@@ -1,0 +1,14 @@
+{
+  "name": "homecasting-backend",
+  "version": "1.0.0",
+  "description": "The backend server of Homecasting web app.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Liplum",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
