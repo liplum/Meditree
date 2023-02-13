@@ -2,7 +2,7 @@
   "name": "homecasting-backend",
   "version": "1.0.0",
   "description": "The backend server of Homecasting web app.",
-  "main": "app.js",
+  "main": "app.ts",
   "type": "module",
   "scripts": {
     "run": "node app.js"
@@ -12,5 +12,8 @@
   "dependencies": {
     "express": "^4.18.2",
     "typescript": "^4.9.5"
+  },
+  "devDependencies": {
+    "@types/node": "^18.13.0"
   }
 }
