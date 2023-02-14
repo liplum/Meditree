@@ -5,12 +5,13 @@
   "main": "dist/app.js",
   "type": "module",
   "scripts": {
-    "run": "node dist/app.js"
+    "run": "tsc && node dist/app.js"
   },
   "author": "Liplum",
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
+    "homecasting-shared": "file:../shared/src",
     "typescript": "^4.9.5"
   },
   "devDependencies": {

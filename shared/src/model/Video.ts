@@ -1,3 +1,3 @@
-interface Video {
+export interface Video {
   url: String
 }
