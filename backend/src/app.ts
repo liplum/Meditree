@@ -5,6 +5,7 @@ import { findFileInFileTree } from './file.js'
 var config = {
   hostname: '127.0.0.1',
   port: 53552,
+  root: "."
 }
 import * as path from 'path'
 import { fileURLToPath } from 'url'
@@ -18,8 +19,9 @@ function findConfig() {
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     throw new Error(`Configuration not found. ${configFile} is created.`)
   }
-  let rawdata = fs.readFileSync(configFile).toString();
-  config = JSON.parse(rawdata);
+  const rawdata = fs.readFileSync(configFile).toString()
+  const configObj = JSON.parse(rawdata)
+  config = Object.assign({}, config, configObj)
 }
 
 function startServer() {
@@ -29,10 +31,15 @@ function startServer() {
     res.end('Hello World\n')
   });
 
-
   server.listen(config.port, config.hostname, () => {
     console.log(`Server running at http://${config.hostname}:${config.port}/`)
   });
 }
+import { HostTree } from './host.js'
+function hostLocalFile() {
+  let hostTree = new HostTree(config.root)
+  hostTree.forzeeTree()
+}
 findConfig()
-startServer()
+hostLocalFile()
+//startServer()
