@@ -2,10 +2,10 @@
   "name": "homecasting-backend",
   "version": "1.0.0",
   "description": "The backend server of Homecasting web app.",
-  "main": "app.ts",
+  "main": "dist/app.js",
   "type": "module",
   "scripts": {
-    "run": "node app.js"
+    "run": "node dist/app.js"
   },
   "author": "Liplum",
   "license": "ISC",
