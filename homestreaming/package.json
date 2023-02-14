@@ -1,5 +1,5 @@
 {
-  "name": "homecasting",
+  "name": "homestreaming",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -11,7 +11,7 @@
     "react-scripts": "5.0.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4",
-    "homecasting-shared": "file:../shared/src"
+    "homestreaming-shared": "file:../shared/src"
   },
   "scripts": {
     "start": "react-scripts start",

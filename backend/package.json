@@ -1,7 +1,7 @@
 {
-  "name": "homecasting-backend",
+  "name": "homestreaming-backend",
   "version": "1.0.0",
-  "description": "The backend server of Homecasting web app.",
+  "description": "The backend server of homestreaming web app.",
   "main": "dist/app.js",
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
-    "homecasting-shared": "file:../shared"
+    "homestreaming-shared": "file:../shared"
   },
   "devDependencies": {
     "@types/node": "^18.13.0",

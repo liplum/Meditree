@@ -21,6 +21,7 @@ export class HostTree {
   }
 
   forzeeTree() {
+    
     fs.readdir(this.root, (err, files) => {
       files.forEach(file => {
         console.log(file);

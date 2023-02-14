@@ -1,5 +1,5 @@
 import { createServer } from 'http'
-import { Video } from 'homecasting-shared/src/model/video'
+import { Video } from 'homestreaming-shared/src/model/video'
 import * as fs from 'fs'
 import { findFileInFileTree } from './file.js'
 var config = {
@@ -9,7 +9,7 @@ var config = {
 }
 import * as path from 'path'
 import { fileURLToPath } from 'url'
-const configFileName = "homecasting-config.json"
+const configFileName = "homestreaming-config.json"
 function findConfig() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url))
   let curDir = path.dirname(__dirname)
