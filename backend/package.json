@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
-    "homecasting-shared": "file:../shared/src"
+    "homecasting-shared": "file:../shared"
   },
   "devDependencies": {
     "@types/node": "^18.13.0",
