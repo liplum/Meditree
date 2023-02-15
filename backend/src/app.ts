@@ -1,7 +1,7 @@
 import { createServer } from 'http'
 import { Video } from 'homestreaming-shared/src/model/video'
 import * as fs from 'fs'
-import { findFileInFileTree } from './file.js'
+import { FileTree, findFileInFileTree } from './file.js'
 var config = {
   hostname: '127.0.0.1',
   port: 53552,
@@ -36,9 +36,9 @@ function startServer() {
   });
 }
 import { HostTree } from './host.js'
-function hostLocalFile() {
-  let hostTree = new HostTree(config.root)
-  hostTree.forzeeTree()
+async function hostLocalFile() {
+  let tree = await FileTree.subFileTreeFromAsync(".")
+  console.log(tree)
 }
 findConfig()
 hostLocalFile()
