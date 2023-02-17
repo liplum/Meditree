@@ -39,6 +39,10 @@ export class FileTree {
   /// Subtree will inherit filter from parent tree.
   filter: PathFilter = alwaysAllowFile
   name2File = new Map<string, FileEntryLike>()
+  rootName: string
+  constructor(rootName: string) {
+    this.rootName = rootName
+  }
   resolve(filePath: string): File | null {
     const parts = filePath.split(path.sep)
     return FileTree.resolveByParts(this, parts)
@@ -67,14 +71,14 @@ export class FileTree {
     }
   }
   addFile(name: string, file: FileEntryLike) {
-    this.name2File[name] = file
+    this.name2File.set(name, file)
   }
   static async subFileTreeFromAsync(direcotry: string, filter: PathFilter = alwaysAllowFile): Promise<FileTree> {
     let stats = await lstatAsync(direcotry)
     if (!stats.isDirectory()) {
       throw Error(`${path} isn't a directory`)
     }
-    const tree = new FileTree()
+    const tree = new FileTree(path.basename(direcotry))
     tree.filter = filter
     await this.iterateFileTreeAsync(tree, direcotry)
     return tree
@@ -90,25 +94,23 @@ export class FileTree {
           tree.addFile(fileName, File.local(filePath))
         }
       } else if (stats.isDirectory()) {
-        const subtree = new FileTree()
+        const subtree = new FileTree(fileName)
         subtree.filter = tree.filter
-        this.iterateFileTreeAsync(subtree, filePath)
-        tree.addFile(filePath, subtree)
+        tree.addFile(fileName, subtree)
+        await this.iterateFileTreeAsync(subtree, filePath)
       }
     }
   }
-  printTree(print = console.log, indentStep: number = 1) {
+  printTree(print = console.log, indentStep: number = 2) {
     this.printTreeWithIntent(print, 0, indentStep)
   }
-  private printTreeWithIntent(print = console.log, indent: number, indentStep: number = 1) {
-    console.log(this.name2File.size)
-    for (const entry of this.name2File.entries()) {
-      const name = entry[0]
-      const file = entry[1]
-      if (file instanceof File) {
-        print(" ".repeat(indent) + name)
-      } else if (file instanceof FileTree) {
-        file.printTreeWithIntent(print, indent + indentStep)
+  private printTreeWithIntent(print = console.log, indent: number, indentStep: number = 2) {
+    print(" ".repeat(indent) + this.rootName + "\\")
+    for (const [name, file] of this.name2File.entries()) {
+      if (file instanceof FileTree) {
+        file.printTreeWithIntent(print, indent + indentStep, indentStep)
+      } else if (file instanceof File) {
+        print(" ".repeat(indent + indentStep) + name)
       }
     }
   }
