@@ -43,9 +43,22 @@ export class FileTree {
   constructor(rootName: string) {
     this.rootName = rootName
   }
+
   resolve(filePath: string): File | null {
     const parts = filePath.split(path.sep)
     return FileTree.resolveByParts(this, parts)
+  }
+
+  get subtreeChildrenCount(): number {
+    let total = 0
+    for (const [_, file] of this.name2File) {
+      if (file instanceof FileTree) {
+        total += file.subtreeChildrenCount
+      } else {
+        total++
+      }
+    }
+    return total;
   }
 
   private static resolveByParts(tree: FileTree, filePathParts: string[]): File | null {
@@ -73,18 +86,32 @@ export class FileTree {
   addFile(name: string, file: FileEntryLike) {
     this.name2File.set(name, file)
   }
-  static async subFileTreeFromAsync(direcotry: string, filter: PathFilter = alwaysAllowFile): Promise<FileTree> {
+  removeFile(name: string) {
+    this.name2File.delete(name)
+  }
+  /**
+   * {@link pruned}: whether to ignore the empty file tree
+   */
+  static async subFileTreeFromAsync(
+    direcotry: string,
+    filter: PathFilter = alwaysAllowFile,
+    pruned: boolean = false,
+  ): Promise<FileTree> {
     let stats = await lstatAsync(direcotry)
     if (!stats.isDirectory()) {
       throw Error(`${path} isn't a directory`)
     }
     const tree = new FileTree(path.basename(direcotry))
     tree.filter = filter
-    await this.iterateFileTreeAsync(tree, direcotry)
+    await this.iterateFileTreeAsync(tree, direcotry, pruned)
     return tree
   }
 
-  private static async iterateFileTreeAsync(tree: FileTree, currentDirectory: string) {
+  private static async iterateFileTreeAsync(
+    tree: FileTree,
+    currentDirectory: string,
+    pruned: boolean = false,
+  ) {
     let fileNames = fs.readdirSync(currentDirectory)
     for (const fileName of fileNames) {
       const filePath = path.join(currentDirectory, fileName)
@@ -97,10 +124,14 @@ export class FileTree {
         const subtree = new FileTree(fileName)
         subtree.filter = tree.filter
         tree.addFile(fileName, subtree)
-        await this.iterateFileTreeAsync(subtree, filePath)
+        await this.iterateFileTreeAsync(subtree, filePath, pruned)
+        if (pruned && subtree.subtreeChildrenCount == 0) {
+          tree.removeFile(fileName)
+        }
       }
     }
   }
+
   printTree(print = console.log, indentStep: number = 2) {
     this.printTreeWithIntent(print, 0, indentStep)
   }
