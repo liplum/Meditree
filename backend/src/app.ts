@@ -5,7 +5,10 @@ import { FileTree, findFileInFileTree } from './file.js'
 var config = {
   hostname: '127.0.0.1',
   port: 53552,
-  root: "."
+  root: ".",
+  allowedFileExtension: [
+    ".mp3", ".avi"
+  ]
 }
 import * as path from 'path'
 import { fileURLToPath } from 'url'
@@ -22,6 +25,7 @@ function findConfig() {
   const rawdata = fs.readFileSync(configFile).toString()
   const configObj = JSON.parse(rawdata)
   config = Object.assign({}, config, configObj)
+  fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
 }
 
 function startServer() {
@@ -36,9 +40,12 @@ function startServer() {
   });
 }
 import { HostTree } from './host.js'
+function filterByExtension(filePath: string) {
+  return path.extname(filePath).toLowerCase() in config.allowedFileExtension
+}
 async function hostLocalFile() {
-  let tree = await FileTree.subFileTreeFromAsync(".")
-  console.log(tree)
+  let tree = await FileTree.subFileTreeFromAsync(".", filterByExtension)
+  tree.printTree()
 }
 findConfig()
 hostLocalFile()
