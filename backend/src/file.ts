@@ -1,13 +1,11 @@
-import { dir } from 'console';
 import * as fs from 'fs';
-import { type } from 'os';
 import * as path from 'path'
 import { promisify } from 'util'
 enum FileType {
   local = "local"
 }
 type FileEntryLike = File | FileTree
-class File {
+export class File {
   type: FileType
   path: String
   constructor(type: FileType, path: String) {
@@ -39,9 +37,11 @@ export class FileTree {
   /// Subtree will inherit filter from parent tree.
   filter: PathFilter = alwaysAllowFile
   name2File = new Map<string, FileEntryLike>()
-  rootName: string
-  constructor(rootName: string) {
-    this.rootName = rootName
+  rootPath: string
+  readonly name: string
+  constructor(rootPath: string) {
+    this.rootPath = rootPath
+    this.name = path.basename(rootPath)
   }
 
   resolve(filePath: string): File | null {
@@ -101,7 +101,7 @@ export class FileTree {
     if (!stats.isDirectory()) {
       throw Error(`${path} isn't a directory`)
     }
-    const tree = new FileTree(path.basename(direcotry))
+    const tree = new FileTree(direcotry)
     tree.filter = filter
     await this.iterateFileTreeAsync(tree, direcotry, pruned)
     return tree
@@ -121,7 +121,7 @@ export class FileTree {
           tree.addFile(fileName, File.local(filePath))
         }
       } else if (stats.isDirectory()) {
-        const subtree = new FileTree(fileName)
+        const subtree = new FileTree(filePath)
         subtree.filter = tree.filter
         tree.addFile(fileName, subtree)
         await this.iterateFileTreeAsync(subtree, filePath, pruned)
@@ -136,7 +136,7 @@ export class FileTree {
     this.printTreeWithIntent(print, 0, indentStep)
   }
   private printTreeWithIntent(print = console.log, indent: number, indentStep: number = 2) {
-    print(" ".repeat(indent) + this.rootName + "\\")
+    print(" ".repeat(indent) + this.name + "\\")
     for (const [name, file] of this.name2File.entries()) {
       if (file instanceof FileTree) {
         file.printTreeWithIntent(print, indent + indentStep, indentStep)

@@ -1,31 +1,42 @@
 import * as fs from 'fs'
+import * as path from 'path'
+import { FileTree, File } from './file.js'
+import * as chokidar from 'chokidar'
 export class HostTree {
-  root: string
-  constructor(root: string) {
+  readonly root: string
+  readonly allowedFileExtensions: string[] | null
+  private fileTree: FileTree
+  constructor(root: string, allowedFileExtensions: string[] | null = null) {
     this.root = root
+    this.allowedFileExtensions = allowedFileExtensions
   }
   get isWatching() { return this.watchTimer != null }
-  watchTimer = null
-  startWatching(intervalMs: number = 1000) {
-    if (this.isWatching) return
-    this.watchTimer = setTimeout(this.onWatch, intervalMs)
+  watchTimer: fs.FSWatcher | null = null
+  startWatching() {
+    if (this.watchTimer != null) return
+    this.watchTimer = chokidar.watch(this.root, {
+      ignoreInitial: true,
+    }).on('all', (event, filePath) => {
+      console.log(`[${event}]${filePath}`)
+    })
   }
 
-  endWatching() {
-    if (!this.isWatching) return
-    clearTimeout(this.watchTimer)
+  stopWatching() {
+    if (this.watchTimer == null) return
+    this.watchTimer.close()
   }
 
-  private onWatch() {
+  resolve(path: string): File | null {
+    return this.fileTree?.resolve(path)
+  }
 
+  filterByExtension(filePath: string) {
+    return this.allowedFileExtensions.includes(path.extname(filePath).toLowerCase())
   }
 
   forzeeTree() {
-    
-    fs.readdir(this.root, (err, files) => {
-      files.forEach(file => {
-        console.log(file);
-      });
-    });
+    FileTree.subFileTreeFromAsync(this.root, this.filterByExtension, true).then((tree) => {
+      this.fileTree = tree
+    })
   }
 }

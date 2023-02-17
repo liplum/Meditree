@@ -1,12 +1,13 @@
 import { createServer } from 'http'
 import { Video } from 'homestreaming-shared/src/model/video'
 import * as fs from 'fs'
+import { HostTree } from './host.js'
 import { FileTree, findFileInFileTree } from './file.js'
 var config = {
   hostname: '127.0.0.1',
   port: 53552,
   root: ".",
-  allowedFileExtension: [
+  allowedFileExtensions: [
     ".mp3", ".avi"
   ]
 }
@@ -39,13 +40,12 @@ function startServer() {
     console.log(`Server running at http://${config.hostname}:${config.port}/`)
   });
 }
-import { HostTree } from './host.js'
 function filterByExtension(filePath: string) {
-  return config.allowedFileExtension.includes(path.extname(filePath).toLowerCase())
+  return config.allowedFileExtensions.includes(path.extname(filePath).toLowerCase())
 }
 async function hostLocalFile() {
-  let tree = await FileTree.subFileTreeFromAsync(config.root, filterByExtension, true)
-  tree.printTree()
+  const tree = new HostTree(config.root,config.allowedFileExtensions)
+  tree.startWatching()
 }
 findConfig()
 hostLocalFile()
