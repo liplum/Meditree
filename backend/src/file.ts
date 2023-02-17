@@ -1,19 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path'
 import { promisify } from 'util'
-enum FileType {
-  local = "local"
-}
-type FileEntryLike = File | FileTree
+
+type FileSystemEntry = File | FileTree
 export class File {
-  type: FileType
   path: String
-  constructor(type: FileType, path: String) {
-    this.type = type
+  constructor(path: String) {
     this.path = path
-  }
-  static local(path: String): File {
-    return new File(FileType.local, path)
   }
 }
 
@@ -36,7 +29,7 @@ let alwaysAllowFile: PathFilter = (_) => true
 export class FileTree {
   /// Subtree will inherit filter from parent tree.
   filter: PathFilter = alwaysAllowFile
-  name2File = new Map<string, FileEntryLike>()
+  name2File = new Map<string, FileSystemEntry>()
   rootPath: string
   readonly name: string
   constructor(rootPath: string) {
@@ -44,7 +37,7 @@ export class FileTree {
     this.name = path.basename(rootPath)
   }
 
-  resolve(filePath: string): File | null {
+  resolveFile(filePath: string): File | null {
     const parts = filePath.split('\\')
     return FileTree.resolveByParts(this, parts)
   }
@@ -67,7 +60,7 @@ export class FileTree {
       return null
     } else if (filePathParts.length == 1) {
       // if not found, null will be returned
-      const target: FileEntryLike | null = tree.name2File.get(filePathParts[0])
+      const target: FileSystemEntry | null = tree.name2File.get(filePathParts[0])
       if (target instanceof File) {
         return target
       } else {
@@ -75,7 +68,7 @@ export class FileTree {
       }
     } else {
       const curPosition = filePathParts.shift()
-      const curFileTree: FileEntryLike | null = tree.name2File.get(curPosition)
+      const curFileTree: FileSystemEntry | null = tree.name2File.get(curPosition)
       if (curFileTree instanceof FileTree) {
         return FileTree.resolveByParts(curFileTree, filePathParts)
       } else {
@@ -83,7 +76,7 @@ export class FileTree {
       }
     }
   }
-  addFile(name: string, file: FileEntryLike) {
+  addFile(name: string, file: FileSystemEntry) {
     this.name2File.set(name, file)
   }
   removeFile(name: string) {
@@ -118,7 +111,7 @@ export class FileTree {
       let stats = await lstatAsync(filePath)
       if (stats.isFile()) {
         if (tree.filter(filePath)) {
-          tree.addFile(fileName, File.local(filePath))
+          tree.addFile(fileName, new File(filePath))
         }
       } else if (stats.isDirectory()) {
         const subtree = new FileTree(filePath)
