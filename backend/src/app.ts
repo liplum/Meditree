@@ -44,7 +44,7 @@ function filterByExtension(filePath: string) {
   return config.allowedFileExtension.includes(path.extname(filePath).toLowerCase())
 }
 async function hostLocalFile() {
-  let tree = await FileTree.subFileTreeFromAsync(".", filterByExtension, true)
+  let tree = await FileTree.subFileTreeFromAsync(config.root, filterByExtension, true)
   tree.printTree()
 }
 findConfig()

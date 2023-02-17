@@ -45,7 +45,7 @@ export class FileTree {
   }
 
   resolve(filePath: string): File | null {
-    const parts = filePath.split(path.sep)
+    const parts = filePath.split('\\')
     return FileTree.resolveByParts(this, parts)
   }
 
@@ -67,7 +67,7 @@ export class FileTree {
       return null
     } else if (filePathParts.length == 1) {
       // if not found, null will be returned
-      const target: FileEntryLike | null = tree.name2File[filePathParts[0]]
+      const target: FileEntryLike | null = tree.name2File.get(filePathParts[0])
       if (target instanceof File) {
         return target
       } else {
@@ -75,9 +75,9 @@ export class FileTree {
       }
     } else {
       const curPosition = filePathParts.shift()
-      const curFileTree: FileEntryLike | null = tree.name2File[curPosition]
+      const curFileTree: FileEntryLike | null = tree.name2File.get(curPosition)
       if (curFileTree instanceof FileTree) {
-        return this.resolveByParts(curFileTree, filePathParts)
+        return FileTree.resolveByParts(curFileTree, filePathParts)
       } else {
         return null
       }
