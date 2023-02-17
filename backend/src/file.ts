@@ -101,7 +101,7 @@ export class FileTree {
     this.printTreeWithIntent(print, 0, indentStep)
   }
   private printTreeWithIntent(print = console.log, indent: number, indentStep: number = 1) {
-    console.log(this.name2File)
+    console.log(this.name2File.size)
     for (const entry of this.name2File.entries()) {
       const name = entry[0]
       const file = entry[1]

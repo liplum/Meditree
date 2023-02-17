@@ -41,7 +41,7 @@ function startServer() {
 }
 import { HostTree } from './host.js'
 function filterByExtension(filePath: string) {
-  return path.extname(filePath).toLowerCase() in config.allowedFileExtension
+  return config.allowedFileExtension.includes(path.extname(filePath).toLowerCase())
 }
 async function hostLocalFile() {
   let tree = await FileTree.subFileTreeFromAsync(".", filterByExtension)
