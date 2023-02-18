@@ -1,7 +1,7 @@
 import * as fs from 'fs'
-import { HostTree } from './host.js'
 import { findFileInFileTree } from './file.js'
 import { startServer } from './server.js'
+
 export var config = {
   hostname: '127.0.0.1',
   port: 53552,
@@ -28,10 +28,5 @@ function findConfig() {
   fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
 }
 
-function hostLocalFile() {
-  const tree = new HostTree(config.root,config.allowedFileExtensions)
-  tree.startWatching()
-}
 findConfig()
-hostLocalFile()
-startServer()
+await startServer()

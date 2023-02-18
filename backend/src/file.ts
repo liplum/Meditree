@@ -39,7 +39,16 @@ export class FileTree {
 
   resolveFile(filePath: string): File | null {
     const parts = filePath.split('\\')
-    return FileTree.resolveByParts(this, parts)
+    let currentFsEntry: FileSystemEntry | null = this
+    while (parts.length > 1 && currentFsEntry instanceof FileTree) {
+      let currentPart = parts.shift()
+      currentFsEntry = currentFsEntry.name2File.get(currentPart)
+    }
+    if (currentFsEntry instanceof File) {
+      return currentFsEntry
+    } else {
+      return null
+    }
   }
 
   get subtreeChildrenCount(): number {
@@ -54,28 +63,6 @@ export class FileTree {
     return total;
   }
 
-  private static resolveByParts(tree: FileTree, filePathParts: string[]): File | null {
-    if (filePathParts.length == 0) {
-      // it should never happen
-      return null
-    } else if (filePathParts.length == 1) {
-      // if not found, null will be returned
-      const target: FileSystemEntry | null = tree.name2File.get(filePathParts[0])
-      if (target instanceof File) {
-        return target
-      } else {
-        return null
-      }
-    } else {
-      const curPosition = filePathParts.shift()
-      const curFileTree: FileSystemEntry | null = tree.name2File.get(curPosition)
-      if (curFileTree instanceof FileTree) {
-        return FileTree.resolveByParts(curFileTree, filePathParts)
-      } else {
-        return null
-      }
-    }
-  }
   addFile(name: string, file: FileSystemEntry) {
     this.name2File.set(name, file)
   }
@@ -137,5 +124,17 @@ export class FileTree {
         print(" ".repeat(indent + indentStep) + name)
       }
     }
+  }
+
+  toJsonObject(): object {
+    const obj = Object()
+    for (const [name, file] of this.name2File.entries()) {
+      if (file instanceof File) {
+        obj[name] = name
+      } else if (file instanceof FileTree) {
+        obj[name] = file.toJsonObject()
+      }
+    }
+    return obj
   }
 }

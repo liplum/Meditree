@@ -9,6 +9,8 @@ export class HostTree {
   readonly root: string
   readonly allowedFileExtensions: string[] | null
   fileTree: FileTree
+  private fileTreeJsonObject: object | null = null
+  private fileTreeJsonString: string | null = null
   constructor(
     root: string,
     allowedFileExtensions: string[] | null = null
@@ -38,13 +40,14 @@ export class HostTree {
     }
   }
 
-  rebuildFileTree() {
-    FileTree.subFileTreeFromAsync(
+  async rebuildFileTree() {
+    const tree = await FileTree.subFileTreeFromAsync(
       this.root, (path) => this.filterByExtension(path), true
-    ).then((tree) => {
-      this.fileTree = tree
-      console.log(`${this.root} is rebuilt.`)
-    })
+    )
+    this.fileTree = tree
+    this.fileTreeJsonObject = null
+    this.fileTreeJsonString = null
+    console.log(`${this.root} is rebuilt.`)
   }
 
   stopWatching() {
@@ -58,5 +61,19 @@ export class HostTree {
 
   filterByExtension(filePath: string) {
     return this.allowedFileExtensions.includes(path.extname(filePath).toLowerCase())
+  }
+
+  getJsonObject(): object {
+    if (this.fileTreeJsonObject == null) {
+      this.fileTreeJsonObject = this.fileTree.toJsonObject()
+    }
+    return this.fileTreeJsonObject
+  }
+
+  getJsonString(): string {
+    if (this.fileTreeJsonString == null) {
+      this.fileTreeJsonString = JSON.stringify(this.getJsonObject())
+    }
+    return this.fileTreeJsonString
   }
 }
