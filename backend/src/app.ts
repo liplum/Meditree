@@ -1,7 +1,8 @@
 import * as fs from 'fs'
 import { findFileInFileTree } from './file.js'
 import { startServer } from './server.js'
-
+import { install as installSourceMap } from 'source-map-support'
+installSourceMap()
 export var config = {
   hostname: '127.0.0.1',
   port: 53552,

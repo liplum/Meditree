@@ -7,15 +7,15 @@ type FileSystemEntry = File | FileTree
 export type FileType = string | null
 export class File {
   type: FileType
-  path: String
-  constructor(path: String, type: FileType = null) {
+  path: fs.PathLike
+  constructor(path: fs.PathLike, type: FileType = null) {
     this.path = path
     this.type = type
   }
   toJSON(): object {
     return {
-      "type": this.type,
-      "path": this.path
+      type: this.type,
+      path: this.path
     }
   }
 }
@@ -52,9 +52,9 @@ export class FileTree {
   }
 
   resolveFile(filePath: string): File | null {
-    const parts = filePath.split('\\')
+    const parts = filePath.split('/')
     let currentFsEntry: FileSystemEntry | null = this
-    while (parts.length > 1 && currentFsEntry instanceof FileTree) {
+    while (parts.length > 0 && currentFsEntry instanceof FileTree) {
       let currentPart = parts.shift()
       currentFsEntry = currentFsEntry.name2File.get(currentPart)
     }
