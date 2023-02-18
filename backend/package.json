@@ -12,7 +12,6 @@
   "dependencies": {
     "chokidar": "^3.5.3",
     "express": "^4.18.2",
-    "homestreaming-shared": "file:../shared",
     "minimatch": "^6.2.0"
   },
   "devDependencies": {

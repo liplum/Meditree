@@ -1,6 +1,5 @@
 import { createServer } from 'http'
 import { HostTree } from './host.js'
-//import { Video } from 'homestreaming-shared/src/model/video'
 import { config } from './app.js';
 import express from 'express';
 
@@ -13,13 +12,17 @@ export async function startServer() {
   })
   tree.startWatching()
   await tree.rebuildFileTree()
-  console.log(tree.getJsonObject())
   const app = express()
 
   app.get("/list", function (req, res) {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
     res.send(tree.getJsonString())
+  })
+
+  app.get("/file",function (req, res) {
+    console.log(req)
+    console.log(res)
   })
 
   app.listen(config.port, config.hostname)
