@@ -15,6 +15,7 @@
     "homestreaming-shared": "file:../shared"
   },
   "devDependencies": {
+    "@types/express": "^4.17.17",
     "@types/node": "^18.13.0",
     "ts-loader": "^9.4.2",
     "ts-node": "^10.9.1",

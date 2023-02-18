@@ -8,7 +8,7 @@ export class HostTree {
    */
   readonly root: string
   readonly allowedFileExtensions: string[] | null
-  private fileTree: FileTree
+  fileTree: FileTree
   constructor(
     root: string,
     allowedFileExtensions: string[] | null = null

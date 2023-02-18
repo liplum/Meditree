@@ -1,9 +1,8 @@
-import { createServer } from 'http'
-import { Video } from 'homestreaming-shared/src/model/video'
 import * as fs from 'fs'
 import { HostTree } from './host.js'
-import { FileTree, findFileInFileTree } from './file.js'
-var config = {
+import { findFileInFileTree } from './file.js'
+import { startServer } from './server.js'
+export var config = {
   hostname: '127.0.0.1',
   port: 53552,
   root: ".",
@@ -29,24 +28,10 @@ function findConfig() {
   fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
 }
 
-function startServer() {
-  const server = createServer((req, res) => {
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'text/plain')
-    res.end('Hello World\n')
-  });
-
-  server.listen(config.port, config.hostname, () => {
-    console.log(`Server running at http://${config.hostname}:${config.port}/`)
-  });
-}
-function filterByExtension(filePath: string) {
-  return config.allowedFileExtensions.includes(path.extname(filePath).toLowerCase())
-}
-async function hostLocalFile() {
+function hostLocalFile() {
   const tree = new HostTree(config.root,config.allowedFileExtensions)
   tree.startWatching()
 }
 findConfig()
 hostLocalFile()
-//startServer()
+startServer()
