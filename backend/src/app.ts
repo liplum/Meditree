@@ -8,7 +8,10 @@ export var config = {
   root: ".",
   allowedFileExtensions: [
     ".mp3", ".avi"
-  ]
+  ],
+  fileTypePattern: {
+    "**/*.mp4": "video/mp4",
+  }
 }
 import * as path from 'path'
 import { fileURLToPath } from 'url'

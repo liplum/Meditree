@@ -6,19 +6,19 @@ import express from 'express';
 
 
 export async function startServer() {
-  const tree = new HostTree(config.root, config.allowedFileExtensions)
+  const tree = new HostTree({
+    root: config.root,
+    allowedFileExtensions: config.allowedFileExtensions,
+    fileTypePattern: config.fileTypePattern,
+  })
   tree.startWatching()
   await tree.rebuildFileTree()
+  console.log(tree.getJsonObject())
   const app = express()
-  app.get('/', function (req, res) {
-    res.status(200)
-    res.setHeader('Content-Type', 'text/plain;charset=utf-8')
-    res.send('Hello World')
-  })
 
   app.get("/list", function (req, res) {
     res.status(200)
-    res.setHeader('Content-Type', 'application/json;charset=utf-8')
+    res.contentType("application/json;charset=utf-8")
     res.send(tree.getJsonString())
   })
 
@@ -27,5 +27,9 @@ export async function startServer() {
 }
 
 function onGetVideo(req, res) {
+
+}
+
+function supportedClassifier() {
 
 }

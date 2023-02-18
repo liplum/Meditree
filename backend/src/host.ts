@@ -1,22 +1,29 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { FileTree, File } from './file.js'
+import { FileTree, File, FileType } from './file.js'
 import * as chokidar from 'chokidar'
+import minimatch from 'minimatch'
+interface HostTreeOptions {
+  root: string
+  allowedFileExtensions: string[] | null
+  fileTypePattern: object | null
+}
 export class HostTree {
   /**
    * The absolute path of root directory.
    */
   readonly root: string
   readonly allowedFileExtensions: string[] | null
+  readonly fileTypePattern: object | null
   fileTree: FileTree
-  private fileTreeJsonObject: object | null = null
-  private fileTreeJsonString: string | null = null
+  private fileTreeJsonObjectCache: object | null = null
+  private fileTreeJsonStringCache: string | null = null
   constructor(
-    root: string,
-    allowedFileExtensions: string[] | null = null
+    options: HostTreeOptions
   ) {
-    this.root = path.resolve(root)
-    this.allowedFileExtensions = allowedFileExtensions
+    this.root = path.resolve(options.root)
+    this.allowedFileExtensions = options.allowedFileExtensions
+    this.fileTypePattern = options.fileTypePattern
   }
   get isWatching() { return this.watchTimer != null }
   watchTimer: fs.FSWatcher | null = null
@@ -41,12 +48,15 @@ export class HostTree {
   }
 
   async rebuildFileTree() {
-    const tree = await FileTree.subFileTreeFromAsync(
-      this.root, (path) => this.filterByExtension(path), true
+    const tree = await FileTree.createFileTreeAsync(
+      this.root,
+      (path) => this.filterByExtension(path),
+      (path) => this.classifyByFilePath(path),
+      true
     )
     this.fileTree = tree
-    this.fileTreeJsonObject = null
-    this.fileTreeJsonString = null
+    this.fileTreeJsonObjectCache = null
+    this.fileTreeJsonStringCache = null
     console.log(`${this.root} is rebuilt.`)
   }
 
@@ -63,17 +73,28 @@ export class HostTree {
     return this.allowedFileExtensions.includes(path.extname(filePath).toLowerCase())
   }
 
-  getJsonObject(): object {
-    if (this.fileTreeJsonObject == null) {
-      this.fileTreeJsonObject = this.fileTree.toJsonObject()
+  classifyByFilePath(filePath: string): FileType {
+    if (this.fileTypePattern == null) return null
+    for (const [pattern, type] of Object.entries(this.fileTypePattern)) {
+      if (minimatch(filePath, pattern)) {
+        return type
+      }
     }
-    return this.fileTreeJsonObject
+    // if not matching any one
+    return null
+  }
+
+  getJsonObject(): object {
+    if (this.fileTreeJsonObjectCache == null) {
+      this.fileTreeJsonObjectCache = this.fileTree.toJSON()
+    }
+    return this.fileTreeJsonObjectCache
   }
 
   getJsonString(): string {
-    if (this.fileTreeJsonString == null) {
-      this.fileTreeJsonString = JSON.stringify(this.getJsonObject())
+    if (this.fileTreeJsonStringCache == null) {
+      this.fileTreeJsonStringCache = JSON.stringify(this.getJsonObject(), null, 2)
     }
-    return this.fileTreeJsonString
+    return this.fileTreeJsonStringCache
   }
 }
