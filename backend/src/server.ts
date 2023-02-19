@@ -5,6 +5,7 @@ import { Request } from 'express'
 import { Response } from 'express'
 import * as fs from 'fs'
 import { File, FileTree } from './file.js'
+
 export async function startServer() {
   const tree = new HostTree({
     root: config.root,

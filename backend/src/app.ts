@@ -1,8 +1,12 @@
 import * as fs from 'fs'
 import { findFileInFileTree } from './file.js'
 import { startServer } from './server.js'
+import * as path from 'path'
+import { fileURLToPath } from 'url'
 import { install as installSourceMap } from 'source-map-support'
+
 installSourceMap()
+
 export var config = {
   hostname: '127.0.0.1',
   port: 80,
@@ -13,8 +17,6 @@ export var config = {
     "**/*.+(jpeg|jpg)": "image/jpeg"
   }
 }
-import * as path from 'path'
-import { fileURLToPath } from 'url'
 const configFileName = "homestreaming-config.json"
 function findConfig() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url))
