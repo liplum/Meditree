@@ -26,7 +26,7 @@ export async function startServer() {
   }
 
   app.get("/file(/*)", (req, res) => {
-    const path = removePrefix(req.url, "/file/")
+    const path = removePrefix(decodeURI(req.url), "/file/")
     const file = tree.resolveFile(path)
     if (file == null) {
       res.status(404)

@@ -5,7 +5,7 @@
   "main": "dist/app.js",
   "type": "module",
   "scripts": {
-    "run": "tsc && node dist/app.js"
+    "serve": "tsc && node dist/app.js"
   },
   "author": "Liplum",
   "license": "ISC",
