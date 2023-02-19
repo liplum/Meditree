@@ -4,11 +4,20 @@ import React from 'react'
 import { FileTreeNavigation } from './navigation/Tree.js'
 const url = "http://localhost/list"
 export class HomestreamingApp extends React.Component {
+
   constructor(props) {
     super(props)
+    this.state = {
+      fileTree: {}
+    }
     fetch(url)
       .then((response) => response.json())
-      .then((data) => console.log(data))
+      .then((data) => {
+        this.setState({
+          fileTree: data
+        })
+        console.log(data)
+      })
   }
   render() {
     return (
@@ -18,14 +27,7 @@ export class HomestreamingApp extends React.Component {
           <p>
             Edit <code>src/App.js</code> and save to reload.
           </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <FileTreeNavigation></FileTreeNavigation>
-          </a>
+          <FileTreeNavigation fileTree={this.state.fileTree}></FileTreeNavigation>
         </header>
       </div >
     );
