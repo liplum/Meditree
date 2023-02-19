@@ -2,11 +2,14 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { FileTree, File, FileType } from './file.js'
 import * as chokidar from 'chokidar'
-import minimatch from 'minimatch'
+import minimatch, { MinimatchOptions } from 'minimatch'
 interface HostTreeOptions {
   root: string
   allowedFileExtensions: string[] | null
   fileTypePattern: object | null
+}
+const minimatchOptions: MinimatchOptions = {
+  nocase: true,
 }
 export class HostTree {
   /**
@@ -69,11 +72,10 @@ export class HostTree {
   filterByExtension(filePath: string) {
     return this.allowedFileExtensions.includes(path.extname(filePath).toLowerCase())
   }
-
   classifyByFilePath(filePath: string): FileType {
     if (this.fileTypePattern == null) return null
     for (const [pattern, type] of Object.entries(this.fileTypePattern)) {
-      if (minimatch(filePath, pattern)) {
+      if (minimatch(filePath, pattern, minimatchOptions)) {
         return type
       }
     }

@@ -7,8 +7,8 @@ type FileSystemEntry = File | FileTree
 export type FileType = string | null
 export class File {
   type: FileType
-  path: fs.PathLike
-  constructor(path: fs.PathLike, type: FileType = null) {
+  path: string
+  constructor(path: string, type: FileType = null) {
     this.path = path
     this.type = type
   }

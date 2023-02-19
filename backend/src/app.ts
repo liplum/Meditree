@@ -12,6 +12,8 @@ export var config = {
   ],
   fileTypePattern: {
     "**/*.mp4": "video/mp4",
+    "**/*.png": "image/png",
+    "**/*.jp(e*)g": "image/jpeg"
   }
 }
 import * as path from 'path'

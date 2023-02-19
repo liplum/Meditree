@@ -40,7 +40,9 @@ export async function startServer() {
   })
 
   const fileType2handler = {
-    "video/mp4": getVideo
+    "video/mp4": getVideo,
+    "image/png": getImage,
+    "image/jpeg": getImage,
   }
 
   app.get("/file(/*)", (req, res) => {
@@ -95,6 +97,15 @@ function getVideo(req: Request, res: Response, file: File) {
     const videoStream = fs.createReadStream(videoPath, { start, end })
     videoStream.pipe(res)
   }
+}
+
+function getImage(req: Request, res: Response, file: File) {
+  res.status(200)
+  res.header({
+    "Content-Type": file.type,
+  })
+  const path = file.path
+  res.sendFile(path)
 }
 
 function buildIndexHtml(tree: FileTree): string {
