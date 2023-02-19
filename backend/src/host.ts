@@ -15,9 +15,8 @@ export class HostTree {
   readonly root: string
   readonly allowedFileExtensions: string[] | null
   readonly fileTypePattern: object | null
+  onRebuilt: (() => void) | null = null
   fileTree: FileTree
-  private fileTreeJsonObjectCache: object | null = null
-  private fileTreeJsonStringCache: string | null = null
   constructor(
     options: HostTreeOptions
   ) {
@@ -55,9 +54,7 @@ export class HostTree {
       true
     )
     this.fileTree = tree
-    this.fileTreeJsonObjectCache = null
-    this.fileTreeJsonStringCache = null
-    console.log(`${this.root} is rebuilt.`)
+    this.onRebuilt?.()
   }
 
   stopWatching() {
@@ -82,19 +79,5 @@ export class HostTree {
     }
     // if not matching any one
     return null
-  }
-
-  getJsonObject(): object {
-    if (this.fileTreeJsonObjectCache == null) {
-      this.fileTreeJsonObjectCache = this.fileTree.toJSON()
-    }
-    return this.fileTreeJsonObjectCache
-  }
-
-  getJsonString(): string {
-    if (this.fileTreeJsonStringCache == null) {
-      this.fileTreeJsonStringCache = JSON.stringify(this.getJsonObject(), null, 2)
-    }
-    return this.fileTreeJsonStringCache
   }
 }

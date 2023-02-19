@@ -50,6 +50,18 @@ export class FileTree {
     this.rootPath = rootPath
     this.name = path.basename(rootPath)
   }
+  /**
+   * example: "a/b/c"
+   */
+  get ancestorFullPath(): string {
+    const parts = []
+    let curTree = this.parent
+    while (curTree != null) {
+      parts.unshift(curTree.name)
+      curTree = curTree.parent
+    }
+    return parts.join("/")
+  }
 
   resolveFile(filePath: string): File | null {
     const parts = filePath.split('/')
