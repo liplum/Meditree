@@ -95,7 +95,7 @@ export class FileTree {
 
   get subtreeChildrenCount(): number {
     let total = 0
-    for (const [_, file] of this.name2File) {
+    for (const file of this.name2File.values()) {
       if (file instanceof FileTree) {
         total += file.subtreeChildrenCount
       } else {
