@@ -3,6 +3,7 @@ import { config } from "./app.js"
 import express, { type Request, type Response } from "express"
 import * as fs from "fs"
 import { File, FileTree } from "./file.js"
+import cors from "cors"
 
 export async function startServer(): Promise<void> {
   const tree = new HostTree({
@@ -21,6 +22,8 @@ export async function startServer(): Promise<void> {
   await tree.rebuildFileTree()
   const app = express()
 
+  app.use(cors())
+  
   app.get("/", (req, res) => {
     res.redirect("/index.html")
   })

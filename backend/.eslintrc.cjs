@@ -34,6 +34,7 @@ module.exports = {
     "@typescript-eslint/lines-between-class-members": "warn",
     "@typescript-eslint/no-floating-promises": "off",
     "@typescript-eslint/strict-boolean-expressions": "off",
-    "@typescript-eslint/no-this-alias": "off"
+    "@typescript-eslint/no-this-alias": "off",
+    "no-trailing-spaces": "off"
   }
 }

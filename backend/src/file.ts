@@ -179,10 +179,7 @@ export class FileTree {
     const obj = Object()
     for (const [name, file] of this.name2File.entries()) {
       if (file instanceof File) {
-        obj[name] = {
-          type: file.type,
-          name,
-        }
+        obj[name] = file.type
       } else if (file instanceof FileTree) {
         obj[name] = file.toJSON()
       }

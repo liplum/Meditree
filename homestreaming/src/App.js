@@ -2,7 +2,14 @@ import logo from './logo.svg'
 import './App.css'
 import React from 'react'
 import { FileTreeNavigation } from './navigation/Tree.js'
+const url = "http://localhost/list"
 export class HomestreamingApp extends React.Component {
+  constructor(props) {
+    super(props)
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => console.log(data))
+  }
   render() {
     return (
       <div className="App">
