@@ -5,15 +5,15 @@ import { install as installSourceMap } from 'source-map-support'
 installSourceMap()
 export var config = {
   hostname: '127.0.0.1',
-  port: 53552,
+  port: 80,
   root: ".",
   allowedFileExtensions: [
-    ".mp3", ".avi"
+    ".mp4"
   ],
-  fileTypePattern: {
+  fileTypePatterns: {
     "**/*.mp4": "video/mp4",
     "**/*.png": "image/png",
-    "**/*.jp(e*)g": "image/jpeg"
+    "**/*.+(jpeg|jpg)": "image/jpeg"
   }
 }
 import * as path from 'path'

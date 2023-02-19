@@ -9,7 +9,7 @@ export async function startServer() {
   const tree = new HostTree({
     root: config.root,
     allowedFileExtensions: config.allowedFileExtensions,
-    fileTypePattern: config.fileTypePattern,
+    fileTypePattern: config.fileTypePatterns,
   })
   let treeJsonObjectCache = null
   let treeJsonStringCache = null
