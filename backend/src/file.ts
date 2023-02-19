@@ -36,13 +36,26 @@ export function findFileInFileTree(dir: string, fileName: string): string | null
 export let lstatAsync = promisify(fs.stat)
 export type PathFilter = (path: string) => boolean
 export type FileClassifier = (path: string) => FileType
-let alwaysAllowFile: PathFilter = (_) => true
 let alwaysNull: FileClassifier = (_) => null
+interface CreateFileTreeOptions {
+  root: string
+  classifier: FileClassifier
+  allowNullFileType: boolean
+  /**
+   * whether to ignore the empty file tree
+   */
+  pruned: boolean
+}
 export class FileTree {
-  /// Subtree will inherit filter from parent tree.
-  filter: PathFilter = alwaysAllowFile
+  /**
+   * It's inherited from the parent tree.
+   */
   classifier: FileClassifier = alwaysNull
   parent: FileTree | null = null
+  /**
+ * It's inherited from the parent tree.
+ */
+  allowNullFileType: boolean = false
   name2File = new Map<string, FileSystemEntry>()
   rootPath: string
   readonly name: string
@@ -95,32 +108,28 @@ export class FileTree {
   removeFileSystemEntry(name: string) {
     this.name2File.delete(name)
   }
-  /**
-   * {@link pruned}: whether to ignore the empty file tree
-   */
-  static async createFileTreeAsync(
-    direcotry: string,
-    filter: PathFilter = alwaysAllowFile,
-    classifier: FileClassifier = alwaysNull,
-    pruned: boolean = false,
-  ): Promise<FileTree> {
-    let stats = await lstatAsync(direcotry)
+
+  static async createFileTreeAsync(options: CreateFileTreeOptions): Promise<FileTree> {
+    const root = options.root
+    let stats = await lstatAsync(root)
     if (!stats.isDirectory()) {
       throw Error(`${path} isn't a directory`)
     }
-    const tree = new FileTree(direcotry)
-    tree.filter = filter
-    tree.classifier = classifier
-    await this.iterateFileTreeAsync(tree, direcotry, pruned)
+    const tree = new FileTree(root)
+    tree.classifier = options.classifier
+    tree.allowNullFileType = options.allowNullFileType
+    await this.iterateFileTreeAsync(tree, root, options.pruned)
     return tree
   }
+
   createSubTree(rootPath: string): FileTree {
     const subtree = new FileTree(rootPath)
-    subtree.filter = this.filter
+    subtree.allowNullFileType = this.allowNullFileType
     subtree.classifier = this.classifier
     subtree.parent = this
     return subtree
   }
+
   private static async iterateFileTreeAsync(
     tree: FileTree,
     currentDirectory: string,
@@ -131,8 +140,8 @@ export class FileTree {
       const filePath = path.join(currentDirectory, fileName)
       let stats = await lstatAsync(filePath)
       if (stats.isFile()) {
-        if (tree.filter(filePath)) {
-          const fileType = tree.classifier(filePath)
+        const fileType = tree.classifier(filePath)
+        if (tree.allowNullFileType || fileType != null) {
           const file = new File(filePath, fileType)
           tree.addFileSystemEntry(fileName, file)
         }

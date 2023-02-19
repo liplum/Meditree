@@ -5,8 +5,7 @@ import * as chokidar from 'chokidar'
 import minimatch, { MinimatchOptions } from 'minimatch'
 interface HostTreeOptions {
   root: string
-  allowedFileExtensions: string[] | null
-  fileTypePattern: object | null
+  fileTypePatterns: object | null
 }
 const minimatchOptions: MinimatchOptions = {
   nocase: true,
@@ -16,16 +15,14 @@ export class HostTree {
    * The absolute path of root directory.
    */
   readonly root: string
-  readonly allowedFileExtensions: string[] | null
-  readonly fileTypePattern: object | null
+  readonly fileTypePatterns: object | null
   onRebuilt: (() => void) | null = null
   fileTree: FileTree
   constructor(
     options: HostTreeOptions
   ) {
     this.root = path.resolve(options.root)
-    this.allowedFileExtensions = options.allowedFileExtensions
-    this.fileTypePattern = options.fileTypePattern
+    this.fileTypePatterns = options.fileTypePatterns
   }
   get isWatching() { return this.watchTimer != null }
   watchTimer: fs.FSWatcher | null = null
@@ -40,22 +37,19 @@ export class HostTree {
   onWatch(event: string, filePath: string) {
     console.log(`[${event}]${filePath}`)
     //const relative = path.relative(this.root, filePath)
-    if (event == "addDir") return
     if (event == "add" || event == "unlink") {
-      if (!this.filterByExtension(filePath)) return
-      this.rebuildFileTree()
-    } else if (event == 'unlinkDir') {
+      if (this.classifyByFilePath(filePath) == null) return
       this.rebuildFileTree()
     }
   }
 
   async rebuildFileTree() {
-    const tree = await FileTree.createFileTreeAsync(
-      this.root,
-      (path) => this.filterByExtension(path),
-      (path) => this.classifyByFilePath(path),
-      true
-    )
+    const tree = await FileTree.createFileTreeAsync({
+      root: this.root,
+      classifier: (path) => this.classifyByFilePath(path),
+      allowNullFileType: false,
+      pruned: true,
+    })
     this.fileTree = tree
     this.onRebuilt?.()
   }
@@ -69,12 +63,9 @@ export class HostTree {
     return this.fileTree?.resolveFile(path)
   }
 
-  filterByExtension(filePath: string) {
-    return this.allowedFileExtensions.includes(path.extname(filePath).toLowerCase())
-  }
   classifyByFilePath(filePath: string): FileType {
-    if (this.fileTypePattern == null) return null
-    for (const [pattern, type] of Object.entries(this.fileTypePattern)) {
+    if (this.fileTypePatterns == null) return null
+    for (const [pattern, type] of Object.entries(this.fileTypePatterns)) {
       if (minimatch(filePath, pattern, minimatchOptions)) {
         return type
       }

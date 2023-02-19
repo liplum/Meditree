@@ -8,8 +8,7 @@ import { File, FileTree } from './file.js'
 export async function startServer() {
   const tree = new HostTree({
     root: config.root,
-    allowedFileExtensions: config.allowedFileExtensions,
-    fileTypePattern: config.fileTypePatterns,
+    fileTypePatterns: config.fileTypePatterns,
   })
   let treeJsonObjectCache = null
   let treeJsonStringCache = null
@@ -70,6 +69,7 @@ function removePrefix(origin: string, prefix: string): string {
 }
 
 function getVideo(req: Request, res: Response, file: File) {
+  // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
   const filePath = file.path
   const options = {
     start: undefined,

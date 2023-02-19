@@ -7,9 +7,6 @@ export var config = {
   hostname: '127.0.0.1',
   port: 80,
   root: ".",
-  allowedFileExtensions: [
-    ".mp4"
-  ],
   fileTypePatterns: {
     "**/*.mp4": "video/mp4",
     "**/*.png": "image/png",
