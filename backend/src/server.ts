@@ -1,19 +1,17 @@
-import { HostTree } from './host.js'
-import { config } from './app.js'
-import express from 'express'
-import { Request } from 'express'
-import { Response } from 'express'
-import * as fs from 'fs'
-import { File, FileTree } from './file.js'
+import { HostTree } from "./host.js"
+import { config } from "./app.js"
+import express, { type Request, type Response } from "express"
+import * as fs from "fs"
+import { File, FileTree } from "./file.js"
 
-export async function startServer() {
+export async function startServer(): Promise<void> {
   const tree = new HostTree({
     root: config.root,
     fileTypePatterns: config.fileTypePatterns,
   })
-  let treeJsonObjectCache = null
-  let treeJsonStringCache = null
-  let treeIndexHtmlCache = null
+  let treeJsonObjectCache: object | null = null
+  let treeJsonStringCache: string | null = null
+  let treeIndexHtmlCache: string | null = null
   tree.onRebuilt = () => {
     treeJsonObjectCache = tree.fileTree.toJSON()
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 2)
@@ -52,7 +50,12 @@ export async function startServer() {
       res.status(404)
       return
     }
-    const handler = fileType2handler[file.type]
+    const fileType = file.type
+    if (fileType == null) {
+      res.status(404)
+      return
+    }
+    const handler = fileType2handler[fileType]
     if (handler == null) {
       res.status(404)
       return
@@ -69,10 +72,13 @@ function removePrefix(origin: string, prefix: string): string {
   else return origin
 }
 
-function getVideo(req: Request, res: Response, file: File) {
+function getVideo(req: Request, res: Response, file: File): void {
   // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
   const filePath = file.path
-  const options = {
+  const options: {
+    start: number | undefined
+    end: number | undefined
+  } = {
     start: undefined,
     end: undefined,
   }
@@ -87,11 +93,11 @@ function getVideo(req: Request, res: Response, file: File) {
       const bytesRange = range.substring(bytesPrefix.length)
       const parts = bytesRange.split("-")
       if (parts.length === 2) {
-        const rangeStart = parts[0] && parts[0].trim()
+        const rangeStart = parts[0]?.trim()
         if (rangeStart && rangeStart.length > 0) {
           options.start = start = parseInt(rangeStart)
         }
-        const rangeEnd = parts[1] && parts[1].trim()
+        const rangeEnd = parts[1]?.trim()
         if (rangeEnd && rangeEnd.length > 0) {
           options.end = end = parseInt(rangeEnd)
         }
@@ -102,33 +108,29 @@ function getVideo(req: Request, res: Response, file: File) {
   res.setHeader("content-type", "video/mp4")
 
   fs.stat(filePath, (err, stat) => {
-    if (err) {
+    if (err != null) {
       console.error(`File stat error for ${filePath}.`)
       console.error(err)
       res.sendStatus(500)
       return
     }
 
-    let contentLength = stat.size
+    const contentLength = stat.size
 
     if (req.method === "HEAD") {
       res.statusCode = 200
       res.setHeader("accept-ranges", "bytes")
       res.setHeader("content-length", contentLength)
       res.end()
-    }
-    else {
+    } else {
       let retrievedLength: number
       if (start !== undefined && end !== undefined) {
         retrievedLength = (end + 1) - start
-      }
-      else if (start !== undefined) {
+      } else if (start !== undefined) {
         retrievedLength = contentLength - start
-      }
-      else if (end !== undefined) {
+      } else if (end !== undefined) {
         retrievedLength = (end + 1)
-      }
-      else {
+      } else {
         retrievedLength = contentLength
       }
 
@@ -142,7 +144,7 @@ function getVideo(req: Request, res: Response, file: File) {
       }
 
       const fileStream = fs.createReadStream(filePath, options)
-      fileStream.on("error", error => {
+      fileStream.on("error", (_) => {
         res.sendStatus(500)
       })
 
@@ -151,7 +153,7 @@ function getVideo(req: Request, res: Response, file: File) {
   })
 }
 
-function getImage(req: Request, res: Response, file: File) {
+function getImage(req: Request, res: Response, file: File): void {
   res.status(200)
   res.header({
     "Content-Type": file.type,
@@ -161,13 +163,13 @@ function getImage(req: Request, res: Response, file: File) {
 }
 
 function buildIndexHtml(tree: FileTree): string {
-  const html = []
+  const html: string[] = []
   html.push("<div>")
-  function buildSubtree(ancestorPath: string, curTree: FileTree, indent: number) {
+  function buildSubtree(ancestorPath: string, curTree: FileTree, indent: number): void {
     const indentLength = 15
     const style = `style="margin-left: ${indentLength * indent}px;"`
     for (const [name, file] of curTree.name2File.entries()) {
-      const fullPath = ancestorPath.length == 0 ? name : `${ancestorPath}/${name}`
+      const fullPath = ancestorPath.length === 0 ? name : `${ancestorPath}/${name}`
       if (file instanceof File) {
         html.push(`<a href="/file/${fullPath}" ${style}>${name}</a>`)
         html.push("<br>")

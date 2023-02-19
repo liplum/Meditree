@@ -1,8 +1,8 @@
-import * as fs from 'fs'
-import * as path from 'path'
-import { FileTree, File, FileType } from './file.js'
-import * as chokidar from 'chokidar'
-import minimatch, { MinimatchOptions } from 'minimatch'
+import type * as fs from "fs"
+import * as path from "path"
+import { FileTree, type File, type FileType } from "./file.js"
+import * as chokidar from "chokidar"
+import minimatch, { type MinimatchOptions } from "minimatch"
 interface HostTreeOptions {
   root: string
   fileTypePatterns: object | null
@@ -18,32 +18,37 @@ export class HostTree {
   readonly fileTypePatterns: object | null
   onRebuilt: (() => void) | null = null
   fileTree: FileTree
+  watchTimer: fs.FSWatcher | null = null
   constructor(
     options: HostTreeOptions
   ) {
     this.root = path.resolve(options.root)
     this.fileTypePatterns = options.fileTypePatterns
   }
-  get isWatching() { return this.watchTimer != null }
-  watchTimer: fs.FSWatcher | null = null
 
-  startWatching() {
+  get isWatching(): boolean {
+    return this.watchTimer != null
+  }
+
+  startWatching(): void {
     if (this.watchTimer != null) return
     this.watchTimer = chokidar.watch(this.root, {
       ignoreInitial: true,
-    }).on('all', (event, filePath) => this.onWatch(event, filePath))
+    }).on("all", (event, filePath) => {
+      this.onWatch(event, filePath)
+    })
   }
 
-  onWatch(event: string, filePath: string) {
+  onWatch(event: string, filePath: string): void {
     console.log(`[${event}]${filePath}`)
-    //const relative = path.relative(this.root, filePath)
-    if (event == "add" || event == "unlink") {
+    // const relative = path.relative(this.root, filePath)
+    if (event === "add" || event === "unlink") {
       if (this.classifyByFilePath(filePath) == null) return
       this.rebuildFileTree()
     }
   }
 
-  async rebuildFileTree() {
+  async rebuildFileTree(): Promise<void> {
     const tree = await FileTree.createFileTreeAsync({
       root: this.root,
       classifier: (path) => this.classifyByFilePath(path),
@@ -54,7 +59,7 @@ export class HostTree {
     this.onRebuilt?.()
   }
 
-  stopWatching() {
+  stopWatching(): void {
     if (this.watchTimer == null) return
     this.watchTimer.close()
   }

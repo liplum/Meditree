@@ -1,14 +1,14 @@
-import * as fs from 'fs'
-import { findFileInFileTree } from './file.js'
-import { startServer } from './server.js'
-import * as path from 'path'
-import { fileURLToPath } from 'url'
-import { install as installSourceMap } from 'source-map-support'
+import * as fs from "fs"
+import { findFileInFileTree } from "./file.js"
+import { startServer } from "./server.js"
+import * as path from "path"
+import { fileURLToPath } from "url"
+import { install as installSourceMap } from "source-map-support"
 
 installSourceMap()
 
-export var config = {
-  hostname: '127.0.0.1',
+export let config = {
+  hostname: "127.0.0.1",
   port: 80,
   root: ".",
   fileTypePatterns: {
@@ -18,9 +18,9 @@ export var config = {
   }
 }
 const configFileName = "homestreaming-config.json"
-function findConfig() {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url))
-  let curDir = path.dirname(__dirname)
+function findConfig(): void {
+  const _dirname = path.dirname(fileURLToPath(import.meta.url))
+  const curDir = path.dirname(_dirname)
   let configFile: string | null = findFileInFileTree(curDir, configFileName)
   if (configFile == null) {
     configFile = path.join(curDir, configFileName)

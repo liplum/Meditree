@@ -10,8 +10,9 @@
     "module": "ES2022",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "strictNullChecks": true
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
   ]
 }
