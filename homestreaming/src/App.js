@@ -2,7 +2,26 @@ import logo from './logo.svg'
 import './App.css'
 import React from 'react'
 import { FileTreeNavigation } from './navigation/Tree.js'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+
 const url = "http://localhost/list"
+const theme = createTheme({
+  typography: {
+    fontSize: 17.5,
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+      '"Apple Color Emoji"',
+      '"Segoe UI Emoji"',
+      '"Segoe UI Symbol"',
+    ].join(','),
+  },
+});
 export class HomestreamingApp extends React.Component {
 
   constructor(props) {
@@ -19,17 +38,20 @@ export class HomestreamingApp extends React.Component {
         console.log(data)
       })
   }
+
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <FileTreeNavigation fileTree={this.state.fileTree}></FileTreeNavigation>
-        </header>
-      </div >
-    );
+      <ThemeProvider theme={theme}>
+        <div className="App">
+          <header className="App-header">
+            <div class="wrapper">
+              <div class="sidebar">
+                <FileTreeNavigation fileTree={this.state.fileTree}></FileTreeNavigation>
+              </div>
+            </div>
+          </header>
+        </div >
+      </ThemeProvider>
+    )
   }
 }

@@ -32,7 +32,27 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
+}
+
+.wrapper .sidebar {
+  background: rgb(5, 68, 104);
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 25%;
+  height: 100%;
+  padding: 20px;
+  transition: all 0.5s ease;
+}
+
+.file-tree-navigation-item {
+  font-size: medium;
+}
+
+.MuiTreeItem-label {
+  text-align: left;
 }
