@@ -25,7 +25,9 @@ export class FileTreeNavigation extends React.Component {
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
       defaultExpanded={["root"]}
-      sx={{ height: "100%", flexGrow: 1, overflowY: 'auto' }}
+      sx={{
+        height: "100%", flexGrow: 1,
+      }}
     >
       {renderTree(renderObject)}
     </TreeView>

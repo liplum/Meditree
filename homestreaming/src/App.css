@@ -38,19 +38,22 @@
   }
 }
 
-.wrapper .sidebar {
+.file-tree {
   background: rgb(5, 68, 104);
   position: fixed;
-  top: 0;
   left: 0;
-  min-width: 25%;
+  float: left;
+  width: 30%;
   height: 100%;
   padding: 20px;
   transition: all 0.5s ease;
 }
 
-.file-tree-navigation-item {
-  font-size: medium;
+.playerground {
+  right: 0;
+  float: right;
+  width: 70%;
+  height: 100%;
 }
 
 .MuiTreeItem-label {
