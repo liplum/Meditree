@@ -4,7 +4,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import TreeItem from '@mui/lab/TreeItem'
 
-
 export class FileTreeNavigation extends React.Component {
 
   render() {
@@ -46,6 +45,7 @@ function createTreeViewRenderObject(fileTree) {
   function createNode(parentUrl, children, fileTree) {
     for (const [name, file] of Object.entries(fileTree)) {
       let curId = `${id++}`
+      const path = parentUrl.length > 0 ? `${parentUrl}/${name}` : name
       if (file instanceof Object) {
         // if file is an object, it presents a directory
         const myChildren = []
@@ -55,10 +55,11 @@ function createTreeViewRenderObject(fileTree) {
           children: myChildren
         }
         children.push(obj)
-        createNode(`${parentUrl}/${name}`, myChildren, file)
+        createNode(path, myChildren, file)
       } else {
         id2File.set(curId, {
-          path: `${parentUrl}/${name}`,
+          name,
+          path: path,
           type: file,
         })
         // otherwise, it presents a file

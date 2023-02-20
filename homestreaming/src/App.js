@@ -10,19 +10,21 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import MailIcon from '@mui/icons-material/Mail';
 import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 
-const backendUrl = "http://localhost"
-const backendListUrl = `${backendUrl}/list`
+const backend = {
+  url: "http://localhost",
+  reolsveFileUrl: function (path) {
+    return encodeURI(`${this.fileUrl}/${path}`)
+  }
+}
+Object.assign(backend, {
+  listUrl: `${backend.url}/list`,
+  fileUrl: `${backend.url}/file`
+})
+
 const theme = createTheme({
   typography: {
     fontSize: 17.5,
@@ -49,7 +51,7 @@ export class HomestreamingApp extends React.Component {
       selectedFile: null,
       mobileOpen: false,
     }
-    fetch(backendListUrl)
+    fetch(backend.listUrl)
       .then((response) => response.json())
       .then((data) => {
         this.setState({
@@ -59,8 +61,10 @@ export class HomestreamingApp extends React.Component {
       })
   }
 
-  onSelectFile = (fileName) => {
-    console.log(fileName)
+  onSelectFile = (file) => {
+    this.setState({
+      selectedFile: file
+    })
   }
 
   render() {
@@ -74,20 +78,33 @@ export class HomestreamingApp extends React.Component {
         </FileTreeNavigation>
       </div>
     )
-    const content = (
-      <VideoPlayer></VideoPlayer>
-    )
+
+    let content = null
+    const selectedFile = this.state.selectedFile
+    if (selectedFile) {
+      const url = backend.reolsveFileUrl(selectedFile.path)
+      content = (
+        <VideoPlayer url={url}></VideoPlayer>
+      )
+    } else {
+      content = (
+        <h1>No file selected</h1>
+      )
+    }
+
+    const title = selectedFile ? selectedFile.name : "No file selected"
     return (
       <ThemeProvider theme={theme}>
         <FileTreeNavigationDrawer
-          drawer={drawer} content={content}
+          drawer={drawer}
+          content={content}
+          title={title}
         />
       </ThemeProvider>
     )
   }
 }
 
-const drawerWidth = 240
 
 class FileTreeNavigationDrawer extends React.Component {
   constructor(props) {
@@ -97,6 +114,7 @@ class FileTreeNavigationDrawer extends React.Component {
     }
   }
   render() {
+    const drawerWidth = 350
     const { window } = this.props;
     const container = window !== undefined ? () => window().document.body : undefined;
 
@@ -127,23 +145,21 @@ class FileTreeNavigationDrawer extends React.Component {
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" noWrap component="div">
-              Responsive drawer
+              {this.props.title}
             </Typography>
           </Toolbar>
         </AppBar>
         <Box
           component="nav"
           sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-          aria-label="mailbox folders"
         >
-          {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-          <Drawer
+          <Drawer // for small screens
             container={container}
             variant="temporary"
             open={this.state.mobileOpen}
             onClose={handleDrawerToggle}
             ModalProps={{
-              keepMounted: true, // Better open performance on mobile.
+              keepMounted: true,
             }}
             sx={{
               display: { xs: 'block', sm: 'none' },
@@ -152,7 +168,7 @@ class FileTreeNavigationDrawer extends React.Component {
           >
             {this.props.drawer}
           </Drawer>
-          <Drawer
+          <Drawer // for large screens
             variant="permanent"
             sx={{
               display: { xs: 'none', sm: 'block' },
