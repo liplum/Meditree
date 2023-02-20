@@ -1,4 +1,5 @@
 import { VideoPlayer } from "./Video"
+import './Playground.css'
 
 const type2Render = {
   "video/mp4": renderVideo,
@@ -18,10 +19,11 @@ export function FileDisplayBoard(props) {
     return <h1>Cannot display this file.</h1>
   }
 }
+
 function renderVideo(file) {
-  return <VideoPlayer url={file.url} />
+  return <VideoPlayer url={file.url} className="video-view" />
 }
 
 function renderImage(file) {
-  return <img src={file.url} alt={file.path} />
+  return <img src={file.url} alt={file.path} className="img-view" />
 }

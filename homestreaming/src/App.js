@@ -1,9 +1,7 @@
-import logo from './logo.svg'
 import './App.css'
 import React from 'react'
 import { FileTreeNavigation } from './navigation/Tree.js'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
-import { VideoPlayer } from './playground/Video.js'
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -42,7 +40,7 @@ const theme = createTheme({
       '"Segoe UI Symbol"',
     ].join(','),
   },
-});
+})
 export class HomestreamingApp extends React.Component {
 
   constructor(props) {
