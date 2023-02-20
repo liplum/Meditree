@@ -2,40 +2,29 @@ import React from 'react'
 import TreeView from '@mui/lab/TreeView'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import { styled } from '@mui/material/styles';
 import TreeItem from '@mui/lab/TreeItem'
 
-const useTreeItemStyles = styled({
-  label: {
-    fontSize: 25,
-  }
-})
-
-function FileTreeTreeItem(props) {
-  const classes = useTreeItemStyles(props);
-  return <TreeItem {...props} classes={{ label: classes.label }} />;
-}
 
 export class FileTreeNavigation extends React.Component {
 
-  constructor(props) {
-    super(props)
-    console.log(this.renderObject)
-  }
-
   render() {
-    const renderObject = createTreeViewRenderObject(this.props.fileTree)
+    const { renderObject, id2File } = createTreeViewRenderObject(this.props.fileTree)
     const renderTree = (nodes) => (
-      <FileTreeTreeItem key={nodes.id} nodeId={nodes.id} label={nodes.name}>
+      <TreeItem key={nodes.id} nodeId={nodes.id} label={nodes.name}>
         {Array.isArray(nodes.children)
           ? nodes.children.map((node) => renderTree(node))
           : null}
-      </FileTreeTreeItem>
+      </TreeItem>
     );
     return <TreeView
       aria-label="file system navigator"
+      onNodeSelect={(event, nodeId) => {
+        const file = id2File.get(nodeId)
+        if (file) this.props.onSelectFile?.(file)
+      }}
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
+      defaultExpanded={["root"]}
       sx={{ height: "100%", flexGrow: 1, overflowY: 'auto' }}
     >
       {renderTree(renderObject)}
@@ -47,11 +36,12 @@ function createTreeViewRenderObject(fileTree) {
   const rootChildren = []
   const rootObj = {
     id: "root",
-    name: "MyDirectory",
+    name: "My Directory",
     children: rootChildren
   }
   let id = 1
-  function createNode(children, fileTree) {
+  const id2File = new Map()
+  function createNode(parentUrl, children, fileTree) {
     for (const [name, file] of Object.entries(fileTree)) {
       let curId = `${id++}`
       if (file instanceof Object) {
@@ -63,8 +53,12 @@ function createTreeViewRenderObject(fileTree) {
           children: myChildren
         }
         children.push(obj)
-        createNode(myChildren, file)
+        createNode(`${parentUrl}/${name}`, myChildren, file)
       } else {
+        id2File.set(curId, {
+          path: `${parentUrl}/${name}`,
+          type: file,
+        })
         // otherwise, it presents a file
         children.push({
           id: curId,
@@ -73,6 +67,9 @@ function createTreeViewRenderObject(fileTree) {
       }
     }
   }
-  createNode(rootChildren, fileTree)
-  return rootObj
+  createNode("", rootChildren, fileTree)
+  return {
+    renderObject: rootObj,
+    id2File
+  }
 }

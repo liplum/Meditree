@@ -27,7 +27,8 @@ export class HomestreamingApp extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      fileTree: {}
+      fileTree: {},
+      selectedFile: null,
     }
     fetch(url)
       .then((response) => response.json())
@@ -39,14 +40,21 @@ export class HomestreamingApp extends React.Component {
       })
   }
 
+  onSelectFile = (fileName) => {
+    console.log(fileName)
+  }
+
   render() {
     return (
       <ThemeProvider theme={theme}>
         <div className="App">
           <header className="App-header">
-            <div class="wrapper">
-              <div class="sidebar">
-                <FileTreeNavigation fileTree={this.state.fileTree}></FileTreeNavigation>
+            <div className="wrapper">
+              <div className="sidebar">
+                <FileTreeNavigation
+                  onSelectFile={this.onSelectFile}
+                  fileTree={this.state.fileTree}>
+                </FileTreeNavigation>
               </div>
             </div>
           </header>
