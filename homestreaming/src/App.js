@@ -13,6 +13,7 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import { FileDisplayBoard } from './playground/FileDisplayBoard'
 
 const backend = {
   url: "http://localhost",
@@ -79,18 +80,13 @@ export class HomestreamingApp extends React.Component {
       </div>
     )
 
-    let content = null
     const selectedFile = this.state.selectedFile
     if (selectedFile) {
-      const url = backend.reolsveFileUrl(selectedFile.path)
-      content = (
-        <VideoPlayer url={url}></VideoPlayer>
-      )
-    } else {
-      content = (
-        <h1>No file selected</h1>
-      )
+      selectedFile.url = backend.reolsveFileUrl(selectedFile.path)
     }
+    let content = (
+      <FileDisplayBoard file={selectedFile}></FileDisplayBoard>
+    )
 
     const title = selectedFile ? selectedFile.name : "No file selected"
     return (
