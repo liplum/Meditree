@@ -14,7 +14,7 @@ import Typography from '@mui/material/Typography';
 import { FileDisplayBoard } from './playground/FileDisplayBoard'
 
 const backend = {
-  url: "http://localhost",
+  url: process.env.REACT_APP_BACKEND_URL,
   reolsveFileUrl: function (path) {
     return encodeURI(`${this.fileUrl}/${path}`)
   }
