@@ -12,7 +12,7 @@ npm install
 ```
 
 Then you should directly run the backend, and a configuration file,
-called `homestreaming-config.json`, will be created.
+called `homestreaming-config.json`, will be created in the root.
 
 ```shell
 npm run serve
@@ -28,6 +28,8 @@ Run `npm install` in `homstreaming` subprojects.
 cd homestreaming
 npm install
 ```
+
+Create a `.env.local` file in the root, and config it based on `.env` file.
 
 Then you should setup the environment variables: `HOST` and `PORT`.
 
