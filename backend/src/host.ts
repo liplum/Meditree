@@ -49,7 +49,7 @@ export class HostTree {
   }
 
   async rebuildFileTree(): Promise<void> {
-    const tree = await FileTree.createFileTreeAsync({
+    const tree = await FileTree.createFrom({
       root: this.root,
       classifier: (path) => this.classifyByFilePath(path),
       allowNullFileType: false,

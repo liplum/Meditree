@@ -34,7 +34,9 @@ export function findFileInFileTree(dir: string, fileName: string): string | null
   }
   return null
 }
-export const lstatAsync = promisify(fs.stat)
+export const statAsync = promisify(fs.stat)
+export const readFileAsync = promisify(fs.readFile)
+export const readdirAsync = promisify(fs.readdir)
 export type PathFilter = (path: string) => boolean
 export type FileClassifier = (path: string) => FileType
 const alwaysNull: FileClassifier = (_) => null
@@ -113,20 +115,20 @@ export class FileTree {
     this.name2File.delete(name)
   }
 
-  static async createFileTreeAsync(options: CreateFileTreeOptions): Promise<FileTree> {
+  static async createFrom(options: CreateFileTreeOptions): Promise<FileTree> {
     const root = options.root
-    const stats = await lstatAsync(root)
+    const stats = await statAsync(root)
     if (!stats.isDirectory()) {
       throw Error(`${root} isn't a directory`)
     }
     const tree = new FileTree(root)
     tree.classifier = options.classifier
     tree.allowNullFileType = options.allowNullFileType
-    await this.iterateFileTreeAsync(tree, root, options.pruned)
+    await this.iterate(tree, root, options.pruned)
     return tree
   }
 
-  createSubTree(rootPath: string): FileTree {
+  createSubtree(rootPath: string): FileTree {
     const subtree = new FileTree(rootPath)
     subtree.allowNullFileType = this.allowNullFileType
     subtree.classifier = this.classifier
@@ -134,43 +136,28 @@ export class FileTree {
     return subtree
   }
 
-  private static async iterateFileTreeAsync(
+  private static async iterate(
     tree: FileTree,
     currentDirectory: string,
     pruned: boolean = false,
   ): Promise<void> {
-    const fileNames = fs.readdirSync(currentDirectory)
-    for (const fileName of fileNames) {
+    const files = await readdirAsync(currentDirectory, { withFileTypes: true })
+    for (const file of files) {
+      const fileName = file.name
       const filePath = path.join(currentDirectory, fileName)
-      const stats = await lstatAsync(filePath)
-      if (stats.isFile()) {
+      if (file.isFile()) {
         const fileType = tree.classifier(filePath)
         if (tree.allowNullFileType || fileType != null) {
           const file = new File(filePath, fileType)
           tree.addFileSystemEntry(fileName, file)
         }
-      } else if (stats.isDirectory()) {
-        const subtree = tree.createSubTree(filePath)
+      } else if (file.isDirectory()) {
+        const subtree = tree.createSubtree(filePath)
         tree.addFileSystemEntry(fileName, subtree)
-        await this.iterateFileTreeAsync(subtree, filePath, pruned)
+        await this.iterate(subtree, filePath, pruned)
         if (pruned && subtree.subtreeChildrenCount === 0) {
           tree.removeFileSystemEntry(fileName)
         }
-      }
-    }
-  }
-
-  printTree(print = console.log, indentStep: number = 2): void {
-    this.printTreeWithIntent(print, 0, indentStep)
-  }
-
-  private printTreeWithIntent(print = console.log, indent: number, indentStep: number = 2): void {
-    print(" ".repeat(indent) + this.name + "\\")
-    for (const [name, file] of this.name2File.entries()) {
-      if (file instanceof FileTree) {
-        file.printTreeWithIntent(print, indent + indentStep, indentStep)
-      } else if (file instanceof File) {
-        print(" ".repeat(indent + indentStep) + name)
       }
     }
   }
