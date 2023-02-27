@@ -101,6 +101,7 @@ export class HomestreamingApp extends React.Component {
       searchPrompt: prompt
     })
   }
+
   render() {
     const drawer = (
       <div>

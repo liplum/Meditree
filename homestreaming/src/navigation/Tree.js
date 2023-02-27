@@ -9,22 +9,31 @@ export class FileTreeNavigation extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      selected: []
+      selected: [],
     }
     this.onGoNext = this.onGoNext.bind(this)
     this.onGoPrevious = this.onGoPrevious.bind(this)
-    let fileTree = props.fileTree
-    if (props.searchPrompt) {
-      fileTree = filterFileTree(fileTree, props.searchPrompt)
-    }
-    const delegate = createFileTreeDelegate(fileTree)
-    this.delegate = delegate
-    console.log(delegate)
   }
 
   componentDidMount() {
     emitter.on("go-next", this.onGoNext)
     emitter.on("go-previous", this.onGoPrevious)
+    this.updateAndNotify()
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.searchPrompt !== this.props.searchPrompt) {
+      this.updateAndNotify()
+    }
+  }
+
+  updateAndNotify = () => {
+    let fileTree = this.props.fileTree
+    if (this.props.searchPrompt) {
+      fileTree = filterFileTree(fileTree, this.props.searchPrompt)
+    }
+    this.delegate = createFileTreeDelegate(fileTree)
+    this.forceUpdate()
   }
 
   componentWillUnmount() {
@@ -32,12 +41,47 @@ export class FileTreeNavigation extends React.Component {
     emitter.off("go-previous", this.onGoPrevious)
   }
 
+  onNodeSelect(id2File, nodeId) {
+    this.setState({
+      selected: nodeId
+    })
+    if (typeof nodeId === "string") {
+      nodeId = parseInt(nodeId)
+      if (isNaN(nodeId)) return
+    }
+    const file = id2File.get(nodeId)
+    if (file) this.props.onSelectFile?.({
+      nodeId,
+      ...file,
+    })
+  }
+
+  render() {
+    const delegate = this.delegate
+    if (!delegate) return
+    const renderObject = buildFileTreeView(delegate.tree)
+    return <TreeView
+      aria-label="file system navigator"
+      onNodeSelect={(_, nodeId) => this.onNodeSelect(this.delegate.id2File, nodeId)}
+      defaultCollapseIcon={<ExpandMoreIcon />}
+      defaultExpandIcon={<ChevronRightIcon />}
+      defaultExpanded={["0"]}
+      selected={this.state.selected}
+      sx={{
+        height: "100%", flexGrow: 1,
+      }}
+    >
+      {renderObject}
+    </TreeView>
+  }
+
   onGoPrevious(curFile) {
     if (!(curFile && "nodeId" in curFile)) return
+    const delegate = this.delegate
     const findPreviousFileTilEnd = () => {
       let previousId = curFile.nodeId - 1
       while (previousId >= 0) {
-        const previous = this.delegate.id2File.get(previousId)
+        const previous = delegate.id2File.get(previousId)
         if (!previous) {
           previousId--
         } else {
@@ -57,10 +101,11 @@ export class FileTreeNavigation extends React.Component {
 
   onGoNext(curFile) {
     if (!(curFile && "nodeId" in curFile)) return
+    const delegate = this.delegate
     const findNextFileTilEnd = () => {
       let nextId = curFile.nodeId + 1
-      while (nextId < this.delegate.maxId) {
-        const next = this.delegate.id2File.get(nextId)
+      while (nextId < this.state.delegate.maxId) {
+        const next = delegate.id2File.get(nextId)
         if (!next) {
           nextId++
         } else {
@@ -87,37 +132,6 @@ export class FileTreeNavigation extends React.Component {
       selected: [`${nodeId}`]
     })
   }
-
-  onNodeSelect(id2File, nodeId) {
-    this.setState({
-      selected: nodeId
-    })
-    if (typeof nodeId === "string") {
-      nodeId = parseInt(nodeId)
-      if (isNaN(nodeId)) return
-    }
-    const file = id2File.get(nodeId)
-    if (file) this.props.onSelectFile?.({
-      nodeId,
-      ...file,
-    })
-  }
-  render() {
-    const renderObject = buildFileTreeView(this.delegate.tree)
-    return <TreeView
-      aria-label="file system navigator"
-      onNodeSelect={(_, nodeId) => this.onNodeSelect(this.delegate.id2File, nodeId)}
-      defaultCollapseIcon={<ExpandMoreIcon />}
-      defaultExpandIcon={<ChevronRightIcon />}
-      defaultExpanded={["0"]}
-      selected={this.state.selected}
-      sx={{
-        height: "100%", flexGrow: 1,
-      }}
-    >
-      {renderObject}
-    </TreeView>
-  }
 }
 
 /**
@@ -125,6 +139,7 @@ export class FileTreeNavigation extends React.Component {
  */
 function filterFileTree(tree, searchPrompt) {
   const filteredTree = {}
+  console.log(tree)
   Object.entries(tree).forEach(([key, value]) => {
     if (key.toLowerCase().includes(searchPrompt.toLowerCase())) {
       filteredTree[key] = value
