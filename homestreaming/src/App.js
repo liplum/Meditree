@@ -158,6 +158,15 @@ export class HomestreamingApp extends React.Component {
           drawer={drawerContent}
           content={content}
           title={title}
+          onStarChange={(newIsStarred) => {
+            if (newIsStarred) {
+              astrology[selectedFile.path] = true
+            } else {
+              delete astrology[selectedFile.path]
+            }
+            window.localStorage.setItem("astrology", JSON.stringify(astrology))
+            this.forceUpdate()
+          }}
           selectedFile={this.state.selectedFile}
         />
       </ThemeProvider>
@@ -195,15 +204,7 @@ class FileTreeNavigationDrawer extends React.Component {
       <IconButton
         key="star"
         color="inherit"
-        onClick={() => {
-          if (starred) {
-            delete astrology[selectedFile.path]
-          } else {
-            astrology[selectedFile.path] = true
-          }
-          window.localStorage.setItem("astrology", JSON.stringify(astrology))
-          this.forceUpdate()
-        }}>
+        onClick={() => this.props.onStarChange?.(!starred)}>
         {starred ? <StarIcon /> : <StarBorderIcon />}
       </IconButton>
     ]
