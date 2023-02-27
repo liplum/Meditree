@@ -17,6 +17,8 @@ import { SearchBar } from './navigation/Search'
 import { Tooltip } from '@mui/material'
 import emitter from "./Event"
 
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 
 const backend = {
   url: process.env.REACT_APP_BACKEND_URL,
@@ -128,6 +130,12 @@ export class HomestreamingApp extends React.Component {
           drawer={drawer}
           content={content}
           title={title}
+          onGoPrevious={() => {
+            emitter.emit("go-previous", this.state.selectedFile)
+          }}
+          onGoNext={() => {
+            emitter.emit("go-next", this.state.selectedFile)
+          }}
         />
       </ThemeProvider>
     )
@@ -152,7 +160,6 @@ class FileTreeNavigationDrawer extends React.Component {
         mobileOpen: !this.state.mobileOpen
       })
     }
-
     return (
       <Box sx={{ display: 'flex' }}>
         <CssBaseline />
@@ -169,15 +176,20 @@ class FileTreeNavigationDrawer extends React.Component {
               aria-label="open drawer"
               edge="start"
               onClick={handleDrawerToggle}
-              sx={{ mr: 2, display: { sm: 'none' } }}
-            >
+              sx={{ mr: 2, display: { sm: 'none' } }}>
               <MenuIcon />
             </IconButton>
             <Tooltip title={this.props.title}>
-              <Typography variant="h6" noWrap component="div">
+              <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                 {this.props.title}
               </Typography>
             </Tooltip>
+            <IconButton color="inherit" onClick={this.props.onGoPrevious}>
+              <ArrowBackIcon />
+            </IconButton>
+            <IconButton color="inherit" onClick={this.props.onGoNext}>
+              <ArrowForwardIcon />
+            </IconButton>
           </Toolbar>
         </AppBar>
         <Box
