@@ -56,6 +56,8 @@ export class HomestreamingApp extends React.Component {
       mobileOpen: false,
       searchPrompt: "",
     }
+  }
+  componentDidMount() {
     fetch(backend.listUrl)
       .then((response) => response.json())
       .then((data) => {
