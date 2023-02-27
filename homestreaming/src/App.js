@@ -15,6 +15,8 @@ import { FileDisplayBoard } from './playground/FileDisplayBoard'
 
 import { SearchBar } from './navigation/Search'
 import { Tooltip } from '@mui/material'
+import emitter from "./Event"
+
 
 const backend = {
   url: process.env.REACT_APP_BACKEND_URL,
@@ -57,9 +59,11 @@ export class HomestreamingApp extends React.Component {
       mobileOpen: false,
       searchPrompt: "",
     }
+    this.handleKeyPress = this.handleKeyPress.bind(this)
   }
 
   componentDidMount() {
+    document.addEventListener('keydown', this.handleKeyPress);
     fetch(backend.listUrl)
       .then((response) => response.json())
       .then((data) => {
@@ -74,6 +78,19 @@ export class HomestreamingApp extends React.Component {
       selectedFile: file
     })
   }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyPress);
+  }
+
+  handleKeyPress(event) {
+    if (event.key === "ArrowLeft") {
+      emitter.emit("go-previous", this.state.selectedFile)
+    } else if (event.key === "ArrowRight") {
+      emitter.emit("go-next", this.state.selectedFile)
+    }
+  }
+
   onSearchPromptChange(prompt) {
     this.setState({
       searchPrompt: prompt
