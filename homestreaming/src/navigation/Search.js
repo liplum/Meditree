@@ -47,6 +47,9 @@ export class SearchBar extends React.Component {
       </SearchIconWrapper>
       <StyledInputBase
         placeholder="Search…"
+        onChange = {(e)=>{
+          this.props.onPromptChange?.(e.target.value)
+        }}
         inputProps={{ 'aria-label': 'search' }}
       />
     </Search>

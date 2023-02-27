@@ -54,6 +54,7 @@ export class HomestreamingApp extends React.Component {
       fileTree: {},
       selectedFile: null,
       mobileOpen: false,
+      searchPrompt: "",
     }
     fetch(backend.listUrl)
       .then((response) => response.json())
@@ -65,21 +66,28 @@ export class HomestreamingApp extends React.Component {
       })
   }
 
-  onSelectFile = (file) => {
+  onSelectFile(file) {
     this.setState({
       selectedFile: file
     })
   }
-
+  onSearchPromptChange(prompt) {
+    this.setState({
+      searchPrompt: prompt
+    })
+  }
   render() {
     const drawer = (
       <div>
         <Toolbar>
-          <SearchBar></SearchBar>
+          <SearchBar
+            onPropmtChange={(prompt) => this.onSearchPromptChange(prompt)}>
+          </SearchBar>
         </Toolbar>
         <Divider />
         <FileTreeNavigation
-          onSelectFile={this.onSelectFile}
+          onSelectFile={(file) => this.onSelectFile(file)}
+          searchPrompt={this.searchPrompt}
           fileTree={this.state.fileTree}>
         </FileTreeNavigation>
       </div>
