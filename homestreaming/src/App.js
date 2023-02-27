@@ -14,6 +14,7 @@ import Typography from '@mui/material/Typography'
 import { FileDisplayBoard } from './playground/FileDisplayBoard'
 
 import { SearchBar } from './navigation/Search'
+import { Tooltip } from '@mui/material'
 
 const backend = {
   url: process.env.REACT_APP_BACKEND_URL,
@@ -65,7 +66,6 @@ export class HomestreamingApp extends React.Component {
         this.setState({
           fileTree: data
         })
-        console.log(data)
       })
   }
 
@@ -156,9 +156,11 @@ class FileTreeNavigationDrawer extends React.Component {
             >
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" noWrap component="div">
-              {this.props.title}
-            </Typography>
+            <Tooltip title={this.props.title}>
+              <Typography variant="h6" noWrap component="div">
+                {this.props.title}
+              </Typography>
+            </Tooltip>
           </Toolbar>
         </AppBar>
         <Box

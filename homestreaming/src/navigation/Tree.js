@@ -1,10 +1,9 @@
 import React from 'react'
 import TreeView from '@mui/lab/TreeView'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import TreeItem from '@mui/lab/TreeItem'
-
+import Tooltip from '@mui/material/Tooltip'
 
 export class FileTreeNavigation extends React.Component {
 
@@ -57,16 +56,16 @@ function createTreeViewRenderObject(rootFileTree) {
     let curId = `${id++}`
     // if file is an object, it presents a directory
     if (fsEntry instanceof Object) {
+      let path
+      if (fsEntry === rootFileTree) {
+        path = ""
+      } else if (parentUrl.length > 0) {
+        path = `${parentUrl}/${name}`
+      } else {
+        path = name
+      }
       const children = []
       for (const [fileName, file] of Object.entries(fsEntry)) {
-        let path
-        if (fsEntry === rootFileTree) {
-          path = ""
-        } else if (parentUrl.length > 0) {
-          path = `${parentUrl}/${name}`
-        } else {
-          path = name
-        }
         children.push(createNode(path, fileName, file))
       }
       return <TreeItem key={curId} nodeId={curId} label={name}>
@@ -80,12 +79,14 @@ function createTreeViewRenderObject(rootFileTree) {
         path: path,
         type: fsEntry,
       })
-      return <TreeItem key={curId} nodeId={curId} label={name} />
+      return <Tooltip title={path}>
+        <TreeItem key={curId} nodeId={curId} label={name} />
+      </Tooltip>
     }
   }
   const rootObj = createNode("", "My Directory", rootFileTree)
   return {
     renderObject: rootObj,
-    id2File
+    id2File,
   }
 }
