@@ -20,6 +20,9 @@ import emitter from "./Event"
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 
+import StarIcon from '@mui/icons-material/Star'
+import StarBorderIcon from '@mui/icons-material/StarBorder'
+
 const backend = {
   url: process.env.REACT_APP_BACKEND_URL,
   reolsveFileUrl(path) {
@@ -130,12 +133,7 @@ export class HomestreamingApp extends React.Component {
           drawer={drawer}
           content={content}
           title={title}
-          onGoPrevious={() => {
-            emitter.emit("go-previous", this.state.selectedFile)
-          }}
-          onGoNext={() => {
-            emitter.emit("go-next", this.state.selectedFile)
-          }}
+          selectedFile={this.state.selectedFile}
         />
       </ThemeProvider>
     )
@@ -150,6 +148,41 @@ class FileTreeNavigationDrawer extends React.Component {
       mobileOpen: false,
     }
   }
+
+  buildAppBarActions() {
+    const selectedFile = this.props.selectedFile
+    if (!selectedFile) return
+    const astrology = JSON.parse(window.localStorage.getItem("astrology") ?? "{}")
+    const starred = astrology[selectedFile.path]
+    return [
+      <IconButton color="inherit" onClick={() => {
+        emitter.emit("go-previous", this.props.selectedFile)
+      }}>
+        <ArrowBackIcon />
+      </IconButton>,
+
+      <IconButton color="inherit" onClick={() => {
+        emitter.emit("go-next", this.props.selectedFile)
+      }}>
+        <ArrowForwardIcon />
+      </IconButton>,
+
+      <IconButton
+        color="inherit"
+        onClick={() => {
+          if (starred) {
+            delete astrology[selectedFile.path]
+          } else {
+            astrology[selectedFile.path] = true
+          }
+          window.localStorage.setItem("astrology", JSON.stringify(astrology))
+          this.forceUpdate()
+        }}>
+        {starred ? <StarIcon /> : <StarBorderIcon />}
+      </IconButton>
+    ]
+  }
+
   render() {
     const drawerWidth = 350
     const { window } = this.props;
@@ -184,12 +217,7 @@ class FileTreeNavigationDrawer extends React.Component {
                 {this.props.title}
               </Typography>
             </Tooltip>
-            <IconButton color="inherit" onClick={this.props.onGoPrevious}>
-              <ArrowBackIcon />
-            </IconButton>
-            <IconButton color="inherit" onClick={this.props.onGoNext}>
-              <ArrowForwardIcon />
-            </IconButton>
+            {this.buildAppBarActions()}
           </Toolbar>
         </AppBar>
         <Box
