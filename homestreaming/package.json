@@ -22,7 +22,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "package": "webpack --mode production"
   },
   "eslintConfig": {
     "extends": [
@@ -43,5 +44,9 @@
     ]
   },
   "devDependencies": {
+    "babel-loader": "^9.1.2",
+    "css-loader": "^6.7.3",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   }
 }
