@@ -79,9 +79,7 @@ function createTreeViewRenderObject(rootFileTree) {
         path: path,
         type: fsEntry,
       })
-      return <Tooltip title={path}>
-        <TreeItem key={curId} nodeId={curId} label={name} />
-      </Tooltip>
+      return <TreeItem key={curId} nodeId={curId} label={name} />
     }
   }
   const rootObj = createNode("", "My Directory", rootFileTree)
