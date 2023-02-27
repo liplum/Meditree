@@ -2,16 +2,18 @@ import './App.css'
 import React from 'react'
 import { FileTreeNavigation } from './navigation/Tree.js'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import CssBaseline from '@mui/material/CssBaseline';
-import Divider from '@mui/material/Divider';
-import Drawer from '@mui/material/Drawer';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
+import AppBar from '@mui/material/AppBar'
+import Box from '@mui/material/Box'
+import CssBaseline from '@mui/material/CssBaseline'
+import Divider from '@mui/material/Divider'
+import Drawer from '@mui/material/Drawer'
+import IconButton from '@mui/material/IconButton'
+import MenuIcon from '@mui/icons-material/Menu'
+import Toolbar from '@mui/material/Toolbar'
+import Typography from '@mui/material/Typography'
 import { FileDisplayBoard } from './playground/FileDisplayBoard'
+
+import { SearchBar } from './navigation/Search'
 
 const backend = {
   url: process.env.REACT_APP_BACKEND_URL,
@@ -25,6 +27,9 @@ Object.assign(backend, {
 })
 
 const theme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
   typography: {
     fontSize: 17.5,
     fontFamily: [
@@ -69,7 +74,9 @@ export class HomestreamingApp extends React.Component {
   render() {
     const drawer = (
       <div>
-        <Toolbar />
+        <Toolbar>
+          <SearchBar></SearchBar>
+        </Toolbar>
         <Divider />
         <FileTreeNavigation
           onSelectFile={this.onSelectFile}
