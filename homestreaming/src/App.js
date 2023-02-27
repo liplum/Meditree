@@ -63,6 +63,7 @@ export class HomestreamingApp extends React.Component {
       selectedFile: null,
       mobileOpen: false,
       searchPrompt: "",
+      onlySearchStarred: false,
     }
     this.handleKeyPress = this.handleKeyPress.bind(this)
   }
@@ -104,9 +105,29 @@ export class HomestreamingApp extends React.Component {
   }
 
   render() {
-    const drawer = (
+    const onlySearchStarred = this.state.onlySearchStarred
+    const astrology = JSON.parse(window.localStorage.getItem("astrology") ?? "{}")
+    const filterByPrompt = (file) => {
+      if (onlySearchStarred && !astrology[file.path]) {
+        return false
+      }
+      const searchPrompt = this.state.searchPrompt
+      if (!searchPrompt) return true
+      return file.path.toLowerCase().includes(searchPrompt.toLocaleLowerCase())
+    }
+    const drawerContent = (
       <div>
         <Toolbar>
+          <IconButton
+            key="star"
+            color="inherit"
+            onClick={() => {
+              this.setState({
+                onlySearchStarred: !onlySearchStarred
+              })
+            }}>
+            {onlySearchStarred ? <StarIcon /> : <StarBorderIcon />}
+          </IconButton>
           <SearchBar
             onPromptChange={(prompt) => this.onSearchPromptChange(prompt)}>
           </SearchBar>
@@ -114,7 +135,8 @@ export class HomestreamingApp extends React.Component {
         <Divider />
         <FileTreeNavigation
           onSelectFile={(file) => this.onSelectFile(file)}
-          searchPrompt={this.state.searchPrompt}
+          astrology={astrology}
+          searchDelegate={filterByPrompt}
           fileTree={this.state.fileTree}>
         </FileTreeNavigation>
       </div>
@@ -132,7 +154,8 @@ export class HomestreamingApp extends React.Component {
     return (
       <ThemeProvider theme={theme}>
         <FileTreeNavigationDrawer
-          drawer={drawer}
+          astrology={astrology}
+          drawer={drawerContent}
           content={content}
           title={title}
           selectedFile={this.state.selectedFile}
@@ -154,7 +177,7 @@ class FileTreeNavigationDrawer extends React.Component {
   buildAppBarActions() {
     const selectedFile = this.props.selectedFile
     if (!selectedFile) return
-    const astrology = JSON.parse(window.localStorage.getItem("astrology") ?? "{}")
+    const astrology = this.props.astrology
     const starred = astrology[selectedFile.path]
     return [
       <IconButton key="go-previous" color="inherit" onClick={() => {

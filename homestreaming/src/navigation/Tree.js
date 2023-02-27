@@ -24,7 +24,7 @@ export class FileTreeNavigation extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (
-      prevProps.searchPrompt !== this.props.searchPrompt ||
+      prevProps.searchDelegate !== this.props.searchDelegate ||
       prevProps.fileTree !== this.props.fileTree
     ) {
       this.updateAndNotify()
@@ -33,9 +33,9 @@ export class FileTreeNavigation extends React.Component {
 
   updateAndNotify = () => {
     const delegate = createFileTreeDelegate(this.props.fileTree)
-    if (this.props.searchPrompt) {
-      const tree = filterFileTree(delegate.tree, this.props.searchPrompt,
-        (id) => delegate.id2File.get(id).path
+    if (this.props.searchDelegate) {
+      const tree = filterFileTree(delegate.tree, this.props.searchDelegate,
+        (id) => delegate.id2File.get(id)
       )
       delegate.tree = tree
     }
@@ -145,17 +145,16 @@ export class FileTreeNavigation extends React.Component {
 /**
  *  @author chatGPT
  */
-function filterFileTree(tree, searchPrompt, getFullPathById) {
-  searchPrompt = searchPrompt.toLowerCase()
+function filterFileTree(tree, searchDelegate, getFileById) {
   function filterTree(tree) {
     // base case: leaf node
     if (!tree.children) {
-      const fullPath = getFullPathById(tree.id).toLowerCase()
-      return fullPath.includes(searchPrompt) ? tree : null
+      const file = getFileById(tree.id)
+      return searchDelegate(file) ? tree : null
     }
 
     // filter children recursively
-    const filteredChildren = tree.children.map(child => filterTree(child, prompt)).filter(child => child !== null)
+    const filteredChildren = tree.children.map(child => filterTree(child)).filter(child => child !== null)
 
     // return null if no children match
     if (filteredChildren.length === 0) {
@@ -169,7 +168,7 @@ function filterFileTree(tree, searchPrompt, getFullPathById) {
       children: filteredChildren
     }
   }
-  let root = filterTree(tree, searchPrompt)
+  let root = filterTree(tree)
   if (!root) {
     root = {
       ...tree,
