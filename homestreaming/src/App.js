@@ -17,7 +17,7 @@ import { SearchBar } from './navigation/Search'
 
 const backend = {
   url: process.env.REACT_APP_BACKEND_URL,
-  reolsveFileUrl: function (path) {
+  reolsveFileUrl(path) {
     return encodeURI(`${this.fileUrl}/${path}`)
   }
 }
@@ -57,7 +57,7 @@ export class HomestreamingApp extends React.Component {
       searchPrompt: "",
     }
   }
-  
+
   componentDidMount() {
     fetch(backend.listUrl)
       .then((response) => response.json())
@@ -84,13 +84,13 @@ export class HomestreamingApp extends React.Component {
       <div>
         <Toolbar>
           <SearchBar
-            onPropmtChange={(prompt) => this.onSearchPromptChange(prompt)}>
+            onPromptChange={(prompt) => this.onSearchPromptChange(prompt)}>
           </SearchBar>
         </Toolbar>
         <Divider />
         <FileTreeNavigation
           onSelectFile={(file) => this.onSelectFile(file)}
-          searchPrompt={this.searchPrompt}
+          searchPrompt={this.state.searchPrompt}
           fileTree={this.state.fileTree}>
         </FileTreeNavigation>
       </div>

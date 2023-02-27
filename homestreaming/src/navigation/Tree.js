@@ -9,7 +9,11 @@ import TreeItem from '@mui/lab/TreeItem'
 export class FileTreeNavigation extends React.Component {
 
   render() {
-    const { renderObject, id2File } = createTreeViewRenderObject(this.props.fileTree)
+    let fileTree = this.props.fileTree
+    if (this.props.searchPrompt) {
+      fileTree = filterFileTree(fileTree, this.props.searchPrompt)
+    }
+    const { renderObject, id2File } = createTreeViewRenderObject(fileTree)
     return <TreeView
       aria-label="file system navigator"
       onNodeSelect={(event, nodeId) => {
@@ -26,6 +30,24 @@ export class FileTreeNavigation extends React.Component {
       {renderObject}
     </TreeView>
   }
+}
+
+/**
+ *  @author chatGPT
+ */
+function filterFileTree(tree, searchPrompt) {
+  const filteredTree = {}
+  Object.entries(tree).forEach(([key, value]) => {
+    if (key.toLowerCase().includes(searchPrompt.toLowerCase())) {
+      filteredTree[key] = value
+    } else if (typeof value === "object" && value !== null) {
+      const subtree = filterFileTree(value, searchPrompt)
+      if (Object.keys(subtree).length > 0) {
+        filteredTree[key] = subtree
+      }
+    }
+  })
+  return filteredTree
 }
 
 function createTreeViewRenderObject(rootFileTree) {
