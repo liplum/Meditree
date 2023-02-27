@@ -26,35 +26,59 @@ export class FileTreeNavigation extends React.Component {
   }
 
   onGoPrevious(curFile) {
-    if (curFile && "id2File" in this && "nodeId" in curFile) {
-      const previousId = curFile.nodeId - 1
-      const previous = this.id2File.get(previousId)
-      if (previous) {
-        this.props.onSelectFile?.({
-          ...previous,
-          nodeId: previousId,
-        })
-        this.setState({
-          selected: [`${previousId}`]
-        })
+    if (!(curFile && "files" in this && "nodeId" in curFile)) return
+    const findPreviousFileTilEnd = () => {
+      let previousId = curFile.nodeId - 1
+      while (previousId >= 0) {
+        const previous = this.files.id2File.get(previousId)
+        if (!previous) {
+          previousId--
+        } else {
+          return {
+            id: previousId,
+            file: previous
+          }
+        }
       }
+    }
+    const previous = findPreviousFileTilEnd()
+    if (previous) {
+      const { id, file } = previous
+      this.selectFile(id, file)
     }
   }
 
   onGoNext(curFile) {
-    if (curFile && "id2File" in this && "nodeId" in curFile) {
-      const nextId = curFile.nodeId + 1
-      const next = this.id2File.get(nextId)
-      if (next) {
-        this.props.onSelectFile?.({
-          ...next,
-          nodeId: nextId,
-        })
-        this.setState({
-          selected: [`${nextId}`]
-        })
+    if (!(curFile && "files" in this && "nodeId" in curFile)) return
+    const findNextFileTilEnd = () => {
+      let nextId = curFile.nodeId + 1
+      while (nextId < this.files.maxId) {
+        const next = this.files.id2File.get(nextId)
+        if (!next) {
+          nextId++
+        } else {
+          return {
+            id: nextId,
+            file: next
+          }
+        }
       }
     }
+    const previous = findNextFileTilEnd()
+    if (previous) {
+      const { id, file } = previous
+      this.selectFile(id, file)
+    }
+  }
+
+  selectFile(nodeId, file) {
+    this.props.onSelectFile?.({
+      ...file,
+      nodeId: nodeId,
+    })
+    this.setState({
+      selected: [`${nodeId}`]
+    })
   }
 
   onNodeSelect(id2File, nodeId) {
@@ -76,11 +100,11 @@ export class FileTreeNavigation extends React.Component {
     if (this.props.searchPrompt) {
       fileTree = filterFileTree(fileTree, this.props.searchPrompt)
     }
-    const { renderObject, id2File } = createTreeViewRenderObject(fileTree)
-    this.id2File = id2File
+    const { renderObject, files } = createTreeViewRenderObject(fileTree)
+    this.files = files
     return <TreeView
       aria-label="file system navigator"
-      onNodeSelect={(_, nodeId) => this.onNodeSelect(id2File, nodeId)}
+      onNodeSelect={(_, nodeId) => this.onNodeSelect(files.id2File, nodeId)}
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
       defaultExpanded={["0"]}
@@ -149,6 +173,9 @@ function createTreeViewRenderObject(rootFileTree) {
   const rootObj = createNode("", "My Directory", rootFileTree)
   return {
     renderObject: rootObj,
-    id2File,
+    files: {
+      id2File,
+      maxId: id,
+    }
   }
 }
