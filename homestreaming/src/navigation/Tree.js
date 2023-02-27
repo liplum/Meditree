@@ -146,11 +146,12 @@ export class FileTreeNavigation extends React.Component {
  *  @author chatGPT
  */
 function filterFileTree(tree, searchPrompt, getFullPathById) {
+  searchPrompt = searchPrompt.toLowerCase()
   function filterTree(tree) {
     // base case: leaf node
     if (!tree.children) {
-      const fullPath = getFullPathById(tree.id).toLowerCase();
-      return fullPath.includes(searchPrompt.toLowerCase()) ? tree : null
+      const fullPath = getFullPathById(tree.id).toLowerCase()
+      return fullPath.includes(searchPrompt) ? tree : null
     }
 
     // filter children recursively
@@ -231,4 +232,42 @@ function buildFileTreeView(node) {
       ? node.children.map((n) => buildFileTreeView(n))
       : null}
   </TreeItem>
+}
+
+/**
+ *  @author chatGPT
+ */
+function fuzzyMatch(test, target) {
+  // Convert both strings to lowercase
+  test = test.toLowerCase()
+  target = target.toLowerCase()
+
+  // If the test string is empty, return 0
+  if (test.length === 0) {
+    return 0
+  }
+
+  // Initialize the matrix
+  const matrix = []
+  for (let i = 0; i <= target.length; i++) {
+    matrix[i] = [i]
+  }
+  for (let j = 0; j <= test.length; j++) {
+    matrix[0][j] = j
+  }
+
+  // Fill the matrix
+  for (let i = 1; i <= target.length; i++) {
+    for (let j = 1; j <= test.length; j++) {
+      if (target.charAt(i - 1) === test.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(matrix[i - 1][j - 1], matrix[i][j - 1], matrix[i - 1][j]) + 1
+      }
+    }
+  }
+
+  // Compute the possibility
+  var distance = matrix[target.length][test.length]
+  return 1 - distance / Math.max(target.length, test.length)
 }
