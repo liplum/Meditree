@@ -13,6 +13,13 @@ export class FileTreeNavigation extends React.Component {
     }
     this.onGoNext = this.onGoNext.bind(this)
     this.onGoPrevious = this.onGoPrevious.bind(this)
+    let fileTree = props.fileTree
+    if (props.searchPrompt) {
+      fileTree = filterFileTree(fileTree, props.searchPrompt)
+    }
+    const delegate = createFileTreeDelegate(fileTree)
+    this.delegate = delegate
+    console.log(delegate)
   }
 
   componentDidMount() {
@@ -26,11 +33,11 @@ export class FileTreeNavigation extends React.Component {
   }
 
   onGoPrevious(curFile) {
-    if (!(curFile && "files" in this && "nodeId" in curFile)) return
+    if (!(curFile && "nodeId" in curFile)) return
     const findPreviousFileTilEnd = () => {
       let previousId = curFile.nodeId - 1
       while (previousId >= 0) {
-        const previous = this.files.id2File.get(previousId)
+        const previous = this.delegate.id2File.get(previousId)
         if (!previous) {
           previousId--
         } else {
@@ -49,11 +56,11 @@ export class FileTreeNavigation extends React.Component {
   }
 
   onGoNext(curFile) {
-    if (!(curFile && "files" in this && "nodeId" in curFile)) return
+    if (!(curFile && "nodeId" in curFile)) return
     const findNextFileTilEnd = () => {
       let nextId = curFile.nodeId + 1
-      while (nextId < this.files.maxId) {
-        const next = this.files.id2File.get(nextId)
+      while (nextId < this.delegate.maxId) {
+        const next = this.delegate.id2File.get(nextId)
         if (!next) {
           nextId++
         } else {
@@ -96,15 +103,10 @@ export class FileTreeNavigation extends React.Component {
     })
   }
   render() {
-    let fileTree = this.props.fileTree
-    if (this.props.searchPrompt) {
-      fileTree = filterFileTree(fileTree, this.props.searchPrompt)
-    }
-    const { renderObject, files } = createTreeViewRenderObject(fileTree)
-    this.files = files
+    const renderObject = buildFileTreeView(this.delegate.tree)
     return <TreeView
       aria-label="file system navigator"
-      onNodeSelect={(_, nodeId) => this.onNodeSelect(files.id2File, nodeId)}
+      onNodeSelect={(_, nodeId) => this.onNodeSelect(this.delegate.id2File, nodeId)}
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
       defaultExpanded={["0"]}
@@ -136,46 +138,56 @@ function filterFileTree(tree, searchPrompt) {
   return filteredTree
 }
 
-function createTreeViewRenderObject(rootFileTree) {
+function createFileTreeDelegate(rootFileTree) {
+  const rootChildren = []
   let id = 0
+  const rootObj = {
+    id: id,
+    name: "My Directory",
+    children: rootChildren
+  }
   const id2File = new Map()
-  function createNode(parentUrl, name, fsEntry) {
-    let curId = id++
-    let curIdStr = `${curId}`
-    // if file is an object, it presents a directory
-    if (fsEntry instanceof Object) {
-      let path
-      if (fsEntry === rootFileTree) {
-        path = ""
-      } else if (parentUrl.length > 0) {
-        path = `${parentUrl}/${name}`
-      } else {
-        path = name
-      }
-      const children = []
-      for (const [fileName, file] of Object.entries(fsEntry)) {
-        children.push(createNode(path, fileName, file))
-      }
-      return <TreeItem key={curIdStr} nodeId={curIdStr} label={name}>
-        {children}
-      </TreeItem>
-    } else {
-      // otherwise, it presents a file
+  function createNode(parentUrl, children, fileTree) {
+    for (const [name, file] of Object.entries(fileTree)) {
+      let curId = id++
       const path = parentUrl.length > 0 ? `${parentUrl}/${name}` : name
-      id2File.set(curId, {
-        name,
-        path: path,
-        type: fsEntry,
-      })
-      return <TreeItem key={curIdStr} nodeId={curIdStr} label={name} />
+      if (file instanceof Object) {
+        // if file is an object, it presents a directory
+        const myChildren = []
+        const obj = {
+          id: curId,
+          name,
+          children: myChildren
+        }
+        children.push(obj)
+        createNode(path, myChildren, file)
+      } else {
+        id2File.set(curId, {
+          name,
+          path: path,
+          type: file,
+        })
+        // otherwise, it presents a file
+        children.push({
+          id: curId,
+          name
+        })
+      }
     }
   }
-  const rootObj = createNode("", "My Directory", rootFileTree)
+  createNode("", rootChildren, rootFileTree)
   return {
-    renderObject: rootObj,
-    files: {
-      id2File,
-      maxId: id,
-    }
+    tree: rootObj,
+    id2File,
+    maxId: id,
   }
+}
+
+function buildFileTreeView(node) {
+  const id = `${node.id}`
+  return <TreeItem key={id} nodeId={id} label={node.name}>
+    {Array.isArray(node.children)
+      ? node.children.map((n) => buildFileTreeView(n))
+      : null}
+  </TreeItem>
 }
