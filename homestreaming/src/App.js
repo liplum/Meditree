@@ -68,7 +68,8 @@ export class HomestreamingApp extends React.Component {
   }
 
   componentDidMount() {
-    document.addEventListener('keydown', this.handleKeyPress);
+    document.addEventListener('keydown', this.handleKeyPress)
+    console.log(`fetching ${backend.listUrl}`)
     fetch(backend.listUrl)
       .then((response) => response.json())
       .then((data) => {
@@ -156,19 +157,20 @@ class FileTreeNavigationDrawer extends React.Component {
     const astrology = JSON.parse(window.localStorage.getItem("astrology") ?? "{}")
     const starred = astrology[selectedFile.path]
     return [
-      <IconButton color="inherit" onClick={() => {
+      <IconButton key="go-previous" color="inherit" onClick={() => {
         emitter.emit("go-previous", this.props.selectedFile)
       }}>
         <ArrowBackIcon />
       </IconButton>,
 
-      <IconButton color="inherit" onClick={() => {
+      <IconButton key="go-next" color="inherit" onClick={() => {
         emitter.emit("go-next", this.props.selectedFile)
       }}>
         <ArrowForwardIcon />
       </IconButton>,
 
       <IconButton
+        key="star"
         color="inherit"
         onClick={() => {
           if (starred) {

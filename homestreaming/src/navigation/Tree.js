@@ -10,6 +10,7 @@ export class FileTreeNavigation extends React.Component {
     super(props)
     this.state = {
       selected: [],
+      delegate: undefined,
     }
     this.onGoNext = this.onGoNext.bind(this)
     this.onGoPrevious = this.onGoPrevious.bind(this)
@@ -22,18 +23,25 @@ export class FileTreeNavigation extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (prevProps.searchPrompt !== this.props.searchPrompt) {
+    if (
+      prevProps.searchPrompt !== this.props.searchPrompt ||
+      prevProps.fileTree !== this.props.fileTree
+    ) {
       this.updateAndNotify()
     }
   }
 
   updateAndNotify = () => {
-    let fileTree = this.props.fileTree
+    const delegate = createFileTreeDelegate(this.props.fileTree)
     if (this.props.searchPrompt) {
-      fileTree = filterFileTree(fileTree, this.props.searchPrompt)
+      const tree = filterFileTree(delegate.tree, this.props.searchPrompt,
+        (id) => delegate.id2File.get(id).path
+      )
+      delegate.tree = tree
     }
-    this.delegate = createFileTreeDelegate(fileTree)
-    this.forceUpdate()
+    this.setState({
+      delegate
+    })
   }
 
   componentWillUnmount() {
@@ -57,12 +65,12 @@ export class FileTreeNavigation extends React.Component {
   }
 
   render() {
-    const delegate = this.delegate
+    const delegate = this.state.delegate
     if (!delegate) return
     const renderObject = buildFileTreeView(delegate.tree)
     return <TreeView
       aria-label="file system navigator"
-      onNodeSelect={(_, nodeId) => this.onNodeSelect(this.delegate.id2File, nodeId)}
+      onNodeSelect={(_, nodeId) => this.onNodeSelect(this.state.delegate.id2File, nodeId)}
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
       defaultExpanded={["0"]}
@@ -77,7 +85,7 @@ export class FileTreeNavigation extends React.Component {
 
   onGoPrevious(curFile) {
     if (!(curFile && "nodeId" in curFile)) return
-    const delegate = this.delegate
+    const delegate = this.state.delegate
     const findPreviousFileTilEnd = () => {
       let previousId = curFile.nodeId - 1
       while (previousId >= 0) {
@@ -101,7 +109,7 @@ export class FileTreeNavigation extends React.Component {
 
   onGoNext(curFile) {
     if (!(curFile && "nodeId" in curFile)) return
-    const delegate = this.delegate
+    const delegate = this.state.delegate
     const findNextFileTilEnd = () => {
       let nextId = curFile.nodeId + 1
       while (nextId < this.state.delegate.maxId) {
@@ -137,27 +145,44 @@ export class FileTreeNavigation extends React.Component {
 /**
  *  @author chatGPT
  */
-function filterFileTree(tree, searchPrompt) {
-  const filteredTree = {}
-  console.log(tree)
-  Object.entries(tree).forEach(([key, value]) => {
-    if (key.toLowerCase().includes(searchPrompt.toLowerCase())) {
-      filteredTree[key] = value
-    } else if (typeof value === "object" && value !== null) {
-      const subtree = filterFileTree(value, searchPrompt)
-      if (Object.keys(subtree).length > 0) {
-        filteredTree[key] = subtree
-      }
+function filterFileTree(tree, searchPrompt, getFullPathById) {
+  function filterTree(tree) {
+    // base case: leaf node
+    if (!tree.children) {
+      const fullPath = getFullPathById(tree.id).toLowerCase();
+      return fullPath.includes(searchPrompt.toLowerCase()) ? tree : null
     }
-  })
-  return filteredTree
+
+    // filter children recursively
+    const filteredChildren = tree.children.map(child => filterTree(child, prompt)).filter(child => child !== null)
+
+    // return null if no children match
+    if (filteredChildren.length === 0) {
+      return null
+    }
+
+    // create a new node with the filtered children
+    return {
+      id: tree.id,
+      name: tree.name,
+      children: filteredChildren
+    }
+  }
+  let root = filterTree(tree, searchPrompt)
+  if (!root) {
+    root = {
+      ...tree,
+      children: []
+    }
+  }
+  return root
 }
 
 function createFileTreeDelegate(rootFileTree) {
   const rootChildren = []
   let id = 0
   const rootObj = {
-    id: id,
+    id: id++,
     name: "My Directory",
     children: rootChildren
   }
@@ -199,6 +224,7 @@ function createFileTreeDelegate(rootFileTree) {
 }
 
 function buildFileTreeView(node) {
+  if (!node) return
   const id = `${node.id}`
   return <TreeItem key={id} nodeId={id} label={node.name}>
     {Array.isArray(node.children)
