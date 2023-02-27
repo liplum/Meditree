@@ -10,14 +10,6 @@ export class FileTreeNavigation extends React.Component {
 
   render() {
     const { renderObject, id2File } = createTreeViewRenderObject(this.props.fileTree)
-    const renderTree = (nodes) => (
-      <TreeItem key={nodes.id} nodeId={nodes.id} label={nodes.name}>
-        {Array.isArray(nodes.children)
-          ? nodes.children.map((node) => renderTree(node))
-          : null}
-      </TreeItem>
-    );
-
     return <TreeView
       aria-label="file system navigator"
       onNodeSelect={(event, nodeId) => {
@@ -26,54 +18,50 @@ export class FileTreeNavigation extends React.Component {
       }}
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
-      defaultExpanded={["root"]}
+      defaultExpanded={["0"]}
       sx={{
         height: "100%", flexGrow: 1,
       }}
     >
-      {renderTree(renderObject)}
+      {renderObject}
     </TreeView>
   }
 }
 
-function createTreeViewRenderObject(fileTree) {
-  const rootChildren = []
-  const rootObj = {
-    id: "root",
-    name: "My Directory",
-    children: rootChildren
-  }
-  let id = 1
+function createTreeViewRenderObject(rootFileTree) {
+  let id = 0
   const id2File = new Map()
-  function createNode(parentUrl, children, fileTree) {
-    for (const [name, file] of Object.entries(fileTree)) {
-      let curId = `${id++}`
-      const path = parentUrl.length > 0 ? `${parentUrl}/${name}` : name
-      if (file instanceof Object) {
-        // if file is an object, it presents a directory
-        const myChildren = []
-        const obj = {
-          id: curId,
-          name,
-          children: myChildren
+  function createNode(parentUrl, name, fsEntry) {
+    let curId = `${id++}`
+    // if file is an object, it presents a directory
+    if (fsEntry instanceof Object) {
+      const children = []
+      for (const [fileName, file] of Object.entries(fsEntry)) {
+        let path
+        if (fsEntry === rootFileTree) {
+          path = ""
+        } else if (parentUrl.length > 0) {
+          path = `${parentUrl}/${name}`
+        } else {
+          path = name
         }
-        children.push(obj)
-        createNode(path, myChildren, file)
-      } else {
-        id2File.set(curId, {
-          name,
-          path: path,
-          type: file,
-        })
-        // otherwise, it presents a file
-        children.push({
-          id: curId,
-          name
-        })
+        children.push(createNode(path, fileName, file))
       }
+      return <TreeItem key={curId} nodeId={curId} label={name}>
+        {children}
+      </TreeItem>
+    } else {
+      // otherwise, it presents a file
+      const path = parentUrl.length > 0 ? `${parentUrl}/${name}` : name
+      id2File.set(curId, {
+        name,
+        path: path,
+        type: fsEntry,
+      })
+      return <TreeItem key={curId} nodeId={curId} label={name} />
     }
   }
-  createNode("", rootChildren, fileTree)
+  const rootObj = createNode("", "My Directory", rootFileTree)
   return {
     renderObject: rootObj,
     id2File
