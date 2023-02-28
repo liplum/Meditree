@@ -201,7 +201,7 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
   const id2File = new Map()
   function createNode(parentUrl, parentIds, children, fileTree) {
     const entries = Object.entries(fileTree)
-    entries.sort((a, b) => compareName(a[0], b[0]))
+    reorder(entries, (entry) => entry[0])
     for (const [name, file] of entries) {
       let curId = id++
       const path = parentUrl.length > 0 ? `${parentUrl}/${name}` : name
@@ -235,16 +235,6 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
     tree: rootObj,
     id2File,
     maxId: id,
-  }
-}
-
-function compareName(a, b) {
-  const numA = parseInt(a.match(/\d+/)?.[0])
-  const numB = parseInt(b.match(/\d+/)?.[0])
-  if (!isNaN(numA) && !isNaN(numB)) {
-    return numA - numB
-  } else {
-    return a.localeCompare(b)
   }
 }
 
@@ -295,4 +285,41 @@ function fuzzyMatch(test, target) {
   // Compute the possibility
   const distance = matrix[target.length][test.length]
   return 1 - distance / Math.max(target.length, test.length)
+}
+
+/**
+ *  @author chatGPT
+ */
+function reorder(array, getFileName) {
+  array.sort((a, b) => {
+    const fileNameA = getFileName(a);
+    const fileNameB = getFileName(b);
+
+    const extensionA = fileNameA.split('.').pop();
+    const extensionB = fileNameB.split('.').pop();
+
+    // Group files with the same extension together
+    if (extensionA !== extensionB) {
+      return extensionA.localeCompare(extensionB);
+    }
+
+    // Compare files without the extension
+    const fileNameOnlyA = fileNameA.replace(/\.[^/.]+$/, '');
+    const fileNameOnlyB = fileNameB.replace(/\.[^/.]+$/, '');
+
+    // Check if both file names contain only numbers
+    if (/^\d+$/.test(fileNameOnlyA) && /^\d+$/.test(fileNameOnlyB)) {
+      return parseInt(fileNameOnlyA) - parseInt(fileNameOnlyB);
+    }
+
+    // Check if both file names have a number in them
+    const numberA = parseInt(fileNameOnlyA.match(/\d+/));
+    const numberB = parseInt(fileNameOnlyB.match(/\d+/));
+    if (numberA && numberB && numberA !== numberB) {
+      return numberA - numberB;
+    }
+
+    // Use lexicographic order as a fallback
+    return fileNameA.localeCompare(fileNameB);
+  });
 }

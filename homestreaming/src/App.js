@@ -79,7 +79,6 @@ export class HomestreamingApp extends React.Component {
         this.setState({
           fileTree: data
         })
-        console.log(data)
       })
   }
 
@@ -196,7 +195,6 @@ function SwipeArea(props) {
   </div>
 }
 
-
 class FileTreeNavigationDrawer extends React.Component {
   constructor(props) {
     super(props)
@@ -221,7 +219,7 @@ class FileTreeNavigationDrawer extends React.Component {
   }
 
   render() {
-    const drawerWidth = 350
+    const drawerWidth = 400
     const { window } = this.props;
     const container = window !== undefined ? () => window().document.body : undefined;
 
