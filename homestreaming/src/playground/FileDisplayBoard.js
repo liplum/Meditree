@@ -26,5 +26,10 @@ function renderVideo(file) {
 }
 
 function renderImage(file) {
-  return <img src={file.url} alt={file.path} className={isMobile ? "img-view-mobile" : "img-view"} />
+  return <div className="image-container">
+    <img
+      src={file.url}
+      alt={file.path}
+      className={isMobile ? "img-view-mobile" : "img-view"} />
+  </div>
 }

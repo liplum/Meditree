@@ -1,9 +1,15 @@
+.image-container {
+  max-width: 100%;
+  overflow: hidden;
+  /* hide any overflowing content */
+}
+
 .img-view {
   display: block;
   margin-left: auto;
   margin-right: auto;
   height: 70%;
-  max-height: 1080%;
+  max-width: 80%; 
 }
 
 .img-view-mobile {
