@@ -22,6 +22,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 
 import StarIcon from '@mui/icons-material/Star'
 import StarBorderIcon from '@mui/icons-material/StarBorder'
+import { useSwipeable } from 'react-swipeable'
 
 const backend = {
   url: process.env.REACT_APP_BACKEND_URL,
@@ -148,32 +149,48 @@ export class HomestreamingApp extends React.Component {
     if (selectedFile) {
       selectedFile.url = backend.reolsveFileUrl(selectedFile.path)
     }
-    let content = (
-      <FileDisplayBoard file={selectedFile}></FileDisplayBoard>
-    )
 
     const title = selectedFile ? selectedFile.name : "No file selected"
+    const content = <FileDisplayBoard file={selectedFile} />
     return (
       <ThemeProvider theme={theme}>
-        <FileTreeNavigationDrawer
-          astrology={astrology}
-          drawer={drawerContent}
-          content={content}
-          title={title}
-          onStarChange={(newIsStarred) => {
-            if (newIsStarred) {
-              astrology[selectedFile.path] = true
-            } else {
-              delete astrology[selectedFile.path]
-            }
-            window.localStorage.setItem("astrology", JSON.stringify(astrology))
-            this.forceUpdate()
-          }}
-          selectedFile={this.state.selectedFile}
-        />
+        <SwipeArea selectedFile={selectedFile}>
+          <FileTreeNavigationDrawer
+            astrology={astrology}
+            drawer={drawerContent}
+            content={content}
+            title={title}
+            onStarChange={(newIsStarred) => {
+              if (newIsStarred) {
+                astrology[selectedFile.path] = true
+              } else {
+                delete astrology[selectedFile.path]
+              }
+              window.localStorage.setItem("astrology", JSON.stringify(astrology))
+              this.forceUpdate()
+            }}
+            selectedFile={this.state.selectedFile}
+          />
+        </SwipeArea>
       </ThemeProvider>
     )
   }
+}
+
+function SwipeArea(props) {
+  const handlers = useSwipeable({
+    onSwipedLeft: (_) => emitter.emit("go-next", props.selectedFile),
+    onSwipedRight: (_) => emitter.emit("go-previous", props.selectedFile),
+  })
+  return <div id="swipe-area" style={{
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+  }} {...handlers} >
+    {props.children}
+  </div>
 }
 
 
@@ -287,8 +304,7 @@ class FileTreeNavigationDrawer extends React.Component {
         </Box>
         <Box
           component="main"
-          sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
-        >
+          sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}>
           <Toolbar />
           {this.props.content}
         </Box>
