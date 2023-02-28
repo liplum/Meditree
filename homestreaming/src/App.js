@@ -59,7 +59,7 @@ export class HomestreamingApp extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      fileTree: {},
+      fileTree: undefined,
       selectedFile: null,
       mobileOpen: false,
       searchPrompt: "",
@@ -77,6 +77,7 @@ export class HomestreamingApp extends React.Component {
         this.setState({
           fileTree: data
         })
+        console.log(data)
       })
   }
 
@@ -120,7 +121,6 @@ export class HomestreamingApp extends React.Component {
         <Toolbar>
           <Tooltip title="Only Show Starred">
             <IconButton
-              key="star"
               color="inherit"
               onClick={() => {
                 this.setState({
@@ -191,25 +191,24 @@ class FileTreeNavigationDrawer extends React.Component {
     const astrology = this.props.astrology
     const starred = astrology[selectedFile.path]
     return [
-      <Tooltip title="Go to Previous">
-        <IconButton key="go-previous" color="inherit" onClick={() => {
+      <Tooltip key="go-previous" title="Go to Previous">
+        <IconButton color="inherit" onClick={() => {
           emitter.emit("go-previous", this.props.selectedFile)
         }}>
           <ArrowBackIcon />
         </IconButton>
       </Tooltip>,
 
-      <Tooltip title="Go to Next">
-        <IconButton key="go-next" color="inherit" onClick={() => {
+      <Tooltip key="go-next" title="Go to Next">
+        <IconButton color="inherit" onClick={() => {
           emitter.emit("go-next", this.props.selectedFile)
         }}>
           <ArrowForwardIcon />
         </IconButton>
       </Tooltip>,
 
-      <Tooltip title="Add to Star">
+      <Tooltip key="star" title="Add to Star">
         <IconButton
-          key="star"
           color="inherit"
           onClick={() => this.props.onStarChange?.(!starred)}>
           {starred ? <StarIcon /> : <StarBorderIcon />}

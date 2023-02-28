@@ -14,7 +14,10 @@ export async function startServer(): Promise<void> {
   let treeJsonStringCache: string | null = null
   let treeIndexHtmlCache: string | null = null
   tree.onRebuilt = () => {
-    treeJsonObjectCache = tree.fileTree.toJSON()
+    treeJsonObjectCache = {
+      name: config.name,
+      files: tree.fileTree.toJSON()
+    }
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 2)
     treeIndexHtmlCache = buildIndexHtml(tree.fileTree)
   }
@@ -23,7 +26,7 @@ export async function startServer(): Promise<void> {
   const app = express()
 
   app.use(cors())
-  
+
   app.get("/", (req, res) => {
     res.redirect("/index.html")
   })

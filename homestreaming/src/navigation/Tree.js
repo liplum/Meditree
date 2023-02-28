@@ -32,7 +32,9 @@ export class FileTreeNavigation extends React.Component {
   }
 
   updateAndNotify = () => {
-    const delegate = createFileTreeDelegate(this.props.fileTree)
+    const fileTree = this.props.fileTree
+    if(!fileTree) return
+    const delegate = createFileTreeDelegate(fileTree.files, fileTree.name)
     if (this.props.searchDelegate) {
       const tree = filterFileTree(delegate.tree, this.props.searchDelegate,
         (id) => delegate.id2File.get(id)
@@ -178,12 +180,12 @@ function filterFileTree(tree, searchDelegate, getFileById) {
   return root
 }
 
-function createFileTreeDelegate(rootFileTree) {
+function createFileTreeDelegate(rootFileTree, rootName = "") {
   const rootChildren = []
   let id = 0
   const rootObj = {
     id: id++,
-    name: "My Directory",
+    name: rootName,
     children: rootChildren
   }
   const id2File = new Map()
