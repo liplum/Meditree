@@ -33,7 +33,7 @@ export class FileTreeNavigation extends React.Component {
 
   updateAndNotify = () => {
     const fileTree = this.props.fileTree
-    if(!fileTree) return
+    if (!fileTree) return
     const delegate = createFileTreeDelegate(fileTree.files, fileTree.name)
     if (this.props.searchDelegate) {
       const tree = filterFileTree(delegate.tree, this.props.searchDelegate,
@@ -203,6 +203,7 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
         }
         children.push(obj)
         createNode(path, myChildren, file)
+        myChildren.sort((a, b) => nameCompare(a.name, b.name))
       } else {
         id2File.set(curId, {
           name,
@@ -222,6 +223,16 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
     tree: rootObj,
     id2File,
     maxId: id,
+  }
+}
+
+function nameCompare(a, b) {
+  const numA = parseInt(a.match(/\d+/)?.[0])
+  const numB = parseInt(b.match(/\d+/)?.[0])
+  if (!isNaN(numA) && !isNaN(numB)) {
+    return numA - numB
+  } else {
+    return a.localeCompare(b)
   }
 }
 
