@@ -126,6 +126,7 @@ export class FileTreeNavigation extends React.Component {
         }
       }
     }
+    
     const previous = findNextFileTilEnd()
     if (previous) {
       const { id, file } = previous
@@ -249,6 +250,7 @@ function buildFileTreeView(node) {
 /**
  *  @author chatGPT
  */
+// eslint-disable-next-line no-unused-vars
 function fuzzyMatch(test, target) {
   // Convert both strings to lowercase
   test = test.toLowerCase()
@@ -280,6 +282,6 @@ function fuzzyMatch(test, target) {
   }
 
   // Compute the possibility
-  var distance = matrix[target.length][test.length]
+  const distance = matrix[target.length][test.length]
   return 1 - distance / Math.max(target.length, test.length)
 }

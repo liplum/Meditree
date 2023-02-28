@@ -2,8 +2,7 @@
   display: block;
   margin-left: auto;
   margin-right: auto;
-  height: 50%;
-  max-width: 1280px;
+  max-width: 100%;
 }
 
 .video-view {
