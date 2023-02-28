@@ -3,6 +3,7 @@ import * as path from "path"
 import { FileTree, type File, type FileType } from "./file.js"
 import * as chokidar from "chokidar"
 import minimatch, { type MinimatchOptions } from "minimatch"
+import { clearInterval } from "timers"
 interface HostTreeOptions {
   root: string
   fileTypePatterns: object | null
@@ -18,7 +19,7 @@ export class HostTree {
   readonly fileTypePatterns: object | null
   onRebuilt: (() => void) | null = null
   fileTree: FileTree
-  watchTimer: fs.FSWatcher | null = null
+  fileWatcher: fs.FSWatcher | null = null
   constructor(
     options: HostTreeOptions
   ) {
@@ -27,12 +28,22 @@ export class HostTree {
   }
 
   get isWatching(): boolean {
-    return this.watchTimer != null
+    return this.fileWatcher != null
   }
 
-  startWatching(): void {
-    if (this.watchTimer != null) return
-    this.watchTimer = chokidar.watch(this.root, {
+  rebuildTimer: NodeJS.Timer | null = null
+
+  shouldRebuild = false
+
+  startWatching(rebuildInterval: number = 3000): void {
+    if (this.fileWatcher != null && this.rebuildTimer != null) return
+    this.rebuildTimer = setInterval(() => {
+      if (this.shouldRebuild) {
+        this.rebuildFileTree()
+        this.shouldRebuild = false
+      }
+    }, rebuildInterval)
+    this.fileWatcher = chokidar.watch(this.root, {
       ignoreInitial: true,
     }).on("all", (event, filePath) => {
       this.onWatch(event, filePath)
@@ -44,7 +55,7 @@ export class HostTree {
     // const relative = path.relative(this.root, filePath)
     if (event === "add" || event === "unlink") {
       if (this.classifyByFilePath(filePath) == null) return
-      this.rebuildFileTree()
+      this.shouldRebuild = true
     }
   }
 
@@ -60,8 +71,12 @@ export class HostTree {
   }
 
   stopWatching(): void {
-    if (this.watchTimer == null) return
-    this.watchTimer.close()
+    if (this.fileWatcher) {
+      this.fileWatcher.close()
+    }
+    if (this.rebuildTimer) {
+      clearInterval(this.rebuildTimer)
+    }
   }
 
   resolveFile(path: string): File | null {

@@ -20,6 +20,7 @@ export async function startServer(): Promise<void> {
     }
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 2)
     treeIndexHtmlCache = buildIndexHtml(tree.fileTree)
+    console.log("FileTree is rebuilt.")
   }
   tree.startWatching()
   await tree.rebuildFileTree()
