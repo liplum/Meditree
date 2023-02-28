@@ -69,6 +69,11 @@ export class HomestreamingApp extends React.Component {
   componentDidMount() {
     document.addEventListener('keydown', this.handleKeyPress)
     console.log(`fetching ${backend.listUrl}`)
+    const lastSelected = JSON.parse(window.localStorage.getItem("lastSelectedFile"))
+    console.log(lastSelected)
+    this.setState({
+      selectedFile: lastSelected
+    })
     fetch(backend.listUrl)
       .then((response) => response.json())
       .then((data) => {
@@ -83,6 +88,7 @@ export class HomestreamingApp extends React.Component {
     this.setState({
       selectedFile: file
     })
+    window.localStorage.setItem("lastSelectedFile", JSON.stringify(file))
   }
 
   componentWillUnmount() {
@@ -127,7 +133,7 @@ export class HomestreamingApp extends React.Component {
               }}>
               {onlySearchStarred ? <StarIcon /> : <StarBorderIcon />}
             </IconButton>
-          </Tooltip >
+          </Tooltip>
           <SearchBar
             onPromptChange={(prompt) => this.onSearchPromptChange(prompt)}>
           </SearchBar>
