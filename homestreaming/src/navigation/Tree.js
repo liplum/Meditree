@@ -70,13 +70,22 @@ export class FileTreeNavigation extends React.Component {
     const delegate = this.state.delegate
     if (!delegate) return
     const renderObject = buildFileTreeView(delegate.tree)
+    let defaultExpanded = ["0"]
+    let selected = this.state.selected
+    const lastSelectedFile = this.props.lastSelectedFile
+    if (lastSelectedFile) {
+      defaultExpanded = lastSelectedFile.parentIds.map(e => `${e}`)
+      if (selected.length === 0) {
+        selected = [`${lastSelectedFile.nodeId}`]
+      }
+    }
     return <TreeView
       aria-label="file system navigator"
       onNodeSelect={(_, nodeId) => this.onNodeSelect(this.state.delegate.id2File, nodeId)}
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
-      defaultExpanded={["0"]}
-      selected={this.state.selected}
+      defaultExpanded={defaultExpanded}
+      selected={selected}
       sx={{
         height: "100%", flexGrow: 1,
       }}
@@ -190,7 +199,7 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
     children: rootChildren
   }
   const id2File = new Map()
-  function createNode(parentUrl, children, fileTree) {
+  function createNode(parentUrl, parentIds, children, fileTree) {
     const entries = Object.entries(fileTree)
     entries.sort((a, b) => compareName(a[0], b[0]))
     for (const [name, file] of entries) {
@@ -205,12 +214,13 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
           children: myChildren
         }
         children.push(obj)
-        createNode(path, myChildren, file)
+        createNode(path, [...parentIds, curId], myChildren, file)
       } else {
         id2File.set(curId, {
           name,
           path: path,
           type: file,
+          parentIds,
         })
         // otherwise, it presents a file
         children.push({
@@ -220,7 +230,7 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
       }
     }
   }
-  createNode("", rootChildren, rootFileTree)
+  createNode("", [rootObj.id], rootChildren, rootFileTree)
   return {
     tree: rootObj,
     id2File,

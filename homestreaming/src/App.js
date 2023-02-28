@@ -64,15 +64,14 @@ export class HomestreamingApp extends React.Component {
       onlySearchStarred: false,
     }
     this.handleKeyPress = this.handleKeyPress.bind(this)
+    this.lastSelectedFile = JSON.parse(window.localStorage.getItem("lastSelectedFile"))
   }
 
   componentDidMount() {
     document.addEventListener('keydown', this.handleKeyPress)
     console.log(`fetching ${backend.listUrl}`)
-    const lastSelected = JSON.parse(window.localStorage.getItem("lastSelectedFile"))
-    console.log(lastSelected)
     this.setState({
-      selectedFile: lastSelected
+      selectedFile: this.lastSelectedFile
     })
     fetch(backend.listUrl)
       .then((response) => response.json())
@@ -143,6 +142,7 @@ export class HomestreamingApp extends React.Component {
           onSelectFile={(file) => this.onSelectFile(file)}
           astrology={astrology}
           searchDelegate={filterByPrompt}
+          lastSelectedFile={this.lastSelectedFile}
           fileTree={this.state.fileTree}>
         </FileTreeNavigation>
       </div>
