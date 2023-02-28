@@ -2,7 +2,14 @@
   display: block;
   margin-left: auto;
   margin-right: auto;
-  max-width: 100%;
+  width: 80%;
+}
+
+.img-view-mobile {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
 }
 
 .video-view {

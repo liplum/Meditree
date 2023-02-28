@@ -1,5 +1,6 @@
 import { VideoPlayer } from "./Video"
 import './Playground.css'
+import { isMobile } from 'react-device-detect'
 
 const type2Render = {
   "video/mp4": renderVideo,
@@ -25,5 +26,5 @@ function renderVideo(file) {
 }
 
 function renderImage(file) {
-  return <img src={file.url} alt={file.path} className="img-view" />
+  return <img src={file.url} alt={file.path} className={isMobile ? "img-view-mobile" : "img-view"} />
 }
