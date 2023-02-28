@@ -126,7 +126,7 @@ export class FileTreeNavigation extends React.Component {
         }
       }
     }
-    
+
     const previous = findNextFileTilEnd()
     if (previous) {
       const { id, file } = previous
@@ -191,7 +191,9 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
   }
   const id2File = new Map()
   function createNode(parentUrl, children, fileTree) {
-    for (const [name, file] of Object.entries(fileTree)) {
+    const entries = Object.entries(fileTree)
+    entries.sort((a, b) => compareName(a[0], b[0]))
+    for (const [name, file] of entries) {
       let curId = id++
       const path = parentUrl.length > 0 ? `${parentUrl}/${name}` : name
       if (file instanceof Object) {
@@ -204,7 +206,6 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
         }
         children.push(obj)
         createNode(path, myChildren, file)
-        myChildren.sort((a, b) => nameCompare(a.name, b.name))
       } else {
         id2File.set(curId, {
           name,
@@ -227,7 +228,7 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
   }
 }
 
-function nameCompare(a, b) {
+function compareName(a, b) {
   const numA = parseInt(a.match(/\d+/)?.[0])
   const numB = parseInt(b.match(/\d+/)?.[0])
   if (!isNaN(numA) && !isNaN(numB)) {

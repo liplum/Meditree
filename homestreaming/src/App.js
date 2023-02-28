@@ -17,9 +17,6 @@ import { SearchBar } from './navigation/Search'
 import { Tooltip } from '@mui/material'
 import emitter from "./Event"
 
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
-
 import StarIcon from '@mui/icons-material/Star'
 import StarBorderIcon from '@mui/icons-material/StarBorder'
 import { useSwipeable } from 'react-swipeable'
@@ -202,36 +199,19 @@ class FileTreeNavigationDrawer extends React.Component {
     }
   }
 
-  buildAppBarActions() {
+  buildAppBarAction() {
     const selectedFile = this.props.selectedFile
     if (!selectedFile) return
     const astrology = this.props.astrology
     const starred = astrology[selectedFile.path]
-    return [
-      <Tooltip key="go-previous" title="Go to Previous">
-        <IconButton color="inherit" onClick={() => {
-          emitter.emit("go-previous", this.props.selectedFile)
-        }}>
-          <ArrowBackIcon />
-        </IconButton>
-      </Tooltip>,
+    return <Tooltip title="Add to Star">
+      <IconButton
+        color="inherit"
+        onClick={() => this.props.onStarChange?.(!starred)}>
+        {starred ? <StarIcon /> : <StarBorderIcon />}
+      </IconButton>
+    </Tooltip>
 
-      <Tooltip key="go-next" title="Go to Next">
-        <IconButton color="inherit" onClick={() => {
-          emitter.emit("go-next", this.props.selectedFile)
-        }}>
-          <ArrowForwardIcon />
-        </IconButton>
-      </Tooltip>,
-
-      <Tooltip key="star" title="Add to Star">
-        <IconButton
-          color="inherit"
-          onClick={() => this.props.onStarChange?.(!starred)}>
-          {starred ? <StarIcon /> : <StarBorderIcon />}
-        </IconButton>
-      </Tooltip>
-    ]
   }
 
   render() {
@@ -269,7 +249,7 @@ class FileTreeNavigationDrawer extends React.Component {
                 {this.props.title}
               </Typography>
             </Tooltip>
-            {this.buildAppBarActions()}
+            {this.buildAppBarAction()}
           </Toolbar>
         </AppBar>
         <Box
