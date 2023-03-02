@@ -3,11 +3,10 @@ import "./App.css";
 import { FileTreeNavigation } from "./navigation/Tree.js";
 import { FileDisplayBoard } from "./playground/FileDisplayBoard";
 
-import { isDesktop } from "react-device-detect";
-import { Layout, Input, Space, Menu, theme, Button, Tooltip } from 'antd';
+import { Layout, Input, Space, Button, Tooltip } from 'antd';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content, Sider } = Layout;
 const { Search } = Input;
 
 
@@ -62,7 +61,7 @@ export class MainBody extends React.Component {
         <Space block>
           <Tooltip title="Only Show Starred">
             <Button
-              type="primary" icon={<StarOutlined />}
+              type="primary" icon={onlyShowStarred ? <StarFilled /> : <StarOutlined />}
               onClick={() => this.props.onOnlyShowStarredChange(!onlyShowStarred)}
             />
           </Tooltip>
@@ -76,14 +75,19 @@ export class MainBody extends React.Component {
       <Layout style={{
         backgroundColor: "#0A0A0A",
         color: "#FAFAFA",
-        fontSize: "14pt"
       }}>
         <Header style={{
           backgroundColor: "#0A0A0A",
           color: "#FAFAFA",
-          fontSize: "18pt"
         }}>
-          {title}
+          <Space wrap>
+            {this.buildAppBarAction()}
+            <label style={{
+              fontSize: "18pt",
+            }}>
+              {title}
+            </label>
+          </Space>
         </Header>
         <Content>{content}</Content>
       </Layout>
