@@ -45,8 +45,17 @@ export class MainBody extends React.Component {
     const content = <FileDisplayBoard file={selectedFile} />
 
     return <Layout>
-      <Sider>
-        <Space.Compact block>
+      <Sider
+        breakpoint="sm"
+        collapsedWidth="0"
+        width="300px"
+        style={{
+          backgroundColor: "#0A0A0A",
+          color: "#FAFAFA",
+          fontSize: "14pt"
+        }}
+      >
+        <Space block>
           <Tooltip title="Only Show Starred">
             <Button
               type="primary" icon={<StarOutlined />}
@@ -56,15 +65,19 @@ export class MainBody extends React.Component {
           <Search
             placeholder="input search text"
             onSearch={(prompt) => this.props.onSearchPromptChange(prompt)}
-            style={{
-              width: 200,
-            }}
           />
-        </Space.Compact>
+        </Space>
         {fileNav}
       </Sider>
       <Layout>
-        <Header>{title}</Header>
+        <Header
+          style={{
+            backgroundColor: "#0A0A0A",
+            color: "#FAFAFA",
+            fontSize: "14pt"
+          }}>
+          <h1 className="text">{title}</h1>
+        </Header>
         <Content>{content}</Content>
         <Footer>footer</Footer>
       </Layout>

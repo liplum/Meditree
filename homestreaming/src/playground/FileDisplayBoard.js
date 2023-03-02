@@ -1,6 +1,5 @@
 import { VideoPlayer } from "./Video"
 import './Playground.css'
-import { isMobile } from 'react-device-detect'
 
 const type2Render = {
   "video/mp4": renderVideo,

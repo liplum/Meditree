@@ -1,8 +1,6 @@
 import React from 'react'
 import emitter from "../Event"
-import { CarryOutOutlined, CheckOutlined, FormOutlined } from '@ant-design/icons';
-import { Select, Switch, Tree } from 'antd';
-
+import { Tree } from 'antd'
 const { DirectoryTree } = Tree;
 
 export class FileTreeNavigation extends React.Component {
@@ -71,6 +69,11 @@ export class FileTreeNavigation extends React.Component {
     const lastSelectedFile = this.props.lastSelectedFile
     return (
       <DirectoryTree
+        style={{
+          backgroundColor: "#0A0A0A",
+          color: "#FAFAFA",
+          fontSize: "14pt"
+        }}
         showLine={true}
         showIcon={false}
         defaultSelectedKeys={[lastSelectedFile?.nodeId]}

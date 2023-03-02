@@ -1,8 +1,8 @@
 import "./App.css";
 import React from "react";
-import { useSwipeable } from "react-swipeable";
 import emitter from "./Event";
 import { MainBody } from "./Body";
+import { ConfigProvider, theme } from 'antd';
 
 const backend = {
   url: process.env.REACT_APP_BACKEND_URL,
@@ -82,59 +82,42 @@ export class HomestreamingApp extends React.Component {
       selectedFile.url = backend.reolsveFileUrl(selectedFile.path);
     }
 
-    return (
-        <MainBody
-          astrology={astrology}
-          fileFilter={filterByPrompt}
-          onStarChange={(newIsStarred) => {
-            if (newIsStarred) {
-              astrology[selectedFile.path] = true;
-            } else {
-              delete astrology[selectedFile.path];
-            }
-            window.localStorage.setItem("astrology", JSON.stringify(astrology));
-            this.forceUpdate();
-          }}
-          checkIsStarred={(file) => astrology[file.path] === true}
-          onSearchPromptChange={(prompt) => {
-            this.setState({
-              searchPrompt: prompt,
-            });
-          }}
-          onOnlyShowStarredChange={(newState) => {
-            this.setState({
-              onlyShowStarred: newState,
-            });
-          }}
-          onlyShowStarred={this.state.onlyShowStarred}
-          selectedFile={this.state.selectedFile}
-          lastSelectedFile={this.lastSelectedFile}
-          fileTree={this.state.fileTree}
-          onSelectFile={(file) => this.onSelectFile(file)}
-        />
-    );
+    return <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#0A0A0A',
+          algorithm: theme.darkAlgorithm,
+        },
+      }}>
+      <MainBody
+        astrology={astrology}
+        fileFilter={filterByPrompt}
+        onStarChange={(newIsStarred) => {
+          if (newIsStarred) {
+            astrology[selectedFile.path] = true;
+          } else {
+            delete astrology[selectedFile.path];
+          }
+          window.localStorage.setItem("astrology", JSON.stringify(astrology));
+          this.forceUpdate();
+        }}
+        checkIsStarred={(file) => astrology[file.path] === true}
+        onSearchPromptChange={(prompt) => {
+          this.setState({
+            searchPrompt: prompt,
+          });
+        }}
+        onOnlyShowStarredChange={(newState) => {
+          this.setState({
+            onlyShowStarred: newState,
+          });
+        }}
+        onlyShowStarred={this.state.onlyShowStarred}
+        selectedFile={this.state.selectedFile}
+        lastSelectedFile={this.lastSelectedFile}
+        fileTree={this.state.fileTree}
+        onSelectFile={(file) => this.onSelectFile(file)}
+      />
+    </ConfigProvider>
   }
 }
-
-function SwipeArea(props) {
-  const handlers = useSwipeable({
-    onSwipedLeft: (_) => emitter.emit("go-next", props.selectedFile),
-    onSwipedRight: (_) => emitter.emit("go-previous", props.selectedFile),
-  });
-  return (
-    <div
-      id="swipe-area"
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-      }}
-      {...handlers}
-    >
-      {props.children}
-    </div>
-  );
-}
-
