@@ -18,7 +18,6 @@ import { Tooltip } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { isDesktop } from "react-device-detect";
-const drawerWidth = isDesktop ? 400 : 300;
 
 export class MainBody extends React.Component {
   constructor(props) {
@@ -44,6 +43,7 @@ export class MainBody extends React.Component {
   }
 
   render() {
+    const drawerWidth = isDesktop ? "400px" : "300px";
     const { window } = this.props;
     const container =
       window !== undefined ? () => window().document.body : undefined;
@@ -87,8 +87,8 @@ export class MainBody extends React.Component {
         <AppBar
           position="fixed"
           sx={{
-            width: { sm: `calc(100% - ${drawerWidth}px)` },
-            ml: { sm: `${drawerWidth}px` },
+            width: { sm: `calc(100% - ${drawerWidth})` },
+            ml: { sm: `${drawerWidth}` },
           }}
         >
           <Toolbar>
@@ -118,7 +118,7 @@ export class MainBody extends React.Component {
           component="nav"
           sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
         >
-          <Drawer // for small screens
+          <Drawer // left drawer for small screens
             container={container}
             variant="temporary"
             open={this.state.mobileOpen}
@@ -136,7 +136,7 @@ export class MainBody extends React.Component {
           >
             {drawer}
           </Drawer>
-          <Drawer // for large screens
+          <Drawer // left drawer for large screens
             variant="permanent"
             sx={{
               display: { xs: "none", sm: "block" },
@@ -150,12 +150,12 @@ export class MainBody extends React.Component {
             {drawer}
           </Drawer>
         </Box>
-        <Box
+        <Box // right content
           component="main"
           sx={{
             flexGrow: 1,
             p: 3,
-            width: { sm: `calc(100% - ${drawerWidth}px)` },
+            width: { sm: `calc(100% - ${drawerWidth})` },
           }}
         >
           <Toolbar />

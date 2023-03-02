@@ -47,14 +47,14 @@ export class HomestreamingApp extends React.Component {
       onlyShowStarred: false,
     };
     this.handleKeyPress = this.handleKeyPress.bind(this);
-    this.lastSelectedFile = JSON.parse(
-      window.localStorage.getItem("lastSelectedFile")
-    );
   }
 
   componentDidMount() {
     document.addEventListener("keydown", this.handleKeyPress);
     console.log(`fetching ${backend.listUrl}`);
+    this.lastSelectedFile = JSON.parse(
+      window.localStorage.getItem("lastSelectedFile")
+    );
     this.setState({
       selectedFile: this.lastSelectedFile,
     });
