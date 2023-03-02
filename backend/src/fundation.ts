@@ -12,8 +12,10 @@ export class ListenableValue<T> {
   }
 
   public set value(newValue: T) {
-    this._value = newValue
-    this.notifyListeners()
+    if (newValue !== this._value) {
+      this._value = newValue
+      this.notifyListeners()
+    }
   }
 
   public addListener(listener: Listener<T>): void {
