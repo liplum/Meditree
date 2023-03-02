@@ -17,9 +17,6 @@ Object.assign(backend, {
 });
 
 const theme = createTheme({
-  palette: {
-    mode: "dark",
-  },
   typography: {
     fontSize: 17.5,
     fontFamily: [
