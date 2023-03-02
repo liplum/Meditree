@@ -1,3 +1,10 @@
 .MuiTreeItem-label {
   text-align: left;
 }
+
+.display-board {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80%;
+}

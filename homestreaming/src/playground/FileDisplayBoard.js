@@ -22,18 +22,14 @@ export function FileDisplayBoard(props) {
 }
 
 function renderVideo(file) {
-  return <div className="video-container">
-    <VideoPlayer url={file.url} 
+  return <VideoPlayer url={file.url}
     className={"video-view"} />
-  </div>
 
 }
 
 function renderImage(file) {
-  return <div className="img-container">
-    <img
-      src={file.url}
-      alt={file.path}
-      className={"img-view"} />
-  </div>
+  return <img
+    src={file.url}
+    alt={file.path}
+    className={"img-view"} />
 }

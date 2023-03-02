@@ -1,4 +1,5 @@
 import React from "react";
+import "./App.css";
 
 import { FileTreeNavigation } from "./navigation/Tree.js";
 import AppBar from "@mui/material/AppBar";
@@ -80,7 +81,7 @@ export class MainBody extends React.Component {
       });
     };
 
-    const content = <FileDisplayBoard file={selectedFile} />;
+    const content = <FileDisplayBoard file={selectedFile} />
     return (
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
@@ -150,17 +151,12 @@ export class MainBody extends React.Component {
             {drawer}
           </Drawer>
         </Box>
-        <Box // right content
-          component="main"
-          sx={{
-            flexGrow: 1,
-            p: 3,
-            width: { sm: `calc(100% - ${drawerWidth})` },
-          }}
-        >
+        <div>
           <Toolbar />
-          {content}
-        </Box>
+          <div className="display-board">
+            {content}
+          </div>
+        </div>
       </Box>
     );
   }
