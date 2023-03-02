@@ -44,7 +44,11 @@ export class MainBody extends React.Component {
     />
     const content = <FileDisplayBoard file={selectedFile} />
 
-    return <Layout>
+    return <Layout style={{
+      backgroundColor: "#0A0A0A",
+      color: "#FAFAFA",
+      fontSize: "14pt"
+    }}>
       <Sider
         breakpoint="sm"
         collapsedWidth="0"
@@ -69,17 +73,19 @@ export class MainBody extends React.Component {
         </Space>
         {fileNav}
       </Sider>
-      <Layout>
-        <Header
-          style={{
-            backgroundColor: "#0A0A0A",
-            color: "#FAFAFA",
-            fontSize: "14pt"
-          }}>
-          <h1 className="text">{title}</h1>
+      <Layout style={{
+        backgroundColor: "#0A0A0A",
+        color: "#FAFAFA",
+        fontSize: "14pt"
+      }}>
+        <Header style={{
+          backgroundColor: "#0A0A0A",
+          color: "#FAFAFA",
+          fontSize: "18pt"
+        }}>
+          {title}
         </Header>
         <Content>{content}</Content>
-        <Footer>footer</Footer>
       </Layout>
     </Layout>
   }
