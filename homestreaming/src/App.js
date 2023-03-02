@@ -1,7 +1,6 @@
 import "./App.css";
 import React from "react";
 import { useSwipeable } from "react-swipeable";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import emitter from "./Event";
 import { MainBody } from "./Body";
 
@@ -16,23 +15,6 @@ Object.assign(backend, {
   fileUrl: `${backend.url}/file`,
 });
 
-const theme = createTheme({
-  typography: {
-    fontSize: 17.5,
-    fontFamily: [
-      "-apple-system",
-      "BlinkMacSystemFont",
-      '"Segoe UI"',
-      "Roboto",
-      '"Helvetica Neue"',
-      "Arial",
-      "sans-serif",
-      '"Apple Color Emoji"',
-      '"Segoe UI Emoji"',
-      '"Segoe UI Symbol"',
-    ].join(","),
-  },
-});
 export class HomestreamingApp extends React.Component {
   constructor(props) {
     super(props);
@@ -101,7 +83,6 @@ export class HomestreamingApp extends React.Component {
     }
 
     return (
-      <ThemeProvider theme={theme}>
         <MainBody
           astrology={astrology}
           fileFilter={filterByPrompt}
@@ -131,7 +112,6 @@ export class HomestreamingApp extends React.Component {
           fileTree={this.state.fileTree}
           onSelectFile={(file) => this.onSelectFile(file)}
         />
-      </ThemeProvider>
     );
   }
 }

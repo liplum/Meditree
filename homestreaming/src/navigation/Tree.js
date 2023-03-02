@@ -1,15 +1,14 @@
 import React from 'react'
-import TreeView from '@mui/lab/TreeView'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import TreeItem from '@mui/lab/TreeItem'
 import emitter from "../Event"
+import { CarryOutOutlined, CheckOutlined, FormOutlined } from '@ant-design/icons';
+import { Select, Switch, Tree } from 'antd';
+
+const { DirectoryTree } = Tree;
 
 export class FileTreeNavigation extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      selected: [],
       delegate: undefined,
     }
     this.onGoNext = this.onGoNext.bind(this)
@@ -36,10 +35,10 @@ export class FileTreeNavigation extends React.Component {
     if (!fileTree) return
     const delegate = createFileTreeDelegate(fileTree.files, fileTree.name)
     if (this.props.searchDelegate) {
-      const tree = filterFileTree(delegate.tree, this.props.searchDelegate,
+      const tree = filterFileTree(delegate.renderTree, this.props.searchDelegate,
         (id) => delegate.id2File.get(id)
       )
-      delegate.tree = tree
+      delegate.renderTree = tree
     }
     this.setState({
       delegate
@@ -51,17 +50,17 @@ export class FileTreeNavigation extends React.Component {
     emitter.off("go-previous", this.onGoPrevious)
   }
 
-  onNodeSelect(id2File, nodeId) {
+  onNodeSelect(key) {
     this.setState({
-      selected: nodeId
+      selected: key
     })
-    if (typeof nodeId === "string") {
-      nodeId = parseInt(nodeId)
-      if (isNaN(nodeId)) return
+    if (typeof key === "string") {
+      key = parseInt(key)
+      if (isNaN(key)) return
     }
-    const file = id2File.get(nodeId)
+    const file = this.state.delegate.id2File.get(key)
     if (file) this.props.onSelectFile?.({
-      nodeId,
+      key,
       ...file,
     })
   }
@@ -69,29 +68,26 @@ export class FileTreeNavigation extends React.Component {
   render() {
     const delegate = this.state.delegate
     if (!delegate) return
-    const renderObject = buildFileTreeView(delegate.tree)
-    let defaultExpanded = ["0"]
-    let selected = this.state.selected
     const lastSelectedFile = this.props.lastSelectedFile
-    if (lastSelectedFile) {
-      defaultExpanded = lastSelectedFile.parentIds.map(e => `${e}`)
-      if (selected.length === 0) {
-        selected = [`${lastSelectedFile.nodeId}`]
-      }
-    }
-    return <TreeView
-      aria-label="file system navigator"
-      onNodeSelect={(_, nodeId) => this.onNodeSelect(this.state.delegate.id2File, nodeId)}
-      defaultCollapseIcon={<ExpandMoreIcon />}
-      defaultExpandIcon={<ChevronRightIcon />}
-      defaultExpanded={defaultExpanded}
-      selected={selected}
-      sx={{
-        height: "100%", flexGrow: 1,
-      }}
-    >
-      {renderObject}
-    </TreeView>
+    return (
+      <DirectoryTree
+        showLine={true}
+        showIcon={false}
+        defaultSelectedKeys={[lastSelectedFile?.nodeId]}
+        defaultExpandedKeys={lastSelectedFile?.tracking}
+        onSelect={(keys, _) => {
+          if (keys.length > 0) this.onNodeSelect(keys[0])
+        }}
+        treeData={this.state.delegate.renderTree.children}
+      />
+    );
+  }
+
+  selectFile(key, file) {
+    this.props.onSelectFile?.({
+      ...file,
+      key,
+    })
   }
 
   onGoPrevious(curFile) {
@@ -142,16 +138,6 @@ export class FileTreeNavigation extends React.Component {
       this.selectFile(id, file)
     }
   }
-
-  selectFile(nodeId, file) {
-    this.props.onSelectFile?.({
-      ...file,
-      nodeId: nodeId,
-    })
-    this.setState({
-      selected: [`${nodeId}`]
-    })
-  }
 }
 
 /**
@@ -161,7 +147,7 @@ function filterFileTree(tree, searchDelegate, getFileById) {
   function filterTree(tree) {
     // base case: leaf node
     if (!tree.children) {
-      const file = getFileById(tree.id)
+      const file = getFileById(tree.key)
       return searchDelegate(file) ? tree : null
     }
 
@@ -175,8 +161,7 @@ function filterFileTree(tree, searchDelegate, getFileById) {
 
     // create a new node with the filtered children
     return {
-      id: tree.id,
-      name: tree.name,
+      ...tree,
       children: filteredChildren
     }
   }
@@ -192,99 +177,53 @@ function filterFileTree(tree, searchDelegate, getFileById) {
 
 function createFileTreeDelegate(rootFileTree, rootName = "") {
   const rootChildren = []
-  let id = 0
+  let key = 0
   const rootObj = {
-    id: id++,
-    name: rootName,
+    key: key++,
+    title: rootName,
     children: rootChildren
   }
   const id2File = new Map()
-  function createNode(parentUrl, parentIds, children, fileTree) {
+  function createNode(parentUrl, parentKeys, children, fileTree) {
     const entries = Object.entries(fileTree)
     reorder(entries, (entry) => entry[0])
     for (const [name, file] of entries) {
-      let curId = id++
+      let curKey = key++
       const path = parentUrl.length > 0 ? `${parentUrl}/${name}` : name
       if (file instanceof Object) {
         // if file is an object, it presents a directory
         const myChildren = []
         const obj = {
-          id: curId,
-          name,
+          key: curKey,
+          title: name,
+          selectable: false,
           children: myChildren
         }
         children.push(obj)
-        createNode(path, [...parentIds, curId], myChildren, file)
+        createNode(path, [...parentKeys, curKey], myChildren, file)
       } else {
-        id2File.set(curId, {
+        id2File.set(curKey, {
           name,
           path: path,
           type: file,
-          parentIds,
+          selectable: false,
+          tracking: [...parentKeys, curKey],
         })
         // otherwise, it presents a file
         children.push({
-          id: curId,
-          name
+          key: curKey,
+          isLeaf: true,
+          title: name,
         })
       }
     }
   }
   createNode("", [rootObj.id], rootChildren, rootFileTree)
   return {
-    tree: rootObj,
+    renderTree: rootObj,
     id2File,
-    maxId: id,
+    maxId: key,
   }
-}
-
-function buildFileTreeView(node) {
-  if (!node) return
-  const id = `${node.id}`
-  return <TreeItem key={id} nodeId={id} label={node.name}>
-    {Array.isArray(node.children)
-      ? node.children.map((n) => buildFileTreeView(n))
-      : null}
-  </TreeItem>
-}
-
-/**
- *  @author chatGPT
- */
-// eslint-disable-next-line no-unused-vars
-function fuzzyMatch(test, target) {
-  // Convert both strings to lowercase
-  test = test.toLowerCase()
-  target = target.toLowerCase()
-
-  // If the test string is empty, return 0
-  if (test.length === 0) {
-    return 0
-  }
-
-  // Initialize the matrix
-  const matrix = []
-  for (let i = 0; i <= target.length; i++) {
-    matrix[i] = [i]
-  }
-  for (let j = 0; j <= test.length; j++) {
-    matrix[0][j] = j
-  }
-
-  // Fill the matrix
-  for (let i = 1; i <= target.length; i++) {
-    for (let j = 1; j <= test.length; j++) {
-      if (target.charAt(i - 1) === test.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(matrix[i - 1][j - 1], matrix[i][j - 1], matrix[i - 1][j]) + 1
-      }
-    }
-  }
-
-  // Compute the possibility
-  const distance = matrix[target.length][test.length]
-  return 1 - distance / Math.max(target.length, test.length)
 }
 
 /**
