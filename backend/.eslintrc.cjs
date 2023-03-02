@@ -35,6 +35,7 @@ module.exports = {
     "@typescript-eslint/no-floating-promises": "off",
     "@typescript-eslint/strict-boolean-expressions": "off",
     "@typescript-eslint/no-this-alias": "off",
-    "no-trailing-spaces": "off"
+    "no-trailing-spaces": "off",
+    "@typescript-eslint/array-type": "off"
   }
 }

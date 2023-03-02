@@ -1,49 +1,60 @@
 import type * as fs from "fs"
-import * as path from "path"
 import { FileTree, type File, type FileType } from "./file.js"
 import * as chokidar from "chokidar"
 import minimatch, { type MinimatchOptions } from "minimatch"
 import { clearInterval } from "timers"
+import { shallowEqual } from "./fundation.js"
 interface HostTreeOptions {
+  /**
+  * The absolute path of root directory.
+  */
   root: string
   fileTypePatterns: object | null
+  rebuildInterval: number
 }
 const minimatchOptions: MinimatchOptions = {
   nocase: true,
 }
 export class HostTree {
-  /**
-   * The absolute path of root directory.
-   */
-  readonly root: string
-  readonly fileTypePatterns: object | null
-  onRebuilt: (() => void) | null = null
+  protected options: HostTreeOptions
   fileTree: FileTree
-  fileWatcher: fs.FSWatcher | null = null
+  protected fileWatcher: fs.FSWatcher | null = null
+  onRebuilt: (() => void) | null = null
   constructor(
     options: HostTreeOptions
   ) {
-    this.root = path.resolve(options.root)
-    this.fileTypePatterns = options.fileTypePatterns
+    this.options = options
+  }
+
+  updateOptions(options: HostTreeOptions): void {
+    const oldOptions = this.options
+    if (!shallowEqual(oldOptions, options)) {
+      this.options = options
+      if (oldOptions.root !== options.root) {
+        this.stopWatching()
+        this.startWatching()
+      }
+      this.shouldRebuild = true
+    }
   }
 
   get isWatching(): boolean {
     return this.fileWatcher != null
   }
 
-  rebuildTimer: NodeJS.Timer | null = null
+  protected rebuildTimer: NodeJS.Timer | null = null
 
-  shouldRebuild = false
+  protected shouldRebuild = false
 
-  startWatching(rebuildInterval: number = 3000): void {
+  startWatching(): void {
     if (this.fileWatcher != null && this.rebuildTimer != null) return
     this.rebuildTimer = setInterval(() => {
       if (this.shouldRebuild) {
         this.rebuildFileTree()
         this.shouldRebuild = false
       }
-    }, rebuildInterval)
-    this.fileWatcher = chokidar.watch(this.root, {
+    }, this.options.rebuildInterval)
+    this.fileWatcher = chokidar.watch(this.options.root, {
       ignoreInitial: true,
     }).on("all", (event, filePath) => {
       this.onWatch(event, filePath)
@@ -61,7 +72,7 @@ export class HostTree {
 
   async rebuildFileTree(): Promise<void> {
     const tree = await FileTree.createFrom({
-      root: this.root,
+      root: this.options.root,
       classifier: (path) => this.classifyByFilePath(path),
       allowNullFileType: false,
       pruned: true,
@@ -77,6 +88,8 @@ export class HostTree {
     if (this.rebuildTimer) {
       clearInterval(this.rebuildTimer)
     }
+    this.fileWatcher = null
+    this.rebuildTimer = null
   }
 
   resolveFile(path: string): File | null {
@@ -84,8 +97,9 @@ export class HostTree {
   }
 
   classifyByFilePath(filePath: string): FileType {
-    if (this.fileTypePatterns == null) return null
-    for (const [pattern, type] of Object.entries(this.fileTypePatterns)) {
+    const patterns = this.options.fileTypePatterns
+    if (patterns == null) return null
+    for (const [pattern, type] of Object.entries(patterns)) {
       if (minimatch(filePath, pattern, minimatchOptions)) {
         return type
       }

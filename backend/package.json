@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "serve": "tsc && node dist/index.js",
+    "start": "tsc && node dist/index.js",
     "package": "esbuild src/index.ts --platform=node --bundle --minify --packages=external --format=esm --outfile=build/index.js"
   },
   "author": "Liplum",

@@ -1,21 +1,32 @@
 import { HostTree } from "./host.js"
-import { config } from "./index.js"
+import { type AppConfig } from "./index.js"
 import express, { type Request, type Response } from "express"
 import * as fs from "fs"
 import { File, FileTree } from "./file.js"
+import { type ListenableValue } from "./fundation.js"
 import cors from "cors"
 
-export async function startServer(): Promise<void> {
+export async function startServer(
+  config: ListenableValue<AppConfig>,
+): Promise<void> {
   const tree = new HostTree({
-    root: config.root,
-    fileTypePatterns: config.fileTypePatterns,
+    root: config.value.root,
+    fileTypePatterns: config.value.fileTypePatterns,
+    rebuildInterval: config.value.rebuildInterval
+  })
+  config.addListener((config) => {
+    tree.updateOptions({
+      root: config.root,
+      fileTypePatterns: config.fileTypePatterns,
+      rebuildInterval: config.rebuildInterval
+    })
   })
   let treeJsonObjectCache: object | null = null
   let treeJsonStringCache: string | null = null
   let treeIndexHtmlCache: string | null = null
   tree.onRebuilt = () => {
     treeJsonObjectCache = {
-      name: config.name,
+      name: config.value.name,
       files: tree.fileTree.toJSON()
     }
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 2)
@@ -70,8 +81,9 @@ export async function startServer(): Promise<void> {
     handler(req, res, file)
   })
 
-  app.listen(config.port, config.hostname)
-  console.log(`Server running at http://${config.hostname}:${config.port}/`)
+  app.listen(config.value.port, config.value.hostname, () => {
+    console.log(`Server running at http://${config.value.hostname}:${config.value.port}/`)
+  })
 }
 
 function removePrefix(origin: string, prefix: string): string {
