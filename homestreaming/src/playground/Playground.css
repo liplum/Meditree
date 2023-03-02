@@ -1,27 +1,20 @@
-.image-container {
-  max-width: 100%;
-  overflow: hidden;
-  /* hide any overflowing content */
-}
 
-.img-view {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  height: 70%;
-  max-width: 80%; 
-}
-
-.img-view-mobile {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+.image-container, .video-container {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex; /* center the image or video horizontally */
+  justify-content: center; /* center the image or video horizontally */
+  padding: 20px; /* add 20px margin on all sides */
+  box-sizing: border-box; /* include padding in total element width and height */
 }
 
-.video-view {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 80%;
+.img-view, .video-view {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
