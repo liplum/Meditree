@@ -2,16 +2,18 @@
   "name": "homestreaming-backend",
   "version": "1.0.0",
   "description": "The backend server of homestreaming web app.",
-  "main": "dist/app.js",
+  "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "serve": "tsc && node dist/app.js"
+    "serve": "tsc && node dist/index.js",
+    "package": "esbuild src/index.ts --platform=node --bundle --minify --packages=external --format=esm --outfile=build/index.js"
   },
   "author": "Liplum",
   "license": "ISC",
   "dependencies": {
     "chokidar": "^3.5.3",
     "cors": "^2.8.5",
+    "esbuild": "0.17.10",
     "express": "^4.18.2",
     "minimatch": "^6.2.0",
     "source-map-support": "^0.5.21"

@@ -1,5 +1,5 @@
 import { HostTree } from "./host.js"
-import { config } from "./app.js"
+import { config } from "./index.js"
 import express, { type Request, type Response } from "express"
 import * as fs from "fs"
 import { File, FileTree } from "./file.js"

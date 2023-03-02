@@ -20,8 +20,7 @@ export let config = {
 }
 const configFileName = "homestreaming-config.json"
 function findConfig(): void {
-  const _dirname = path.dirname(fileURLToPath(import.meta.url))
-  const curDir = path.dirname(_dirname)
+  const curDir = path.dirname(fileURLToPath(import.meta.url))
   let configFile: string | null = findFileInFileTree(curDir, configFileName)
   if (configFile == null) {
     configFile = path.join(curDir, configFileName)
@@ -35,4 +34,6 @@ function findConfig(): void {
 }
 
 findConfig()
-await startServer()
+startServer().then(() => {
+
+})
