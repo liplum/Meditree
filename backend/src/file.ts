@@ -124,7 +124,42 @@ export class FileTree {
     const tree = new FileTree(root)
     tree.classifier = options.classifier
     tree.allowNullFileType = options.allowNullFileType
-    await this.iterate(tree, root, options.pruned)
+    const pruned = options.pruned
+    const walk = async (
+      tree: FileTree,
+      currentDirectory: string,
+    ): Promise<void> => {
+      let files: fs.Dirent[]
+      try {
+        files = await readdirAsync(currentDirectory, { withFileTypes: true })
+      } catch (e) {
+        console.error(e.message)
+        return
+      }
+      for (const file of files) {
+        const fileName = file.name
+        const filePath = path.join(currentDirectory, fileName)
+        try {
+          if (file.isFile()) {
+            const fileType = tree.classifier(filePath)
+            if (tree.allowNullFileType || fileType != null) {
+              const file = new File(filePath, fileType)
+              tree.addFileSystemEntry(fileName, file)
+            }
+          } else if (file.isDirectory()) {
+            const subtree = tree.createSubtree(filePath)
+            tree.addFileSystemEntry(fileName, subtree)
+            await walk(subtree, filePath)
+            if (pruned && subtree.subtreeChildrenCount === 0) {
+              tree.removeFileSystemEntry(fileName)
+            }
+          }
+        } catch (e) {
+          continue
+        }
+      }
+    }
+    await walk(tree, root)
     return tree
   }
 
@@ -134,32 +169,6 @@ export class FileTree {
     subtree.classifier = this.classifier
     subtree.parent = this
     return subtree
-  }
-
-  private static async iterate(
-    tree: FileTree,
-    currentDirectory: string,
-    pruned: boolean = false,
-  ): Promise<void> {
-    const files = await readdirAsync(currentDirectory, { withFileTypes: true })
-    for (const file of files) {
-      const fileName = file.name
-      const filePath = path.join(currentDirectory, fileName)
-      if (file.isFile()) {
-        const fileType = tree.classifier(filePath)
-        if (tree.allowNullFileType || fileType != null) {
-          const file = new File(filePath, fileType)
-          tree.addFileSystemEntry(fileName, file)
-        }
-      } else if (file.isDirectory()) {
-        const subtree = tree.createSubtree(filePath)
-        tree.addFileSystemEntry(fileName, subtree)
-        await this.iterate(subtree, filePath, pruned)
-        if (pruned && subtree.subtreeChildrenCount === 0) {
-          tree.removeFileSystemEntry(fileName)
-        }
-      }
-    }
   }
 
   toJSON(): object {
