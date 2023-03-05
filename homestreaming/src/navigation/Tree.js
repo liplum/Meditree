@@ -9,8 +9,6 @@ export class FileTreeNavigation extends React.Component {
     this.state = {
       delegate: undefined,
     }
-    this.onGoNext = this.onGoNext.bind(this)
-    this.onGoPrevious = this.onGoPrevious.bind(this)
   }
 
   componentDidMount() {
@@ -73,8 +71,6 @@ export class FileTreeNavigation extends React.Component {
           backgroundColor: "#0A0A0A",
           color: "#FAFAFA",
           fontSize: "14pt",
-          height: "100vh",
-          overflow: "auto"
         }}
         showLine={true}
         showIcon={false}
@@ -94,53 +90,25 @@ export class FileTreeNavigation extends React.Component {
       key,
     })
   }
-
-  onGoPrevious(curFile) {
-    if (!(curFile && "nodeId" in curFile)) return
-    const delegate = this.state.delegate
-    const findPreviousFileTilEnd = () => {
-      let previousId = curFile.nodeId - 1
-      while (previousId >= 0) {
-        const previous = delegate.id2File.get(previousId)
-        if (!previous) {
-          previousId--
-        } else {
-          return {
-            id: previousId,
-            file: previous
-          }
-        }
-      }
-    }
-    const previous = findPreviousFileTilEnd()
-    if (previous) {
-      const { id, file } = previous
-      this.selectFile(id, file)
-    }
+  onGoNext = (curFile) => {
+    this.onGoImage(curFile, +1)
+  }
+  onGoPrevious = (curFile) => {
+    this.onGoImage(curFile, -1)
   }
 
-  onGoNext(curFile) {
-    if (!(curFile && "nodeId" in curFile)) return
+  onGoImage(curFile, delta) {
+    if (!(curFile && "key" in curFile)) return
     const delegate = this.state.delegate
-    const findNextFileTilEnd = () => {
-      let nextId = curFile.nodeId + 1
-      while (nextId < this.state.delegate.maxId) {
-        const next = delegate.id2File.get(nextId)
-        if (!next) {
-          nextId++
-        } else {
-          return {
-            id: nextId,
-            file: next
-          }
-        }
+    let nextKey = curFile.key + delta
+    while (0 <= nextKey && nextKey < this.state.delegate.maxId) {
+      const next = delegate.id2File.get(nextKey)
+      if (!next) {
+        nextKey += delta
+      } else {
+        this.selectFile(nextKey, next)
+        return
       }
-    }
-
-    const previous = findNextFileTilEnd()
-    if (previous) {
-      const { id, file } = previous
-      this.selectFile(id, file)
     }
   }
 }

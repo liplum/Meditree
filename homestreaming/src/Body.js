@@ -56,10 +56,12 @@ export class MainBody extends React.Component {
         style={{
           backgroundColor: "#0A0A0A",
           color: "#FAFAFA",
-          fontSize: "14pt"
+          fontSize: "14pt",
+          height: "100vh",
+          overflow: "auto"
         }}
       >
-        <Space block>
+        <Space>
           <Tooltip title="Only Show Starred">
             <Button
               type="primary" icon={onlyShowStarred ? <StarFilled /> : <StarOutlined />}
@@ -67,7 +69,7 @@ export class MainBody extends React.Component {
             />
           </Tooltip>
           <Search
-            placeholder="input search text"
+            placeholder="search files or folders"
             onSearch={(prompt) => this.props.onSearchPromptChange(prompt)}
           />
         </Space>
@@ -90,7 +92,8 @@ export class MainBody extends React.Component {
             </label>
           </Space>
         </Header>
-        <Content>{content}</Content>
+        <Content
+        >{content}</Content>
       </Layout>
     </Layout>
   }
