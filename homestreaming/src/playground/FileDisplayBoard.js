@@ -20,6 +20,7 @@ export class FileDisplayBoard extends React.Component {
   }
 
   handleMouseDown = (event) => {
+    if (!isMobile) return
     const { clientX } = event;
     const { left, width } = this.boardRef.current.getBoundingClientRect();
 
@@ -58,8 +59,8 @@ function renderVideo(file) {
     url={file.url}
     autoPlay
     onMouseDown={(event) => {
-    event.stopPropagation();
-  }}
+      event.stopPropagation();
+    }}
     className={"video-view"} />
 
 }
