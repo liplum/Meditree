@@ -28,57 +28,58 @@ export class HomestreamingApp extends React.Component {
   }
 
   componentDidMount() {
-    document.addEventListener("keydown", this.handleKeyPress);
-    console.log(`fetching ${backend.listUrl}`);
+    document.addEventListener("keydown", this.handleKeyPress)
+    console.log(`fetching ${backend.listUrl}`)
     this.lastSelectedFile = JSON.parse(
       window.localStorage.getItem("lastSelectedFile")
-    );
+    )
     this.setState({
       selectedFile: this.lastSelectedFile,
-    });
+    })
     fetch(backend.listUrl)
       .then((response) => response.json())
       .then((data) => {
         this.setState({
           fileTree: data,
-        });
-      });
+        })
+        document.title = data.name
+      })
   }
 
   onSelectFile(file) {
     this.setState({
       selectedFile: file,
-    });
-    window.localStorage.setItem("lastSelectedFile", JSON.stringify(file));
+    })
+    window.localStorage.setItem("lastSelectedFile", JSON.stringify(file))
   }
 
   componentWillUnmount() {
-    document.removeEventListener("keydown", this.handleKeyPress);
+    document.removeEventListener("keydown", this.handleKeyPress)
   }
 
   handleKeyPress = (event) => {
     if (event.key === "ArrowLeft") {
-      goPreviousFile(this.state.selectedFile);
+      goPreviousFile(this.state.selectedFile)
     } else if (event.key === "ArrowRight") {
-      goNextFile(this.state.selectedFile);
+      goNextFile(this.state.selectedFile)
     }
   }
 
   render() {
-    const astrology = JSON.parse(window.localStorage.getItem("astrology")) ?? {};
+    const astrology = JSON.parse(window.localStorage.getItem("astrology")) ?? {}
 
     const filterByPrompt = (file) => {
       if (this.state.onlyShowStarred && !astrology[file.path]) {
         return false;
       }
-      const searchPrompt = this.state.searchPrompt;
-      if (!searchPrompt) return true;
-      return file.path.toLowerCase().includes(searchPrompt.toLocaleLowerCase());
-    };
+      const searchPrompt = this.state.searchPrompt
+      if (!searchPrompt) return true
+      return file.path.toLowerCase().includes(searchPrompt.toLocaleLowerCase())
+    }
 
-    const selectedFile = this.state.selectedFile;
+    const selectedFile = this.state.selectedFile
     if (selectedFile) {
-      selectedFile.url = backend.reolsveFileUrl(selectedFile.path);
+      selectedFile.url = backend.reolsveFileUrl(selectedFile.path)
     }
 
     return <ConfigProvider
