@@ -5,6 +5,8 @@ const type2Render = {
   "video/mp4": renderVideo,
   "image/png": renderImage,
   "image/jpeg": renderImage,
+  "audio/mpeg": renderAudio,
+  "audio/ogg": renderAudio,
 }
 
 export function FileDisplayBoard(props) {
@@ -21,7 +23,8 @@ export function FileDisplayBoard(props) {
 }
 
 function renderVideo(file) {
-  return <VideoPlayer url={file.url}
+  return <VideoPlayer
+    url={file.url}
     className={"video-view"} />
 
 }
@@ -31,4 +34,12 @@ function renderImage(file) {
     src={file.url}
     alt={file.path}
     className={"img-view"} />
+}
+
+function renderAudio(file) {
+  return <audio
+    controls
+    src={file.url}
+    alt={file.path}
+    className={"video-view"} />
 }

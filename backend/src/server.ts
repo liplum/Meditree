@@ -5,6 +5,7 @@ import * as fs from "fs"
 import { File, FileTree } from "./file.js"
 import { type ListenableValue } from "./fundation.js"
 import cors from "cors"
+import * as ms from "mediaserver"
 
 export async function startServer(
   config: ListenableValue<AppConfig>,
@@ -59,6 +60,8 @@ export async function startServer(
     "video/mp4": getVideo,
     "image/png": getImage,
     "image/jpeg": getImage,
+    "audio/ogg": getAudio,
+    "audio/mpeg": getAudio,
   }
 
   app.get("/file(/*)", (req, res) => {
@@ -179,6 +182,11 @@ function getImage(req: Request, res: Response, file: File): void {
   })
   const path = file.path
   res.sendFile(path)
+}
+
+function getAudio(req: Request, res: Response, file: File): void {
+  res.status(200)
+  ms.pipe(req, res, file.path)
 }
 
 function buildIndexHtml(tree: FileTree): string {
