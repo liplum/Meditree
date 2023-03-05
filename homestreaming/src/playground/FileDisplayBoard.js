@@ -56,6 +56,7 @@ export class FileDisplayBoard extends React.Component {
 function renderVideo(file) {
   return <VideoPlayer
     url={file.url}
+    autoPlay
     onMouseDown={(event) => {
     event.stopPropagation();
   }}
