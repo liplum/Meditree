@@ -25,7 +25,6 @@ export class HomestreamingApp extends React.Component {
       searchPrompt: "",
       onlyShowStarred: false,
     };
-    this.handleKeyPress = this.handleKeyPress.bind(this);
   }
 
   componentDidMount() {
@@ -57,11 +56,11 @@ export class HomestreamingApp extends React.Component {
     document.removeEventListener("keydown", this.handleKeyPress);
   }
 
-  handleKeyPress(event) {
+  handleKeyPress = (event) => {
     if (event.key === "ArrowLeft") {
-      goNextFile(this.state.selectedFile);
-    } else if (event.key === "ArrowRight") {
       goPreviousFile(this.state.selectedFile);
+    } else if (event.key === "ArrowRight") {
+      goNextFile(this.state.selectedFile);
     }
   }
 
