@@ -28,14 +28,13 @@ export class HostTree {
 
   updateOptions(options: HostTreeOptions): void {
     const oldOptions = this.options
-    if (!shallowEqual(oldOptions, options)) {
-      this.options = options
-      if (oldOptions.root !== options.root) {
-        this.stopWatching()
-        this.startWatching()
-      }
-      this.shouldRebuild = true
+    if (shallowEqual(oldOptions, options)) return
+    this.options = options
+    if (oldOptions.root !== options.root) {
+      this.stopWatching()
+      this.startWatching()
     }
+    this.rebuildFileTree()
   }
 
   get isWatching(): boolean {
@@ -51,7 +50,6 @@ export class HostTree {
     this.rebuildTimer = setInterval(() => {
       if (this.shouldRebuild) {
         this.rebuildFileTree()
-        this.shouldRebuild = false
       }
     }, this.options.rebuildInterval)
     this.fileWatcher = chokidar.watch(this.options.root, {
@@ -71,6 +69,7 @@ export class HostTree {
   }
 
   async rebuildFileTree(): Promise<void> {
+    this.shouldRebuild = false
     const tree = await FileTree.createFrom({
       root: this.options.root,
       classifier: (path) => this.classifyByFilePath(path),

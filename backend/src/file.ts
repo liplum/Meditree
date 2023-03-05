@@ -129,30 +129,32 @@ export class FileTree {
       tree: FileTree,
       currentDirectory: string,
     ): Promise<void> => {
-      let files: fs.Dirent[]
+      let files: string[]
       try {
-        files = await readdirAsync(currentDirectory, { withFileTypes: true })
+        files = await readdirAsync(currentDirectory)
       } catch (e) {
         console.error(e.message)
         return
       }
-      for (const file of files) {
-        const fileName = file.name
+      for (const fileName of files) {
         const filePath = path.join(currentDirectory, fileName)
         try {
-          if (file.isFile()) {
+          const stat = fs.statSync(filePath)
+          if (stat.isFile()) {
             const fileType = tree.classifier(filePath)
             if (tree.allowNullFileType || fileType != null) {
               const file = new File(filePath, fileType)
               tree.addFileSystemEntry(fileName, file)
             }
-          } else if (file.isDirectory()) {
+          } else if (stat.isDirectory()) {
             const subtree = tree.createSubtree(filePath)
             tree.addFileSystemEntry(fileName, subtree)
             await walk(subtree, filePath)
             if (pruned && subtree.subtreeChildrenCount === 0) {
               tree.removeFileSystemEntry(fileName)
             }
+          } else {
+            console.log("Unknown file type", filePath)
           }
         } catch (e) {
           continue
