@@ -71,6 +71,8 @@ export class FileTreeNavigation extends React.Component {
           backgroundColor: "#0A0A0A",
           color: "#FAFAFA",
           fontSize: "14pt",
+          height: "95vh",
+          overflow: "auto",
         }}
         showLine={true}
         showIcon={false}
@@ -159,7 +161,7 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
   const id2File = new Map()
   function createNode(parentUrl, parentKeys, children, fileTree) {
     const entries = Object.entries(fileTree)
-    reorder(entries, (entry) => entry[0])
+    reorder(entries)
     for (const [name, file] of entries) {
       let curKey = key++
       const path = parentUrl.length > 0 ? `${parentUrl}/${name}` : name
@@ -202,10 +204,15 @@ function createFileTreeDelegate(rootFileTree, rootName = "") {
 /**
  *  @author chatGPT
  */
-function reorder(array, getFileName) {
+function reorder(array) {
   array.sort((a, b) => {
-    const fileNameA = getFileName(a);
-    const fileNameB = getFileName(b);
+    const [fileNameA, fileA] = a;
+    const [fileNameB, fileB] = b;
+    // if both fileA and fileB are directories
+    if(typeof fileA === "object" && typeof fileB === "object"){
+      // just compare in string
+      return fileNameA.localeCompare(fileNameB)
+    }
 
     const extensionA = fileNameA.split('.').pop();
     const extensionB = fileNameB.split('.').pop();

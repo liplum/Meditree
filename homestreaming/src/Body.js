@@ -32,17 +32,9 @@ export class MainBody extends React.Component {
   }
 
   render() {
-    const selectedFile = this.props.selectedFile;
-    const title = selectedFile ? selectedFile.name : "No file selected";
-    const onlyShowStarred = this.props.onlyShowStarred;
-    const fileNav = <FileTreeNavigation
-      onSelectFile={this.props.onSelectFile}
-      searchDelegate={this.props.fileFilter}
-      lastSelectedFile={this.props.lastSelectedFile}
-      fileTree={this.props.fileTree}
-    />
-    const content = <FileDisplayBoard file={selectedFile} />
-
+    const selectedFile = this.props.selectedFile
+    const title = selectedFile ? selectedFile.name : "No file selected"
+    const onlyShowStarred = this.props.onlyShowStarred
     return <Layout style={{
       backgroundColor: "#0A0A0A",
       color: "#FAFAFA",
@@ -57,10 +49,7 @@ export class MainBody extends React.Component {
           backgroundColor: "#0A0A0A",
           color: "#FAFAFA",
           fontSize: "14pt",
-          height: "100vh",
-          overflow: "auto"
-        }}
-      >
+        }}>
         <Space>
           <Tooltip title="Only Show Starred">
             <Button
@@ -73,7 +62,12 @@ export class MainBody extends React.Component {
             onSearch={(prompt) => this.props.onSearchPromptChange(prompt)}
           />
         </Space>
-        {fileNav}
+        <FileTreeNavigation
+          onSelectFile={this.props.onSelectFile}
+          searchDelegate={this.props.fileFilter}
+          lastSelectedFile={this.props.lastSelectedFile}
+          fileTree={this.props.fileTree}
+        />
       </Sider>
       <Layout style={{
         backgroundColor: "#0A0A0A",
@@ -83,17 +77,25 @@ export class MainBody extends React.Component {
           backgroundColor: "#0A0A0A",
           color: "#FAFAFA",
         }}>
-          <Space wrap>
+          <Space>
             {this.buildAppBarAction()}
             <label style={{
               fontSize: "18pt",
             }}>
-              {title}
+              {selectedFile ?
+                (
+                  <Tooltip title={selectedFile.path}>
+                    {title}
+                  </Tooltip>
+                ) : title}
             </label>
           </Space>
         </Header>
-        <Content
-        >{content}</Content>
+        <Content style={{
+          height: "100vh"
+        }}>
+          <FileDisplayBoard file={selectedFile} />
+        </Content>
       </Layout>
     </Layout>
   }
