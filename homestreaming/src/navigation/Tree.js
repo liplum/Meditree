@@ -1,5 +1,5 @@
 import React from 'react'
-import emitter from "../Event"
+import { emitter } from "../Event"
 import { Tree } from 'antd'
 const { DirectoryTree } = Tree;
 
@@ -209,7 +209,7 @@ function reorder(array) {
     const [fileNameA, fileA] = a;
     const [fileNameB, fileB] = b;
     // if both fileA and fileB are directories
-    if(typeof fileA === "object" && typeof fileB === "object"){
+    if (typeof fileA === "object" && typeof fileB === "object") {
       // just compare in string
       return fileNameA.localeCompare(fileNameB)
     }

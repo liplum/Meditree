@@ -1,5 +1,9 @@
 import { VideoPlayer } from "./Video"
 import './Playground.css'
+import React, { createRef } from 'react'
+import { goNextFile, goPreviousFile } from "../Event";
+
+import { isMobile } from "react-device-detect"
 
 const type2Render = {
   "video/mp4": renderVideo,
@@ -9,22 +13,52 @@ const type2Render = {
   "audio/ogg": renderAudio,
 }
 
-export function FileDisplayBoard(props) {
-  const file = props.file
-  if (!file) {
-    return <h1>No file selected</h1>
+export class FileDisplayBoard extends React.Component {
+  constructor(props) {
+    super(props);
+    this.boardRef = createRef()
   }
-  const renderer = type2Render[file.type]
-  if (renderer) {
-    return renderer(file)
-  } else {
-    return <h1>Cannot display this file.</h1>
+
+  handleMouseDown = (event) => {
+    const { clientX } = event;
+    const { left, width } = this.boardRef.current.getBoundingClientRect();
+
+    if (clientX < left + width / 2) {
+      // left side
+      goPreviousFile(this.props.file)
+    } else {
+      // right side
+      goNextFile(this.props.file)
+    }
+  }
+
+  render() {
+    const file = this.props.file
+    if (!file) {
+      return <h1>No file selected</h1>
+    }
+    const renderer = type2Render[file.type]
+
+    const content = renderer ?
+      renderer(file) :
+      <h1>Cannot display this file.</h1>
+    return <div
+      ref={this.boardRef}
+      onMouseDown={this.handleMouseDown}
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
+    >{content}</div>
   }
 }
 
 function renderVideo(file) {
   return <VideoPlayer
     url={file.url}
+    onMouseDown={(event) => {
+    event.stopPropagation();
+  }}
     className={"video-view"} />
 
 }

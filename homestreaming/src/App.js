@@ -1,6 +1,6 @@
 import "./App.css";
 import React from "react";
-import emitter from "./Event";
+import { goNextFile, goPreviousFile } from "./Event";
 import { MainBody } from "./Body";
 import { ConfigProvider, theme } from 'antd';
 
@@ -59,9 +59,9 @@ export class HomestreamingApp extends React.Component {
 
   handleKeyPress(event) {
     if (event.key === "ArrowLeft") {
-      emitter.emit("go-previous", this.state.selectedFile);
+      goNextFile(this.state.selectedFile);
     } else if (event.key === "ArrowRight") {
-      emitter.emit("go-next", this.state.selectedFile);
+      goPreviousFile(this.state.selectedFile);
     }
   }
 
