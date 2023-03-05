@@ -1,8 +1,8 @@
-import "./App.css";
-import React from "react";
-import { goNextFile, goPreviousFile } from "./Event";
-import { MainBody } from "./Body";
-import { ConfigProvider, theme } from 'antd';
+import "./App.css"
+import React from "react"
+import { goNextFile, goPreviousFile } from "./Event"
+import { MainBody } from "./Body"
+import { ConfigProvider, theme } from 'antd'
 
 const backend = {
   url: process.env.REACT_APP_BACKEND_URL,
