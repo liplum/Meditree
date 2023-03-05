@@ -72,7 +72,9 @@ export class FileTreeNavigation extends React.Component {
         style={{
           backgroundColor: "#0A0A0A",
           color: "#FAFAFA",
-          fontSize: "14pt"
+          fontSize: "14pt",
+          height: "100vh",
+          overflow: "auto"
         }}
         showLine={true}
         showIcon={false}

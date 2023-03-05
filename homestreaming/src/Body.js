@@ -46,7 +46,8 @@ export class MainBody extends React.Component {
     return <Layout style={{
       backgroundColor: "#0A0A0A",
       color: "#FAFAFA",
-      fontSize: "14pt"
+      fontSize: "14pt",
+      height: "100vh",
     }}>
       <Sider
         breakpoint="sm"
