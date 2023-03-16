@@ -9,9 +9,8 @@ const { DirectoryTree } = Tree;
 
 
 export function FileTreeNavigation(props) {
-  const [delegate, setDelegate] = useContext(FileTreeDeleagteContext)
+  const [delegate] = useContext(FileTreeDeleagteContext)
   const [renderTree, setRenderTree] = useState()
-
   useEffect(() => {
     if (!delegate) return
     if (props.searchDelegate) {

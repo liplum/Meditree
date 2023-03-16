@@ -6,13 +6,14 @@ import {
 import { ConfigProvider, theme } from 'antd'
 import ReactDOM from 'react-dom/client'
 import './index.css'
-import { HomestreamingApp } from './app'
-import reportWebVitals from './reportWebVitals'
+import { App, loader as appLoader } from './app'
 import { FileDisplayBoard } from './playground'
+import reportWebVitals from './reportWebVitals'
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <HomestreamingApp />,
+    element: <App />,
+    loader: appLoader,
     children: [
       {
         path: "/:key",

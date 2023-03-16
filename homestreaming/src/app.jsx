@@ -9,6 +9,7 @@ import { StarOutlined, StarFilled } from '@ant-design/icons';
 import * as ft from "./fileTree"
 import {
   Outlet,
+  useLoaderData,
 } from "react-router-dom";
 
 import Box from '@mui/material/Box';
@@ -34,13 +35,24 @@ export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
 const drawerWidth = 240;
 
-export function HomestreamingApp(props) {
-  const [fileTreeDelegate, setFileTreeDelegate] = useState()
+export async function loader() {
+  console.log(`fetching ${backend.listUrl}`)
+  const response = await fetch(backend.listUrl, {
+    method: "GET",
+  })
+  const data = await response.json()
+  const fileTreeDelegate = ft.createDelegate(data.files, data.name)
+  document.title = data.name
+  return { fileTreeDelegate }
+}
+
+export function App(props) {
+  const { fileTreeDelegate } = useLoaderData()
   const [isDrawerOpen, setIsDrawerOpen] = useState()
-  const [selectedFile, setSelectedFile] = useState()
+  const lastSelectedFile = JSON.parse(window.localStorage.getItem("lastSelectedFile"))
+  const [selectedFile, setSelectedFile] = useState(lastSelectedFile)
   const [searchPrompt, setSearchPrompt] = useState()
   const [onlyShowStarred, setOnlyShowStarred] = useState()
-  const [lastSelectedFile, setLastSelectedFile] = useState()
   function goFile(curFile, delta) {
     if (!(curFile && "key" in curFile)) return
     let nextKey = curFile.key + delta
@@ -60,23 +72,6 @@ export function HomestreamingApp(props) {
 
   const goNext = (curFile) => goFile(curFile, +1)
   const goPrevious = (curFile) => goFile(curFile, -1)
-  useEffect(() => {
-    setLastSelectedFile(JSON.parse(
-      window.localStorage.getItem("lastSelectedFile")
-    ))
-    setSelectedFile(lastSelectedFile)
-  }, [lastSelectedFile])
-  
-  useEffect(() => {
-    console.log(`fetching ${backend.listUrl}`)
-    fetch(backend.listUrl)
-      .then((response) => response.json())
-      .then((data) => {
-        const delegate = ft.createDelegate(data.files, data.name)
-        setFileTreeDelegate(delegate)
-        document.title = data.name
-      })
-  }, [fileTreeDelegate])
 
   useEffect(() => {
     emitter.on("go-next", goNext)
@@ -185,7 +180,7 @@ export function HomestreamingApp(props) {
     </Box>
   )
   return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
-    <FileTreeDeleagteContext.Provider value={[fileTreeDelegate, setFileTreeDelegate]}>
+    <FileTreeDeleagteContext.Provider value={[fileTreeDelegate]}>
       {body}
     </FileTreeDeleagteContext.Provider>
   </IsDrawerOpenContext.Provider>
