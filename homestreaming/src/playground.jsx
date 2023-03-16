@@ -58,14 +58,13 @@ export function FileDisplayBoard(props) {
 }
 
 function renderVideo(file) {
-  return <VideoPlayer
-    url={file.url}
+  return <video controls
+    src={file.url}
     autoPlay
     onMouseDown={(event) => {
       event.stopPropagation();
     }}
     className={"video-view"} />
-
 }
 
 function renderImage(file) {
@@ -81,10 +80,4 @@ function renderAudio(file) {
     src={file.url}
     alt={file.path}
     className={"video-view"} />
-}
-
-function VideoPlayer() {
-  return <video controls
-    src={this.props.url} {...this.props}
-  />
 }
