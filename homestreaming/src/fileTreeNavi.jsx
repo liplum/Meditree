@@ -1,7 +1,7 @@
 import React from 'react'
 import { emitter } from "./event"
 import { Tree } from 'antd'
-import * as ft from "./FileTree"
+import * as ft from "./fileTree"
 const { DirectoryTree } = Tree;
 
 export class FileTreeNavigation extends React.Component {

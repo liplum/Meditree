@@ -1,5 +1,5 @@
 import React from "react";
-import { FileTreeNavigation } from "./TreeNavi.jsx";
+import { FileTreeNavigation } from "./fileTreeNavi";
 import { FileDisplayBoard } from "./playground";
 
 import { Layout, Input, Space, Button, Tooltip } from 'antd';

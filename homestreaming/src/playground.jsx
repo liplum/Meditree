@@ -1,5 +1,5 @@
 import './playground.css'
-import React, { createRef } from 'react'
+import React, { useRef } from 'react'
 import { goNextFile, goPreviousFile } from "./event";
 
 import { isMobile } from "react-device-detect"
@@ -11,46 +11,50 @@ const type2Render = {
   "audio/mpeg": renderAudio,
   "audio/ogg": renderAudio,
 }
-
-export class FileDisplayBoard extends React.Component {
-  constructor(props) {
-    super(props);
-    this.boardRef = createRef()
-  }
-
-  handleMouseDown = (event) => {
+export function FileDisplayBoard(props) {
+  const boardRef = useRef()
+  const onMouseDown = (e) => {
     if (!isMobile) return
-    const { clientX } = event;
-    const { left, width } = this.boardRef.current.getBoundingClientRect();
+    const { clientX } = e;
+    const { left, width } = boardRef.current.getBoundingClientRect();
 
     if (clientX < left + width / 2) {
       // left side
-      goPreviousFile(this.props.file)
+      goPreviousFile(props.file)
     } else {
       // right side
-      goNextFile(this.props.file)
+      goNextFile(props.file)
     }
   }
-
-  render() {
-    const file = this.props.file
-    if (!file) {
-      return <h1>No file selected</h1>
+  const onWheel = (e) => {
+    if (isMobile) return
+    if (e.deltaY > 0) {
+      // wheel down
+      goNextFile(props.file)
+    } else if (e.deltaY < 0) {
+      // wheel up
+      goPreviousFile(props.file)
     }
-    const renderer = type2Render[file.type]
-
-    const content = renderer ?
-      renderer(file) :
-      <h1>Cannot display this file.</h1>
-    return <div
-      ref={this.boardRef}
-      onMouseDown={this.handleMouseDown}
-      style={{
-        width: "100%",
-        height: "100%",
-      }}
-    >{content}</div>
   }
+  const file = props.file
+  if (!file) {
+    return <h1>No file selected</h1>
+  }
+  const renderer = type2Render[file.type]
+
+  const content = renderer ?
+    renderer(file) :
+    <h1>Cannot display this file.</h1>
+  return <div
+    ref={boardRef}
+    onMouseDown={onMouseDown}
+    onWheel={onWheel}
+    style={{
+      width: "100%",
+      height: "100%",
+    }}>
+    {content}
+  </div>
 }
 
 function renderVideo(file) {
