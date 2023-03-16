@@ -5,7 +5,6 @@ import { emitter } from "./event"
 import MenuIcon from '@mui/icons-material/Menu';
 
 import { Input, Space, Button } from 'antd';
-import { StarOutlined, StarFilled } from '@ant-design/icons';
 import * as ft from "./fileTree"
 import {
   Outlet,
@@ -13,6 +12,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { Box, Divider, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
+import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from "./env";
 
 const { Search } = Input;
@@ -77,18 +77,23 @@ export function App(props) {
   }
 
   const drawer = <>
-    <Space>
-      <Tooltip title="Only Show Starred">
-        <Button
-          type="primary" icon={onlyShowStarred ? <StarFilled /> : <StarOutlined />}
-          onClick={() => setOnlyShowStarred(!onlyShowStarred)}
+    <AppBar position="fixed"
+      sx={{
+        width: { sm: `${drawerWidth}px` },
+        left: 0,
+      }}>
+      <div style={{ display: "flex", alignItems: 'center' }}>
+        <Tooltip title="Only Show Starred">
+          <IconButton onClick={() => setOnlyShowStarred(!onlyShowStarred)}>
+            {onlyShowStarred ? <Star /> : <StarBorder />}
+          </IconButton>
+        </Tooltip>
+        <Search
+          placeholder="search files or folders"
+          onSearch={(prompt) => setSearchPrompt(prompt)}
         />
-      </Tooltip>
-      <Search
-        placeholder="search files or folders"
-        onSearch={(prompt) => setSearchPrompt(prompt)}
-      />
-    </Space>
+      </div>
+    </AppBar>
     <FileTreeNavigation
       onSelectFile={(newFile) => {
         window.localStorage.setItem("lastSelectedFile", JSON.stringify(newFile))
@@ -99,13 +104,11 @@ export function App(props) {
   </>
   const body = (
     <Box sx={{
-      display: 'flex', height: "100vh", backgroundColor: "#0A0A0A",
-      color: "#FAFAFA",
+      display: 'flex', height: "100vh",
     }}>
       <Box
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="mailbox folders"
       >
         <Drawer
           variant="temporary"
