@@ -10,6 +10,13 @@ import {
   Outlet,
 } from "react-router-dom";
 
+import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
+import Drawer from '@mui/material/Drawer';
+import CssBaseline from '@mui/material/CssBaseline';
+import Toolbar from '@mui/material/Toolbar';
+
+
 const { Header, Content, Sider } = Layout;
 const { Search } = Input;
 
@@ -25,6 +32,8 @@ Object.assign(backend, {
 });
 
 export const FileTreeDeleagteContext = createContext()
+const drawerWidth = 240;
+
 
 export class HomestreamingApp extends React.Component {
   constructor(props) {
@@ -32,7 +41,7 @@ export class HomestreamingApp extends React.Component {
     this.state = {
       fileTree: undefined,
       selectedFile: null,
-      mobileOpen: false,
+      isDrawerOpen: false,
       searchPrompt: "",
       onlyShowStarred: false,
     };
@@ -97,74 +106,80 @@ export class HomestreamingApp extends React.Component {
       </Tooltip>
     );
     const onlyShowStarred = this.state.onlyShowStarred
-    return <Layout style={{
-      backgroundColor: "#0A0A0A",
-      color: "#FAFAFA",
-      fontSize: "14pt",
-      height: "100vh",
-    }}>
-      <Sider
-        breakpoint="sm"
-        collapsedWidth="0"
-        width="300px"
-        style={{
-          backgroundColor: "#0A0A0A",
-          color: "#FAFAFA",
-          fontSize: "14pt",
-        }}>
-        <Space>
-          <Tooltip title="Only Show Starred">
-            <Button
-              type="primary" icon={onlyShowStarred ? <StarFilled /> : <StarOutlined />}
-              onClick={() => {
-                this.setState({
-                  onlyShowStarred: !onlyShowStarred,
-                })
-              }}
-            />
-          </Tooltip>
-          <Search
-            placeholder="search files or folders"
-            onSearch={(prompt) => this.setState({
-              searchPrompt: prompt,
-            })}
+    const drawer = <>
+      <Space>
+        <Tooltip title="Only Show Starred">
+          <Button
+            type="primary" icon={onlyShowStarred ? <StarFilled /> : <StarOutlined />}
+            onClick={() => {
+              this.setState({
+                onlyShowStarred: !onlyShowStarred,
+              })
+            }}
           />
-        </Space>
-        <FileTreeNavigation
-          onSelectFile={(file) => this.onSelectFile(file)}
-          searchDelegate={filterByPrompt}
-          lastSelectedFile={this.lastSelectedFile}
-          fileTree={this.state.fileTree}
+        </Tooltip>
+        <Search
+          placeholder="search files or folders"
+          onSearch={(prompt) => this.setState({
+            searchPrompt: prompt,
+          })}
         />
-      </Sider>
-      <Layout style={{
-        backgroundColor: "#0A0A0A",
+      </Space>
+      <FileTreeNavigation
+        onSelectFile={(file) => this.onSelectFile(file)}
+        searchDelegate={filterByPrompt}
+        lastSelectedFile={this.lastSelectedFile}
+        fileTree={this.state.fileTree}
+      />
+    </>
+    return (
+      <Box sx={{
+        display: 'flex', height: "100vh", backgroundColor: "#0A0A0A",
         color: "#FAFAFA",
       }}>
-        <Header style={{
-          backgroundColor: "#0A0A0A",
-          color: "#FAFAFA",
-        }}>
-          <Space>
-            {appBarAction}
-            <label style={{
-              fontSize: "18pt",
-            }}>
-              {selectedFile ?
-                (
-                  <Tooltip title={selectedFile.path}>
-                    {title}
-                  </Tooltip>
-                ) : title}
-            </label>
-          </Space>
-        </Header>
-        <Content style={{
-          height: "100vh"
-        }}>
+        <Box
+          component="nav"
+          sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+          aria-label="mailbox folders"
+        >
+          <Drawer
+            variant="temporary"
+            open={this.state.isDrawerOpen}
+            onClose={() => {
+              this.setState({
+                isDrawerOpen: false
+              })
+            }}
+            ModalProps={{
+              keepMounted: true, // Better open performance on mobile.
+            }}
+            sx={{
+              display: { xs: 'block', sm: 'none' },
+              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            }}
+          >
+            {drawer}
+          </Drawer>
+          <Drawer
+            variant="permanent"
+            sx={{
+              display: { xs: 'none', sm: 'block' },
+              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            }}
+            open
+          >
+            {drawer}
+          </Drawer>
+        </Box>
+        <Box
+          component="main"
+          sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
+        >
+          <CssBaseline />
+          <Toolbar />
           <FileDisplayBoard file={selectedFile} />
-        </Content>
-      </Layout>
-    </Layout>
+        </Box>
+      </Box>
+    )
   }
 }
