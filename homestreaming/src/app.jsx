@@ -41,31 +41,30 @@ export function App(props) {
   const [onlyShowStarred, setOnlyShowStarred] = useState()
   const navigate = useNavigate()
 
-  function goFile(curFile, delta) {
-    if (!(curFile && "key" in curFile)) return
-    let nextKey = curFile.key + delta
-    while (0 <= nextKey && nextKey < fileTreeDelegate.maxKey) {
-      const next = fileTreeDelegate.key2File.get(nextKey)
-      if (!next) {
-        nextKey += delta
-      } else {
-        navigate(`/${nextKey}`)
-        return
+  useEffect(() => {
+    function goFile(curFile, delta) {
+      if (!(curFile && "key" in curFile)) return
+      let nextKey = curFile.key + delta
+      while (0 <= nextKey && nextKey < fileTreeDelegate.maxKey) {
+        const next = fileTreeDelegate.key2File.get(nextKey)
+        if (!next) {
+          nextKey += delta
+        } else {
+          navigate(`/${nextKey}`)
+          return
+        }
       }
     }
-  }
+    const goNext = (curFile) => goFile(curFile, +1)
+    const goPrevious = (curFile) => goFile(curFile, -1)
 
-  const goNext = (curFile) => goFile(curFile, +1)
-  const goPrevious = (curFile) => goFile(curFile, -1)
-
-  useEffect(() => {
     emitter.on("go-next", goNext)
     emitter.on("go-previous", goPrevious)
     return function cleanup() {
       emitter.on("go-next", goNext)
       emitter.on("go-previous", goPrevious)
     }
-  })
+  }, [fileTreeDelegate])
 
   const astrology = JSON.parse(window.localStorage.getItem("astrology")) ?? {}
 
@@ -141,7 +140,7 @@ export function App(props) {
       >
         <CssBaseline />
         <Toolbar />
-        <Outlet/>
+        <Outlet />
       </Box>
     </Box>
   )

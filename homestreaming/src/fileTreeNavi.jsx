@@ -5,9 +5,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { FileTreeDeleagteContext } from './app';
-import { backend } from './env';
 const { DirectoryTree } = Tree;
-
 
 export function FileTreeNavigation(props) {
   const [delegate] = useContext(FileTreeDeleagteContext)
