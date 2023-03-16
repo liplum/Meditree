@@ -1,8 +1,18 @@
 import "./app.css"
 import React, { createContext } from "react"
 import { goNextFile, goPreviousFile } from "./event"
-import { MainBody } from "./body"
 import { ConfigProvider, theme } from 'antd'
+import { FileTreeNavigation } from "./fileTreeNavi";
+import { FileDisplayBoard } from "./playground";
+
+import { Layout, Input, Space, Button, Tooltip } from 'antd';
+import { StarOutlined, StarFilled } from '@ant-design/icons';
+import {
+  Outlet,
+} from "react-router-dom";
+
+const { Header, Content, Sider } = Layout;
+const { Search } = Input;
 
 const backend = {
   url: process.env.REACT_APP_BACKEND_URL,
@@ -83,7 +93,24 @@ export class HomestreamingApp extends React.Component {
     if (selectedFile) {
       selectedFile.url = backend.reolsveFileUrl(selectedFile.path)
     }
-
+    const title = selectedFile ? selectedFile.name : "No file selected"
+    const starred = astrology[selectedFile?.path] === true;
+    const appBarAction = (
+      <Tooltip title="Add to Star">
+        <Button icon={starred ? <StarFilled /> : <StarOutlined />}
+          onClick={(newIsStarred) => {
+            if (newIsStarred) {
+              astrology[selectedFile.path] = true;
+            } else {
+              delete astrology[selectedFile.path];
+            }
+            window.localStorage.setItem("astrology", JSON.stringify(astrology));
+            this.forceUpdate();
+          }}>
+        </Button>
+      </Tooltip>
+    );
+    const onlyShowStarred = this.state.onlyShowStarred
     return <ConfigProvider
       theme={{
         token: {
@@ -91,35 +118,75 @@ export class HomestreamingApp extends React.Component {
           algorithm: theme.darkAlgorithm,
         },
       }}>
-      <MainBody
-        astrology={astrology}
-        fileFilter={filterByPrompt}
-        onStarChange={(newIsStarred) => {
-          if (newIsStarred) {
-            astrology[selectedFile.path] = true;
-          } else {
-            delete astrology[selectedFile.path];
-          }
-          window.localStorage.setItem("astrology", JSON.stringify(astrology));
-          this.forceUpdate();
-        }}
-        checkIsStarred={(file) => astrology[file.path] === true}
-        onSearchPromptChange={(prompt) => {
-          this.setState({
-            searchPrompt: prompt,
-          });
-        }}
-        onOnlyShowStarredChange={(newState) => {
-          this.setState({
-            onlyShowStarred: newState,
-          });
-        }}
-        onlyShowStarred={this.state.onlyShowStarred}
-        selectedFile={this.state.selectedFile}
-        lastSelectedFile={this.lastSelectedFile}
-        fileTree={this.state.fileTree}
-        onSelectFile={(file) => this.onSelectFile(file)}
-      />
+      <Layout style={{
+        backgroundColor: "#0A0A0A",
+        color: "#FAFAFA",
+        fontSize: "14pt",
+        height: "100vh",
+      }}>
+        <Sider
+          breakpoint="sm"
+          collapsedWidth="0"
+          width="300px"
+          style={{
+            backgroundColor: "#0A0A0A",
+            color: "#FAFAFA",
+            fontSize: "14pt",
+          }}>
+          <Space>
+            <Tooltip title="Only Show Starred">
+              <Button
+                type="primary" icon={onlyShowStarred ? <StarFilled /> : <StarOutlined />}
+                onClick={() => {
+                  this.setState({
+                    onlyShowStarred: !onlyShowStarred,
+                  })
+                }}
+              />
+            </Tooltip>
+            <Search
+              placeholder="search files or folders"
+              onSearch={(prompt) => this.setState({
+                searchPrompt: prompt,
+              })}
+            />
+          </Space>
+          <FileTreeNavigation
+            onSelectFile={(file) => this.onSelectFile(file)}
+            searchDelegate={filterByPrompt}
+            lastSelectedFile={this.lastSelectedFile}
+            fileTree={this.state.fileTree}
+          />
+        </Sider>
+        <Layout style={{
+          backgroundColor: "#0A0A0A",
+          color: "#FAFAFA",
+        }}>
+          <Header style={{
+            backgroundColor: "#0A0A0A",
+            color: "#FAFAFA",
+          }}>
+            <Space>
+              {appBarAction}
+              <label style={{
+                fontSize: "18pt",
+              }}>
+                {selectedFile ?
+                  (
+                    <Tooltip title={selectedFile.path}>
+                      {title}
+                    </Tooltip>
+                  ) : title}
+              </label>
+            </Space>
+          </Header>
+          <Content style={{
+            height: "100vh"
+          }}>
+            <FileDisplayBoard file={selectedFile} />
+          </Content>
+        </Layout>
+      </Layout>
     </ConfigProvider>
   }
 }
