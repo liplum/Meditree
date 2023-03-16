@@ -3,7 +3,7 @@ import React, { createContext } from "react"
 import { FileTreeNavigation } from "./fileTreeNavi";
 import { FileDisplayBoard } from "./playground";
 
-import { Layout, Input, Space, Button, Tooltip } from 'antd';
+import { Input, Space, Button, Tooltip } from 'antd';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
 import * as ft from "./fileTree"
 import {
@@ -16,8 +16,6 @@ import Drawer from '@mui/material/Drawer';
 import CssBaseline from '@mui/material/CssBaseline';
 import Toolbar from '@mui/material/Toolbar';
 
-
-const { Header, Content, Sider } = Layout;
 const { Search } = Input;
 
 const backend = {
@@ -32,6 +30,7 @@ Object.assign(backend, {
 });
 
 export const FileTreeDeleagteContext = createContext()
+export const IsDrawerOpenContext = createContext()
 const drawerWidth = 240;
 
 

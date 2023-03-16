@@ -1,119 +1,88 @@
-import React from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { emitter } from "./event"
 import { Tree } from 'antd'
-import * as ft from "./fileTree"
+import * as ft from "./FileTree"
 import {
   useNavigate,
 } from "react-router-dom";
+import { FileTreeDeleagteContext } from './App';
 const { DirectoryTree } = Tree;
-export class FileTreeNavigation extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      delegate: undefined,
-    }
-  }
 
-  componentDidMount() {
-    emitter.on("go-next", this.onGoNext)
-    emitter.on("go-previous", this.onGoPrevious)
-    this.updateAndNotify()
-  }
 
-  componentDidUpdate(prevProps) {
-    if (
-      prevProps.searchDelegate !== this.props.searchDelegate ||
-      prevProps.fileTree !== this.props.fileTree
-    ) {
-      this.updateAndNotify()
-    }
-  }
+export function FileTreeNavigation(props) {
+  const [delegate, setDelegate] = useContext(FileTreeDeleagteContext)
+  const [renderTree, setRenderTree] = useState()
 
-  updateAndNotify = () => {
-    const fileTree = this.props.fileTree
-    if (!fileTree) return
-    const delegate = ft.createDelegate(fileTree.files, fileTree.name)
-    if (this.props.searchDelegate) {
-      const tree = ft.filter(delegate.renderTree, this.props.searchDelegate,
-        (id) => delegate.id2File.get(id)
-      )
-      delegate.renderTree = tree
-    }
-    this.setState({
-      delegate
-    })
-  }
-
-  componentWillUnmount() {
-    emitter.off("go-next", this.onGoNext)
-    emitter.off("go-previous", this.onGoPrevious)
-  }
-
-  onNodeSelect(key) {
-    this.setState({
-      selected: key
-    })
-    if (typeof key === "string") {
-      key = parseInt(key)
-      if (isNaN(key)) return
-    }
-    const file = this.state.delegate.id2File.get(key)
-    if (file) this.props.onSelectFile?.({
-      key,
-      ...file,
-    })
-  }
-
-  render() {
-    const delegate = this.state.delegate
-    if (!delegate) return
-    const lastSelectedFile = this.props.lastSelectedFile
-    return (
-      <DirectoryTree
-        style={{
-          backgroundColor: "#0A0A0A",
-          color: "#FAFAFA",
-          fontSize: "14pt",
-          height: "95vh",
-          overflow: "auto",
-        }}
-        showLine={true}
-        showIcon={false}
-        defaultSelectedKeys={[lastSelectedFile?.nodeId]}
-        defaultExpandedKeys={lastSelectedFile?.tracking}
-        onSelect={(keys, _) => {
-          if (keys.length > 0) this.onNodeSelect(keys[0])
-        }}
-        treeData={this.state.delegate.renderTree.children}
-      />
-    );
-  }
-
-  selectFile(key, file) {
-    this.props.onSelectFile?.({
-      ...file,
-      key,
-    })
-  }
-  onGoNext = (curFile) => {
-    this.onGoImage(curFile, +1)
-  }
-  onGoPrevious = (curFile) => {
-    this.onGoImage(curFile, -1)
-  }
-
-  onGoImage(curFile, delta) {
+  function goFile(curFile, delta) {
     if (!(curFile && "key" in curFile)) return
-    const delegate = this.state.delegate
     let nextKey = curFile.key + delta
-    while (0 <= nextKey && nextKey < this.state.delegate.maxId) {
+    while (0 <= nextKey && nextKey < delegate.maxId) {
       const next = delegate.id2File.get(nextKey)
       if (!next) {
         nextKey += delta
       } else {
-        this.selectFile(nextKey, next)
+        props.onSelectFile?.({
+          ...next,
+          nextKey,
+        })
         return
       }
     }
   }
+
+  const goNext = (curFile) => goFile(curFile, +1)
+  const goPrevious = (curFile) => goFile(curFile, -1)
+
+  useEffect(() => {
+    emitter.on("go-next", goNext)
+    emitter.on("go-previous", goPrevious)
+    return function cleanup() {
+      emitter.on("go-next", goNext)
+      emitter.on("go-previous", goPrevious)
+    }
+  })
+
+  useEffect(() => {
+    if (props.searchDelegate) {
+      const newRenderTree = ft.filter(delegate.renderTree, props.searchDelegate,
+        (id) => delegate.id2File.get(id)
+      )
+      setRenderTree(newRenderTree)
+    }
+  }, [props.searchDelegate, delegate.id2File, delegate.renderTree])
+
+  if (!delegate) return
+  return (
+    <DirectoryTree
+      style={{
+        backgroundColor: "#0A0A0A",
+        color: "#FAFAFA",
+        fontSize: "14pt",
+        height: "95vh",
+        overflow: "auto",
+      }}
+      showLine={true}
+      showIcon={false}
+      treeData={renderTree.children}
+      defaultSelectedKeys={[props.lastSelectedFile?.nodeId]}
+      defaultExpandedKeys={props.lastSelectedFile?.tracking}
+      onSelect={(keys, _) => {
+        if (keys.length > 0) {
+          let key = keys[0]
+          this.setState({
+            selected: key
+          })
+          if (typeof key === "string") {
+            key = parseInt(key)
+            if (isNaN(key)) return
+          }
+          const file = delegate.id2File.get(key)
+          if (file) props.onSelectFile?.({
+            key,
+            ...file,
+          })
+        }
+      }}
+    />
+  );
 }

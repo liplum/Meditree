@@ -50,8 +50,9 @@ export function createDelegate(rootFileTree, rootName = "") {
 }
 /**
  *  @author chatGPT
+ *  @returns the render tree
  */
-export function filter(tree, searchDelegate, getFileById) {
+export function filter(renderTree, searchDelegate, getFileById) {
   function filterTree(tree) {
     // base case: leaf node
     if (!tree.children) {
@@ -73,10 +74,10 @@ export function filter(tree, searchDelegate, getFileById) {
       children: filteredChildren
     }
   }
-  let root = filterTree(tree)
+  let root = filterTree(renderTree)
   if (!root) {
     root = {
-      ...tree,
+      ...renderTree,
       children: []
     }
   }
