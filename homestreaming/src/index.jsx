@@ -3,6 +3,7 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom"
+import { ConfigProvider, theme } from 'antd'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import { HomestreamingApp } from './app'
@@ -24,7 +25,15 @@ const router = createBrowserRouter([
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#0A0A0A',
+          algorithm: theme.darkAlgorithm,
+        },
+      }}>
+      <RouterProvider router={router} />
+    </ConfigProvider>
   </React.StrictMode>
 )
 

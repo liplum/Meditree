@@ -1,12 +1,11 @@
 import "./app.css"
 import React, { createContext } from "react"
-import { goNextFile, goPreviousFile } from "./event"
-import { ConfigProvider, theme } from 'antd'
 import { FileTreeNavigation } from "./fileTreeNavi";
 import { FileDisplayBoard } from "./playground";
 
 import { Layout, Input, Space, Button, Tooltip } from 'antd';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
+import * as ft from "./fileTree"
 import {
   Outlet,
 } from "react-router-dom";
@@ -25,7 +24,7 @@ Object.assign(backend, {
   fileUrl: `${backend.url}/file`,
 });
 
-export const FileTreeContext = createContext()
+export const FileTreeDeleagteContext = createContext()
 
 export class HomestreamingApp extends React.Component {
   constructor(props) {
@@ -98,82 +97,74 @@ export class HomestreamingApp extends React.Component {
       </Tooltip>
     );
     const onlyShowStarred = this.state.onlyShowStarred
-    return <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: '#0A0A0A',
-          algorithm: theme.darkAlgorithm,
-        },
-      }}>
+    return <Layout style={{
+      backgroundColor: "#0A0A0A",
+      color: "#FAFAFA",
+      fontSize: "14pt",
+      height: "100vh",
+    }}>
+      <Sider
+        breakpoint="sm"
+        collapsedWidth="0"
+        width="300px"
+        style={{
+          backgroundColor: "#0A0A0A",
+          color: "#FAFAFA",
+          fontSize: "14pt",
+        }}>
+        <Space>
+          <Tooltip title="Only Show Starred">
+            <Button
+              type="primary" icon={onlyShowStarred ? <StarFilled /> : <StarOutlined />}
+              onClick={() => {
+                this.setState({
+                  onlyShowStarred: !onlyShowStarred,
+                })
+              }}
+            />
+          </Tooltip>
+          <Search
+            placeholder="search files or folders"
+            onSearch={(prompt) => this.setState({
+              searchPrompt: prompt,
+            })}
+          />
+        </Space>
+        <FileTreeNavigation
+          onSelectFile={(file) => this.onSelectFile(file)}
+          searchDelegate={filterByPrompt}
+          lastSelectedFile={this.lastSelectedFile}
+          fileTree={this.state.fileTree}
+        />
+      </Sider>
       <Layout style={{
         backgroundColor: "#0A0A0A",
         color: "#FAFAFA",
-        fontSize: "14pt",
-        height: "100vh",
       }}>
-        <Sider
-          breakpoint="sm"
-          collapsedWidth="0"
-          width="300px"
-          style={{
-            backgroundColor: "#0A0A0A",
-            color: "#FAFAFA",
-            fontSize: "14pt",
-          }}>
-          <Space>
-            <Tooltip title="Only Show Starred">
-              <Button
-                type="primary" icon={onlyShowStarred ? <StarFilled /> : <StarOutlined />}
-                onClick={() => {
-                  this.setState({
-                    onlyShowStarred: !onlyShowStarred,
-                  })
-                }}
-              />
-            </Tooltip>
-            <Search
-              placeholder="search files or folders"
-              onSearch={(prompt) => this.setState({
-                searchPrompt: prompt,
-              })}
-            />
-          </Space>
-          <FileTreeNavigation
-            onSelectFile={(file) => this.onSelectFile(file)}
-            searchDelegate={filterByPrompt}
-            lastSelectedFile={this.lastSelectedFile}
-            fileTree={this.state.fileTree}
-          />
-        </Sider>
-        <Layout style={{
+        <Header style={{
           backgroundColor: "#0A0A0A",
           color: "#FAFAFA",
         }}>
-          <Header style={{
-            backgroundColor: "#0A0A0A",
-            color: "#FAFAFA",
-          }}>
-            <Space>
-              {appBarAction}
-              <label style={{
-                fontSize: "18pt",
-              }}>
-                {selectedFile ?
-                  (
-                    <Tooltip title={selectedFile.path}>
-                      {title}
-                    </Tooltip>
-                  ) : title}
-              </label>
-            </Space>
-          </Header>
-          <Content style={{
-            height: "100vh"
-          }}>
-            <FileDisplayBoard file={selectedFile} />
-          </Content>
-        </Layout>
+          <Space>
+            {appBarAction}
+            <label style={{
+              fontSize: "18pt",
+            }}>
+              {selectedFile ?
+                (
+                  <Tooltip title={selectedFile.path}>
+                    {title}
+                  </Tooltip>
+                ) : title}
+            </label>
+          </Space>
+        </Header>
+        <Content style={{
+          height: "100vh"
+        }}>
+          <FileDisplayBoard file={selectedFile} />
+        </Content>
       </Layout>
-    </ConfigProvider>
+    </Layout>
   }
 }

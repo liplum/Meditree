@@ -2,8 +2,10 @@ import React from 'react'
 import { emitter } from "./event"
 import { Tree } from 'antd'
 import * as ft from "./fileTree"
+import {
+  useNavigate,
+} from "react-router-dom";
 const { DirectoryTree } = Tree;
-
 export class FileTreeNavigation extends React.Component {
   constructor(props) {
     super(props)
