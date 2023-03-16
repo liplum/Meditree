@@ -1,7 +1,6 @@
 import "./app.css"
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { FileTreeNavigation } from "./fileTreeNavi";
-import { FileDisplayBoard } from "./playground";
 import { emitter } from "./event"
 import MenuIcon from '@mui/icons-material/Menu';
 
@@ -11,6 +10,7 @@ import * as ft from "./fileTree"
 import {
   Outlet,
   useLoaderData,
+  useNavigate,
 } from "react-router-dom";
 import { Box, Divider, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { backend } from "./env";
@@ -37,21 +37,19 @@ export function App(props) {
   const { fileTreeDelegate } = useLoaderData()
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const lastSelectedFile = JSON.parse(window.localStorage.getItem("lastSelectedFile"))
-  const [selectedFile, setSelectedFile] = useState(lastSelectedFile)
   const [searchPrompt, setSearchPrompt] = useState()
   const [onlyShowStarred, setOnlyShowStarred] = useState()
+  const navigate = useNavigate()
+
   function goFile(curFile, delta) {
     if (!(curFile && "key" in curFile)) return
     let nextKey = curFile.key + delta
-    while (0 <= nextKey && nextKey < fileTreeDelegate.maxId) {
-      const next = fileTreeDelegate.id2File.get(nextKey)
+    while (0 <= nextKey && nextKey < fileTreeDelegate.maxKey) {
+      const next = fileTreeDelegate.key2File.get(nextKey)
       if (!next) {
         nextKey += delta
       } else {
-        props.onSelectFile?.({
-          ...next,
-          nextKey,
-        })
+        navigate(`/${nextKey}`)
         return
       }
     }
@@ -79,10 +77,6 @@ export function App(props) {
     return file.path.toLowerCase().includes(searchPrompt.toLocaleLowerCase())
   }
 
-  if (selectedFile) {
-    selectedFile.url = backend.reolsveFileUrl(selectedFile.path)
-  }
-
   const drawer = <>
     <Space>
       <Tooltip title="Only Show Starred">
@@ -98,7 +92,6 @@ export function App(props) {
     </Space>
     <FileTreeNavigation
       onSelectFile={(newFile) => {
-        setSelectedFile(newFile)
         window.localStorage.setItem("lastSelectedFile", JSON.stringify(newFile))
       }}
       searchDelegate={filterByPrompt}

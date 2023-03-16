@@ -17,7 +17,7 @@ export function FileTreeNavigation(props) {
     if (!delegate) return
     if (props.searchDelegate) {
       const newRenderTree = ft.filter(delegate.renderTree, props.searchDelegate,
-        (id) => delegate.id2File.get(id)
+        (id) => delegate.key2File.get(id)
       )
       setRenderTree(newRenderTree)
     }
@@ -45,9 +45,8 @@ export function FileTreeNavigation(props) {
             key = parseInt(key)
             if (isNaN(key)) return
           }
-          const file = delegate.id2File.get(key)
-          if(file){
-            file.url = backend.reolsveFileUrl(file.path)
+          const file = delegate.key2File.get(key)
+          if (file) {
             navigate(`/${key}`)
           }
         }

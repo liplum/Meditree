@@ -18,7 +18,7 @@ const router = createBrowserRouter([
     loader: appLoader,
     children: [
       {
-        path: "/:key",
+        path: ":key",
         element: <FileDisplayBoard />,
       }
     ]

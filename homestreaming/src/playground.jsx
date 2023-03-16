@@ -7,6 +7,7 @@ import { AstrologyContext, FileTreeDeleagteContext, ResponsiveAppBar } from './a
 import { Tooltip, IconButton, Typography } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
+import { backend } from './env';
 
 const type2Render = {
   "video/mp4": renderVideo,
@@ -21,7 +22,10 @@ export function FileDisplayBoard(props) {
   const [delegate] = useContext(FileTreeDeleagteContext)
   const [astrology] = useContext(AstrologyContext)
   const boardRef = useRef()
-  const file = delegate.id2File.get(parseInt(key))
+  const file = delegate.key2File.get(parseInt(key))
+  if (!file) {
+    return <h1>No file selected</h1>
+  }
   const onMouseDown = (e) => {
     if (!isMobile) return
     const { clientX } = e;
@@ -52,9 +56,7 @@ export function FileDisplayBoard(props) {
       goNextFile(file)
     }
   }
-  if (!file) {
-    return <h1>No file selected</h1>
-  }
+  file.url = backend.reolsveFileUrl(file.path)
   const renderer = type2Render[file.type]
   const starred = astrology[file?.path] === true;
   return <>

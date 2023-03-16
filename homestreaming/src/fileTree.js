@@ -6,7 +6,7 @@ export function createDelegate(rootFileTree, rootName = "") {
     title: rootName,
     children: rootChildren
   }
-  const id2File = new Map()
+  const key2File = new Map()
   function createNode(parentUrl, parentKeys, children, fileTree) {
     const entries = Object.entries(fileTree)
     reorder(entries)
@@ -25,8 +25,9 @@ export function createDelegate(rootFileTree, rootName = "") {
         children.push(obj)
         createNode(path, [...parentKeys, curKey], myChildren, file)
       } else {
-        id2File.set(curKey, {
+        key2File.set(curKey, {
           name,
+          key: curKey,
           path: path,
           type: file,
           selectable: false,
@@ -41,11 +42,11 @@ export function createDelegate(rootFileTree, rootName = "") {
       }
     }
   }
-  createNode("", [rootObj.id], rootChildren, rootFileTree)
+  createNode("", [rootObj.key], rootChildren, rootFileTree)
   return {
     renderTree: rootObj,
-    id2File,
-    maxId: key,
+    key2File,
+    maxKey: key,
   }
 }
 /**
