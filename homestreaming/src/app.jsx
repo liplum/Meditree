@@ -1,7 +1,8 @@
 import "./app.css"
-import React, { createContext } from "react"
+import React, { createContext, useEffect, useState } from "react"
 import { FileTreeNavigation } from "./fileTreeNavi";
 import { FileDisplayBoard } from "./playground";
+import { emitter } from "./event"
 
 import { Input, Space, Button, Tooltip } from 'antd';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
@@ -33,152 +34,159 @@ export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
 const drawerWidth = 240;
 
-
-export class HomestreamingApp extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      fileTree: undefined,
-      selectedFile: null,
-      isDrawerOpen: false,
-      searchPrompt: "",
-      onlyShowStarred: false,
-    };
+export function HomestreamingApp(props) {
+  const [fileTreeDelegate, setFileTreeDelegate] = useState()
+  const [isDrawerOpen, setIsDrawerOpen] = useState()
+  const [selectedFile, setSelectedFile] = useState()
+  const [searchPrompt, setSearchPrompt] = useState()
+  const [onlyShowStarred, setOnlyShowStarred] = useState()
+  const [lastSelectedFile, setLastSelectedFile] = useState()
+  function goFile(curFile, delta) {
+    if (!(curFile && "key" in curFile)) return
+    let nextKey = curFile.key + delta
+    while (0 <= nextKey && nextKey < fileTreeDelegate.maxId) {
+      const next = fileTreeDelegate.id2File.get(nextKey)
+      if (!next) {
+        nextKey += delta
+      } else {
+        props.onSelectFile?.({
+          ...next,
+          nextKey,
+        })
+        return
+      }
+    }
   }
 
-  componentDidMount() {
-    console.log(`fetching ${backend.listUrl}`)
-    this.lastSelectedFile = JSON.parse(
+  const goNext = (curFile) => goFile(curFile, +1)
+  const goPrevious = (curFile) => goFile(curFile, -1)
+  useEffect(() => {
+    setLastSelectedFile(JSON.parse(
       window.localStorage.getItem("lastSelectedFile")
-    )
-    this.setState({
-      selectedFile: this.lastSelectedFile,
-    })
+    ))
+    setSelectedFile(lastSelectedFile)
+  }, [lastSelectedFile])
+  
+  useEffect(() => {
+    console.log(`fetching ${backend.listUrl}`)
     fetch(backend.listUrl)
       .then((response) => response.json())
       .then((data) => {
-        this.setState({
-          fileTree: data,
-        })
+        const delegate = ft.createDelegate(data.files, data.name)
+        setFileTreeDelegate(delegate)
         document.title = data.name
       })
+  }, [fileTreeDelegate])
+
+  useEffect(() => {
+    emitter.on("go-next", goNext)
+    emitter.on("go-previous", goPrevious)
+    return function cleanup() {
+      emitter.on("go-next", goNext)
+      emitter.on("go-previous", goPrevious)
+    }
+  })
+
+  const astrology = JSON.parse(window.localStorage.getItem("astrology")) ?? {}
+
+  const filterByPrompt = (file) => {
+    if (onlyShowStarred && !astrology[file.path]) {
+      return false;
+    }
+    if (!searchPrompt) return true
+    return file.path.toLowerCase().includes(searchPrompt.toLocaleLowerCase())
   }
 
-  onSelectFile(file) {
-    this.setState({
-      selectedFile: file,
-    })
-    window.localStorage.setItem("lastSelectedFile", JSON.stringify(file))
+  if (selectedFile) {
+    selectedFile.url = backend.reolsveFileUrl(selectedFile.path)
   }
-
-  render() {
-    const astrology = JSON.parse(window.localStorage.getItem("astrology")) ?? {}
-
-    const filterByPrompt = (file) => {
-      if (this.state.onlyShowStarred && !astrology[file.path]) {
-        return false;
-      }
-      const searchPrompt = this.state.searchPrompt
-      if (!searchPrompt) return true
-      return file.path.toLowerCase().includes(searchPrompt.toLocaleLowerCase())
-    }
-
-    const selectedFile = this.state.selectedFile
-    if (selectedFile) {
-      selectedFile.url = backend.reolsveFileUrl(selectedFile.path)
-    }
-    const title = selectedFile ? selectedFile.name : "No file selected"
-    const starred = astrology[selectedFile?.path] === true;
-    const appBarAction = (
-      <Tooltip title="Add to Star">
-        <Button icon={starred ? <StarFilled /> : <StarOutlined />}
-          onClick={(newIsStarred) => {
-            if (newIsStarred) {
-              astrology[selectedFile.path] = true;
-            } else {
-              delete astrology[selectedFile.path];
-            }
-            window.localStorage.setItem("astrology", JSON.stringify(astrology));
-            this.forceUpdate();
-          }}>
-        </Button>
-      </Tooltip>
-    );
-    const onlyShowStarred = this.state.onlyShowStarred
-    const drawer = <>
-      <Space>
-        <Tooltip title="Only Show Starred">
-          <Button
-            type="primary" icon={onlyShowStarred ? <StarFilled /> : <StarOutlined />}
-            onClick={() => {
-              this.setState({
-                onlyShowStarred: !onlyShowStarred,
-              })
-            }}
-          />
-        </Tooltip>
-        <Search
-          placeholder="search files or folders"
-          onSearch={(prompt) => this.setState({
-            searchPrompt: prompt,
-          })}
-        />
-      </Space>
-      <FileTreeNavigation
-        onSelectFile={(file) => this.onSelectFile(file)}
-        searchDelegate={filterByPrompt}
-        lastSelectedFile={this.lastSelectedFile}
-        fileTree={this.state.fileTree}
-      />
-    </>
-    return (
-      <Box sx={{
-        display: 'flex', height: "100vh", backgroundColor: "#0A0A0A",
-        color: "#FAFAFA",
+  const title = selectedFile ? selectedFile.name : "No file selected"
+  const starred = astrology[selectedFile?.path] === true;
+  const appBarAction = <Tooltip title="Add to Star">
+    <Button icon={starred ? <StarFilled /> : <StarOutlined />}
+      onClick={(newIsStarred) => {
+        if (newIsStarred) {
+          astrology[selectedFile.path] = true;
+        } else {
+          delete astrology[selectedFile.path];
+        }
+        window.localStorage.setItem("astrology", JSON.stringify(astrology));
+        this.forceUpdate();
       }}>
-        <Box
-          component="nav"
-          sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-          aria-label="mailbox folders"
+    </Button>
+  </Tooltip>
+  const drawer = <>
+    <Space>
+      <Tooltip title="Only Show Starred">
+        <Button
+          type="primary" icon={onlyShowStarred ? <StarFilled /> : <StarOutlined />}
+          onClick={() => setOnlyShowStarred(!onlyShowStarred)}
+        />
+      </Tooltip>
+      <Search
+        placeholder="search files or folders"
+        onSearch={(prompt) => setSearchPrompt(prompt)}
+      />
+    </Space>
+    <FileTreeNavigation
+      onSelectFile={(newFile) => {
+        setSelectedFile(newFile)
+        window.localStorage.setItem("lastSelectedFile", JSON.stringify(newFile))
+      }}
+      searchDelegate={filterByPrompt}
+      lastSelectedFile={lastSelectedFile}
+    />
+  </>
+  const body = (
+    <Box sx={{
+      display: 'flex', height: "100vh", backgroundColor: "#0A0A0A",
+      color: "#FAFAFA",
+    }}>
+      <Box
+        component="nav"
+        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        aria-label="mailbox folders"
+      >
+        <Drawer
+          variant="temporary"
+          open={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false)
+          }}
+          ModalProps={{
+            keepMounted: true, // Better open performance on mobile.
+          }}
+          sx={{
+            display: { xs: 'block', sm: 'none' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          }}
         >
-          <Drawer
-            variant="temporary"
-            open={this.state.isDrawerOpen}
-            onClose={() => {
-              this.setState({
-                isDrawerOpen: false
-              })
-            }}
-            ModalProps={{
-              keepMounted: true, // Better open performance on mobile.
-            }}
-            sx={{
-              display: { xs: 'block', sm: 'none' },
-              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-            }}
-          >
-            {drawer}
-          </Drawer>
-          <Drawer
-            variant="permanent"
-            sx={{
-              display: { xs: 'none', sm: 'block' },
-              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-            }}
-            open
-          >
-            {drawer}
-          </Drawer>
-        </Box>
-        <Box
-          component="main"
-          sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
+          {drawer}
+        </Drawer>
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: 'none', sm: 'block' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          }}
+          open
         >
-          <CssBaseline />
-          <Toolbar />
-          <FileDisplayBoard file={selectedFile} />
-        </Box>
+          {drawer}
+        </Drawer>
       </Box>
-    )
-  }
+      <Box
+        component="main"
+        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
+      >
+        <CssBaseline />
+        <Toolbar />
+        <FileDisplayBoard file={selectedFile} />
+      </Box>
+    </Box>
+  )
+  return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
+    <FileTreeDeleagteContext.Provider value={[fileTreeDelegate, setFileTreeDelegate]}>
+      {body}
+    </FileTreeDeleagteContext.Provider>
+  </IsDrawerOpenContext.Provider>
 }

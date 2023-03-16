@@ -1,11 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { emitter } from "./event"
 import { Tree } from 'antd'
-import * as ft from "./FileTree"
+import * as ft from "./fileTree"
 import {
   useNavigate,
 } from "react-router-dom";
-import { FileTreeDeleagteContext } from './App';
+import { FileTreeDeleagteContext } from './app';
 const { DirectoryTree } = Tree;
 
 
@@ -13,45 +12,17 @@ export function FileTreeNavigation(props) {
   const [delegate, setDelegate] = useContext(FileTreeDeleagteContext)
   const [renderTree, setRenderTree] = useState()
 
-  function goFile(curFile, delta) {
-    if (!(curFile && "key" in curFile)) return
-    let nextKey = curFile.key + delta
-    while (0 <= nextKey && nextKey < delegate.maxId) {
-      const next = delegate.id2File.get(nextKey)
-      if (!next) {
-        nextKey += delta
-      } else {
-        props.onSelectFile?.({
-          ...next,
-          nextKey,
-        })
-        return
-      }
-    }
-  }
-
-  const goNext = (curFile) => goFile(curFile, +1)
-  const goPrevious = (curFile) => goFile(curFile, -1)
-
   useEffect(() => {
-    emitter.on("go-next", goNext)
-    emitter.on("go-previous", goPrevious)
-    return function cleanup() {
-      emitter.on("go-next", goNext)
-      emitter.on("go-previous", goPrevious)
-    }
-  })
-
-  useEffect(() => {
+    if (!delegate) return
     if (props.searchDelegate) {
       const newRenderTree = ft.filter(delegate.renderTree, props.searchDelegate,
         (id) => delegate.id2File.get(id)
       )
       setRenderTree(newRenderTree)
     }
-  }, [props.searchDelegate, delegate.id2File, delegate.renderTree])
+  }, [props.searchDelegate, delegate, delegate?.id2File, delegate?.renderTree])
 
-  if (!delegate) return
+  if (!renderTree) return
   return (
     <DirectoryTree
       style={{
