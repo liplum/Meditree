@@ -9,6 +9,8 @@ import './index.css'
 import { App, loader as appLoader } from './app'
 import { FileDisplayBoard } from './playground'
 import reportWebVitals from './reportWebVitals'
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -23,18 +25,55 @@ const router = createBrowserRouter([
   },
 ]);
 
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: "16px",
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: "16px",
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          margin: "8px",
+        }
+      }
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          borderRadius: "16px",
+        },
+      }
+    }
+  },
+});
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
   <React.StrictMode>
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: '#0A0A0A',
-          algorithm: theme.darkAlgorithm,
-        },
-      }}>
-      <RouterProvider router={router} />
-    </ConfigProvider>
+    <ThemeProvider theme={darkTheme}>
+      <ConfigProvider
+        theme={{
+          token: {
+            colorPrimary: '#0A0A0A',
+            algorithm: theme.darkAlgorithm,
+          },
+        }}>
+        <RouterProvider router={router} />
+      </ConfigProvider>
+    </ThemeProvider>
   </React.StrictMode>
 )
 

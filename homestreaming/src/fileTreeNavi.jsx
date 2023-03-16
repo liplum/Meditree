@@ -19,7 +19,7 @@ export function FileTreeNavigation(props) {
       )
       setRenderTree(newRenderTree)
     }
-  }, [props.searchDelegate, delegate, delegate?.id2File, delegate?.renderTree])
+  }, [props.searchDelegate, delegate])
 
   if (!renderTree) return
   return (
@@ -39,9 +39,6 @@ export function FileTreeNavigation(props) {
       onSelect={(keys, _) => {
         if (keys.length > 0) {
           let key = keys[0]
-          this.setState({
-            selected: key
-          })
           if (typeof key === "string") {
             key = parseInt(key)
             if (isNaN(key)) return

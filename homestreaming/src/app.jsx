@@ -1,22 +1,18 @@
 import "./app.css"
-import React, { createContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useEffect, useState } from "react"
 import { FileTreeNavigation } from "./fileTreeNavi";
 import { FileDisplayBoard } from "./playground";
 import { emitter } from "./event"
+import MenuIcon from '@mui/icons-material/Menu';
 
-import { Input, Space, Button, Tooltip } from 'antd';
+import { Input, Space, Button } from 'antd';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
 import * as ft from "./fileTree"
 import {
   Outlet,
   useLoaderData,
 } from "react-router-dom";
-
-import Box from '@mui/material/Box';
-import Divider from '@mui/material/Divider';
-import Drawer from '@mui/material/Drawer';
-import CssBaseline from '@mui/material/CssBaseline';
-import Toolbar from '@mui/material/Toolbar';
+import { Box, Divider, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 
 const { Search } = Input;
 
@@ -33,7 +29,8 @@ Object.assign(backend, {
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
-const drawerWidth = 240;
+export const AstrologyContext = createContext()
+const drawerWidth = 320;
 
 export async function loader() {
   console.log(`fetching ${backend.listUrl}`)
@@ -95,21 +92,7 @@ export function App(props) {
   if (selectedFile) {
     selectedFile.url = backend.reolsveFileUrl(selectedFile.path)
   }
-  const title = selectedFile ? selectedFile.name : "No file selected"
-  const starred = astrology[selectedFile?.path] === true;
-  const appBarAction = <Tooltip title="Add to Star">
-    <Button icon={starred ? <StarFilled /> : <StarOutlined />}
-      onClick={(newIsStarred) => {
-        if (newIsStarred) {
-          astrology[selectedFile.path] = true;
-        } else {
-          delete astrology[selectedFile.path];
-        }
-        window.localStorage.setItem("astrology", JSON.stringify(astrology));
-        this.forceUpdate();
-      }}>
-    </Button>
-  </Tooltip>
+
   const drawer = <>
     <Space>
       <Tooltip title="Only Show Starred">
@@ -181,7 +164,33 @@ export function App(props) {
   )
   return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
     <FileTreeDeleagteContext.Provider value={[fileTreeDelegate]}>
-      {body}
+      <AstrologyContext.Provider value={[astrology]}>{body}</AstrologyContext.Provider>
     </FileTreeDeleagteContext.Provider>
   </IsDrawerOpenContext.Provider>
+}
+
+export function ResponsiveAppBar(props) {
+  const [isDrawerOpen, setIsDrawerOpen] = useContext(IsDrawerOpenContext);
+  return <AppBar
+    position="fixed"
+    sx={{
+      width: { sm: `calc(100% - ${drawerWidth}px)` },
+      ml: { sm: `${drawerWidth}px` },
+    }}
+  >
+    <Toolbar>
+      <IconButton
+        color="inherit"
+        aria-label="open drawer"
+        edge="start"
+        onClick={() => {
+          setIsDrawerOpen(!isDrawerOpen)
+        }}
+        sx={{ mr: 2, display: { sm: 'none' } }}
+      >
+        <MenuIcon />
+      </IconButton>
+      {props.children}
+    </Toolbar>
+  </AppBar>
 }

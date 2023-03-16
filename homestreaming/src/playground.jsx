@@ -1,8 +1,11 @@
 import './playground.css'
-import React, { useRef } from 'react'
+import React, { useContext, useRef } from 'react'
 import { goNextFile, goPreviousFile } from "./event";
 
 import { isMobile } from "react-device-detect"
+import { AstrologyContext, FileTreeDeleagteContext, ResponsiveAppBar } from './app';
+import { Box, Divider, Drawer, CssBaseline, Toolbar, AppBar, Tooltip, IconButton, Typography } from "@mui/material"
+import { StarBorder, Star } from '@mui/icons-material';
 
 const type2Render = {
   "video/mp4": renderVideo,
@@ -12,6 +15,8 @@ const type2Render = {
   "audio/ogg": renderAudio,
 }
 export function FileDisplayBoard(props) {
+  const [delegate] = useContext(FileTreeDeleagteContext)
+  const [astrology] = useContext(AstrologyContext)
   const boardRef = useRef()
   const file = props.file
   const onMouseDown = (e) => {
@@ -48,23 +53,42 @@ export function FileDisplayBoard(props) {
     return <h1>No file selected</h1>
   }
   const renderer = type2Render[file.type]
-
-  return <div
-    ref={boardRef}
-    onMouseDown={onMouseDown}
-    onWheel={onWheel}
-    onKeyDown={onKeyDown}
-    tabIndex="0"
-    style={{
-      width: "100%",
-      height: "100%",
-    }}>
-    {
-      renderer ?
-        renderer(file) :
-        <h1>Cannot display this file.</h1>
-    }
-  </div>
+  const starred = astrology[file?.path] === true;
+  return <>
+    <ResponsiveAppBar>
+      <Tooltip title={file?.path}>
+        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          {file ? file.name : "No file selected"}
+        </Typography>
+      </Tooltip>
+      <IconButton onClick={(newIsStarred) => {
+        if (newIsStarred) {
+          astrology[file.path] = true;
+        } else {
+          delete astrology[file.path];
+        }
+        window.localStorage.setItem("astrology", JSON.stringify(astrology));
+      }}>
+        {starred ? <Star /> : <StarBorder />}
+      </IconButton>
+    </ResponsiveAppBar>
+    <div
+      ref={boardRef}
+      onMouseDown={onMouseDown}
+      onWheel={onWheel}
+      onKeyDown={onKeyDown}
+      tabIndex="0"
+      style={{
+        width: "100%",
+        height: "100%",
+      }}>
+      {
+        renderer ?
+          renderer(file) :
+          <h1>Cannot display this file.</h1>
+      }
+    </div>
+  </>
 }
 
 function renderVideo(file) {
