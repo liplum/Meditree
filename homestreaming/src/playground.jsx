@@ -4,8 +4,9 @@ import { goNextFile, goPreviousFile } from "./event";
 
 import { isMobile } from "react-device-detect"
 import { AstrologyContext, FileTreeDeleagteContext, ResponsiveAppBar } from './app';
-import { Box, Divider, Drawer, CssBaseline, Toolbar, AppBar, Tooltip, IconButton, Typography } from "@mui/material"
+import { Tooltip, IconButton, Typography } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
+import { useParams } from 'react-router-dom';
 
 const type2Render = {
   "video/mp4": renderVideo,
@@ -14,11 +15,13 @@ const type2Render = {
   "audio/mpeg": renderAudio,
   "audio/ogg": renderAudio,
 }
+
 export function FileDisplayBoard(props) {
+  const { key } = useParams();
   const [delegate] = useContext(FileTreeDeleagteContext)
   const [astrology] = useContext(AstrologyContext)
   const boardRef = useRef()
-  const file = props.file
+  const file = delegate.id2File.get(parseInt(key))
   const onMouseDown = (e) => {
     if (!isMobile) return
     const { clientX } = e;

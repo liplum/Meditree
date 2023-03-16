@@ -13,19 +13,9 @@ import {
   useLoaderData,
 } from "react-router-dom";
 import { Box, Divider, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
+import { backend } from "./env";
 
 const { Search } = Input;
-
-const backend = {
-  url: process.env.REACT_APP_BACKEND_URL,
-  reolsveFileUrl(path) {
-    return encodeURI(`${this.fileUrl}/${path}`);
-  },
-};
-Object.assign(backend, {
-  listUrl: `${backend.url}/list`,
-  fileUrl: `${backend.url}/file`,
-});
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
@@ -158,13 +148,15 @@ export function App(props) {
       >
         <CssBaseline />
         <Toolbar />
-        <FileDisplayBoard file={selectedFile} />
+        <Outlet/>
       </Box>
     </Box>
   )
   return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
     <FileTreeDeleagteContext.Provider value={[fileTreeDelegate]}>
-      <AstrologyContext.Provider value={[astrology]}>{body}</AstrologyContext.Provider>
+      <AstrologyContext.Provider value={[astrology]}>
+        {body}
+      </AstrologyContext.Provider>
     </FileTreeDeleagteContext.Provider>
   </IsDrawerOpenContext.Provider>
 }

@@ -5,12 +5,14 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { FileTreeDeleagteContext } from './app';
+import { backend } from './env';
 const { DirectoryTree } = Tree;
 
 
 export function FileTreeNavigation(props) {
   const [delegate] = useContext(FileTreeDeleagteContext)
   const [renderTree, setRenderTree] = useState()
+  const navigate = useNavigate()
   useEffect(() => {
     if (!delegate) return
     if (props.searchDelegate) {
@@ -44,10 +46,10 @@ export function FileTreeNavigation(props) {
             if (isNaN(key)) return
           }
           const file = delegate.id2File.get(key)
-          if (file) props.onSelectFile?.({
-            key,
-            ...file,
-          })
+          if(file){
+            file.url = backend.reolsveFileUrl(file.path)
+            navigate(`/${key}`)
+          }
         }
       }}
     />
