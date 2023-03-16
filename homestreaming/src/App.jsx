@@ -40,7 +40,6 @@ export class HomestreamingApp extends React.Component {
   }
 
   componentDidMount() {
-    document.addEventListener("keydown", this.handleKeyPress)
     console.log(`fetching ${backend.listUrl}`)
     this.lastSelectedFile = JSON.parse(
       window.localStorage.getItem("lastSelectedFile")
@@ -63,18 +62,6 @@ export class HomestreamingApp extends React.Component {
       selectedFile: file,
     })
     window.localStorage.setItem("lastSelectedFile", JSON.stringify(file))
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener("keydown", this.handleKeyPress)
-  }
-
-  handleKeyPress = (event) => {
-    if (event.key === "ArrowLeft") {
-      goPreviousFile(this.state.selectedFile)
-    } else if (event.key === "ArrowRight") {
-      goNextFile(this.state.selectedFile)
-    }
   }
 
   render() {

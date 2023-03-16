@@ -13,6 +13,7 @@ const type2Render = {
 }
 export function FileDisplayBoard(props) {
   const boardRef = useRef()
+  const file = props.file
   const onMouseDown = (e) => {
     if (!isMobile) return
     const { clientX } = e;
@@ -20,40 +21,49 @@ export function FileDisplayBoard(props) {
 
     if (clientX < left + width / 2) {
       // left side
-      goPreviousFile(props.file)
+      goPreviousFile(file)
     } else {
       // right side
-      goNextFile(props.file)
+      goNextFile(file)
     }
   }
   const onWheel = (e) => {
     if (isMobile) return
     if (e.deltaY > 0) {
       // wheel down
-      goNextFile(props.file)
+      goNextFile(file)
     } else if (e.deltaY < 0) {
       // wheel up
-      goPreviousFile(props.file)
+      goPreviousFile(file)
     }
   }
-  const file = props.file
+  const onKeyDown = (e) => {
+    if (e.key === "ArrowLeft") {
+      goPreviousFile(file)
+    } else if (e.key === "ArrowRight") {
+      goNextFile(file)
+    }
+  }
   if (!file) {
     return <h1>No file selected</h1>
   }
   const renderer = type2Render[file.type]
 
-  const content = renderer ?
-    renderer(file) :
-    <h1>Cannot display this file.</h1>
   return <div
     ref={boardRef}
     onMouseDown={onMouseDown}
     onWheel={onWheel}
+    onKeyDown={onKeyDown}
+    tabIndex="0"
     style={{
       width: "100%",
       height: "100%",
     }}>
-    {content}
+    {
+      renderer ?
+        renderer(file) :
+        <h1>Cannot display this file.</h1>
+    }
   </div>
 }
 
