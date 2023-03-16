@@ -1,5 +1,5 @@
 import "./App.css"
-import React from "react"
+import React, { createContext } from "react"
 import { goNextFile, goPreviousFile } from "./Event"
 import { MainBody } from "./Body"
 import { ConfigProvider, theme } from 'antd'
@@ -14,6 +14,8 @@ Object.assign(backend, {
   listUrl: `${backend.url}/list`,
   fileUrl: `${backend.url}/file`,
 });
+
+export const FileTreeContext = createContext()
 
 export class HomestreamingApp extends React.Component {
   constructor(props) {

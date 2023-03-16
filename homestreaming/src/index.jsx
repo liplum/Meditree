@@ -1,13 +1,30 @@
 import React from 'react'
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom"
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import { HomestreamingApp } from './App'
 import reportWebVitals from './reportWebVitals'
+import { FileDisplayBoard } from './playground/FileDisplayBoard'
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HomestreamingApp />,
+    children: [
+      {
+        path: "/:key",
+        element: <FileDisplayBoard />,
+      }
+    ]
+  },
+]);
 
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
   <React.StrictMode>
-    <HomestreamingApp />
+    <RouterProvider router={router} />
   </React.StrictMode>
 )
 
