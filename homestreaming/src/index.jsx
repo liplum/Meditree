@@ -5,9 +5,9 @@ import {
 } from "react-router-dom"
 import ReactDOM from 'react-dom/client'
 import './index.css'
-import { HomestreamingApp } from './App'
+import { HomestreamingApp } from './app'
 import reportWebVitals from './reportWebVitals'
-import { FileDisplayBoard } from './playground/FileDisplayBoard'
+import { FileDisplayBoard } from './playground'
 const router = createBrowserRouter([
   {
     path: "/",

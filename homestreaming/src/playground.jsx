@@ -1,7 +1,6 @@
-import { VideoPlayer } from "./Video"
-import './Playground.css'
+import './playground.css'
 import React, { createRef } from 'react'
-import { goNextFile, goPreviousFile } from "../Event";
+import { goNextFile, goPreviousFile } from "./event";
 
 import { isMobile } from "react-device-detect"
 
@@ -78,4 +77,10 @@ function renderAudio(file) {
     src={file.url}
     alt={file.path}
     className={"video-view"} />
+}
+
+function VideoPlayer() {
+  return <video controls
+    src={this.props.url} {...this.props}
+  />
 }

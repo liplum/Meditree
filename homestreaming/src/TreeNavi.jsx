@@ -1,5 +1,5 @@
 import React from 'react'
-import { emitter } from "./Event"
+import { emitter } from "./event"
 import { Tree } from 'antd'
 import * as ft from "./FileTree"
 const { DirectoryTree } = Tree;

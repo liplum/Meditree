@@ -1,7 +1,7 @@
-import "./App.css"
+import "./app.css"
 import React, { createContext } from "react"
-import { goNextFile, goPreviousFile } from "./Event"
-import { MainBody } from "./Body"
+import { goNextFile, goPreviousFile } from "./event"
+import { MainBody } from "./body"
 import { ConfigProvider, theme } from 'antd'
 
 const backend = {

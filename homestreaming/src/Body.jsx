@@ -1,7 +1,6 @@
 import React from "react";
-import "./App.css";
 import { FileTreeNavigation } from "./TreeNavi.jsx";
-import { FileDisplayBoard } from "./playground/FileDisplayBoard";
+import { FileDisplayBoard } from "./playground";
 
 import { Layout, Input, Space, Button, Tooltip } from 'antd';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
