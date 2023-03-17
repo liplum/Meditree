@@ -6,6 +6,12 @@
   margin: auto;
 }
 
+.board {
+  /** Avoid overlap */
+  width: 100%;
+  height: 100%;
+}
+
 .board:focus {
   outline: none;
 }
