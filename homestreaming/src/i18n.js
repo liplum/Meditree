@@ -10,6 +10,10 @@ export const i18n = new LocalizedStrings({
       starBtn: "Add To Star",
       unstarBtn: "Remove From Star",
     },
+    loading: {
+      text: "Loading...",
+      failed: "Failed to load content.",
+    },
   },
   zh: {
     search: {
@@ -19,6 +23,10 @@ export const i18n = new LocalizedStrings({
     playground: {
       starBtn: "收藏",
       unstarBtn: "取消收藏",
+    },
+    loading: {
+      text: "加载中……",
+      failed: "无法加载目录",
     },
   }
 });

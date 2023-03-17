@@ -8,21 +8,14 @@ import ReactDOM from 'react-dom/client'
 import { App, loader as appLoader } from './dashboard'
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './index.css'
-import { Loading } from './loading'
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Loading />,
-    children: [
-      {
-        path: "dashboard",
-        element: <App />,
-        loader: appLoader,
-        shouldRevalidate: () => false,
-      }
-    ]
-  },
+    element: <App />,
+    loader: appLoader,
+    shouldRevalidate: () => false,
+  }
 ]);
 
 const darkTheme = createTheme({

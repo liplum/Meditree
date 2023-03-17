@@ -3,13 +3,19 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh; /* set the height of the container to the full viewport height */
+  height: 100vh;
+  /* set the height of the container to the full viewport height */
 }
 
 .loading-svg {
   width: 100px;
   height: 100px;
   animation: spin 1s linear infinite;
+}
+
+.error-svg {
+  width: 100px;
+  height: 100px;
 }
 
 .loading-circle {

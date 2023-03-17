@@ -6,6 +6,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 import * as ft from "./fileTree"
 import {
   useLoaderData,
+  defer,
+  Await,
 } from "react-router-dom";
 import { Box, Divider, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
@@ -14,6 +16,7 @@ import { FileDisplayBoard } from "./playground";
 import { i18n } from "./i18n";
 import { SearchBar } from "./searchbar";
 import "./dashboard.css"
+import { Failed, Loading } from "./loading";
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
@@ -22,18 +25,48 @@ export const SelectedFileContext = createContext()
 const drawerWidth = 320;
 
 export async function loader() {
-  console.log(`fetching ${backend.listUrl}`)
-  const response = await fetch(backend.listUrl, {
-    method: "GET",
+  const task = new Promise((resolve, reject) => {
+    console.log(`fetching ${backend.listUrl}`)
+    fetch(backend.listUrl, {
+      method: "GET",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const fileTreeDelegate = ft.createDelegate(data.files, data.name)
+        document.title = data.name
+        resolve(fileTreeDelegate)
+      })
+      .catch((error) => {
+        reject(error)
+      })
   })
-  const data = await response.json()
-  const fileTreeDelegate = ft.createDelegate(data.files, data.name)
-  document.title = data.name
-  return { fileTreeDelegate }
+  return defer({
+    fileTreeDelegate: task,
+  });
+}
+export function App(props) {
+  const { fileTreeDelegate } = useLoaderData();
+
+  return (
+    <main>
+      <React.Suspense
+        fallback={<Loading />}
+      >
+        <Await
+          resolve={fileTreeDelegate}
+          errorElement={<Failed text={i18n.loading.failed} />}
+        >
+          {(delegate) => (
+            <Body fileTreeDelegate={delegate} />
+          )}
+        </Await>
+      </React.Suspense>
+    </main>
+  );
 }
 
-export function App(props) {
-  const { fileTreeDelegate } = useLoaderData()
+function Body(props) {
+  const { fileTreeDelegate } = props
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const lastSelectedFile = JSON.parse(window.localStorage.getItem("lastSelectedFile"))
   const [selectedFile, setSelectedFile] = useState(lastSelectedFile)
