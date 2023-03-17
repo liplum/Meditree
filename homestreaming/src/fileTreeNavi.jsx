@@ -30,8 +30,7 @@ export function FileTreeNavigation(props) {
         backgroundColor: theme.palette.background.paper,
         color: theme.palette.text.primary,
         fontSize: "14pt",
-        height: "95vh",
-        overflow: "auto",
+        overflow: "hidden",
       }}
       showLine={true}
       showIcon={false}

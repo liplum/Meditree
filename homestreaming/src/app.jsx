@@ -76,7 +76,7 @@ export function App(props) {
     return file.path.toLowerCase().includes(searchPrompt.toLocaleLowerCase())
   }
 
-  const drawer = <>
+  const drawer = <div style={{ height: "100vh" }}>
     <div style={{ display: "flex", alignItems: 'center' }}>
       <Tooltip title="Only Show Starred">
         <IconButton onClick={() => setOnlyShowStarred(!onlyShowStarred)}>
@@ -95,7 +95,7 @@ export function App(props) {
       searchDelegate={filterByPrompt}
       lastSelectedFile={lastSelectedFile}
     />
-  </>
+  </div>
   const body = (
     <Box sx={{
       display: 'flex', height: "100vh",

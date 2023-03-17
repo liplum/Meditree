@@ -23,9 +23,6 @@ export function FileDisplayBoard(props) {
   const [file] = useContext(SelectedFileContext)
   const boardRef = useRef()
   const forceUpdate = useForceUpdate()
-  if (!file) {
-    return <h1>No file selected</h1>
-  }
   const onMouseDown = (e) => {
     if (!isMobile) return
     const { clientX } = e
@@ -56,8 +53,29 @@ export function FileDisplayBoard(props) {
       goNextFile(file)
     }
   }
-  file.url = backend.reolsveFileUrl(file.path)
-  const renderer = type2Render[file.type]
+  let content
+  if (file) {
+    file.url = backend.reolsveFileUrl(file.path)
+    const renderer = type2Render[file.type]
+    content = <div
+      ref={boardRef}
+      onMouseDown={onMouseDown}
+      onWheel={onWheel}
+      onKeyDown={onKeyDown}
+      tabIndex="0"
+      style={{
+        width: "100%",
+        height: "100%",
+      }}>
+      {
+        renderer ?
+          renderer(file) :
+          <h1>Cannot display this file.</h1>
+      }
+    </div>
+  } else {
+    content = <h1>No file selected</h1>
+  }
   return <>
     <ResponsiveAppBar>
       <Tooltip title={file?.path}>
@@ -75,22 +93,7 @@ export function FileDisplayBoard(props) {
         </IconButton>
       </Tooltip>
     </ResponsiveAppBar>
-    <div
-      ref={boardRef}
-      onMouseDown={onMouseDown}
-      onWheel={onWheel}
-      onKeyDown={onKeyDown}
-      tabIndex="0"
-      style={{
-        width: "100%",
-        height: "100%",
-      }}>
-      {
-        renderer ?
-          renderer(file) :
-          <h1>Cannot display this file.</h1>
-      }
-    </div>
+    {content}
   </>
 }
 
