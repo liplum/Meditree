@@ -1,9 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Tree } from 'antd'
 import * as ft from "./fileTree"
-import {
-  useNavigate,
-} from "react-router-dom";
 import { FileTreeDeleagteContext, SelectedFileContext } from './app';
 import { useTheme } from '@mui/material/styles';
 const { DirectoryTree } = Tree;
@@ -12,7 +9,9 @@ export function FileTreeNavigation(props) {
   const [delegate] = useContext(FileTreeDeleagteContext)
   const [renderTree, setRenderTree] = useState()
   const [selectedFile, setSelectedFile] = useContext(SelectedFileContext)
-  const navigate = useNavigate()
+  useEffect(() => {
+    window.localStorage.setItem("lastSelectedFile", JSON.stringify(selectedFile))
+  }, [selectedFile])
   useEffect(() => {
     if (!delegate) return
     if (props.searchDelegate) {

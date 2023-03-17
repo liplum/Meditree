@@ -19,7 +19,6 @@ const type2Render = {
 }
 
 export function FileDisplayBoard(props) {
-  const [delegate] = useContext(FileTreeDeleagteContext)
   const { isStarred, star, unstar } = useContext(AstrologyContext)
   const [file] = useContext(SelectedFileContext)
   const boardRef = useRef()

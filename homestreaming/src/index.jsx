@@ -7,7 +7,6 @@ import { ConfigProvider, theme } from 'antd'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import { App, loader as appLoader } from './app'
-import { FileDisplayBoard } from './playground'
 import reportWebVitals from './reportWebVitals'
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
@@ -17,12 +16,6 @@ const router = createBrowserRouter([
     element: <App />,
     loader: appLoader,
     shouldRevalidate: () => false,
-    children: [
-      {
-        path: ":key",
-        element: <FileDisplayBoard />,
-      }
-    ]
   },
 ]);
 

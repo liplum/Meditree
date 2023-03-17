@@ -77,7 +77,7 @@ export function App(props) {
     return file.path.toLowerCase().includes(searchPrompt.toLocaleLowerCase())
   }
 
-  const drawer = <div style={{ height: "100vh" }}>
+  const drawer = <>
     <div style={{ display: "flex", alignItems: 'center' }}>
       <Tooltip title={i18n.search.starFilter}>
         <IconButton onClick={() => setOnlyShowStarred(!onlyShowStarred)}>
@@ -90,13 +90,10 @@ export function App(props) {
       />
     </div>
     <FileTreeNavigation
-      onSelectFile={(newFile) => {
-        window.localStorage.setItem("lastSelectedFile", JSON.stringify(newFile))
-      }}
       searchDelegate={filterByPrompt}
       lastSelectedFile={lastSelectedFile}
     />
-  </div>
+  </>
   const body = (
     <Box sx={{
       display: 'flex', height: "100vh",
