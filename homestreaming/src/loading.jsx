@@ -1,0 +1,22 @@
+import React, { useEffect, useLayoutEffect } from 'react';
+import './loading.css';
+import {
+  useNavigate
+} from "react-router-dom"
+export function Loading(props) {
+  const circleSize = props.size || 100; // default size is 100px
+  const circleColor = props.color || '#FAFAFA'; // default color is black
+  const textSize = props.textSize || circleSize / 4; // text size is a quarter of the circle size
+  const navigate = useNavigate()
+  useEffect(() => {
+    navigate("/dashboard")
+  }, [])
+  return (
+    <div className="loading-container">
+      <svg className="loading-svg" viewBox={`0 0 ${circleSize} ${circleSize}`} xmlns="http://www.w3.org/2000/svg">
+        <circle className="loading-circle" cx={circleSize / 2} cy={circleSize / 2} r={circleSize / 2 - 5} stroke={circleColor} strokeWidth="10" fill="none" strokeLinecap="round" />
+      </svg>
+      <div className="loading-text" style={{ fontSize: textSize, color: circleColor }}>Loading...</div>
+    </div>
+  );
+}

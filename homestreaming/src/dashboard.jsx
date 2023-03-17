@@ -1,4 +1,3 @@
-import "./app.css"
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { FileTreeNavigation } from "./fileTreeNavi";
 import { emitter } from "./event"
@@ -14,6 +13,7 @@ import { backend } from "./env";
 import { FileDisplayBoard } from "./playground";
 import { i18n } from "./i18n";
 import { SearchBar } from "./searchbar";
+import "./dashboard.css"
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()

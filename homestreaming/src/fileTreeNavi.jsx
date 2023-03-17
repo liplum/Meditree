@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Tree } from 'antd'
 import * as ft from "./fileTree"
-import { FileTreeDeleagteContext, SelectedFileContext } from './app';
+import { FileTreeDeleagteContext, SelectedFileContext } from './dashboard';
 import { useTheme } from '@mui/material/styles';
 const { DirectoryTree } = Tree;
 

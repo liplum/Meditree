@@ -1,0 +1,51 @@
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* set the height of the container to the full viewport height */
+}
+
+.loading-svg {
+  width: 100px;
+  height: 100px;
+  animation: spin 1s linear infinite;
+}
+
+.loading-circle {
+  stroke: #FAFAFA;
+  stroke-width: 10;
+  fill: none;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 0;
+  animation: dash 1s ease-in-out infinite;
+}
+
+.loading-text {
+  margin-top: 10px;
+  color: #FAFAFA
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dashoffset: 283;
+  }
+
+  50% {
+    stroke-dashoffset: 141.5;
+  }
+
+  100% {
+    stroke-dashoffset: 283;
+  }
+}
