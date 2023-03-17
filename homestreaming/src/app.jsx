@@ -13,6 +13,7 @@ import { Box, Divider, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from "./env";
 import { FileDisplayBoard } from "./playground";
+import { i18n } from "./i18n";
 
 const { Search } = Input;
 
@@ -78,13 +79,13 @@ export function App(props) {
 
   const drawer = <div style={{ height: "100vh" }}>
     <div style={{ display: "flex", alignItems: 'center' }}>
-      <Tooltip title="Only Show Starred">
+      <Tooltip title={i18n.search.starFilter}>
         <IconButton onClick={() => setOnlyShowStarred(!onlyShowStarred)}>
           {onlyShowStarred ? <Star /> : <StarBorder />}
         </IconButton>
       </Tooltip>
       <Search
-        placeholder="search files or folders"
+        placeholder={i18n.search.placeholder}
         onSearch={(prompt) => setSearchPrompt(prompt)}
       />
     </div>

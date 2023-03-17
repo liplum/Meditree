@@ -8,6 +8,7 @@ import { Tooltip, IconButton, Typography } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from './env';
 import useForceUpdate from 'use-force-update';
+import { i18n } from './i18n';
 
 const type2Render = {
   "video/mp4": renderVideo,
@@ -53,7 +54,7 @@ export function FileDisplayBoard(props) {
       goNextFile(file)
     }
   }
-  let content
+  let content = null
   if (file) {
     file.url = backend.reolsveFileUrl(file.path)
     const renderer = type2Render[file.type]
@@ -73,9 +74,8 @@ export function FileDisplayBoard(props) {
           <h1>Cannot display this file.</h1>
       }
     </div>
-  } else {
-    content = <h1>No file selected</h1>
   }
+  const isFileStarred = isStarred(file)
   return <>
     <ResponsiveAppBar>
       <Tooltip title={file?.path}>
@@ -83,15 +83,20 @@ export function FileDisplayBoard(props) {
           {file ? file.name : "No file selected"}
         </Typography>
       </Tooltip>
-      <Tooltip title="Add To Star ">
-        <IconButton onClick={() => {
-          if (isStarred(file)) unstar(file)
-          else star(file)
-          forceUpdate()
-        }}>
-          {isStarred(file) ? <Star /> : <StarBorder />}
-        </IconButton>
-      </Tooltip>
+      {file && // only display if any file is selected
+        <Tooltip title={
+          isFileStarred ? i18n.playground.unstarBtn
+            : i18n.playground.starBtn
+        }>
+          <IconButton onClick={() => {
+            if (isFileStarred) unstar(file)
+            else star(file)
+            forceUpdate()
+          }}>
+            {isFileStarred ? <Star /> : <StarBorder />}
+          </IconButton>
+        </Tooltip>
+      }
     </ResponsiveAppBar>
     {content}
   </>
