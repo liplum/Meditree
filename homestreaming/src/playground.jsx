@@ -63,10 +63,8 @@ export function FileDisplayBoard(props) {
       onWheel={onWheel}
       onKeyDown={onKeyDown}
       tabIndex="0"
-      style={{
-        width: "100%",
-        height: "100%",
-      }}>
+      className="board"
+    >
       {
         renderer ?
           renderer(file) :
