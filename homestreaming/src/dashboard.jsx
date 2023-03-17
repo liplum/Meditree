@@ -17,6 +17,7 @@ import { i18n } from "./i18n";
 import { SearchBar } from "./searchbar";
 import "./dashboard.css"
 import { Failed, Loading } from "./loading";
+import useForceUpdate from "use-force-update";
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
@@ -97,9 +98,32 @@ function Body(props) {
       emitter.on("go-previous", goPrevious)
     }
   })
-
+  const forceUpdate = useForceUpdate()
   const astrology = JSON.parse(window.localStorage.getItem("astrology")) ?? {}
-
+  const astrologyCtx = {
+    astrology,
+    isStarred(file) {
+      return file && astrology[file.path] === true
+    },
+    star(file) {
+      const path = file?.path
+      if (path && astrology[path] !== true) {
+        astrology[path] = true
+        window.localStorage.setItem("astrology", JSON.stringify(astrology))
+        // rebuild for prompt filter
+        forceUpdate() 
+      }
+    },
+    unstar(file) {
+      const path = file?.path
+      if (path && path in astrology) {
+        delete astrology[path]
+        window.localStorage.setItem("astrology", JSON.stringify(astrology))
+        // rebuild for prompt filter
+        forceUpdate()
+      }
+    }
+  }
   const filterByPrompt = (file) => {
     if (onlyShowStarred && !astrology[file.path]) {
       return false;
@@ -175,26 +199,6 @@ function Body(props) {
       </Box>
     </Box>
   )
-  const astrologyCtx = {
-    astrology,
-    isStarred(file) {
-      return file && astrology[file.path] === true
-    },
-    star(file) {
-      const path = file?.path
-      if (path && astrology[path] !== true) {
-        astrology[path] = true
-        window.localStorage.setItem("astrology", JSON.stringify(astrology))
-      }
-    },
-    unstar(file) {
-      const path = file?.path
-      if (path && path in astrology) {
-        delete astrology[path]
-        window.localStorage.setItem("astrology", JSON.stringify(astrology))
-      }
-    }
-  }
   return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
     <FileTreeDeleagteContext.Provider value={[fileTreeDelegate]}>
       <AstrologyContext.Provider value={astrologyCtx}>

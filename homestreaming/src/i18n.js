@@ -4,7 +4,7 @@ export const i18n = new LocalizedStrings({
   en: {
     search: {
       starFilter: "Only Show Starred",
-      placeholder: "search files or folders"
+      placeholder: "Search files or folders"
     },
     playground: {
       starBtn: "Add To Star",
