@@ -4,22 +4,22 @@ import { FileTreeNavigation } from "./fileTreeNavi";
 import { emitter } from "./event"
 import MenuIcon from '@mui/icons-material/Menu';
 
-import { Input, Space, Button } from 'antd';
+import { Input, } from 'antd';
 import * as ft from "./fileTree"
 import {
-  Outlet,
   useLoaderData,
-  useNavigate,
 } from "react-router-dom";
 import { Box, Divider, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from "./env";
+import { FileDisplayBoard } from "./playground";
 
 const { Search } = Input;
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
 export const AstrologyContext = createContext()
+export const SelectedFileContext = createContext()
 const drawerWidth = 320;
 
 export async function loader() {
@@ -37,9 +37,9 @@ export function App(props) {
   const { fileTreeDelegate } = useLoaderData()
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const lastSelectedFile = JSON.parse(window.localStorage.getItem("lastSelectedFile"))
+  const [selectedFile, setSelectedFile] = useState(lastSelectedFile)
   const [searchPrompt, setSearchPrompt] = useState()
   const [onlyShowStarred, setOnlyShowStarred] = useState()
-  const navigate = useNavigate()
 
   useEffect(() => {
     function goFile(curFile, delta) {
@@ -50,7 +50,7 @@ export function App(props) {
         if (!next) {
           nextKey += delta
         } else {
-          navigate(`/${nextKey}`)
+          setSelectedFile(next)
           return
         }
       }
@@ -64,7 +64,7 @@ export function App(props) {
       emitter.on("go-next", goNext)
       emitter.on("go-previous", goPrevious)
     }
-  }, [fileTreeDelegate])
+  })
 
   const astrology = JSON.parse(window.localStorage.getItem("astrology")) ?? {}
 
@@ -77,23 +77,17 @@ export function App(props) {
   }
 
   const drawer = <>
-    <AppBar position="fixed"
-      sx={{
-        width: { sm: `${drawerWidth}px` },
-        left: 0,
-      }}>
-      <div style={{ display: "flex", alignItems: 'center' }}>
-        <Tooltip title="Only Show Starred">
-          <IconButton onClick={() => setOnlyShowStarred(!onlyShowStarred)}>
-            {onlyShowStarred ? <Star /> : <StarBorder />}
-          </IconButton>
-        </Tooltip>
-        <Search
-          placeholder="search files or folders"
-          onSearch={(prompt) => setSearchPrompt(prompt)}
-        />
-      </div>
-    </AppBar>
+    <div style={{ display: "flex", alignItems: 'center' }}>
+      <Tooltip title="Only Show Starred">
+        <IconButton onClick={() => setOnlyShowStarred(!onlyShowStarred)}>
+          {onlyShowStarred ? <Star /> : <StarBorder />}
+        </IconButton>
+      </Tooltip>
+      <Search
+        placeholder="search files or folders"
+        onSearch={(prompt) => setSearchPrompt(prompt)}
+      />
+    </div>
     <FileTreeNavigation
       onSelectFile={(newFile) => {
         window.localStorage.setItem("lastSelectedFile", JSON.stringify(newFile))
@@ -143,14 +137,36 @@ export function App(props) {
       >
         <CssBaseline />
         <Toolbar />
-        <Outlet />
+        <FileDisplayBoard />
       </Box>
     </Box>
   )
+  const astrologyCtx = {
+    astrology,
+    isStarred(file) {
+      return file && astrology[file.path] === true
+    },
+    star(file) {
+      const path = file?.path
+      if (path && astrology[path] !== true) {
+        astrology[path] = true
+        window.localStorage.setItem("astrology", JSON.stringify(astrology))
+      }
+    },
+    unstar(file) {
+      const path = file?.path
+      if (path && path in astrology) {
+        delete astrology[path]
+        window.localStorage.setItem("astrology", JSON.stringify(astrology))
+      }
+    }
+  }
   return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
     <FileTreeDeleagteContext.Provider value={[fileTreeDelegate]}>
-      <AstrologyContext.Provider value={[astrology]}>
-        {body}
+      <AstrologyContext.Provider value={astrologyCtx}>
+        <SelectedFileContext.Provider value={[selectedFile, setSelectedFile]}>
+          {body}
+        </SelectedFileContext.Provider>
       </AstrologyContext.Provider>
     </FileTreeDeleagteContext.Provider>
   </IsDrawerOpenContext.Provider>

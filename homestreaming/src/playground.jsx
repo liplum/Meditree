@@ -3,11 +3,11 @@ import React, { useContext, useRef } from 'react'
 import { goNextFile, goPreviousFile } from "./event";
 
 import { isMobile } from "react-device-detect"
-import { AstrologyContext, FileTreeDeleagteContext, ResponsiveAppBar } from './app';
+import { AstrologyContext, FileTreeDeleagteContext, ResponsiveAppBar, SelectedFileContext } from './app';
 import { Tooltip, IconButton, Typography } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
-import { useParams } from 'react-router-dom';
 import { backend } from './env';
+import useForceUpdate from 'use-force-update';
 
 const type2Render = {
   "video/mp4": renderVideo,
@@ -18,18 +18,18 @@ const type2Render = {
 }
 
 export function FileDisplayBoard(props) {
-  const { key } = useParams();
   const [delegate] = useContext(FileTreeDeleagteContext)
-  const [astrology] = useContext(AstrologyContext)
+  const { isStarred, star, unstar } = useContext(AstrologyContext)
+  const [file] = useContext(SelectedFileContext)
   const boardRef = useRef()
-  const file = delegate.key2File.get(parseInt(key))
+  const forceUpdate = useForceUpdate()
   if (!file) {
     return <h1>No file selected</h1>
   }
   const onMouseDown = (e) => {
     if (!isMobile) return
-    const { clientX } = e;
-    const { left, width } = boardRef.current.getBoundingClientRect();
+    const { clientX } = e
+    const { left, width } = boardRef.current.getBoundingClientRect()
 
     if (clientX < left + width / 2) {
       // left side
@@ -58,7 +58,6 @@ export function FileDisplayBoard(props) {
   }
   file.url = backend.reolsveFileUrl(file.path)
   const renderer = type2Render[file.type]
-  const starred = astrology[file?.path] === true;
   return <>
     <ResponsiveAppBar>
       <Tooltip title={file?.path}>
@@ -66,16 +65,15 @@ export function FileDisplayBoard(props) {
           {file ? file.name : "No file selected"}
         </Typography>
       </Tooltip>
-      <IconButton onClick={(newIsStarred) => {
-        if (newIsStarred) {
-          astrology[file.path] = true;
-        } else {
-          delete astrology[file.path];
-        }
-        window.localStorage.setItem("astrology", JSON.stringify(astrology));
-      }}>
-        {starred ? <Star /> : <StarBorder />}
-      </IconButton>
+      <Tooltip title="Add To Star ">
+        <IconButton onClick={() => {
+          if (isStarred(file)) unstar(file)
+          else star(file)
+          forceUpdate()
+        }}>
+          {isStarred(file) ? <Star /> : <StarBorder />}
+        </IconButton>
+      </Tooltip>
     </ResponsiveAppBar>
     <div
       ref={boardRef}

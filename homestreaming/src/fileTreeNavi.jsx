@@ -4,12 +4,14 @@ import * as ft from "./fileTree"
 import {
   useNavigate,
 } from "react-router-dom";
-import { FileTreeDeleagteContext } from './app';
+import { FileTreeDeleagteContext, SelectedFileContext } from './app';
+import { useTheme } from '@mui/material/styles';
 const { DirectoryTree } = Tree;
 
 export function FileTreeNavigation(props) {
   const [delegate] = useContext(FileTreeDeleagteContext)
   const [renderTree, setRenderTree] = useState()
+  const [selectedFile, setSelectedFile] = useContext(SelectedFileContext)
   const navigate = useNavigate()
   useEffect(() => {
     if (!delegate) return
@@ -20,13 +22,13 @@ export function FileTreeNavigation(props) {
       setRenderTree(newRenderTree)
     }
   }, [props.searchDelegate, delegate])
-
+  const theme = useTheme()
   if (!renderTree) return
   return (
     <DirectoryTree
       style={{
-        backgroundColor: "#0A0A0A",
-        color: "#FAFAFA",
+        backgroundColor: theme.palette.background.paper,
+        color: theme.palette.text.primary,
         fontSize: "14pt",
         height: "95vh",
         overflow: "auto",
@@ -45,7 +47,7 @@ export function FileTreeNavigation(props) {
           }
           const file = delegate.key2File.get(key)
           if (file) {
-            navigate(`/${key}`)
+            setSelectedFile(file)
           }
         }
       }}

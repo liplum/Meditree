@@ -1,7 +1,7 @@
 export function createDelegate(rootFileTree, rootName = "") {
   const rootChildren = []
   let key = 0
-  const rootObj = {
+  const rootRenderTree = {
     key: key++,
     title: rootName,
     children: rootChildren
@@ -20,7 +20,7 @@ export function createDelegate(rootFileTree, rootName = "") {
           key: curKey,
           title: name,
           selectable: false,
-          children: myChildren
+          children: myChildren,
         }
         children.push(obj)
         createNode(path, [...parentKeys, curKey], myChildren, file)
@@ -42,9 +42,9 @@ export function createDelegate(rootFileTree, rootName = "") {
       }
     }
   }
-  createNode("", [rootObj.key], rootChildren, rootFileTree)
+  createNode("", [rootRenderTree.key], rootChildren, rootFileTree)
   return {
-    renderTree: rootObj,
+    renderTree: rootRenderTree,
     key2File,
     maxKey: key,
   }
