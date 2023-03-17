@@ -4,36 +4,29 @@
 
 ### Backend
 
-Run `npm install` in `backend` subprojects.
+Install the dependencies of `backend` subprojects.
+Then run `npm start` to start the server.
 
 ```shell
 cd backend
 npm install
+npm start
 ```
 
-Then you should directly run the backend, and a configuration file,
-called `homestreaming-config.json`, will be created in the root.
+At the first time you start the server,
+it will throw an error and require you to configure it,
+then a file called `homestreaming-config.json` will be created in the root.
 
-```shell
-npm run serve
-```
+### Frontend Website
 
-After configuring the settings, you can run `npm run serve` again.
-
-### Frotend
-
-Run `npm install` in `homstreaming` subprojects.
+Install the dependencies of `homstreaming` subprojects.
+Create a `.env.local` file in the root, and config it based on `.env` file.
+Then run `npm run dev` to start the website.
 
 ```shell
 cd homestreaming
 npm install
+npm run dev
 ```
 
-Create a `.env.local` file in the root, and config it based on `.env` file.
-
-Then you should setup the environment variables: `HOST` and `PORT`.
-
-```shell
-# This works on Linux, macOS and Windows WSL.
-HOST="0.0.0.0" PORT=8000 npm run start
-```
+You can configure the host and port in the [Vite config file](/homestreaming/vite.config.js).
