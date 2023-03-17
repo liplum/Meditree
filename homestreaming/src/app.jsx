@@ -4,7 +4,6 @@ import { FileTreeNavigation } from "./fileTreeNavi";
 import { emitter } from "./event"
 import MenuIcon from '@mui/icons-material/Menu';
 
-import { Input, } from 'antd';
 import * as ft from "./fileTree"
 import {
   useLoaderData,
@@ -14,8 +13,7 @@ import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from "./env";
 import { FileDisplayBoard } from "./playground";
 import { i18n } from "./i18n";
-
-const { Search } = Input;
+import { SearchBar } from "./searchbar";
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
@@ -78,13 +76,18 @@ export function App(props) {
   }
 
   const drawer = <>
-    <div style={{ display: "flex", alignItems: 'center' }}>
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      padding: "10px 0px 10px 0px",
+      justifyContent: "space-evenly",
+    }}>
       <Tooltip title={i18n.search.starFilter}>
         <IconButton onClick={() => setOnlyShowStarred(!onlyShowStarred)}>
           {onlyShowStarred ? <Star /> : <StarBorder />}
         </IconButton>
       </Tooltip>
-      <Search
+      <SearchBar
         placeholder={i18n.search.placeholder}
         onSearch={(prompt) => setSearchPrompt(prompt)}
       />
