@@ -21,19 +21,6 @@ export class File {
   }
 }
 
-export function findFileInFileTree(dir: string, fileName: string): string | null {
-  let lastDir: string | null = null
-  while (dir !== lastDir) {
-    const configFile = path.join(dir, fileName)
-    if (fs.existsSync(configFile)) {
-      return configFile
-    } else {
-      lastDir = dir
-      dir = path.dirname(dir)
-    }
-  }
-  return null
-}
 export const statAsync = promisify(fs.stat)
 export const readFileAsync = promisify(fs.readFile)
 export const readdirAsync = promisify(fs.readdir)

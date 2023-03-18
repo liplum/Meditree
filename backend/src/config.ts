@@ -1,5 +1,4 @@
 import fs from "fs"
-import { findFileInFileTree } from "./file.js"
 import path from "path"
 import { listenable, type ListenableValue } from "./foundation.js"
 import chokidar from "chokidar"
@@ -16,7 +15,7 @@ export function findConfig<T>(args: FindConfigArgs<T>): ListenableValue<T> {
     return config
   }
   const curDir = rootDir
-  let configFile = findFileInFileTree(curDir, filename)
+  let configFile = findFileInTree(curDir, filename)
   if (!configFile) {
     configFile = path.join(curDir, filename)
     fs.writeFileSync(configFile, JSON.stringify(defaultConfig, null, 2))
@@ -34,4 +33,18 @@ export function findConfig<T>(args: FindConfigArgs<T>): ListenableValue<T> {
   })
 
   return config
+}
+
+function findFileInTree(dir: string, fileName: string): string | null {
+  let lastDir: string | null = null
+  while (dir !== lastDir) {
+    const configFile = path.join(dir, fileName)
+    if (fs.existsSync(configFile)) {
+      return configFile
+    } else {
+      lastDir = dir
+      dir = path.dirname(dir)
+    }
+  }
+  return null
 }

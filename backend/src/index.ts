@@ -6,7 +6,21 @@ import { fileURLToPath } from "url"
 
 installSourceMap()
 
-const defaultConfig = {
+export interface NodeConfig {
+  url: string
+}
+
+export interface AppConfig {
+  hostname: string
+  port: number
+  root: string
+  name: string
+  server?: NodeConfig
+  rebuildInterval: number
+  fileTypePatterns: Record<string, string>
+}
+
+const defaultConfig: AppConfig = {
   hostname: "127.0.0.1",
   port: 80,
   root: ".",
@@ -18,7 +32,6 @@ const defaultConfig = {
     "**/*.+(jpeg|jpg)": "image/jpeg"
   }
 }
-export type AppConfig = typeof defaultConfig
 
 const configFileName = "homestreaming.config.json"
 const config = findConfig(

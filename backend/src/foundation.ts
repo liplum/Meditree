@@ -39,19 +39,3 @@ export class ListenableValue<T> {
 export function listenable<T>(initial: T): ListenableValue<T> {
   return new ListenableValue<T>(initial)
 }
-
-export function shallowEqual(obj1: any, obj2: any): boolean {
-  // Check if both objects have the same number of properties
-  if (Object.keys(obj1).length !== Object.keys(obj2).length) {
-    return false
-  }
-
-  // Iterate over the properties of obj1 and compare them to the properties in obj2
-  for (const prop in obj1) {
-    if (obj1[prop] !== obj2[prop]) {
-      return false
-    }
-  }
-
-  return true
-}

@@ -2,7 +2,6 @@ import type fs from "fs"
 import chokidar from "chokidar"
 import minimatch, { type MinimatchOptions } from "minimatch"
 import { clearInterval } from "timers"
-import { shallowEqual } from "./foundation.js"
 import { FileTree, type File, type FileType } from "./file.js"
 export interface HostTreeOptions {
   /**
@@ -106,4 +105,20 @@ export class HostTree {
     // if not matching any one
     return null
   }
+}
+
+function shallowEqual(obj1: any, obj2: any): boolean {
+  // Check if both objects have the same number of properties
+  if (Object.keys(obj1).length !== Object.keys(obj2).length) {
+    return false
+  }
+
+  // Iterate over the properties of obj1 and compare them to the properties in obj2
+  for (const prop in obj1) {
+    if (obj1[prop] !== obj2[prop]) {
+      return false
+    }
+  }
+
+  return true
 }
