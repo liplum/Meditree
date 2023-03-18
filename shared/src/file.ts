@@ -40,7 +40,7 @@ export const readdirAsync = promisify(fs.readdir)
 export type PathFilter = (path: string) => boolean
 export type FileClassifier = (path: string) => FileType
 const alwaysNull: FileClassifier = (_) => null
-interface CreateFileTreeOptions {
+export interface CreateFileTreeOptions {
   root: string
   classifier: FileClassifier
   allowNullFileType: boolean

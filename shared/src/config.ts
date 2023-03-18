@@ -1,17 +1,21 @@
 import fs from "fs"
 import { findFileInFileTree } from "./file.js"
 import path from "path"
-import { fileURLToPath } from "url"
 import { listenable, type ListenableValue } from "./foundation.js"
 import chokidar from "chokidar"
-
-export function findConfig<T>(filename: string, defaultConfig: T): ListenableValue<T> {
+export interface FindConfigArgs<T> {
+  rootDir: string
+  filename: string
+  defaultConfig: T
+}
+export function findConfig<T>(args: FindConfigArgs<T>): ListenableValue<T> {
+  const { rootDir, filename, defaultConfig } = args
   function readConfig(configFile: string): T {
     const config = Object.assign({}, defaultConfig, JSON.parse(fs.readFileSync(configFile).toString()))
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     return config
   }
-  const curDir = path.dirname(fileURLToPath(import.meta.url))
+  const curDir = rootDir
   let configFile = findFileInFileTree(curDir, filename)
   if (!configFile) {
     configFile = path.join(curDir, filename)

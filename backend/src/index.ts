@@ -1,7 +1,8 @@
-import fs from "fs"
 import { findConfig } from "shared"
 import { startServer } from "./server.js"
 import { install as installSourceMap } from "source-map-support"
+import path from "path"
+import { fileURLToPath } from "url"
 
 installSourceMap()
 
@@ -20,6 +21,11 @@ const defaultConfig = {
 export type AppConfig = typeof defaultConfig
 
 const configFileName = "homestreaming.config.json"
-
-const config = findConfig(configFileName, defaultConfig)
+const config = findConfig(
+  {
+    rootDir: path.dirname(fileURLToPath(import.meta.url)),
+    filename: configFileName,
+    defaultConfig,
+  }
+)
 startServer(config)
