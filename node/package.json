@@ -11,6 +11,7 @@
   "author": "Liplum",
   "license": "ISC",
   "dependencies": {
+    "chokidar": "^3.5.3",
     "esbuild": "0.17.10",
     "minimatch": "^6.2.0",
     "source-map-support": "^0.5.21"
