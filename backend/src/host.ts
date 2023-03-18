@@ -1,5 +1,5 @@
 import type fs from "fs"
-import { FileTree, type File, type FileType } from "./file.js"
+import { FileTree, type File, type FileType } from "shared"
 import chokidar from "chokidar"
 import minimatch, { type MinimatchOptions } from "minimatch"
 import { clearInterval } from "timers"

@@ -1,11 +1,7 @@
 import fs from "fs"
-import { findFileInFileTree } from "./file.js"
+import { findConfig } from "shared"
 import { startServer } from "./server.js"
-import path from "path"
-import { fileURLToPath } from "url"
 import { install as installSourceMap } from "source-map-support"
-import { listenable, type ListenableValue } from "shared"
-import chokidar from "chokidar"
 
 installSourceMap()
 
@@ -24,32 +20,6 @@ const defaultConfig = {
 export type AppConfig = typeof defaultConfig
 
 const configFileName = "homestreaming.config.json"
-function readConfig(configFile: string): AppConfig {
-  const config = Object.assign({}, defaultConfig, JSON.parse(fs.readFileSync(configFile).toString()))
-  fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
-  return config
-}
-function findConfig(): ListenableValue<AppConfig> {
-  const curDir = path.dirname(fileURLToPath(import.meta.url))
-  let configFile = findFileInFileTree(curDir, configFileName)
-  if (!configFile) {
-    configFile = path.join(curDir, configFileName)
-    fs.writeFileSync(configFile, JSON.stringify(defaultConfig, null, 2))
-    throw new Error(`Configuration not found. ${configFile} is created.`)
-  }
-  const config = listenable(readConfig(configFile))
-  chokidar.watch(configFile, {
-    ignoreInitial: true,
-  }).on("all", (event, filePath: string) => {
-    console.log(`[${event}] Configuration was changed. ${filePath}`)
-    try {
-      config.value = readConfig(filePath)
-    } catch (e) {
-    }
-  })
 
-  return config
-}
-
-const config = findConfig()
+const config = findConfig(configFileName, defaultConfig)
 startServer(config)

@@ -11,8 +11,13 @@
     "dist/**/*.js",
     "dist/**/*.d.ts"
   ],
-  "scripts": {
-  },
+  "scripts": {},
   "author": "Liplum",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.15.3"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3"
+  }
 }
