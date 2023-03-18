@@ -38,19 +38,24 @@ export function FileDisplayBoard(props) {
   }
   const onWheel = (e) => {
     if (isMobile) return
+    if(e.ctrlKey) return
     if (e.deltaY > 0) {
       // wheel down
       goNextFile(file)
+      e.preventDefault()
     } else if (e.deltaY < 0) {
       // wheel up
       goPreviousFile(file)
+      e.preventDefault()
     }
   }
   const onKeyDown = (e) => {
     if (e.key === "ArrowLeft") {
       goPreviousFile(file)
+      e.preventDefault()
     } else if (e.key === "ArrowRight") {
       goNextFile(file)
+      e.preventDefault()
     }
   }
   let content = null
