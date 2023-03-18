@@ -2,8 +2,8 @@ import type fs from "fs"
 import chokidar from "chokidar"
 import minimatch, { type MinimatchOptions } from "minimatch"
 import { clearInterval } from "timers"
-import { shallowEqual } from "shared"
-import { FileTree, type File, type FileType } from "shared"
+import { shallowEqual } from "./foundation.js"
+import { FileTree, type File, type FileType } from "./file.js"
 export interface HostTreeOptions {
   /**
   * The absolute path of root directory.

@@ -1,4 +1,4 @@
-import { findConfig } from "shared"
+import { findConfig } from "./config.js"
 import { startServer } from "./server.js"
 import { install as installSourceMap } from "source-map-support"
 import path from "path"

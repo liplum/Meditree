@@ -17,7 +17,6 @@
     "express": "^4.18.2",
     "mediaserver": "^0.1.1",
     "minimatch": "^6.2.0",
-    "shared": "file:../shared",
     "source-map-support": "^0.5.21"
   },
   "devDependencies": {
