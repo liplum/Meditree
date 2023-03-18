@@ -111,7 +111,7 @@ function Body(props) {
         astrology[path] = true
         window.localStorage.setItem("astrology", JSON.stringify(astrology))
         // rebuild for prompt filter
-        forceUpdate() 
+        forceUpdate()
       }
     },
     unstar(file) {
@@ -132,7 +132,12 @@ function Body(props) {
     return file.path.toLowerCase().includes(searchPrompt.toLocaleLowerCase())
   }
 
-  const drawer = <>
+  const drawer = <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column', 
+      height: '100%'
+    }}>
     <div style={{
       display: "flex",
       alignItems: "center",
@@ -149,11 +154,13 @@ function Body(props) {
         onSearch={(prompt) => setSearchPrompt(prompt)}
       />
     </div>
-    <FileTreeNavigation
-      searchDelegate={filterByPrompt}
-      lastSelectedFile={lastSelectedFile}
-    />
-  </>
+    <div style={{ flex: 1, overflow: 'auto' }}>
+      <FileTreeNavigation
+        searchDelegate={filterByPrompt}
+        lastSelectedFile={lastSelectedFile}
+      />
+    </div>
+  </div>
   const body = (
     <Box sx={{
       display: 'flex', height: "100vh",

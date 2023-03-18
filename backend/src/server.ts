@@ -3,31 +3,21 @@ import { type AppConfig } from "./index.js"
 import express, { type Request, type Response } from "express"
 import fs from "fs"
 import { File, FileTree } from "./file.js"
-import { type ListenableValue } from "./foundation.js"
 import cors from "cors"
 import ms from "mediaserver"
 
-export async function startServer(
-  config: ListenableValue<AppConfig>,
-): Promise<void> {
+export async function startServer(config: AppConfig): Promise<void> {
   const tree = new HostTree({
-    root: config.value.root,
-    fileTypePatterns: config.value.fileTypePatterns,
-    rebuildInterval: config.value.rebuildInterval
-  })
-  config.addListener((config) => {
-    tree.updateOptions({
-      root: config.root,
-      fileTypePatterns: config.fileTypePatterns,
-      rebuildInterval: config.rebuildInterval
-    })
+    root: config.root,
+    fileTypePatterns: config.fileTypePatterns,
+    rebuildInterval: config.rebuildInterval
   })
   let treeJsonObjectCache: object | null = null
   let treeJsonStringCache: string | null = null
   let treeIndexHtmlCache: string | null = null
   tree.onRebuilt = () => {
     treeJsonObjectCache = {
-      name: config.value.name,
+      name: config.name,
       files: tree.fileTree.toJSON()
     }
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 2)
@@ -84,8 +74,8 @@ export async function startServer(
     handler(req, res, file)
   })
 
-  app.listen(config.value.port, config.value.hostname, () => {
-    console.log(`Server running at http://${config.value.hostname}:${config.value.port}/`)
+  app.listen(config.port, config.hostname, () => {
+    console.log(`Server running at http://${config.hostname}:${config.port}/`)
   })
 }
 

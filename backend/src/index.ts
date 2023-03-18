@@ -10,12 +10,17 @@ export interface NodeConfig {
   url: string
 }
 
+export interface PolymorphismConfig extends Record<string, string> {
+  type: string
+}
+
 export interface AppConfig {
   hostname: string
   port: number
   root: string
   name: string
   server?: NodeConfig
+  authentication?: PolymorphismConfig
   rebuildInterval: number
   fileTypePatterns: Record<string, string>
 }
