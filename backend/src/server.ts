@@ -1,11 +1,11 @@
 import { HostTree } from "./host.js"
 import { type AppConfig } from "./index.js"
 import express, { type Request, type Response } from "express"
-import * as fs from "fs"
+import fs from "fs"
 import { File, FileTree } from "./file.js"
-import { type ListenableValue } from "./fundation.js"
+import { type ListenableValue } from "shared"
 import cors from "cors"
-import * as ms from "mediaserver"
+import ms from "mediaserver"
 
 export async function startServer(
   config: ListenableValue<AppConfig>,

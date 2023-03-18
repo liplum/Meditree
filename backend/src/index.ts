@@ -1,11 +1,11 @@
-import * as fs from "fs"
+import fs from "fs"
 import { findFileInFileTree } from "./file.js"
 import { startServer } from "./server.js"
-import * as path from "path"
+import path from "path"
 import { fileURLToPath } from "url"
 import { install as installSourceMap } from "source-map-support"
-import { listenable, type ListenableValue } from "./fundation.js"
-import * as chokidar from "chokidar"
+import { listenable, type ListenableValue } from "shared"
+import chokidar from "chokidar"
 
 installSourceMap()
 
