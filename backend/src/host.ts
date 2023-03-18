@@ -4,7 +4,7 @@ import minimatch, { type MinimatchOptions } from "minimatch"
 import { clearInterval } from "timers"
 import { shallowEqual } from "shared"
 import { FileTree, type File, type FileType } from "shared"
-interface HostTreeOptions {
+export interface HostTreeOptions {
   /**
   * The absolute path of root directory.
   */

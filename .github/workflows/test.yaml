@@ -17,7 +17,12 @@ jobs:
           node-version: 16
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
-      - name: test build
+      - name: compile shared
+        run: |
+          cd shared
+          npm ci
+          tsc
+      - name: compile backend
         run: |
           cd backend
           npm ci

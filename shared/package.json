@@ -14,10 +14,10 @@
   "scripts": {},
   "author": "Liplum",
   "license": "ISC",
-  "devDependencies": {
-    "@types/node": "^18.15.3"
-  },
   "dependencies": {
     "chokidar": "^3.5.3"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.3"
   }
 }
