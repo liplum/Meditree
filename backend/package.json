@@ -1,7 +1,7 @@
 {
-  "name": "homestreaming-backend",
+  "name": "medimesh",
   "version": "1.0.0",
-  "description": "The backend server of homestreaming web app.",
+  "description": "The Medimesh server.",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {

@@ -38,12 +38,12 @@ const defaultConfig: AppConfig = {
   }
 }
 
-const configFileName = "homestreaming.config.json"
 const config = findConfig(
   {
     rootDir: path.dirname(fileURLToPath(import.meta.url)),
-    filename: configFileName,
+    filename: "medimesh.json",
     defaultConfig,
   }
 )
+
 startServer(config)
