@@ -13,6 +13,12 @@ export const storage = {
   setAstrologyOf(baseUrl, value) {
     window.localStorage.setItem(`astrology-${baseUrl}`, JSON.stringify(value))
   },
+  getLastSelectedFileOf(baseUrl) {
+    return JSON.parse(window.localStorage.getItem(`lastSelectedFile-${baseUrl}`))
+  },
+  setLastSelectedFileOf(baseUrl, value) {
+    window.localStorage.setItem(`lastSelectedFile-${baseUrl}`, JSON.stringify(value))
+  },
   get lastConnected() {
     return JSON.parse(window.localStorage.getItem("lastConnected")) ?? null
   },

@@ -9,9 +9,7 @@ export function FileTreeNavigation(props) {
   const [delegate] = useContext(FileTreeDeleagteContext)
   const [renderTree, setRenderTree] = useState()
   const [selectedFile, setSelectedFile] = useContext(SelectedFileContext)
-  useEffect(() => {
-    window.localStorage.setItem("lastSelectedFile", JSON.stringify(selectedFile))
-  }, [selectedFile])
+
   useEffect(() => {
     if (!delegate) return
     if (props.searchDelegate) {
@@ -21,6 +19,7 @@ export function FileTreeNavigation(props) {
       setRenderTree(newRenderTree)
     }
   }, [props.searchDelegate, delegate])
+  
   const theme = useTheme()
   if (!renderTree) return
   return (
@@ -33,8 +32,8 @@ export function FileTreeNavigation(props) {
       showLine={true}
       showIcon={false}
       treeData={renderTree.children}
-      defaultSelectedKeys={[props.lastSelectedFile?.nodeId]}
-      defaultExpandedKeys={props.lastSelectedFile?.tracking}
+      defaultSelectedKeys={[selectedFile?.nodeId]}
+      defaultExpandedKeys={selectedFile?.tracking}
       onSelect={(keys, _) => {
         if (keys.length > 0) {
           let key = keys[0]

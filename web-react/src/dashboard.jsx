@@ -78,10 +78,14 @@ function Body(props) {
   const { fileTreeDelegate, params } = props
   const { baseUrl } = params
   const [isDrawerOpen, setIsDrawerOpen] = useState()
-  const lastSelectedFile = JSON.parse(window.localStorage.getItem("lastSelectedFile"))
+  const lastSelectedFile = storage.getLastSelectedFileOf(baseUrl)
   const [selectedFile, setSelectedFile] = useState(lastSelectedFile)
   const [searchPrompt, setSearchPrompt] = useState()
   const [onlyShowStarred, setOnlyShowStarred] = useState()
+
+  useEffect(() => {
+    storage.setLastSelectedFileOf(baseUrl, selectedFile)
+  }, [selectedFile])
 
   useEffect(() => {
     function goFile(curFile, delta) {
@@ -166,7 +170,6 @@ function Body(props) {
     <div style={{ flex: 1, overflow: 'auto' }}>
       <FileTreeNavigation
         searchDelegate={filterByPrompt}
-        lastSelectedFile={lastSelectedFile}
       />
     </div>
   </div>
