@@ -116,12 +116,13 @@ function Body(props) {
   const astrologyCtx = {
     astrology,
     isStarred(file) {
-      return file && astrology[file.path] === true
+      return file && astrology[file.path]
     },
     star(file) {
       const path = file?.path
-      if (path && astrology[path] !== true) {
-        astrology[path] = true
+      if (path && !astrology[path]) {
+        // `1` instead of `true` to shrink the json size
+        astrology[path] = 1
         storage.setAstrologyOf(baseUrl, astrology)
         // rebuild for prompt filter
         forceUpdate()

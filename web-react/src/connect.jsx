@@ -44,7 +44,15 @@ export function ConnectDialog(props) {
       }}>
         <FormControl style={{ alignSelf: "center" }}>
           <RadioGroup name="protocol" row value={protocol}
-            onChange={(e) => setProtocol(e.target.value)}>
+            onChange={(e) => {
+              if (server.startsWith("http://")) {
+                setProtocol("http")
+              } else if (server.startsWith("https://")) {
+                setProtocol("https")
+              } else {
+                setProtocol(e.target.value)
+              }
+            }}>
             <FormControlLabel value="http" label="HTTP" control={<Radio />} />
             <FormControlLabel value="https" label="HTTPS" control={<Radio />} />
           </RadioGroup>
@@ -72,6 +80,7 @@ export function ConnectDialog(props) {
           type="password"
           label={i18n.connect.passcode}
           placeholder={i18n.connect.passcodePlaceholder}
+          defaultValue={lastConnected?.passcode}
           name="passcode"
         />
         <DialogActions>
