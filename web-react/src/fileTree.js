@@ -42,7 +42,7 @@ export function createDelegate(rootFileTree, rootName = "") {
       }
     }
   }
-  createNode("", [rootRenderTree.key], rootChildren, rootFileTree)
+  createNode("", [], rootChildren, rootFileTree)
   return {
     renderTree: rootRenderTree,
     key2File,
