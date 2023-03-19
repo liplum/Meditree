@@ -37,18 +37,6 @@ export function FileDisplayBoard(props) {
       goNextFile(file)
     }
   }
-  const onWheel = (e) => {
-    if (isMobile) return
-    if (e.ctrlKey) return
-    if (e.deltaY > 0) {
-      // wheel down
-      goNextFile(file)
-    } else if (e.deltaY < 0) {
-      // wheel up
-      goPreviousFile(file)
-    }
-    // Don't call e.preventDefault()
-  }
   const onKeyDown = (e) => {
     if (e.key === "ArrowLeft") {
       goPreviousFile(file)
@@ -64,10 +52,10 @@ export function FileDisplayBoard(props) {
       file.url = backend.reolsveFileUrl(baseUrl, file.path)
     }
     const renderer = type2Render[file.type]
+    // wheel control works so bad when using trackpad.
     content = <div
       ref={boardRef}
       onMouseDown={onMouseDown}
-      onWheel={onWheel}
       onKeyDown={onKeyDown}
       tabIndex="0"
       className="board"
