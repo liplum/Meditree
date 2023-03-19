@@ -18,6 +18,7 @@ export const i18n = new LocalizedStrings({
       title: "Connect to server",
       server: "Server",
       passcode: "Passcode",
+      passcodePlaceholder: "Optional",
     },
   },
   zh: {
@@ -37,6 +38,7 @@ export const i18n = new LocalizedStrings({
       title: "连接服务器",
       server: "服务器",
       passcode: "口令",
+      passcodePlaceholder: "可选",
     },
   }
 });

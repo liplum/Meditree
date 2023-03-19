@@ -43,12 +43,11 @@ export function FileDisplayBoard(props) {
     if (e.deltaY > 0) {
       // wheel down
       goNextFile(file)
-      e.preventDefault()
     } else if (e.deltaY < 0) {
       // wheel up
       goPreviousFile(file)
-      e.preventDefault()
     }
+    // Don't call e.preventDefault()
   }
   const onKeyDown = (e) => {
     if (e.key === "ArrowLeft") {

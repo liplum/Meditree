@@ -1,5 +1,5 @@
 // Import required modules
-import { Button, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel } from '@mui/material';
+import { Button, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, DialogActions, DialogTitle } from '@mui/material';
 import React, { useState } from 'react';
 import {
   redirect,
@@ -20,9 +20,13 @@ import { removePrefix } from './utils.jsx';
 export async function action({ request }) {
   const formData = await request.formData()
   const info = Object.fromEntries(formData)
-  const { server, passcode, protocol } = info
+  if (info.server.startsWith("http://")) {
+    info.server = removePrefix(info.server, "http://")
+  } else if (info.server.startsWith("https://")) {
+    info.server = removePrefix(info.server, "https://")
+  }
   storage.lastConnected = info
-  return redirect(`/connect?protocol=${protocol}&server=${server}`)
+  return redirect(`/connect?protocol=${info.protocol}&server=${info.server}`)
 }
 
 
@@ -35,11 +39,12 @@ export function ConnectDialog(props) {
   return (
     <div id="connect-dialog">
       <h1>{i18n.connect.title}</h1>
-      <Form method="post" id="connect-form" style={{ flexDirection: "column", display: "flex" }}>
+      <Form method="post" id="connect-form" style={{
+        flexDirection: "column", display: "flex",
+      }}>
         <FormControl style={{ alignSelf: "center" }}>
-          <RadioGroup name="protocol" row value={protocol} onChange={(e) => {
-            setProtocol(e.target.value)
-          }}>
+          <RadioGroup name="protocol" row value={protocol}
+            onChange={(e) => setProtocol(e.target.value)}>
             <FormControlLabel value="http" label="HTTP" control={<Radio />} />
             <FormControlLabel value="https" label="HTTPS" control={<Radio />} />
           </RadioGroup>
@@ -53,14 +58,11 @@ export function ConnectDialog(props) {
           onChange={(e) => {
             const url = e.target.value
             if (url.startsWith("http://")) {
-              setServer(removePrefix(url, "http://"))
               setProtocol("http")
             } else if (url.startsWith("https://")) {
-              setServer(removePrefix(url, "https://"))
               setProtocol("https")
-            } else {
-              setServer(url)
             }
+            setServer(url)
           }}
           label={i18n.connect.server}
         />
@@ -69,10 +71,12 @@ export function ConnectDialog(props) {
           rows={3}
           type="password"
           label={i18n.connect.passcode}
+          placeholder={i18n.connect.passcodePlaceholder}
           name="passcode"
         />
-        <br />
-        <Button type="submit">{"Connect"}</Button>
+        <DialogActions>
+          <Button type="submit">{"Connect"}</Button>
+        </DialogActions>
       </Form>
     </div>
   );

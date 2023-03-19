@@ -76,6 +76,7 @@ export function App(props) {
 
 function Body(props) {
   const { fileTreeDelegate, params } = props
+  const { baseUrl } = params
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const lastSelectedFile = JSON.parse(window.localStorage.getItem("lastSelectedFile"))
   const [selectedFile, setSelectedFile] = useState(lastSelectedFile)
@@ -107,7 +108,7 @@ function Body(props) {
     }
   })
   const forceUpdate = useForceUpdate()
-  const astrology = storage.astrology
+  const astrology = storage.getAstrologyOf(baseUrl)
   const astrologyCtx = {
     astrology,
     isStarred(file) {
@@ -117,7 +118,7 @@ function Body(props) {
       const path = file?.path
       if (path && astrology[path] !== true) {
         astrology[path] = true
-        storage.astrology = astrology
+        storage.setAstrologyOf(baseUrl, astrology)
         // rebuild for prompt filter
         forceUpdate()
       }
@@ -126,7 +127,7 @@ function Body(props) {
       const path = file?.path
       if (path && path in astrology) {
         delete astrology[path]
-        storage.astrology = astrology
+        storage.setAstrologyOf(baseUrl, astrology)
         // rebuild for prompt filter
         forceUpdate()
       }

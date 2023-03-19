@@ -7,11 +7,11 @@ export const backend = {
 }
 
 export const storage = {
-  get astrology() {
-    return JSON.parse(window.localStorage.getItem("astrology")) ?? {}
+  getAstrologyOf(baseUrl) {
+    return JSON.parse(window.localStorage.getItem(`astrology-${baseUrl}`)) ?? {}
   },
-  set astrology(value) {
-    window.localStorage.setItem("astrology", JSON.stringify(value))
+  setAstrologyOf(baseUrl, value) {
+    window.localStorage.setItem(`astrology-${baseUrl}`, JSON.stringify(value))
   },
   get lastConnected() {
     return JSON.parse(window.localStorage.getItem("lastConnected")) ?? null
