@@ -11,7 +11,7 @@ import {
 } from "react-router-dom";
 import { Box, Divider, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
-import { backend } from "./env";
+import { backend, storage } from "./env";
 import { FileDisplayBoard } from "./playground";
 import { i18n } from "./i18n";
 import { SearchBar } from "./searchbar";
@@ -23,12 +23,18 @@ export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
 export const AstrologyContext = createContext()
 export const SelectedFileContext = createContext()
+export const BackendContext = createContext()
 const drawerWidth = 320;
 
-export async function loader() {
+export async function loader({ request }) {
+  const url = new URL(request.url);
+  const urlParams = new URLSearchParams(url.search);
+  const params = Object.fromEntries(urlParams.entries());
+  params.baseUrl = `${params.protocol}://${params.server}`
   const task = new Promise((resolve, reject) => {
-    console.log(`fetching ${backend.listUrl}`)
-    fetch(backend.listUrl, {
+    const listUrl = backend.listUrl(params.baseUrl)
+    console.log(`fetching ${listUrl}`)
+    fetch(listUrl, {
       method: "GET",
     })
       .then((res) => res.json())
@@ -37,16 +43,18 @@ export async function loader() {
         document.title = data.name
         resolve(fileTreeDelegate)
       })
-      .catch((error) => {
-        reject(error)
+      .catch((e) => {
+        console.error(e)
+        reject(e)
       })
   })
   return defer({
     fileTreeDelegate: task,
+    params,
   });
 }
 export function App(props) {
-  const { fileTreeDelegate } = useLoaderData();
+  const { fileTreeDelegate, params } = useLoaderData();
 
   return (
     <main>
@@ -58,7 +66,7 @@ export function App(props) {
           errorElement={<Failed text={i18n.loading.failed} />}
         >
           {(delegate) => (
-            <Body fileTreeDelegate={delegate} />
+            <Body fileTreeDelegate={delegate} params={params} />
           )}
         </Await>
       </React.Suspense>
@@ -67,7 +75,7 @@ export function App(props) {
 }
 
 function Body(props) {
-  const { fileTreeDelegate } = props
+  const { fileTreeDelegate, params } = props
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const lastSelectedFile = JSON.parse(window.localStorage.getItem("lastSelectedFile"))
   const [selectedFile, setSelectedFile] = useState(lastSelectedFile)
@@ -99,7 +107,7 @@ function Body(props) {
     }
   })
   const forceUpdate = useForceUpdate()
-  const astrology = JSON.parse(window.localStorage.getItem("astrology")) ?? {}
+  const astrology = storage.astrology
   const astrologyCtx = {
     astrology,
     isStarred(file) {
@@ -109,7 +117,7 @@ function Body(props) {
       const path = file?.path
       if (path && astrology[path] !== true) {
         astrology[path] = true
-        window.localStorage.setItem("astrology", JSON.stringify(astrology))
+        storage.astrology = astrology
         // rebuild for prompt filter
         forceUpdate()
       }
@@ -118,7 +126,7 @@ function Body(props) {
       const path = file?.path
       if (path && path in astrology) {
         delete astrology[path]
-        window.localStorage.setItem("astrology", JSON.stringify(astrology))
+        storage.astrology = astrology
         // rebuild for prompt filter
         forceUpdate()
       }
@@ -135,7 +143,7 @@ function Body(props) {
   const drawer = <div
     style={{
       display: 'flex',
-      flexDirection: 'column', 
+      flexDirection: 'column',
       height: '100%'
     }}>
     <div style={{
@@ -210,7 +218,9 @@ function Body(props) {
     <FileTreeDeleagteContext.Provider value={[fileTreeDelegate]}>
       <AstrologyContext.Provider value={astrologyCtx}>
         <SelectedFileContext.Provider value={[selectedFile, setSelectedFile]}>
-          {body}
+          <BackendContext.Provider value={params}>
+            {body}
+          </BackendContext.Provider>
         </SelectedFileContext.Provider>
       </AstrologyContext.Provider>
     </FileTreeDeleagteContext.Provider>

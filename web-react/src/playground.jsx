@@ -3,7 +3,7 @@ import React, { useContext, useRef } from 'react'
 import { goNextFile, goPreviousFile } from "./event";
 
 import { isMobile } from "react-device-detect"
-import { AstrologyContext, FileTreeDeleagteContext, ResponsiveAppBar, SelectedFileContext } from './dashboard';
+import { AstrologyContext, BackendContext, FileTreeDeleagteContext, ResponsiveAppBar, SelectedFileContext } from './dashboard';
 import { Tooltip, IconButton, Typography } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from './env';
@@ -20,6 +20,7 @@ const type2Render = {
 
 export function FileDisplayBoard(props) {
   const { isStarred, star, unstar } = useContext(AstrologyContext)
+  const { baseUrl } = useContext(BackendContext)
   const [file] = useContext(SelectedFileContext)
   const boardRef = useRef()
   const forceUpdate = useForceUpdate()
@@ -38,7 +39,7 @@ export function FileDisplayBoard(props) {
   }
   const onWheel = (e) => {
     if (isMobile) return
-    if(e.ctrlKey) return
+    if (e.ctrlKey) return
     if (e.deltaY > 0) {
       // wheel down
       goNextFile(file)
@@ -60,7 +61,9 @@ export function FileDisplayBoard(props) {
   }
   let content = null
   if (file) {
-    file.url = backend.reolsveFileUrl(file.path)
+    if (!file.url) {
+      file.url = backend.reolsveFileUrl(baseUrl, file.path)
+    }
     const renderer = type2Render[file.type]
     content = <div
       ref={boardRef}

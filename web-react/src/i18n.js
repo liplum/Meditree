@@ -14,6 +14,11 @@ export const i18n = new LocalizedStrings({
       text: "Loading...",
       failed: "Failed to load content.",
     },
+    connect: {
+      title: "Connect to server",
+      server: "Server",
+      passcode: "Passcode",
+    },
   },
   zh: {
     search: {
@@ -27,6 +32,11 @@ export const i18n = new LocalizedStrings({
     loading: {
       text: "加载中……",
       failed: "无法加载目录",
+    },
+    connect: {
+      title: "连接服务器",
+      server: "服务器",
+      passcode: "口令",
     },
   }
 });

@@ -8,10 +8,18 @@ import ReactDOM from 'react-dom/client'
 import { App, loader as appLoader } from './dashboard'
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './index.css'
-
+import {
+  ConnectDialog,
+  action as connectDialogAction,
+} from './connect'
 const router = createBrowserRouter([
   {
-    path: "/",
+    index: true,
+    element: <ConnectDialog />,
+    action: connectDialogAction,
+  },
+  {
+    path: "/connect",
     element: <App />,
     loader: appLoader,
     shouldRevalidate: () => false,
@@ -36,13 +44,6 @@ const darkTheme = createTheme({
           borderRadius: "16px",
         },
       },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          margin: "8px",
-        }
-      }
     },
     MuiDialog: {
       styleOverrides: {
