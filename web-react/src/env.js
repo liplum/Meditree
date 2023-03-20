@@ -1,8 +1,17 @@
 export const backend = {
-  listUrl(baseUrl) { return `${baseUrl}/list` },
-  fileUrl(baseUrl) { return `${baseUrl}/file` },
-  reolsveFileUrl(baseUrl, path) {
-    return encodeURI(`${this.fileUrl(baseUrl)}/${path}`);
+  listUrl(baseUrl, passcode) {
+    if (passcode) {
+      return `${baseUrl}/list?passcode=${passcode}`
+    } else {
+      return `${baseUrl}/list`
+    }
+  },
+  reolsveFileUrl(baseUrl, path, passcode) {
+    if (passcode) {
+      return encodeURI(`${baseUrl}/file/${path}?passcode=${passcode}`);
+    } else {
+      return encodeURI(`${baseUrl}/file/${path}`);
+    }
   },
 }
 

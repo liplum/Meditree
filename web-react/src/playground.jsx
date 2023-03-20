@@ -20,7 +20,7 @@ const type2Render = {
 
 export function FileDisplayBoard(props) {
   const { isStarred, star, unstar } = useContext(AstrologyContext)
-  const { baseUrl } = useContext(BackendContext)
+  const { baseUrl, passcode } = useContext(BackendContext)
   const [file] = useContext(SelectedFileContext)
   const boardRef = useRef()
   const forceUpdate = useForceUpdate()
@@ -49,7 +49,7 @@ export function FileDisplayBoard(props) {
   let content = null
   if (file) {
     if (!file.url) {
-      file.url = backend.reolsveFileUrl(baseUrl, file.path)
+      file.url = backend.reolsveFileUrl(baseUrl, file.path, passcode)
     }
     const renderer = type2Render[file.type]
     // wheel control works so bad when using trackpad.

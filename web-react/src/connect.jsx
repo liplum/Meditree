@@ -26,7 +26,11 @@ export async function action({ request }) {
     info.server = removePrefix(info.server, "https://")
   }
   storage.lastConnected = info
-  return redirect(`/connect?protocol=${info.protocol}&server=${info.server}`)
+  if (info.passcode) {
+    return redirect(`/connect?protocol=${info.protocol}&server=${info.server}&passcode=${info.passcode}`)
+  } else {
+    return redirect(`/connect?protocol=${info.protocol}&server=${info.server}`)
+  }
 }
 
 

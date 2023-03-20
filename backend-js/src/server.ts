@@ -29,6 +29,19 @@ export async function startServer(config: AppConfig): Promise<void> {
   const app = express()
 
   app.use(cors())
+  app.use(express.json())
+
+  // If posscode is enabled.
+  if (config.passcode) {
+    app.use((req, res, next) => {
+      const passcode = req.query.passcode ?? req.body.passcode
+      if (passcode !== config.passcode) {
+        res.status(401).json({ error: "wrong passcode" })
+        return
+      }
+      next()
+    })
+  }
 
   app.get("/", (req, res) => {
     res.redirect("/index.html")
@@ -54,7 +67,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   app.get("/file(/*)", (req, res) => {
-    const path = removePrefix(decodeURI(req.url), "/file/")
+    const path = removePrefix(decodeURI(req.baseUrl + req.path), "/file/")
     const file = tree.resolveFile(path)
     if (file == null) {
       res.status(404)

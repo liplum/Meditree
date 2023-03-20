@@ -32,7 +32,7 @@ export async function loader({ request }) {
   const params = Object.fromEntries(urlParams.entries());
   params.baseUrl = `${params.protocol}://${params.server}`
   const task = new Promise((resolve, reject) => {
-    const listUrl = backend.listUrl(params.baseUrl)
+    const listUrl = backend.listUrl(params.baseUrl, params.passcode)
     console.log(`fetching ${listUrl}`)
     fetch(listUrl, {
       method: "GET",
