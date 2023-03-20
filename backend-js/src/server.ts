@@ -1,5 +1,5 @@
 import { HostTree } from "./host.js"
-import { type AppConfig } from "./index.js"
+import { type AppConfig } from "./config.js"
 import express, { type Request, type Response } from "express"
 import fs from "fs"
 import { File, FileTree } from "./file.js"
@@ -73,10 +73,14 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
     handler(req, res, file)
   })
-
-  app.listen(config.port, config.hostname, () => {
-    console.log(`Server running at http://${config.hostname}:${config.port}/`)
-  })
+  const onRunning = (): void => {
+    console.log(`Server running at http://localhost:${config.port}/`)
+  }
+  if (config.hostname) {
+    app.listen(config.port, config.hostname, onRunning)
+  } else {
+    app.listen(config.port, onRunning)
+  }
 }
 
 function removePrefix(origin: string, prefix: string): string {

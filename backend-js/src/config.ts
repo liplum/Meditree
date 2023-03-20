@@ -1,14 +1,32 @@
 import fs from "fs"
 import path from "path"
+
+export enum ForwardType {
+  socket = "socket",
+  redirect = "redirect",
+}
+
+export interface CentralConfig {
+  server: string
+  forward: ForwardType
+}
+type PublicKey = string
+export interface AppConfig {
+  hostname?: string
+  port: number
+  root: string
+  name: string
+  central?: CentralConfig
+  node?: PublicKey[]
+  passcode?: string
+  rebuildInterval: number
+  fileTypePatterns: Record<string, string>
+}
+
 export interface FindConfigArgs<T> {
   rootDir: string
   filename: string
   defaultConfig: T
-}
-
-export interface FindConfigDirArgs {
-  rootDir: string
-  dirName: string
 }
 
 export function findConfig<T>(args: FindConfigArgs<T>): T {

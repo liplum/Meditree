@@ -1,4 +1,4 @@
-import { findConfig } from "./config.js"
+import { type AppConfig, findConfig } from "./config.js"
 import { startServer } from "./server.js"
 import { install as installSourceMap } from "source-map-support"
 import path from "path"
@@ -6,27 +6,7 @@ import { fileURLToPath } from "url"
 
 installSourceMap()
 
-export interface NodeConfig {
-  url: string
-}
-
-export interface PolymorphismConfig extends Record<string, string> {
-  type: string
-}
-
-export interface AppConfig {
-  hostname: string
-  port: number
-  root: string
-  name: string
-  server?: NodeConfig
-  authentication?: PolymorphismConfig
-  rebuildInterval: number
-  fileTypePatterns: Record<string, string>
-}
-
 const defaultConfig: AppConfig = {
-  hostname: "127.0.0.1",
   port: 80,
   root: ".",
   name: "My Directory",

@@ -3,7 +3,7 @@ import React, { useContext, useRef } from 'react'
 import { goNextFile, goPreviousFile } from "./event";
 
 import { isMobile } from "react-device-detect"
-import { AstrologyContext, BackendContext, FileTreeDeleagteContext, ResponsiveAppBar, SelectedFileContext } from './dashboard';
+import { AstrologyContext, BackendContext, ResponsiveAppBar, SelectedFileContext } from './dashboard';
 import { Tooltip, IconButton, Typography } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from './env';
@@ -58,8 +58,7 @@ export function FileDisplayBoard(props) {
       onMouseDown={onMouseDown}
       onKeyDown={onKeyDown}
       tabIndex="0"
-      className="board"
-    >
+      className="board">
       {
         renderer ?
           renderer(file) :
