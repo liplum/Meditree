@@ -13,6 +13,12 @@ export interface CentralConfig {
 }
 
 type PublicKey = string
+export enum FileType {
+  video = "video",
+  image = "image",
+  audio = "audio",
+  text = "text",
+}
 export interface AppConfig {
   /** 
    * The network interface on which the application will listen for incoming connections.
@@ -47,7 +53,8 @@ export interface AppConfig {
    */
   passcode?: string
   rebuildInterval: number
-  fileTypePatterns: Record<string, string>
+  fileTypePattern: Record<string, string>
+  fileType: Record<string, FileType>
 }
 
 export interface FindConfigArgs<T> {

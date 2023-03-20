@@ -8,7 +8,7 @@ export interface HostTreeOptions {
   * The absolute path of root directory.
   */
   root: string
-  fileTypePatterns: object | null
+  fileTypePattern: object | null
   rebuildInterval: number
 }
 const minimatchOptions: MinimatchOptions = {
@@ -95,7 +95,7 @@ export class HostTree {
   }
 
   classifyByFilePath(filePath: string): FileType {
-    const patterns = this.options.fileTypePatterns
+    const patterns = this.options.fileTypePattern
     if (patterns == null) return null
     for (const [pattern, type] of Object.entries(patterns)) {
       if (minimatch(filePath, pattern, minimatchOptions)) {

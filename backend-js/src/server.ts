@@ -1,5 +1,5 @@
 import { HostTree } from "./host.js"
-import { type AppConfig } from "./config.js"
+import { type AppConfig, FileType } from "./config.js"
 import express, { type Request, type Response } from "express"
 import fs from "fs"
 import { File, FileTree } from "./file.js"
@@ -9,7 +9,7 @@ import ms from "mediaserver"
 export async function startServer(config: AppConfig): Promise<void> {
   const tree = new HostTree({
     root: config.root,
-    fileTypePatterns: config.fileTypePatterns,
+    fileTypePattern: config.fileTypePattern,
     rebuildInterval: config.rebuildInterval
   })
   let treeJsonObjectCache: object | null = null
@@ -47,11 +47,10 @@ export async function startServer(config: AppConfig): Promise<void> {
   })
 
   const fileType2handler = {
-    "video/mp4": getVideo,
-    "image/png": getImage,
-    "image/jpeg": getImage,
-    "audio/ogg": getAudio,
-    "audio/mpeg": getAudio,
+    [FileType.video]: getVideo,
+    [FileType.image]: getImage,
+    [FileType.audio]: getAudio,
+    [FileType.text]: getText,
   }
 
   app.get("/file(/*)", (req, res) => {
@@ -66,13 +65,14 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.status(404)
       return
     }
-    const handler = fileType2handler[fileType]
-    if (handler == null) {
-      res.status(404)
-      return
+    const handler = fileType2handler[config.fileType[fileType]]
+    if (!handler) {
+      return res.status(404).end()
+    } else {
+      handler(req, res, file)
     }
-    handler(req, res, file)
   })
+
   const onRunning = (): void => {
     console.log(`Server running at http://localhost:${config.port}/`)
   }
@@ -168,7 +168,15 @@ function getVideo(req: Request, res: Response, file: File): void {
     }
   })
 }
-
+function getText(req: Request, res: Response, file: File): void {
+  res.status(200)
+  res.header({
+    "Content-Type": file.type,
+  })
+  fs.readFile(file.path, "utf-8", (data) => {
+    res.send(data)
+  })
+}
 function getImage(req: Request, res: Response, file: File): void {
   res.status(200)
   res.header({

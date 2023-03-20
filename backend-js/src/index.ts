@@ -1,4 +1,4 @@
-import { type AppConfig, findConfig } from "./config.js"
+import { type AppConfig, findConfig, FileType } from "./config.js"
 import { startServer } from "./server.js"
 import { install as installSourceMap } from "source-map-support"
 import path from "path"
@@ -7,15 +7,22 @@ import { fileURLToPath } from "url"
 installSourceMap()
 
 const defaultConfig: AppConfig = {
-  port: 80,
-  root: ".",
   name: "My Directory",
+  root: ".",
+  port: 80,
   rebuildInterval: 3000,
-  fileTypePatterns: {
+  fileType: {
+    "video/mp4": FileType.video,
+    "image/png": FileType.image,
+    "image/jpeg": FileType.image,
+    "audio/mpeg": FileType.audio,
+  },
+  fileTypePattern: {
     "**/*.mp4": "video/mp4",
     "**/*.png": "image/png",
-    "**/*.+(jpeg|jpg)": "image/jpeg"
-  }
+    "**/*.+(jpeg|jpg)": "image/jpeg",
+    "**/*.mp3": "audio/mpeg",
+  },
 }
 
 const config = findConfig({
