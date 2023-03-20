@@ -30,7 +30,7 @@ export function FileTreeNavigation(props) {
         fontSize: "1.2rem",
       }}
       showLine={true}
-      showIcon={false}
+      showIcon={true}
       treeData={renderTree.children}
       defaultSelectedKeys={[selectedFile?.nodeId]}
       defaultExpandedKeys={selectedFile?.tracking}
