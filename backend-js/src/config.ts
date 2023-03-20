@@ -9,15 +9,42 @@ export enum ForwardType {
 export interface CentralConfig {
   server: string
   forward: ForwardType
+  [key: string]: string
 }
+
 type PublicKey = string
 export interface AppConfig {
+  /** 
+   * The network interface on which the application will listen for incoming connections.
+   * Default is for all interfaces.
+   */
   hostname?: string
+  /** 
+   * Default is 3000.
+   */
   port: number
+  /**
+   * The root directory to host.
+   * Default is ".".
+   */
   root: string
+  /**
+   * The name of hosted file tree.
+   * Default is "My Directory".
+   */
   name: string
+  /**
+   * Default is none.
+   */
   central?: CentralConfig
+  /**
+   * The public key of node.
+   * Default is none.
+   */
   node?: PublicKey[]
+  /**
+   * If set, requests need passcode in authentication headers, body or cookies.
+   */
   passcode?: string
   rebuildInterval: number
   fileTypePatterns: Record<string, string>

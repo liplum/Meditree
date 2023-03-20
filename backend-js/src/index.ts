@@ -18,12 +18,10 @@ const defaultConfig: AppConfig = {
   }
 }
 
-const config = findConfig(
-  {
-    rootDir: path.dirname(fileURLToPath(import.meta.url)),
-    filename: "medimesh.json",
-    defaultConfig,
-  }
-)
+const config = findConfig({
+  rootDir: path.dirname(fileURLToPath(import.meta.url)),
+  filename: "medimesh.json",
+  defaultConfig,
+})
 
 startServer(config)
