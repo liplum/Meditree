@@ -80,12 +80,12 @@ export function findConfig<T>(args: FindConfigArgs<T>): T {
     const config = Object.assign({}, defaultConfig, JSON.parse(fs.readFileSync(configFile).toString()))
     if (config.privateKey) {
       if (!config.publicKey) {
-        config.publicKey = nacl.box.keyPair.fromSecretKey(config.privateKey)
+        config.publicKey = Buffer.from(nacl.box.keyPair.fromSecretKey(config.privateKey).publicKey).toString("base64")
       }
     } else if (!config.publicKey) {
       const { publicKey, secretKey } = nacl.box.keyPair()
-      config.publicKey = publicKey
-      config.privateKey = secretKey
+      config.publicKey = Buffer.from(publicKey).toString("base64")
+      config.privateKey = Buffer.from(secretKey).toString("base64")
     }
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     return config
