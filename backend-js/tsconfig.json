@@ -3,7 +3,6 @@
     "noImplicitAny": false,
     "noEmitOnError": true,
     "declaration": true,
-    "declarationDir": "./types",
     "removeComments": true,
     "sourceMap": true,
     "target": "ES2022",
