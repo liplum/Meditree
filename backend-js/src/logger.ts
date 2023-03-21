@@ -5,3 +5,4 @@ export function createLogger(category?: string): log4js.Logger {
   logger.level = "trace"
   return logger
 }
+export type Logger = log4js.Logger
