@@ -1,5 +1,6 @@
 import fs from "fs"
 import path from "path"
+import nacl from "tweetnacl"
 
 export enum FileType {
   video = "video",
@@ -77,6 +78,15 @@ export function findConfig<T>(args: FindConfigArgs<T>): T {
   const { rootDir, filename, defaultConfig } = args
   function readConfig(configFile: string): T {
     const config = Object.assign({}, defaultConfig, JSON.parse(fs.readFileSync(configFile).toString()))
+    if (config.privateKey) {
+      if (!config.publicKey) {
+        config.publicKey = nacl.box.keyPair.fromSecretKey(config.privateKey)
+      }
+    } else if (!config.publicKey) {
+      const { publicKey, secretKey } = nacl.box.keyPair()
+      config.publicKey = publicKey
+      config.privateKey = secretKey
+    }
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     return config
   }
