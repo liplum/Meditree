@@ -2,9 +2,16 @@
   "name": "medimesh",
   "version": "1.0.0",
   "description": "The Medimesh server.",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "type": "module",
+  "module": "src/index.ts",
+  "files": [
+    "src/**/*.ts",
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
   "scripts": {
+    "install": "tsc",
     "start": "tsc && node dist/index.js",
     "package": "esbuild src/index.ts --platform=node --bundle --minify --packages=external --format=esm --outfile=build/index.js"
   },

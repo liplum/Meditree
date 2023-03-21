@@ -12,7 +12,7 @@ export async function setupMesh(config: AppConfig): Promise<void> {
   }
 }
 
-async function setupAsNode(config: MeshAsNodeConfig): Promise<void> {
+export async function setupAsNode(config: MeshAsNodeConfig): Promise<void> {
   for (const central of config.central) {
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
     ws.emit("auth", {
@@ -21,7 +21,7 @@ async function setupAsNode(config: MeshAsNodeConfig): Promise<void> {
   }
 }
 
-async function setupAsCentral(config: MeshAsCentralConfig): Promise<void> {
+export async function setupAsCentral(config: MeshAsCentralConfig): Promise<void> {
   const allNodeConnections = []
   // as central
   const wss = new WebSocketServer({

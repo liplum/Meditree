@@ -2,6 +2,8 @@
   "compilerOptions": {
     "noImplicitAny": false,
     "noEmitOnError": true,
+    "declaration": true,
+    "declarationDir": "./types",
     "removeComments": true,
     "sourceMap": true,
     "target": "ES2022",
@@ -13,6 +15,10 @@
     "strictNullChecks": true
   },
   "include": [
-    "src/**/*.ts", "src/index.ts", "src/host.ts", "src/file.ts", "src/server.ts",
+    "src/**/*.ts",
+    "src/index.ts",
+    "src/host.ts",
+    "src/file.ts",
+    "src/server.ts",
   ]
 }
