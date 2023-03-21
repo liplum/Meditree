@@ -56,6 +56,8 @@ export interface MeshAsCentralConfig {
    * The public key of node.
    */
   node: string[]
+  publicKey: string
+  privateKey: string
 }
 
 export interface MeshAsNodeConfig {
