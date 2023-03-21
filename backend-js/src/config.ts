@@ -12,7 +12,6 @@ export interface CentralConfig {
   [key: string]: string
 }
 
-type PublicKey = string
 export enum FileType {
   video = "video",
   image = "image",
@@ -42,16 +41,18 @@ export interface AppConfig {
   /**
    * Default is none.
    */
-  central?: CentralConfig
+  central?: CentralConfig[]
   /**
    * The public key of node.
    * Default is none.
    */
-  node?: PublicKey[]
+  node?: string[]
   /**
    * If set, requests need passcode in authentication headers, body or cookies.
    */
   passcode?: string
+  publicKey?: string
+  privateKey?: string
   rebuildInterval: number
   fileTypePattern: Record<string, string>
   fileType: Record<string, FileType>
