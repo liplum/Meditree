@@ -1,23 +1,13 @@
 import fs from "fs"
 import path from "path"
 
-export enum ForwardType {
-  socket = "socket",
-  redirect = "redirect",
-}
-
-export interface CentralConfig {
-  server: string
-  forward: ForwardType
-  [key: string]: string
-}
-
 export enum FileType {
   video = "video",
   image = "image",
   audio = "audio",
   text = "text",
 }
+
 export interface AppConfig {
   /** 
    * The network interface on which the application will listen for incoming connections.
@@ -25,7 +15,7 @@ export interface AppConfig {
    */
   hostname?: string
   /** 
-   * Default is 3000.
+   * Default is 80.
    */
   port: number
   /**
@@ -39,23 +29,40 @@ export interface AppConfig {
    */
   name: string
   /**
-   * Default is none.
-   */
-  central?: CentralConfig[]
-  /**
-   * The public key of node.
-   * Default is none.
-   */
-  node?: string[]
-  /**
    * If set, requests need passcode in authentication headers, body or cookies.
    */
   passcode?: string
-  publicKey?: string
-  privateKey?: string
   rebuildInterval: number
   fileTypePattern: Record<string, string>
   fileType: Record<string, FileType>
+  [key: string]: any
+}
+
+export enum ForwardType {
+  socket = "socket",
+  redirect = "redirect",
+}
+
+export interface CentralConfig {
+  server: string
+  forward: ForwardType
+  [key: string]: string
+}
+
+export interface MeshAsCentralConfig {
+  name: string
+  port: number
+  /**
+   * The public key of node.
+   */
+  node: string[]
+}
+
+export interface MeshAsNodeConfig {
+  name: string
+  central: CentralConfig[]
+  publicKey: string
+  privateKey: string
 }
 
 export interface FindConfigArgs<T> {

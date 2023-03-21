@@ -1,58 +1,43 @@
-import { ForwardType, type AppConfig } from "./config"
+import { ForwardType, type MeshAsNodeConfig, type MeshAsCentralConfig, type AppConfig } from "./config"
 import WebSocket, { WebSocketServer } from "ws"
 
 export async function setupMesh(config: AppConfig): Promise<void> {
-  const allNodeConnections = []
   // If node is defined and not empty, subnodes can connect to this.
-  if (config.node?.length) {
-    // as central
-    const wss = new WebSocketServer({
-      port: config.port,
-      path: "/ws",
-    })
+  if (config.central?.length && config.publicKey && config.privateKey) {
+    setupAsCentral(config as any as MeshAsCentralConfig)
   }
   // If central is defined and not empty, it will try connecting to every central.
-  if (config.central?.length && config.publicKey && config.privateKey) {
-    // as node
-    for (const central of config.central) {
-      const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
-      const handler = new AsNodeHandler(ws, {
-        publicKey: config.publicKey,
-        privateKey: config.privateKey,
-        server: central.server,
-        forward: central.forward,
+  if (config.node?.length) {
+    setupAsNode(config as any as MeshAsNodeConfig)
+  }
+}
+
+async function setupAsNode(config: MeshAsNodeConfig): Promise<void> {
+  for (const central of config.central) {
+    const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
+    ws.emit("auth", {
+      publicKey: config.publicKey
+    })
+  }
+}
+
+async function setupAsCentral(config: MeshAsCentralConfig): Promise<void> {
+  const allNodeConnections = []
+  // as central
+  const wss = new WebSocketServer({
+    port: config.port,
+    path: "/ws",
+  })
+  wss.on("connection", (ws) => {
+    const challenge = Math.random().toString()
+    let publicKey: string
+    ws.on("auth", (ws, data) => {
+      publicKey = data.publicKey
+      ws.emit("auth", {
+        challenge
       })
-      handler.init()
-    }
-  }
-}
-interface AsNodeOptions {
-  publicKey: string
-  privateKey: string
-  server: string
-  forward: string
-}
-class AsNodeHandler {
-  readonly ws: WebSocket
-  readonly options: AsNodeOptions
-  constructor(ws: WebSocket, options: AsNodeOptions) {
-    this.ws = ws
-    this.options = options
-  }
-  init(): void {
-    if (this.options.forward === ForwardType.redirect) {
-
-    } else if (this.options.forward === ForwardType.socket) {
-
-    }
-  }
-}
-
-class AsCentralHandler {
-  readonly wss: WebSocketServer
-  constructor(wss: WebSocketServer) {
-    this.wss = wss
-  }
+    })
+  })
 }
 
 function convertUrlToWs(mayBeUrl: string): string {
