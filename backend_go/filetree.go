@@ -15,8 +15,8 @@ type FileTree struct {
 	Children []*FileTree
 }
 
-func (tree *FileTree) ToJson() interface{} {
-	res := make(map[string]interface{})
+func (tree *FileTree) ToJson() any {
+	res := make(map[string]any)
 	for _, file := range tree.Children {
 		if file.Children == nil {
 			res[file.Name] = "text/plain"

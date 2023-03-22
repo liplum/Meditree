@@ -22,11 +22,9 @@ export class File {
 }
 
 export const statAsync = promisify(fs.stat)
-export const readFileAsync = promisify(fs.readFile)
 export const readdirAsync = promisify(fs.readdir)
 export type PathFilter = (path: string) => boolean
 export type FileClassifier = (path: string) => FileType
-const alwaysNull: FileClassifier = (_) => null
 export interface CreateFileTreeOptions {
   root: string
   classifier: FileClassifier
@@ -37,15 +35,7 @@ export interface CreateFileTreeOptions {
   pruned: boolean
 }
 export class FileTree {
-  /**
-   * It's inherited from the parent tree.
-   */
-  classifier: FileClassifier = alwaysNull
   parent: FileTree | null = null
-  /**
- * It's inherited from the parent tree.
- */
-  allowNullFileType: boolean = false
   name2File = new Map<string, FileSystemEntry>()
   rootPath: string
   readonly name: string
@@ -109,8 +99,6 @@ export class FileTree {
       throw Error(`${root} isn't a directory`)
     }
     const tree = new FileTree(root)
-    tree.classifier = options.classifier
-    tree.allowNullFileType = options.allowNullFileType
     const pruned = options.pruned
     const walk = async (
       tree: FileTree,
@@ -128,8 +116,8 @@ export class FileTree {
         try {
           const stat = fs.statSync(filePath)
           if (stat.isFile()) {
-            const fileType = tree.classifier(filePath)
-            if (tree.allowNullFileType || fileType != null) {
+            const fileType = options.classifier(filePath)
+            if (options.allowNullFileType || fileType != null) {
               const file = new File(filePath, fileType)
               tree.addFileSystemEntry(fileName, file)
             }
@@ -154,8 +142,6 @@ export class FileTree {
 
   createSubtree(rootPath: string): FileTree {
     const subtree = new FileTree(rootPath)
-    subtree.allowNullFileType = this.allowNullFileType
-    subtree.classifier = this.classifier
     subtree.parent = this
     return subtree
   }
