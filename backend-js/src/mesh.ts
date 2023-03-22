@@ -44,7 +44,7 @@ function uint8ArrayOf(text: string, encoding?: BufferEncoding): Uint8Array {
   return Uint8Array.from(Buffer.from(text, encoding))
 }
 
-function tryConvertToUint8Array(raw: string | Uint8Array, encoding?: BufferEncoding): Uint8Array {
+function castUint8Array(raw: string | Uint8Array, encoding?: BufferEncoding): Uint8Array {
   return raw instanceof Uint8Array ? raw : uint8ArrayOf(raw, encoding)
 }
 
@@ -55,10 +55,10 @@ function encrypt(
   myPrivateKey: Uint8Array | string
 ): string {
   const encrypted = nacl.box(
-    tryConvertToUint8Array(plain),
-    tryConvertToUint8Array(nonce, "base64"),
-    tryConvertToUint8Array(theirPublicKey, "base64"),
-    tryConvertToUint8Array(myPrivateKey, "base64"),
+    castUint8Array(plain),
+    castUint8Array(nonce, "base64"),
+    castUint8Array(theirPublicKey, "base64"),
+    castUint8Array(myPrivateKey, "base64"),
   )
   return Buffer.from(encrypted).toString("base64")
 }
@@ -70,25 +70,29 @@ function decrypt(
   myPrivateKey: Uint8Array | string
 ): string | null {
   const decrypted = nacl.box.open(
-    tryConvertToUint8Array(encrypted, "base64"),
-    tryConvertToUint8Array(nonce, "base64"),
-    tryConvertToUint8Array(theirPublicKey, "base64"),
-    tryConvertToUint8Array(myPrivateKey, "base64"),
+    castUint8Array(encrypted, "base64"),
+    castUint8Array(nonce, "base64"),
+    castUint8Array(theirPublicKey, "base64"),
+    castUint8Array(myPrivateKey, "base64"),
   )
   return decrypted === null ? null : Buffer.from(decrypted).toString()
 }
 
 type MessageHandler = (data: Buffer) => Promise<void>
-
+function EmptyState(log: Logger): MessageHandler {
+  return async (data) => {
+    log.info(data.toString())
+  }
+}
 function createAsCentralStateMachine(
   ws: WebSocket,
   log: Logger,
   config: MeshAsCentralConfig,
 ): { state: MessageHandler } {
   const sm = {
-    state: createAuthState()
+    state: AuthState()
   }
-  function createAuthState(): MessageHandler {
+  function AuthState(): MessageHandler {
     const nonce = nacl.randomBytes(24)
     const nonceBase64 = Buffer.from(nonce).toString("base64")
     const challenge = Math.random().toString()
@@ -113,15 +117,19 @@ function createAsCentralStateMachine(
         const payload = JSON.parse(data.toString())
         if (payload.resolved === challenge) {
           log.info(`"${publicKey}" is authenticated.`)
-          sm.state = createEmptyState()
+          ws.send(JSON.stringify({
+            result: "success",
+          }))
+          sm.state = EmptyState(log)
         } else {
-          throw new Error("challenge failed.")
+          log.info(`"${publicKey}" challenge failed.`)
+          ws.send(JSON.stringify({
+            result: "failure",
+          }))
+          ws.close()
         }
       }
     }
-  }
-  function createEmptyState(): MessageHandler {
-    return async (data) => { }
   }
   return sm
 }
@@ -132,9 +140,13 @@ export async function setupAsNode(config: MeshAsNodeConfig): Promise<void> {
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
     const sm = createAsNodeStateMachine(ws, log, central, config)
     ws.on("open", () => {
+      log.info(`Connected to ${central.server}.`)
       ws.send(JSON.stringify({
         publicKey: config.publicKey
       }))
+    })
+    ws.on("close", () => {
+      log.info(`Disconnected from ${central.server}.`)
     })
     ws.on("message", (data) => {
       sm.state(data as Buffer)
@@ -149,20 +161,34 @@ function createAsNodeStateMachine(
   config: MeshAsNodeConfig,
 ): { state: MessageHandler } {
   const sm = {
-    state: createAuthState()
+    state: ResolveChallengeState()
   }
-  function createAuthState(): MessageHandler {
+  function ResolveChallengeState(): MessageHandler {
     return async (data) => {
       const { challenge, publicKey, nonce } = JSON.parse(data.toString())
       const encrypted = uint8ArrayOf(challenge, "base64")
       const resolved = decrypt(encrypted, nonce, publicKey, config.privateKey)
       if (resolved !== null) {
-        log.info(`Resolved challenge "${resolved}" from ${central.server}`)
+        log.info(`Resolved challenge "${resolved}" from ${central.server}.`)
         ws.send(JSON.stringify({
           resolved
         }))
+        sm.state = AwaitChallengeResultState()
       } else {
-        throw new Error("challenge failed.")
+        log.error("challenge failed.")
+        ws.close()
+      }
+    }
+  }
+  function AwaitChallengeResultState(): MessageHandler {
+    return async (data) => {
+      const { result } = JSON.parse(data.toString())
+      if (result === "success") {
+        log.info(`Authenticated on ${central.server}.`)
+        sm.state = EmptyState(log)
+      } else {
+        log.error("challenge failed.")
+        ws.close()
       }
     }
   }
