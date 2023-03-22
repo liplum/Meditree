@@ -25,11 +25,10 @@ export async function setupAsCentral(config: MeshAsCentralConfig): Promise<void>
   log.info(`Central websocket is running on ws://localhost:${config.port}/ws.`)
   wss.on("connection", (ws: WebSocket) => {
     ws.on("error", log.trace)
-    ws.on("close", (ws: WebSocket) => {
-      log.trace("Websocket is disconnected.")
+    ws.on("close", () => {
+      log.trace("A websocket is closed.")
     })
-    log.trace("Websocket is connected.")
-
+    log.trace("A websocket is established.")
     const sm = createAsCentralStateMachine(ws, log, config)
     ws.on("message", (data) => {
       sm.state(data as Buffer)
@@ -173,6 +172,7 @@ function createAsNodeStateMachine(
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => { setTimeout(resolve, ms) })
 }
+
 function convertUrlToWs(mayBeUrl: string): string {
   if (mayBeUrl.startsWith("http://")) {
     return `ws://${removePrefix(mayBeUrl, "http://")}`

@@ -1,6 +1,7 @@
 import fs from "fs"
 import path from "path"
 import nacl from "tweetnacl"
+import { v4 as uuidv4 } from "uuid"
 
 export enum FileType {
   video = "video",
@@ -25,8 +26,8 @@ export interface AppConfig {
    */
   root: string
   /**
-   * The name of hosted file tree.
-   * Default is "My Directory".
+   * The unique name of hosted file tree.
+   * If not specified, a uuid v4 will be generated.
    */
   name: string
   /**
@@ -74,7 +75,7 @@ export interface FindConfigArgs<T> {
   defaultConfig: T
 }
 
-export function findConfig<T>(args: FindConfigArgs<T>): T {
+export function findConfig<T>(args: FindConfigArgs<T | Partial<T>>): T {
   const { rootDir, filename, defaultConfig } = args
   function readConfig(configFile: string): T {
     const config = Object.assign({}, defaultConfig, JSON.parse(fs.readFileSync(configFile).toString()))
@@ -86,6 +87,9 @@ export function findConfig<T>(args: FindConfigArgs<T>): T {
       const { publicKey, secretKey } = nacl.box.keyPair()
       config.publicKey = Buffer.from(publicKey).toString("base64")
       config.privateKey = Buffer.from(secretKey).toString("base64")
+    }
+    if (!config.name) {
+      config.name = uuidv4()
     }
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     return config

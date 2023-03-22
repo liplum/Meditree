@@ -6,8 +6,7 @@ import { fileURLToPath } from "url"
 
 installSourceMap()
 
-const defaultConfig: AppConfig = {
-  name: "My Directory",
+const defaultConfig: Partial<AppConfig> = {
   root: ".",
   port: 80,
   rebuildInterval: 3000,
