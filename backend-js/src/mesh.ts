@@ -1,4 +1,5 @@
-import { ForwardType, type MeshAsNodeConfig, type MeshAsCentralConfig, type AppConfig } from "./config.js"
+import { ForwardType } from "./config.js"
+import type { MeshAsNodeConfig, MeshAsCentralConfig, AppConfig, CentralConfig } from "./config.js"
 import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
@@ -29,14 +30,13 @@ export async function setupAsCentral(config: MeshAsCentralConfig): Promise<void>
     })
     log.trace("Websocket is connected.")
 
-    const sm = createAsCentralStateMachine(ws, log, config.node, config.publicKey, config.privateKey)
+    const sm = createAsCentralStateMachine(ws, log, config)
     ws.on("message", (data) => {
-      try {
-        sm.state(data as Buffer)
-      } catch (e) {
-        log.trace(e)
-        ws.close()
-      }
+      sm.state(data as Buffer)
+        .catch(e => {
+          log.trace(e)
+          ws.close()
+        })
     })
   })
 }
@@ -45,14 +45,46 @@ function uint8ArrayOf(text: string, encoding?: BufferEncoding): Uint8Array {
   return Uint8Array.from(Buffer.from(text, encoding))
 }
 
-type MessageHandler = (data: Buffer) => void
+function tryConvertToUint8Array(raw: string | Uint8Array, encoding?: BufferEncoding): Uint8Array {
+  return raw instanceof Uint8Array ? raw : uint8ArrayOf(raw, encoding)
+}
+
+function encrypt(
+  plain: Uint8Array | string,
+  nonce: Uint8Array | string,
+  theirPublicKey: Uint8Array | string,
+  myPrivateKey: Uint8Array | string
+): string {
+  const encrypted = nacl.box(
+    tryConvertToUint8Array(plain),
+    tryConvertToUint8Array(nonce, "base64"),
+    tryConvertToUint8Array(theirPublicKey, "base64"),
+    tryConvertToUint8Array(myPrivateKey, "base64"),
+  )
+  return Buffer.from(encrypted).toString("base64")
+}
+
+function decrypt(
+  encrypted: Uint8Array | string,
+  nonce: Uint8Array | string,
+  theirPublicKey: Uint8Array | string,
+  myPrivateKey: Uint8Array | string
+): string | null {
+  const decrypted = nacl.box.open(
+    tryConvertToUint8Array(encrypted, "base64"),
+    tryConvertToUint8Array(nonce, "base64"),
+    tryConvertToUint8Array(theirPublicKey, "base64"),
+    tryConvertToUint8Array(myPrivateKey, "base64"),
+  )
+  return decrypted === null ? null : Buffer.from(decrypted).toString()
+}
+
+type MessageHandler = (data: Buffer) => Promise<void>
 
 function createAsCentralStateMachine(
   ws: WebSocket,
   log: Logger,
-  nodes: string[],
-  myPublicKey: string,
-  myPrivateKey: string
+  config: MeshAsCentralConfig,
 ): { state: MessageHandler } {
   const sm = {
     state: createAuthState()
@@ -60,35 +92,28 @@ function createAsCentralStateMachine(
   function createAuthState(): MessageHandler {
     const nonce = nacl.randomBytes(24)
     const nonceBase64 = Buffer.from(nonce).toString("base64")
-    const myPublicKeyUint8 = Uint8Array.from(Buffer.from(myPublicKey, "base64"))
-    const myPrivateKeyUint8 = Uint8Array.from(Buffer.from(myPrivateKey, "base64"))
     const challenge = Math.random().toString()
     let publicKey: string | undefined
-    return (data) => {
+    return async (data) => {
       if (!publicKey) {
         // state 1: waiting for public key from node
         const payload = JSON.parse(data.toString())
         log.trace(payload)
         publicKey = payload.publicKey
         if (!publicKey) throw new Error("public key not given.")
-        if (!nodes.includes(publicKey)) throw new Error(`${publicKey} unregistered.`)
-        log.info(`${publicKey} is challenging with "${challenge}".`)
-        const challengeEncrypted = nacl.box(
-          uint8ArrayOf(challenge),
-          nonce,
-          uint8ArrayOf(publicKey, "base64"),
-          myPrivateKeyUint8
-        )
+        if (!config.node.includes(publicKey)) throw new Error(`${publicKey} unregistered.`)
+        log.info(`"${publicKey}" is challenging with "${challenge}".`)
+        const challengeEncrypted = encrypt(challenge, nonce, publicKey, config.privateKey)
         ws.send(JSON.stringify({
           challenge: challengeEncrypted,
           nonce: nonceBase64,
-          publicKey: myPrivateKey,
+          publicKey: config.publicKey,
         }))
       } else {
-        // state 2: waiting for chanllege from node
+        // state 2: waiting for resolved challenge from node
         const payload = JSON.parse(data.toString())
-        if (payload.decrypted === challenge) {
-          log.info(`${publicKey} is authenticated.`)
+        if (payload.resolved === challenge) {
+          log.info(`"${publicKey}" is authenticated.`)
           sm.state = createEmptyState()
         } else {
           throw new Error("challenge failed.")
@@ -97,7 +122,7 @@ function createAsCentralStateMachine(
     }
   }
   function createEmptyState(): MessageHandler {
-    return (data) => { }
+    return async (data) => { }
   }
   return sm
 }
@@ -106,13 +131,45 @@ export async function setupAsNode(config: MeshAsNodeConfig): Promise<void> {
   for (const central of config.central) {
     const log = createLogger(`Node-${central.server}`)
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
+    const sm = createAsNodeStateMachine(ws, log, central, config)
     ws.on("open", () => {
       ws.send(JSON.stringify({
         publicKey: config.publicKey
       }))
     })
+    ws.on("message", (data) => {
+      sm.state(data as Buffer)
+    })
   }
 }
+
+function createAsNodeStateMachine(
+  ws: WebSocket,
+  log: Logger,
+  central: CentralConfig,
+  config: MeshAsNodeConfig,
+): { state: MessageHandler } {
+  const sm = {
+    state: createAuthState()
+  }
+  function createAuthState(): MessageHandler {
+    return async (data) => {
+      const { challenge, publicKey, nonce } = JSON.parse(data.toString())
+      const encrypted = uint8ArrayOf(challenge, "base64")
+      const resolved = decrypt(encrypted, nonce, publicKey, config.privateKey)
+      if (resolved !== null) {
+        log.info(`Resolved challenge "${resolved}" from ${central.server}`)
+        ws.send(JSON.stringify({
+          resolved
+        }))
+      } else {
+        throw new Error("challenge failed.")
+      }
+    }
+  }
+  return sm
+}
+
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => { setTimeout(resolve, ms) })
 }
