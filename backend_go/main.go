@@ -3,7 +3,12 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 )
+
+func loadConfig() {
+	os.ReadFile(".")
+}
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

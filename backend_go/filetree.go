@@ -7,9 +7,11 @@ import (
 	"path/filepath"
 )
 
+type FileType = string
 type FileTree struct {
 	Name     string
 	Path     string
+	Type     FileType
 	Children []*FileTree
 }
 
@@ -24,31 +26,7 @@ func (tree *FileTree) ToJson() interface{} {
 	}
 	return res
 }
-
-func main() {
-	// Set the root directory path
-	root := "."
-
-	// Generate the file tree
-	tree, err := generateFileTree(root)
-
-	if err != nil {
-		fmt.Println("Error generating file tree:", err)
-		os.Exit(1)
-	}
-	jobj := tree.ToJson()
-	// Serialize the file tree to JSON
-	jsonData, err := json.MarshalIndent(jobj, "", "  ")
-	if err != nil {
-		fmt.Println("Error serializing file tree to JSON:", err)
-		os.Exit(1)
-	}
-
-	// Print the file tree
-	fmt.Printf("%s\n", jsonData)
-}
-
-func generateFileTree(path string) (*FileTree, error) {
+func CreateFileTree(path string, classifier func(path string) FileType) (*FileTree, error) {
 	// Initialize the file tree
 	tree := &FileTree{
 		Name: filepath.Base(path),
@@ -67,7 +45,7 @@ func generateFileTree(path string) (*FileTree, error) {
 
 		// If the child is a directory, generate its file tree recursively
 		if f.IsDir() {
-			child, err := generateFileTree(childPath)
+			child, err := CreateFileTree(childPath, classifier)
 			if err != nil {
 				return nil, err
 			}
@@ -83,4 +61,29 @@ func generateFileTree(path string) (*FileTree, error) {
 	}
 
 	return tree, nil
+}
+
+func main() {
+	// Set the root directory path
+	root := "."
+
+	// Generate the file tree
+	tree, err := CreateFileTree(root, func(path string) FileType {
+		return ""
+	})
+
+	if err != nil {
+		fmt.Println("Error generating file tree:", err)
+		os.Exit(1)
+	}
+	jobj := tree.ToJson()
+	// Serialize the file tree to JSON
+	jsonData, err := json.MarshalIndent(jobj, "", "  ")
+	if err != nil {
+		fmt.Println("Error serializing file tree to JSON:", err)
+		os.Exit(1)
+	}
+
+	// Print the file tree
+	fmt.Printf("%s\n", jsonData)
 }
