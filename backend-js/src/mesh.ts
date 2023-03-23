@@ -1,5 +1,5 @@
 import { ForwardType } from "./config.js"
-import type { MeshAsNodeConfig, MeshAsCentralConfig, AppConfig, CentralConfig } from "./config.js"
+import type { MeshAsNodeConfig, MeshAsCentralConfig, AppConfig, CentralConfig, ForwardConfig } from "./config.js"
 import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
@@ -39,50 +39,24 @@ export async function setupAsCentral(config: MeshAsCentralConfig): Promise<void>
     })
   })
 }
-
-function uint8ArrayOf(text: string, encoding?: BufferEncoding): Uint8Array {
-  return Uint8Array.from(Buffer.from(text, encoding))
-}
-
-function castUint8Array(raw: string | Uint8Array, encoding?: BufferEncoding): Uint8Array {
-  return raw instanceof Uint8Array ? raw : uint8ArrayOf(raw, encoding)
-}
-
-function encrypt(
-  plain: Uint8Array | string,
-  nonce: Uint8Array | string,
-  theirPublicKey: Uint8Array | string,
-  myPrivateKey: Uint8Array | string
-): string {
-  const encrypted = nacl.box(
-    castUint8Array(plain),
-    castUint8Array(nonce, "base64"),
-    castUint8Array(theirPublicKey, "base64"),
-    castUint8Array(myPrivateKey, "base64"),
-  )
-  return Buffer.from(encrypted).toString("base64")
-}
-
-function decrypt(
-  encrypted: Uint8Array | string,
-  nonce: Uint8Array | string,
-  theirPublicKey: Uint8Array | string,
-  myPrivateKey: Uint8Array | string
-): string | null {
-  const decrypted = nacl.box.open(
-    castUint8Array(encrypted, "base64"),
-    castUint8Array(nonce, "base64"),
-    castUint8Array(theirPublicKey, "base64"),
-    castUint8Array(myPrivateKey, "base64"),
-  )
-  return decrypted === null ? null : Buffer.from(decrypted).toString()
-}
-
 type MessageHandler = (data: Buffer) => Promise<void>
 function EmptyState(log: Logger): MessageHandler {
   return async (data) => {
-    log.info(data.toString())
+    log.info("[Empty State]", data.toString())
   }
+}
+type NodeMeta = {
+  name: string
+  forward: ForwardType
+  passcode?: string
+} & ForwardConfig
+enum ChallengeResult {
+  success = "success",
+  failure = "failure",
+}
+enum NodeMetaResult {
+  passcodeConflict = "passcodeConflict",
+  success = "success",
 }
 function createAsCentralStateMachine(
   ws: WebSocket,
@@ -115,20 +89,34 @@ function createAsCentralStateMachine(
       } else {
         // state 2: waiting for resolved challenge from node
         const payload = JSON.parse(data.toString())
-        if (payload.resolved === challenge) {
-          log.info(`"${publicKey}" is authenticated.`)
-          ws.send(JSON.stringify({
-            result: "success",
-          }))
-          sm.state = EmptyState(log)
-        } else {
+        if (payload.resolved !== challenge) {
           log.info(`"${publicKey}" challenge failed.`)
           ws.send(JSON.stringify({
-            result: "failure",
+            result: ChallengeResult.failure,
           }))
           ws.close()
+          return
         }
+        log.info(`"${publicKey}" is authenticated.`)
+        ws.send(JSON.stringify({
+          result: ChallengeResult.success,
+        }))
+        sm.state = GetNodeMetaState()
       }
+    }
+  }
+  function GetNodeMetaState(): MessageHandler {
+    return async (data) => {
+      const nodeMeta: NodeMeta = JSON.parse(data.toString())
+      // If the node has passcode and it doesn't match this central's passcode, then report an error
+      if (nodeMeta.passcode && nodeMeta.passcode !== config.passcode) {
+        ws.send(JSON.stringify({
+          result: NodeMetaResult.passcodeConflict,
+        }))
+        ws.close()
+        return
+      }
+      sm.state = EmptyState(log)
     }
   }
   return sm
@@ -168,26 +156,53 @@ function createAsNodeStateMachine(
       const { challenge, publicKey, nonce } = JSON.parse(data.toString())
       const encrypted = uint8ArrayOf(challenge, "base64")
       const resolved = decrypt(encrypted, nonce, publicKey, config.privateKey)
-      if (resolved !== null) {
-        log.info(`Resolved challenge "${resolved}" from ${central.server}.`)
-        ws.send(JSON.stringify({
-          resolved
-        }))
-        sm.state = AwaitChallengeResultState()
-      } else {
+      if (resolved === null) {
         log.error("challenge failed.")
         ws.close()
+        return
       }
+      log.info(`Resolved challenge "${resolved}" from ${central.server}.`)
+      ws.send(JSON.stringify({
+        resolved
+      }))
+      sm.state = AwaitChallengeResultState()
     }
   }
   function AwaitChallengeResultState(): MessageHandler {
     return async (data) => {
-      const { result } = JSON.parse(data.toString())
-      if (result === "success") {
-        log.info(`Authenticated on ${central.server}.`)
-        sm.state = EmptyState(log)
-      } else {
+      const { result }: { result: ChallengeResult } = JSON.parse(data.toString())
+      if (result !== ChallengeResult.success) {
         log.error("challenge failed.")
+        ws.close()
+        return
+      }
+      log.info(`Authenticated on ${central.server}.`)
+      let nodeMeta: NodeMeta
+      if (central.forward === ForwardType.socket) {
+        nodeMeta = {
+          name: config.name,
+          forward: central.forward,
+          passcode: config.passcode,
+        }
+      } else { // redirect
+        nodeMeta = {
+          name: config.name,
+          forward: ForwardType.redirect,
+          redirectTo: central.redirectTo,
+          passcode: config.passcode,
+        }
+      }
+      ws.send(JSON.stringify(nodeMeta))
+      sm.state = AwaitNodeMetaState()
+    }
+  }
+  function AwaitNodeMetaState(): MessageHandler {
+    return async (data) => {
+      const { result }: { result: NodeMetaResult } = JSON.parse(data.toString())
+      if (result === NodeMetaResult.success) {
+        sm.state = EmptyState(log)
+      } else if (result === NodeMetaResult.passcodeConflict) {
+        log.error(`Passcode is conflict with the central "${central.server}"`)
         ws.close()
       }
     }
@@ -199,6 +214,43 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => { setTimeout(resolve, ms) })
 }
 
+function uint8ArrayOf(text: string, encoding?: BufferEncoding): Uint8Array {
+  return Uint8Array.from(Buffer.from(text, encoding))
+}
+
+function castUint8Array(raw: string | Uint8Array, encoding?: BufferEncoding): Uint8Array {
+  return raw instanceof Uint8Array ? raw : uint8ArrayOf(raw, encoding)
+}
+
+function encrypt(
+  plain: Uint8Array | string,
+  nonce: Uint8Array | string,
+  theirPublicKey: Uint8Array | string,
+  myPrivateKey: Uint8Array | string
+): string {
+  const encrypted = nacl.box(
+    castUint8Array(plain),
+    castUint8Array(nonce, "base64"),
+    castUint8Array(theirPublicKey, "base64"),
+    castUint8Array(myPrivateKey, "base64"),
+  )
+  return Buffer.from(encrypted).toString("base64")
+}
+
+function decrypt(
+  encrypted: Uint8Array | string,
+  nonce: Uint8Array | string,
+  theirPublicKey: Uint8Array | string,
+  myPrivateKey: Uint8Array | string
+): string | null {
+  const decrypted = nacl.box.open(
+    castUint8Array(encrypted, "base64"),
+    castUint8Array(nonce, "base64"),
+    castUint8Array(theirPublicKey, "base64"),
+    castUint8Array(myPrivateKey, "base64"),
+  )
+  return decrypted === null ? null : Buffer.from(decrypted).toString()
+}
 function convertUrlToWs(mayBeUrl: string): string {
   if (mayBeUrl.startsWith("http://")) {
     return `ws://${removePrefix(mayBeUrl, "http://")}`

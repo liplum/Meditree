@@ -45,10 +45,16 @@ export enum ForwardType {
   redirect = "redirect",
 }
 
-export interface CentralConfig {
+export type CentralConfig = {
   server: string
   forward: ForwardType
-  [key: string]: string
+} & ForwardConfig
+
+export type ForwardConfig = {
+  forward: ForwardType.socket
+} | {
+  forward: ForwardType.redirect
+  redirectTo: string
 }
 
 export interface MeshAsCentralConfig {
@@ -60,6 +66,7 @@ export interface MeshAsCentralConfig {
   node: string[]
   publicKey: string
   privateKey: string
+  passcode?: string
 }
 
 export interface MeshAsNodeConfig {
@@ -67,6 +74,7 @@ export interface MeshAsNodeConfig {
   central: CentralConfig[]
   publicKey: string
   privateKey: string
+  passcode?: string
 }
 
 export interface FindConfigArgs<T> {
