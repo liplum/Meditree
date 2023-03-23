@@ -34,7 +34,10 @@ export interface CreateFileTreeOptions {
    */
   pruned: boolean
 }
-export class FileTree {
+export interface FileTreeLike {
+  resolveFile: (filePath: string) => File | null
+}
+export class FileTree implements FileTreeLike {
   parent: FileTree | null = null
   name2File = new Map<string, FileSystemEntry>()
   rootPath: string

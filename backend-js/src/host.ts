@@ -2,7 +2,8 @@ import type fs from "fs"
 import chokidar from "chokidar"
 import minimatch, { type MinimatchOptions } from "minimatch"
 import { clearInterval } from "timers"
-import { FileTree, type File, type FileType } from "./file.js"
+import type { FileTreeLike, File, FileType } from "./file.js"
+import { FileTree } from "./file.js"
 export interface HostTreeOptions {
   /**
   * The absolute path of root directory.
@@ -14,7 +15,7 @@ export interface HostTreeOptions {
 const minimatchOptions: MinimatchOptions = {
   nocase: true,
 }
-export class HostTree {
+export class HostTree implements FileTreeLike {
   protected options: HostTreeOptions
   fileTree: FileTree
   protected fileWatcher: fs.FSWatcher | null = null

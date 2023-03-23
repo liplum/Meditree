@@ -14,6 +14,11 @@ export async function setupMesh(config: AppConfig): Promise<void> {
     setupAsNode(config as any as MeshAsNodeConfig)
   }
 }
+type NodeMeta = {
+  name: string
+  forward: ForwardType
+  passcode?: string
+} & ForwardConfig
 
 export async function setupAsCentral(config: MeshAsCentralConfig): Promise<void> {
   const log = createLogger("Central")
@@ -45,19 +50,17 @@ function EmptyState(log: Logger): MessageHandler {
     log.info("[Empty State]", data.toString())
   }
 }
-type NodeMeta = {
-  name: string
-  forward: ForwardType
-  passcode?: string
-} & ForwardConfig
+
 enum ChallengeResult {
   success = "success",
   failure = "failure",
 }
+
 enum NodeMetaResult {
   passcodeConflict = "passcodeConflict",
   success = "success",
 }
+
 function createAsCentralStateMachine(
   ws: WebSocket,
   log: Logger,
@@ -107,12 +110,15 @@ function createAsCentralStateMachine(
   }
   function GetNodeMetaState(): MessageHandler {
     return async (data) => {
-      const nodeMeta: NodeMeta = JSON.parse(data.toString())
+      const dataText = data.toString()
+      const nodeMeta: NodeMeta = JSON.parse(dataText)
+      log.info(`Receieved node meta "${dataText}".`)
       // If the node has passcode and it doesn't match this central's passcode, then report an error
       if (nodeMeta.passcode && nodeMeta.passcode !== config.passcode) {
         ws.send(JSON.stringify({
           result: NodeMetaResult.passcodeConflict,
         }))
+        log.info(`Node[${nodeMeta.name}] conflicts with this passcode.`)
         ws.close()
         return
       }
@@ -154,7 +160,7 @@ function createAsNodeStateMachine(
   function ResolveChallengeState(): MessageHandler {
     return async (data) => {
       const { challenge, publicKey, nonce } = JSON.parse(data.toString())
-      const encrypted = uint8ArrayOf(challenge, "base64")
+      const encrypted = Buffer.from(challenge, "base64")
       const resolved = decrypt(encrypted, nonce, publicKey, config.privateKey)
       if (resolved === null) {
         log.error("challenge failed.")
@@ -214,12 +220,8 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => { setTimeout(resolve, ms) })
 }
 
-function uint8ArrayOf(text: string, encoding?: BufferEncoding): Uint8Array {
-  return Uint8Array.from(Buffer.from(text, encoding))
-}
-
 function castUint8Array(raw: string | Uint8Array, encoding?: BufferEncoding): Uint8Array {
-  return raw instanceof Uint8Array ? raw : uint8ArrayOf(raw, encoding)
+  return raw instanceof Uint8Array ? raw : Buffer.from(raw, encoding)
 }
 
 function encrypt(
