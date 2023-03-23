@@ -3,6 +3,7 @@ import type { MeshAsNodeConfig, MeshAsCentralConfig, AppConfig, CentralConfig, F
 import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
+import { Net } from "./net.js"
 
 export async function setupMesh(config: AppConfig): Promise<void> {
   // If node is defined and not empty, subnodes can connect to this.
@@ -29,26 +30,17 @@ export async function setupAsCentral(config: MeshAsCentralConfig): Promise<void>
   })
   log.info(`Central websocket is running on ws://localhost:${config.port}/ws.`)
   wss.on("connection", (ws: WebSocket) => {
+    const net = new Net(ws)
+    log.trace("A websocket is established.")
     ws.on("error", log.trace)
     ws.on("close", () => {
       log.trace("A websocket is closed.")
     })
-    log.trace("A websocket is established.")
-    const sm = createAsCentralStateMachine(ws, log, config)
+    runAsCentralStateMachine(net, log, config)
     ws.on("message", (data) => {
-      sm.state(data as Buffer)
-        .catch(e => {
-          log.trace(e)
-          ws.close()
-        })
+      net.handleReceivedMessage(data as Buffer)
     })
   })
-}
-type MessageHandler = (data: Buffer) => Promise<void>
-function EmptyState(log: Logger): MessageHandler {
-  return async (data) => {
-    log.info("[Empty State]", data.toString())
-  }
 }
 
 enum ChallengeResult {
@@ -61,159 +53,118 @@ enum NodeMetaResult {
   success = "success",
 }
 
-function createAsCentralStateMachine(
-  ws: WebSocket,
+async function runAsCentralStateMachine(
+  net: Net,
   log: Logger,
   config: MeshAsCentralConfig,
-): { state: MessageHandler } {
-  const sm = {
-    state: AuthState()
+): Promise<void> {
+  const nonce = nacl.randomBytes(24)
+  const nonceBase64 = Buffer.from(nonce).toString("base64")
+  const challenge = Math.random().toString()
+  const { publicKey }: { publicKey: string } = await net.readJson("auth-public-key")
+  log.trace(publicKey)
+  if (!config.node.includes(publicKey)) throw new Error(`${publicKey} unregistered.`)
+  log.info(`"${publicKey}" is challenging with "${challenge}".`)
+  const challengeEncrypted = encrypt(challenge, nonce, publicKey, config.privateKey)
+  net.json("auth-challenge", {
+    challenge: challengeEncrypted,
+    nonce: nonceBase64,
+    publicKey: config.publicKey,
+  })
+  const { resolved } = await net.readJson("auth-challenge-solution")
+  if (resolved !== challenge) {
+    log.info(`"${publicKey}" challenge failed.`)
+    net.json("auth-challenge-solution-result", {
+      result: ChallengeResult.failure,
+    })
+    net.close()
+    return
   }
-  function AuthState(): MessageHandler {
-    const nonce = nacl.randomBytes(24)
-    const nonceBase64 = Buffer.from(nonce).toString("base64")
-    const challenge = Math.random().toString()
-    let publicKey: string | undefined
-    return async (data) => {
-      if (!publicKey) {
-        // state 1: waiting for public key from node
-        const payload = JSON.parse(data.toString())
-        log.trace(payload)
-        publicKey = payload.publicKey
-        if (!publicKey) throw new Error("public key not given.")
-        if (!config.node.includes(publicKey)) throw new Error(`${publicKey} unregistered.`)
-        log.info(`"${publicKey}" is challenging with "${challenge}".`)
-        const challengeEncrypted = encrypt(challenge, nonce, publicKey, config.privateKey)
-        ws.send(JSON.stringify({
-          challenge: challengeEncrypted,
-          nonce: nonceBase64,
-          publicKey: config.publicKey,
-        }))
-      } else {
-        // state 2: waiting for resolved challenge from node
-        const payload = JSON.parse(data.toString())
-        if (payload.resolved !== challenge) {
-          log.info(`"${publicKey}" challenge failed.`)
-          ws.send(JSON.stringify({
-            result: ChallengeResult.failure,
-          }))
-          ws.close()
-          return
-        }
-        log.info(`"${publicKey}" is authenticated.`)
-        ws.send(JSON.stringify({
-          result: ChallengeResult.success,
-        }))
-        sm.state = GetNodeMetaState()
-      }
-    }
+  log.info(`"${publicKey}" is authenticated.`)
+  net.json("auth-challenge-solution-result", {
+    result: ChallengeResult.success,
+  })
+  const nodeMeta: NodeMeta = await net.readJson("node-meta")
+  log.info(`Receieved node meta "${JSON.stringify(nodeMeta)}".`)
+  // If the node has passcode and it doesn't match this central's passcode, then report an error
+  if (nodeMeta.passcode && nodeMeta.passcode !== config.passcode) {
+    net.json("node-meta-result", {
+      result: NodeMetaResult.passcodeConflict,
+    })
+    log.info(`Node[${nodeMeta.name}] conflicts with this passcode.`)
+    net.close()
+    return
   }
-  function GetNodeMetaState(): MessageHandler {
-    return async (data) => {
-      const dataText = data.toString()
-      const nodeMeta: NodeMeta = JSON.parse(dataText)
-      log.info(`Receieved node meta "${dataText}".`)
-      // If the node has passcode and it doesn't match this central's passcode, then report an error
-      if (nodeMeta.passcode && nodeMeta.passcode !== config.passcode) {
-        ws.send(JSON.stringify({
-          result: NodeMetaResult.passcodeConflict,
-        }))
-        log.info(`Node[${nodeMeta.name}] conflicts with this passcode.`)
-        ws.close()
-        return
-      }
-      sm.state = EmptyState(log)
-    }
-  }
-  return sm
 }
 
 export async function setupAsNode(config: MeshAsNodeConfig): Promise<void> {
   for (const central of config.central) {
     const log = createLogger(`Node-${central.server}`)
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
-    const sm = createAsNodeStateMachine(ws, log, central, config)
+    const net = new Net(ws)
     ws.on("open", () => {
       log.info(`Connected to ${central.server}.`)
-      ws.send(JSON.stringify({
-        publicKey: config.publicKey
-      }))
+      runAsNodeStateMachine(net, log, central, config)
     })
     ws.on("close", () => {
       log.info(`Disconnected from ${central.server}.`)
     })
     ws.on("message", (data) => {
-      sm.state(data as Buffer)
+      net.handleReceivedMessage(data as Buffer)
     })
   }
 }
 
-function createAsNodeStateMachine(
-  ws: WebSocket,
+async function runAsNodeStateMachine(
+  net: Net,
   log: Logger,
   central: CentralConfig,
   config: MeshAsNodeConfig,
-): { state: MessageHandler } {
-  const sm = {
-    state: ResolveChallengeState()
+): Promise<void> {
+  net.json("auth-public-key", {
+    publicKey: config.publicKey
+  })
+  const { challenge, publicKey, nonce } = await net.readJson("auth-challenge")
+  const encrypted = Buffer.from(challenge, "base64")
+  const resolved = decrypt(encrypted, nonce, publicKey, config.privateKey)
+  if (resolved === null) {
+    log.error("challenge failed.")
+    net.close()
+    return
   }
-  function ResolveChallengeState(): MessageHandler {
-    return async (data) => {
-      const { challenge, publicKey, nonce } = JSON.parse(data.toString())
-      const encrypted = Buffer.from(challenge, "base64")
-      const resolved = decrypt(encrypted, nonce, publicKey, config.privateKey)
-      if (resolved === null) {
-        log.error("challenge failed.")
-        ws.close()
-        return
-      }
-      log.info(`Resolved challenge "${resolved}" from ${central.server}.`)
-      ws.send(JSON.stringify({
-        resolved
-      }))
-      sm.state = AwaitChallengeResultState()
+  log.info(`Resolved challenge "${resolved}" from ${central.server}.`)
+  net.json("auth-challenge-solution", {
+    resolved
+  })
+  const challengeResultPayload: { result: ChallengeResult } = await net.readJson("auth-challenge-solution-result")
+  if (challengeResultPayload.result !== ChallengeResult.success) {
+    log.error("challenge failed.")
+    net.close()
+    return
+  }
+  log.info(`Authenticated on ${central.server}.`)
+  let nodeMeta: NodeMeta
+  if (central.forward === ForwardType.socket) {
+    nodeMeta = {
+      name: config.name,
+      forward: central.forward,
+      passcode: config.passcode,
+    }
+  } else { // redirect
+    nodeMeta = {
+      name: config.name,
+      forward: ForwardType.redirect,
+      redirectTo: central.redirectTo,
+      passcode: config.passcode,
     }
   }
-  function AwaitChallengeResultState(): MessageHandler {
-    return async (data) => {
-      const { result }: { result: ChallengeResult } = JSON.parse(data.toString())
-      if (result !== ChallengeResult.success) {
-        log.error("challenge failed.")
-        ws.close()
-        return
-      }
-      log.info(`Authenticated on ${central.server}.`)
-      let nodeMeta: NodeMeta
-      if (central.forward === ForwardType.socket) {
-        nodeMeta = {
-          name: config.name,
-          forward: central.forward,
-          passcode: config.passcode,
-        }
-      } else { // redirect
-        nodeMeta = {
-          name: config.name,
-          forward: ForwardType.redirect,
-          redirectTo: central.redirectTo,
-          passcode: config.passcode,
-        }
-      }
-      ws.send(JSON.stringify(nodeMeta))
-      sm.state = AwaitNodeMetaState()
-    }
+  net.json("node-meta", nodeMeta)
+  const nodeMetaResultPayload: { result: NodeMetaResult } = await net.readJson("node-meta-result")
+  if (nodeMetaResultPayload.result === NodeMetaResult.passcodeConflict) {
+    log.error(`Passcode is conflict with the central "${central.server}"`)
+    net.close()
+    return
   }
-  function AwaitNodeMetaState(): MessageHandler {
-    return async (data) => {
-      const { result }: { result: NodeMetaResult } = JSON.parse(data.toString())
-      if (result === NodeMetaResult.success) {
-        sm.state = EmptyState(log)
-      } else if (result === NodeMetaResult.passcodeConflict) {
-        log.error(`Passcode is conflict with the central "${central.server}"`)
-        ws.close()
-      }
-    }
-  }
-  return sm
 }
 
 async function sleep(ms: number): Promise<void> {

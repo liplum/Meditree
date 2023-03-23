@@ -10,19 +10,23 @@ enum DataType {
 }
 type ChannlHanlder<Input> = Map<string, Handler<Input>[]>
 export class Net {
-  ws: WebSocket
-  messageHandlers: ChannlHanlder<string> = new Map()
-  jsonHandlers: ChannlHanlder<object> = new Map()
-  messageOnceHanlders: ChannlHanlder<string> = new Map()
-  jsonOnceHandlers: ChannlHanlder<object> = new Map()
+  private readonly ws: WebSocket
+  private readonly messageHandlers: ChannlHanlder<string> = new Map()
+  private readonly jsonHandlers: ChannlHanlder<any> = new Map()
+  private readonly messageOnceHanlders: ChannlHanlder<string> = new Map()
+  private readonly jsonOnceHandlers: ChannlHanlder<any> = new Map()
   constructor(ws: WebSocket) {
     this.ws = ws
+  }
+
+  close(): void {
+    this.ws.close()
   }
 
   /**
    * Call this in ws.on("message")
    */
-  receieveMessage(data: Buffer): void {
+  handleReceivedMessage(data: Buffer): void {
     const reader = new BufferReader(data)
     const type = reader.uint8()
     const channel = reader.string()
@@ -36,7 +40,7 @@ export class Net {
       })
       this.messageOnceHanlders.delete(channel)
     } else if (type === DataType.json) {
-      const jobj = JSON.parse(data.toString())
+      const jobj = JSON.parse(reader.string())
       this.jsonHandlers.get(channel)?.forEach((handler) => {
         handler(jobj)
       })
@@ -49,15 +53,15 @@ export class Net {
 
   message(channel: string, msg: string): void {
     const writer = new BufferWriter()
-    writer.int8(DataType.text)
+    writer.uint8(DataType.text)
     writer.string(channel)
     writer.string(msg)
     this.ws.send(writer.buildBuffer())
   }
 
-  json(channel: string, json: object): void {
+  json(channel: string, json: any): void {
     const writer = new BufferWriter()
-    writer.int8(DataType.json)
+    writer.uint8(DataType.json)
     writer.string(channel)
     writer.string(JSON.stringify(json))
     this.ws.send(writer.buildBuffer())
@@ -115,8 +119,8 @@ export class Net {
     })
   }
 
-  async readJson(channel: string): Promise<object> {
-    return new Promise<object>((resolve, reject) => {
+  async readJson(channel: string): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
       this.onOnceJson(channel, (json) => {
         resolve(json)
       })
@@ -126,11 +130,10 @@ export class Net {
 
 class BufferWriter {
   private backend: Buffer
-  private cursor: number
+  private cursor: number = 0
 
   constructor(size: number = 1024) {
     this.backend = Buffer.alloc(size)
-    this.cursor = 0
   }
 
   private ensureCapacity(size: number): void {
@@ -147,6 +150,11 @@ class BufferWriter {
     this.cursor += 1
   }
 
+  uint8(value: number): void {
+    this.backend.writeUInt8(value, this.cursor)
+    this.cursor += 1
+  }
+
   int16LE(value: number): void {
     this.ensureCapacity(2)
     this.backend.writeInt16LE(value, this.cursor)
@@ -156,6 +164,18 @@ class BufferWriter {
   int16BE(value: number): void {
     this.ensureCapacity(2)
     this.backend.writeInt16BE(value, this.cursor)
+    this.cursor += 2
+  }
+
+  uint16LE(value: number): void {
+    this.ensureCapacity(2)
+    this.backend.writeUInt16LE(value, this.cursor)
+    this.cursor += 2
+  }
+
+  uint16BE(value: number): void {
+    this.ensureCapacity(2)
+    this.backend.writeUInt16BE(value, this.cursor)
     this.cursor += 2
   }
 
@@ -171,10 +191,22 @@ class BufferWriter {
     this.cursor += 4
   }
 
+  uint32LE(value: number): void {
+    this.ensureCapacity(4)
+    this.backend.writeUInt32LE(value, this.cursor)
+    this.cursor += 4
+  }
+
+  uint32BE(value: number): void {
+    this.ensureCapacity(4)
+    this.backend.writeUInt32BE(value, this.cursor)
+    this.cursor += 4
+  }
+
   string(value: string, encoding: BufferEncoding = "utf8"): void {
     const length = Buffer.byteLength(value, encoding)
     this.ensureCapacity(length + 4)
-    this.backend.writeInt32BE(length)
+    this.backend.writeInt32BE(length, this.cursor)
     this.cursor += 4
     this.backend.write(value, this.cursor, length, encoding)
     this.cursor += length
@@ -194,11 +226,10 @@ class BufferWriter {
 
 class BufferReader {
   private readonly backend: Buffer
-  private cursor: number
+  private cursor: number = 0
 
   constructor(buffer: Buffer) {
     this.backend = buffer
-    this.cursor = 0
   }
 
   int8(): number {
@@ -264,7 +295,7 @@ class BufferReader {
   string(encoding: BufferEncoding = "utf8"): string {
     const length = this.backend.readInt32BE(this.cursor)
     this.cursor += 4
-    const content = this.backend.toString(encoding, this.cursor, length)
+    const content = this.backend.toString(encoding, this.cursor, this.cursor + length)
     this.cursor += length
     return content
   }
@@ -272,7 +303,7 @@ class BufferReader {
   buffer(): Buffer {
     const length = this.backend.readInt32BE(this.cursor)
     this.cursor += 4
-    const buffer = this.backend.subarray(this.cursor, length)
+    const buffer = this.backend.subarray(this.cursor, this.cursor + length)
     this.cursor += length
     return buffer
   }

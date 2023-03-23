@@ -38,6 +38,7 @@ module.exports = {
     "no-trailing-spaces": "off",
     "@typescript-eslint/array-type": "off",
     "no-return-await": "off",
-    "@typescript-eslint/return-await": "off"
+    "@typescript-eslint/return-await": "off",
+    "no-useless-return": "off",
   }
 }
