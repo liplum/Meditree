@@ -5,17 +5,21 @@ import fs from "fs"
 import { File, FileTree } from "./file.js"
 import cors from "cors"
 import ms from "mediaserver"
+import { setupMesh } from "./mesh.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
+  const app = express()
+  app.use(cors())
+  app.use(express.json())
   const tree = new HostTree({
     root: config.root,
     fileTypePattern: config.fileTypePattern,
     rebuildInterval: config.rebuildInterval
   })
-  let treeJsonObjectCache: object | null = null
-  let treeJsonStringCache: string | null = null
-  let treeIndexHtmlCache: string | null = null
-  tree.onRebuilt = () => {
+  let treeJsonObjectCache: object | undefined
+  let treeJsonStringCache: string | undefined
+  let treeIndexHtmlCache: string | undefined
+  tree.onRebuild(() => {
     treeJsonObjectCache = {
       name: config.name,
       files: tree.fileTree.toJSON()
@@ -23,13 +27,11 @@ export async function startServer(config: AppConfig): Promise<void> {
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 2)
     treeIndexHtmlCache = buildIndexHtml(tree.fileTree)
     console.log("FileTree is rebuilt.")
-  }
+  })
   tree.startWatching()
   await tree.rebuildFileTree()
-  const app = express()
 
-  app.use(cors())
-  app.use(express.json())
+  setupMesh(app, config)
 
   // If posscode is enabled.
   if (config.passcode) {

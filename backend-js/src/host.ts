@@ -19,7 +19,7 @@ export class HostTree implements FileTreeLike {
   protected options: HostTreeOptions
   fileTree: FileTree
   protected fileWatcher: fs.FSWatcher | null = null
-  onRebuilt: (() => void) | null = null
+  private readonly rebuildListeners: (() => void)[] = []
   constructor(
     options: HostTreeOptions
   ) {
@@ -68,6 +68,10 @@ export class HostTree implements FileTreeLike {
     }
   }
 
+  onRebuild(listener: () => void): void {
+    this.rebuildListeners.push(listener)
+  }
+
   async rebuildFileTree(): Promise<void> {
     this.shouldRebuild = false
     const tree = await FileTree.createFrom({
@@ -77,7 +81,9 @@ export class HostTree implements FileTreeLike {
       pruned: true,
     })
     this.fileTree = tree
-    this.onRebuilt?.()
+    for (const listener of this.rebuildListeners) {
+      listener()
+    }
   }
 
   stopWatching(): void {

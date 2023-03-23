@@ -4,8 +4,8 @@ import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
 import { Net } from "./net.js"
-
-export async function setupMesh(config: AppConfig): Promise<void> {
+import { type Express } from "express"
+export async function setupMesh(app: Express, config: AppConfig): Promise<void> {
   // If node is defined and not empty, subnodes can connect to this.
   if (config.central?.length && config.publicKey && config.privateKey) {
     setupAsCentral(config as any as MeshAsCentralConfig)
