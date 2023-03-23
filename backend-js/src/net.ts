@@ -1,4 +1,4 @@
-import WebSocket from "ws"
+import type WebSocket from "ws"
 
 export type Handler<Input> = ((data: Input) => void) | ((data: Input) => Promise<void>)
 
@@ -8,43 +8,272 @@ enum DataType {
   file = 3,
   stream = 4,
 }
-
+type ChannlHanlder<Input> = Map<string, Handler<Input>[]>
 export class Net {
   ws: WebSocket
+  messageHandlers: ChannlHanlder<string> = new Map()
+  jsonHandlers: ChannlHanlder<object> = new Map()
+  messageOnceHanlders: ChannlHanlder<string> = new Map()
+  jsonOnceHandlers: ChannlHanlder<object> = new Map()
   constructor(ws: WebSocket) {
     this.ws = ws
   }
 
-  init() {
-    this.ws.on("message", (data) => {
+  /**
+   * Call this in ws.on("message")
+   */
+  receieveMessage(data: Buffer): void {
+    const reader = new BufferReader(data)
+    const type = reader.uint8()
+    const channel = reader.string()
+    if (type === DataType.text) {
+      const content = reader.string()
+      this.messageHandlers.get(channel)?.forEach((handler) => {
+        handler(content)
+      })
+      this.messageOnceHanlders.get(channel)?.forEach((handler) => {
+        handler(content)
+      })
+      this.messageOnceHanlders.delete(channel)
+    } else if (type === DataType.json) {
+      const jobj = JSON.parse(data.toString())
+      this.jsonHandlers.get(channel)?.forEach((handler) => {
+        handler(jobj)
+      })
+      this.jsonOnceHandlers.get(channel)?.forEach((handler) => {
+        handler(jobj)
+      })
+      this.jsonOnceHandlers.delete(channel)
+    }
+  }
+
+  message(channel: string, msg: string): void {
+    const writer = new BufferWriter()
+    writer.int8(DataType.text)
+    writer.string(channel)
+    writer.string(msg)
+    this.ws.send(writer.buildBuffer())
+  }
+
+  json(channel: string, json: object): void {
+    const writer = new BufferWriter()
+    writer.int8(DataType.json)
+    writer.string(channel)
+    writer.string(JSON.stringify(json))
+    this.ws.send(writer.buildBuffer())
+  }
+
+  file(channel: string, filePath: string): void {
+
+  }
+
+  stream(channel: string): void {
+
+  }
+
+  onMessage(channel: string, handler: Handler<string>): void {
+    if (this.messageHandlers.has(channel)) {
+      this.messageHandlers.get(channel)?.push(handler)
+    } else {
+      this.messageHandlers.set(channel, [handler])
+    }
+  }
+
+  onJson(channel: string, handler: Handler<object>): void {
+    if (this.jsonHandlers.has(channel)) {
+      this.jsonHandlers.get(channel)?.push(handler)
+    } else {
+      this.jsonHandlers.set(channel, [handler])
+    }
+  }
+
+  onStream(channel: string, handler: Handler<any>): void {
+
+  }
+
+  onOnceMessage(channel: string, handler: Handler<string>): void {
+    if (this.messageOnceHanlders.has(channel)) {
+      this.messageOnceHanlders.get(channel)?.push(handler)
+    } else {
+      this.messageOnceHanlders.set(channel, [handler])
+    }
+  }
+
+  onOnceJson(channel: string, handler: Handler<object>): void {
+    if (this.jsonOnceHandlers.has(channel)) {
+      this.jsonOnceHandlers.get(channel)?.push(handler)
+    } else {
+      this.jsonOnceHandlers.set(channel, [handler])
+    }
+  }
+
+  async readMessage(channel: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      this.onOnceMessage(channel, (msg) => {
+        resolve(msg)
+      })
     })
   }
 
-  message(channel: string, msg: string) {
+  async readJson(channel: string): Promise<object> {
+    return new Promise<object>((resolve, reject) => {
+      this.onOnceJson(channel, (json) => {
+        resolve(json)
+      })
+    })
+  }
+}
 
+class BufferWriter {
+  private backend: Buffer
+  private cursor: number
+
+  constructor(size: number = 1024) {
+    this.backend = Buffer.alloc(size)
+    this.cursor = 0
   }
 
-  json(channel: string, msg: string) {
-
+  private ensureCapacity(size: number): void {
+    if (this.cursor + size > this.backend.length) {
+      const newBuffer = Buffer.alloc(this.backend.length + size)
+      this.backend.copy(newBuffer)
+      this.backend = newBuffer
+    }
   }
 
-  file(channel: string, filePath: string) {
-
+  int8(value: number): void {
+    this.ensureCapacity(1)
+    this.backend.writeInt8(value, this.cursor)
+    this.cursor += 1
   }
 
-  stream(channel: string) {
-
+  int16LE(value: number): void {
+    this.ensureCapacity(2)
+    this.backend.writeInt16LE(value, this.cursor)
+    this.cursor += 2
   }
 
-  onMessage(channel: string, handler: Handler<string>) {
-
+  int16BE(value: number): void {
+    this.ensureCapacity(2)
+    this.backend.writeInt16BE(value, this.cursor)
+    this.cursor += 2
   }
 
-  onJson(channel: string, handler: Handler<object>) {
-
+  int32LE(value: number): void {
+    this.ensureCapacity(4)
+    this.backend.writeInt32LE(value, this.cursor)
+    this.cursor += 4
   }
 
-  onStream(channel: string, handler: Handler<any>) {
+  int32BE(value: number): void {
+    this.ensureCapacity(4)
+    this.backend.writeInt32BE(value, this.cursor)
+    this.cursor += 4
+  }
 
+  string(value: string, encoding: BufferEncoding = "utf8"): void {
+    const length = Buffer.byteLength(value, encoding)
+    this.ensureCapacity(length + 4)
+    this.backend.writeInt32BE(length)
+    this.cursor += 4
+    this.backend.write(value, this.cursor, length, encoding)
+    this.cursor += length
+  }
+
+  buffer(buffer: Buffer): void {
+    this.ensureCapacity(buffer.length + 4)
+    this.cursor += 4
+    buffer.copy(this.backend, this.cursor, 0)
+    this.cursor += buffer.length
+  }
+
+  buildBuffer(): Buffer {
+    return this.backend.subarray(0, this.cursor + 1)
+  }
+}
+
+class BufferReader {
+  private readonly backend: Buffer
+  private cursor: number
+
+  constructor(buffer: Buffer) {
+    this.backend = buffer
+    this.cursor = 0
+  }
+
+  int8(): number {
+    const value = this.backend.readInt8(this.cursor)
+    this.cursor += 1
+    return value
+  }
+
+  uint8(): number {
+    const value = this.backend.readUInt8(this.cursor)
+    this.cursor += 1
+    return value
+  }
+
+  int16BE(): number {
+    const value = this.backend.readInt16BE(this.cursor)
+    this.cursor += 2
+    return value
+  }
+
+  int16LE(): number {
+    const value = this.backend.readInt16LE(this.cursor)
+    this.cursor += 2
+    return value
+  }
+
+  uint16BE(): number {
+    const value = this.backend.readUInt16BE(this.cursor)
+    this.cursor += 2
+    return value
+  }
+
+  uint16LE(): number {
+    const value = this.backend.readUInt16LE(this.cursor)
+    this.cursor += 2
+    return value
+  }
+
+  int32BE(): number {
+    const value = this.backend.readInt32BE(this.cursor)
+    this.cursor += 4
+    return value
+  }
+
+  int32LE(): number {
+    const value = this.backend.readInt32LE(this.cursor)
+    this.cursor += 4
+    return value
+  }
+
+  uint32BE(): number {
+    const value = this.backend.readUInt32BE(this.cursor)
+    this.cursor += 4
+    return value
+  }
+
+  uint32LE(): number {
+    const value = this.backend.readUInt32LE(this.cursor)
+    this.cursor += 4
+    return value
+  }
+
+  string(encoding: BufferEncoding = "utf8"): string {
+    const length = this.backend.readInt32BE(this.cursor)
+    this.cursor += 4
+    const content = this.backend.toString(encoding, this.cursor, length)
+    this.cursor += length
+    return content
+  }
+
+  buffer(): Buffer {
+    const length = this.backend.readInt32BE(this.cursor)
+    this.cursor += 4
+    const buffer = this.backend.subarray(this.cursor, length)
+    this.cursor += length
+    return buffer
   }
 }
