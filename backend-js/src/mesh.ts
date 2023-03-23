@@ -31,6 +31,7 @@ export async function setupAsCentral(config: MeshAsCentralConfig): Promise<void>
   log.info(`Central websocket is running on ws://localhost:${config.port}/ws.`)
   wss.on("connection", (ws: WebSocket) => {
     const net = new Net(ws)
+    net.startDaemonWatch()
     log.trace("A websocket is established.")
     ws.on("error", log.trace)
     ws.on("close", () => {
@@ -38,9 +39,28 @@ export async function setupAsCentral(config: MeshAsCentralConfig): Promise<void>
     })
     runAsCentralStateMachine(net, log, config)
     ws.on("message", (data) => {
-      net.handleReceivedMessage(data as Buffer)
+      net.handleReceivedData(data as Buffer)
     })
   })
+}
+
+export async function setupAsNode(config: MeshAsNodeConfig): Promise<void> {
+  for (const central of config.central) {
+    const log = createLogger(`Node-${central.server}`)
+    const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
+    const net = new Net(ws)
+    net.startDaemonWatch()
+    ws.on("open", () => {
+      log.info(`Connected to ${central.server}.`)
+      runAsNodeStateMachine(net, log, central, config)
+    })
+    ws.on("close", () => {
+      log.info(`Disconnected from ${central.server}.`)
+    })
+    ws.on("message", (data) => {
+      net.handleReceivedData(data as Buffer)
+    })
+  }
 }
 
 enum ChallengeResult {
@@ -59,19 +79,18 @@ async function runAsCentralStateMachine(
   config: MeshAsCentralConfig,
 ): Promise<void> {
   const nonce = nacl.randomBytes(24)
-  const nonceBase64 = Buffer.from(nonce).toString("base64")
   const challenge = Math.random().toString()
-  const { publicKey }: { publicKey: string } = await net.readJson("auth-public-key")
+  const { publicKey }: { publicKey: string } = await net.getJson("auth-public-key")
   log.trace(publicKey)
   if (!config.node.includes(publicKey)) throw new Error(`${publicKey} unregistered.`)
   log.info(`"${publicKey}" is challenging with "${challenge}".`)
   const challengeEncrypted = encrypt(challenge, nonce, publicKey, config.privateKey)
   net.sendJson("auth-challenge", {
     challenge: challengeEncrypted,
-    nonce: nonceBase64,
+    nonce: Buffer.from(nonce).toString("base64"),
     publicKey: config.publicKey,
   })
-  const { resolved } = await net.readJson("auth-challenge-solution")
+  const { resolved } = await net.getJson("auth-challenge-solution")
   if (resolved !== challenge) {
     log.info(`"${publicKey}" challenge failed.`)
     net.sendJson("auth-challenge-solution-result", {
@@ -84,7 +103,7 @@ async function runAsCentralStateMachine(
   net.sendJson("auth-challenge-solution-result", {
     result: ChallengeResult.success,
   })
-  const nodeMeta: NodeMeta = await net.readJson("node-meta")
+  const nodeMeta: NodeMeta = await net.getJson("node-meta")
   log.info(`Receieved node meta "${JSON.stringify(nodeMeta)}".`)
   // If the node has passcode and it doesn't match this central's passcode, then report an error
   if (nodeMeta.passcode && nodeMeta.passcode !== config.passcode) {
@@ -97,24 +116,6 @@ async function runAsCentralStateMachine(
   }
 }
 
-export async function setupAsNode(config: MeshAsNodeConfig): Promise<void> {
-  for (const central of config.central) {
-    const log = createLogger(`Node-${central.server}`)
-    const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
-    const net = new Net(ws)
-    ws.on("open", () => {
-      log.info(`Connected to ${central.server}.`)
-      runAsNodeStateMachine(net, log, central, config)
-    })
-    ws.on("close", () => {
-      log.info(`Disconnected from ${central.server}.`)
-    })
-    ws.on("message", (data) => {
-      net.handleReceivedMessage(data as Buffer)
-    })
-  }
-}
-
 async function runAsNodeStateMachine(
   net: Net,
   log: Logger,
@@ -124,7 +125,7 @@ async function runAsNodeStateMachine(
   net.sendJson("auth-public-key", {
     publicKey: config.publicKey
   })
-  const { challenge, publicKey, nonce } = await net.readJson("auth-challenge")
+  const { challenge, publicKey, nonce } = await net.getJson("auth-challenge")
   const encrypted = Buffer.from(challenge, "base64")
   const resolved = decrypt(encrypted, nonce, publicKey, config.privateKey)
   if (resolved === null) {
@@ -136,7 +137,7 @@ async function runAsNodeStateMachine(
   net.sendJson("auth-challenge-solution", {
     resolved
   })
-  const challengeResultPayload: { result: ChallengeResult } = await net.readJson("auth-challenge-solution-result")
+  const challengeResultPayload: { result: ChallengeResult } = await net.getJson("auth-challenge-solution-result")
   if (challengeResultPayload.result !== ChallengeResult.success) {
     log.error("challenge failed.")
     net.close()
@@ -148,7 +149,6 @@ async function runAsNodeStateMachine(
     nodeMeta = {
       name: config.name,
       forward: central.forward,
-      passcode: config.passcode,
     }
   } else { // redirect
     nodeMeta = {
@@ -159,7 +159,7 @@ async function runAsNodeStateMachine(
     }
   }
   net.sendJson("node-meta", nodeMeta)
-  const nodeMetaResultPayload: { result: NodeMetaResult } = await net.readJson("node-meta-result")
+  const nodeMetaResultPayload: { result: NodeMetaResult } = await net.getJson("node-meta-result")
   if (nodeMetaResultPayload.result === NodeMetaResult.passcodeConflict) {
     log.error(`Passcode is conflict with the central "${central.server}"`)
     net.close()

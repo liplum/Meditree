@@ -11,12 +11,22 @@ enum DataType {
 type ChannlHanlder<Input> = Map<string, Handler<Input>[]>
 export class Net {
   private readonly ws: WebSocket
-  private readonly messageHandlers: ChannlHanlder<string> = new Map()
+  private readonly messageHanlders: ChannlHanlder<string> = new Map()
   private readonly jsonHandlers: ChannlHanlder<any> = new Map()
-  private readonly messageOnceHanlders: ChannlHanlder<string> = new Map()
-  private readonly jsonOnceHandlers: ChannlHanlder<any> = new Map()
+  private unhandledMessageTasks: (() => void)[] = []
   constructor(ws: WebSocket) {
     this.ws = ws
+  }
+
+  startDaemonWatch(): void {
+    const timer = setInterval(() => {
+      const tasks = this.unhandledMessageTasks
+      this.unhandledMessageTasks = []
+      for (const task of tasks) {
+        task()
+      }
+    })
+    timer.unref()
   }
 
   close(): void {
@@ -26,102 +36,102 @@ export class Net {
   /**
    * Call this in ws.on("message")
    */
-  handleReceivedMessage(data: Buffer): void {
+  handleReceivedData(data: Buffer): void {
     const reader = new BufferReader(data)
     const type = reader.uint8()
-    const header = reader.string()
+    const id = reader.string()
     if (type === DataType.text) {
       const content = reader.string()
-      this.messageHandlers.get(header)?.forEach((handler) => {
-        handler(content)
-      })
-      this.messageOnceHanlders.get(header)?.forEach((handler) => {
-        handler(content)
-      })
-      this.messageOnceHanlders.delete(header)
+      this.handleText(id, content)
     } else if (type === DataType.json) {
       const jobj = JSON.parse(reader.string())
-      this.jsonHandlers.get(header)?.forEach((handler) => {
-        handler(jobj)
-      })
-      this.jsonOnceHandlers.get(header)?.forEach((handler) => {
-        handler(jobj)
-      })
-      this.jsonOnceHandlers.delete(header)
+      this.handleJson(id, jobj)
     }
   }
 
-  sendText(header: string, msg: string): void {
+  private handleText(id: string, text: string): void {
+    const handlers = this.messageHanlders.get(id)
+    if (handlers) {
+      handlers.forEach((handler) => {
+        handler(text)
+      })
+      handlers.splice(0)
+    } else {
+      this.unhandledMessageTasks.push(() => {
+        this.handleText(id, text)
+      })
+    }
+  }
+
+  private handleJson(id: string, json: object): void {
+    const handlers = this.jsonHandlers.get(id)
+    if (handlers) {
+      handlers.forEach((handler) => {
+        handler(json)
+      })
+      handlers.splice(0)
+    } else {
+      this.unhandledMessageTasks.push(() => {
+        this.handleJson(id, json)
+      })
+    }
+  }
+
+  sendText(id: string, msg: string): void {
     const writer = new BufferWriter()
     writer.uint8(DataType.text)
-    writer.string(header)
+    writer.string(id)
     writer.string(msg)
     this.ws.send(writer.buildBuffer())
   }
 
-  sendJson(header: string, json: any): void {
+  sendJson(id: string, json: any): void {
     const writer = new BufferWriter()
     writer.uint8(DataType.json)
-    writer.string(header)
+    writer.string(id)
     writer.string(JSON.stringify(json))
     this.ws.send(writer.buildBuffer())
   }
 
-  file(header: string, filePath: string): void {
+  file(id: string, filePath: string): void {
 
   }
 
-  stream(header: string): void {
+  stream(id: string): void {
 
   }
 
-  onMessage(header: string, handler: Handler<string>): void {
-    if (this.messageHandlers.has(header)) {
-      this.messageHandlers.get(header)?.push(handler)
+  onStream(id: string, handler: Handler<any>): void {
+
+  }
+
+  onMessage(id: string, handler: Handler<string>): void {
+    if (this.messageHanlders.has(id)) {
+      this.messageHanlders.get(id)?.push(handler)
     } else {
-      this.messageHandlers.set(header, [handler])
+      this.messageHanlders.set(id, [handler])
     }
   }
 
-  onJson(header: string, handler: Handler<object>): void {
-    if (this.jsonHandlers.has(header)) {
-      this.jsonHandlers.get(header)?.push(handler)
+  onJson(id: string, handler: Handler<object>): void {
+    if (this.jsonHandlers.has(id)) {
+      this.jsonHandlers.get(id)?.push(handler)
     } else {
-      this.jsonHandlers.set(header, [handler])
+      this.jsonHandlers.set(id, [handler])
     }
   }
 
-  onStream(header: string, handler: Handler<any>): void {
-
-  }
-
-  onOnceMessage(header: string, handler: Handler<string>): void {
-    if (this.messageOnceHanlders.has(header)) {
-      this.messageOnceHanlders.get(header)?.push(handler)
-    } else {
-      this.messageOnceHanlders.set(header, [handler])
-    }
-  }
-
-  onOnceJson(header: string, handler: Handler<object>): void {
-    if (this.jsonOnceHandlers.has(header)) {
-      this.jsonOnceHandlers.get(header)?.push(handler)
-    } else {
-      this.jsonOnceHandlers.set(header, [handler])
-    }
-  }
-
-  async readMessage(header: string): Promise<string> {
+  async getText(id: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      this.onOnceMessage(header, (msg) => {
+      this.onMessage(id, (msg) => {
         resolve(msg)
       })
     })
   }
 
-  async readJson(header: string): Promise<any> {
+  async getJson(id: string): Promise<any> {
     return new Promise<any>((resolve, reject) => {
-      this.onOnceJson(header, (json) => {
+      this.onJson(id, (json) => {
         resolve(json)
       })
     })
