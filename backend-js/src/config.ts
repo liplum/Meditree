@@ -40,43 +40,6 @@ export interface AppConfig {
   [key: string]: any
 }
 
-export enum ForwardType {
-  socket = "socket",
-  redirect = "redirect",
-}
-
-export type CentralConfig = {
-  server: string
-  forward: ForwardType
-} & ForwardConfig
-
-export type ForwardConfig = {
-  forward: ForwardType.socket
-} | {
-  forward: ForwardType.redirect
-  redirectTo: string
-}
-
-export interface MeshAsCentralConfig {
-  name: string
-  port: number
-  /**
-   * The public key of node.
-   */
-  node: string[]
-  publicKey: string
-  privateKey: string
-  passcode?: string
-}
-
-export interface MeshAsNodeConfig {
-  name: string
-  central: CentralConfig[]
-  publicKey: string
-  privateKey: string
-  passcode?: string
-}
-
 export interface FindConfigArgs<T> {
   rootDir: string
   filename: string

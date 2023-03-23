@@ -1,31 +1,55 @@
-import { ForwardType } from "./config.js"
-import type { MeshAsNodeConfig, MeshAsCentralConfig, AppConfig, CentralConfig, ForwardConfig } from "./config.js"
 import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
 import { Net } from "./net.js"
-import { type Express } from "express"
-export async function setupMesh(app: Express, config: AppConfig): Promise<void> {
-  // If node is defined and not empty, subnodes can connect to this.
-  if (config.central?.length && config.publicKey && config.privateKey) {
-    setupAsCentral(config as any as MeshAsCentralConfig)
-  }
-  // If central is defined and not empty, it will try connecting to every central.
-  if (config.node?.length && config.publicKey && config.privateKey) {
-    setupAsNode(config as any as MeshAsNodeConfig)
-  }
+export enum ForwardType {
+  socket = "socket",
+  redirect = "redirect",
 }
+
+export type CentralConfig = {
+  server: string
+  forward: ForwardType
+} & ForwardConfig
+
+export type ForwardConfig = {
+  forward: ForwardType.socket
+} | {
+  forward: ForwardType.redirect
+  redirectTo: string
+}
+
+export interface MeshAsCentralConfig {
+  name: string
+  port: number
+  /**
+   * The public key of node.
+   */
+  node: string[]
+  publicKey: string
+  privateKey: string
+  passcode?: string
+}
+
+export interface MeshAsNodeConfig {
+  name: string
+  central: CentralConfig[]
+  publicKey: string
+  privateKey: string
+  passcode?: string
+}
+
 type NodeMeta = {
   name: string
   forward: ForwardType
   passcode?: string
 } & ForwardConfig
 
-export async function setupAsCentral(config: MeshAsCentralConfig): Promise<void> {
+export async function setupAsCentral(config: MeshAsCentralConfig, server?: any): Promise<void> {
   const log = createLogger("Central")
   // as central
   const wss = new WebSocketServer({
-    port: config.port,
+    server,
     path: "/ws",
   })
   log.info(`Central websocket is running on ws://localhost:${config.port}/ws.`)
@@ -33,7 +57,7 @@ export async function setupAsCentral(config: MeshAsCentralConfig): Promise<void>
     const net = new Net(ws)
     net.startDaemonWatch()
     log.trace("A websocket is established.")
-    ws.on("error", log.trace)
+    ws.on("error", (error) => { log.error(error) })
     ws.on("close", () => {
       log.trace("A websocket is closed.")
     })
@@ -49,12 +73,16 @@ export async function setupAsNode(config: MeshAsNodeConfig): Promise<void> {
     const log = createLogger(`Node-${central.server}`)
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
     const net = new Net(ws)
+    let isConnected = false
     net.startDaemonWatch()
+    ws.on("error", (error) => { log.error(error) })
     ws.on("open", () => {
+      isConnected = true
       log.info(`Connected to ${central.server}.`)
       runAsNodeStateMachine(net, log, central, config)
     })
     ws.on("close", () => {
+      if (!isConnected) return
       log.info(`Disconnected from ${central.server}.`)
     })
     ws.on("message", (data) => {

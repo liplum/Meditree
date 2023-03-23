@@ -5,20 +5,22 @@ import fs from "fs"
 import { File, FileTree } from "./file.js"
 import cors from "cors"
 import ms from "mediaserver"
-import { setupMesh } from "./mesh.js"
+import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode } from "./mesh.js"
+import { createLogger } from "./logger.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   const app = express()
   app.use(cors())
   app.use(express.json())
+  const log = createLogger("Main")
   const tree = new HostTree({
     root: config.root,
     fileTypePattern: config.fileTypePattern,
     rebuildInterval: config.rebuildInterval
   })
-  let treeJsonObjectCache: object | undefined
-  let treeJsonStringCache: string | undefined
-  let treeIndexHtmlCache: string | undefined
+  let treeJsonObjectCache: object | null
+  let treeJsonStringCache: string | null
+  let treeIndexHtmlCache: string | null
   tree.onRebuild(() => {
     treeJsonObjectCache = {
       name: config.name,
@@ -26,12 +28,19 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 2)
     treeIndexHtmlCache = buildIndexHtml(tree.fileTree)
-    console.log("FileTree is rebuilt.")
+    log.info("FileTree is rebuilt.")
   })
   tree.startWatching()
   await tree.rebuildFileTree()
 
-  setupMesh(app, config)
+  // If node is defined and not empty, subnodes can connect to this.
+  if (config.central?.length && config.publicKey && config.privateKey) {
+    setupAsCentral(config as any as MeshAsCentralConfig, app)
+  }
+  // If central is defined and not empty, it will try connecting to every central.
+  if (config.node?.length && config.publicKey && config.privateKey) {
+    setupAsNode(config as any as MeshAsNodeConfig)
+  }
 
   // If posscode is enabled.
   if (config.passcode) {
@@ -89,7 +98,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   })
 
   const onRunning = (): void => {
-    console.log(`Server running at http://localhost:${config.port}/`)
+    log.info(`Server running at http://localhost:${config.port}/`)
   }
   if (config.hostname) {
     app.listen(config.port, config.hostname, onRunning)
