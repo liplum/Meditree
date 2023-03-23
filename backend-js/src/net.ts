@@ -29,99 +29,99 @@ export class Net {
   handleReceivedMessage(data: Buffer): void {
     const reader = new BufferReader(data)
     const type = reader.uint8()
-    const channel = reader.string()
+    const header = reader.string()
     if (type === DataType.text) {
       const content = reader.string()
-      this.messageHandlers.get(channel)?.forEach((handler) => {
+      this.messageHandlers.get(header)?.forEach((handler) => {
         handler(content)
       })
-      this.messageOnceHanlders.get(channel)?.forEach((handler) => {
+      this.messageOnceHanlders.get(header)?.forEach((handler) => {
         handler(content)
       })
-      this.messageOnceHanlders.delete(channel)
+      this.messageOnceHanlders.delete(header)
     } else if (type === DataType.json) {
       const jobj = JSON.parse(reader.string())
-      this.jsonHandlers.get(channel)?.forEach((handler) => {
+      this.jsonHandlers.get(header)?.forEach((handler) => {
         handler(jobj)
       })
-      this.jsonOnceHandlers.get(channel)?.forEach((handler) => {
+      this.jsonOnceHandlers.get(header)?.forEach((handler) => {
         handler(jobj)
       })
-      this.jsonOnceHandlers.delete(channel)
+      this.jsonOnceHandlers.delete(header)
     }
   }
 
-  message(channel: string, msg: string): void {
+  message(header: string, msg: string): void {
     const writer = new BufferWriter()
     writer.uint8(DataType.text)
-    writer.string(channel)
+    writer.string(header)
     writer.string(msg)
     this.ws.send(writer.buildBuffer())
   }
 
-  json(channel: string, json: any): void {
+  json(header: string, json: any): void {
     const writer = new BufferWriter()
     writer.uint8(DataType.json)
-    writer.string(channel)
+    writer.string(header)
     writer.string(JSON.stringify(json))
     this.ws.send(writer.buildBuffer())
   }
 
-  file(channel: string, filePath: string): void {
+  file(header: string, filePath: string): void {
 
   }
 
-  stream(channel: string): void {
+  stream(header: string): void {
 
   }
 
-  onMessage(channel: string, handler: Handler<string>): void {
-    if (this.messageHandlers.has(channel)) {
-      this.messageHandlers.get(channel)?.push(handler)
+  onMessage(header: string, handler: Handler<string>): void {
+    if (this.messageHandlers.has(header)) {
+      this.messageHandlers.get(header)?.push(handler)
     } else {
-      this.messageHandlers.set(channel, [handler])
+      this.messageHandlers.set(header, [handler])
     }
   }
 
-  onJson(channel: string, handler: Handler<object>): void {
-    if (this.jsonHandlers.has(channel)) {
-      this.jsonHandlers.get(channel)?.push(handler)
+  onJson(header: string, handler: Handler<object>): void {
+    if (this.jsonHandlers.has(header)) {
+      this.jsonHandlers.get(header)?.push(handler)
     } else {
-      this.jsonHandlers.set(channel, [handler])
+      this.jsonHandlers.set(header, [handler])
     }
   }
 
-  onStream(channel: string, handler: Handler<any>): void {
+  onStream(header: string, handler: Handler<any>): void {
 
   }
 
-  onOnceMessage(channel: string, handler: Handler<string>): void {
-    if (this.messageOnceHanlders.has(channel)) {
-      this.messageOnceHanlders.get(channel)?.push(handler)
+  onOnceMessage(header: string, handler: Handler<string>): void {
+    if (this.messageOnceHanlders.has(header)) {
+      this.messageOnceHanlders.get(header)?.push(handler)
     } else {
-      this.messageOnceHanlders.set(channel, [handler])
+      this.messageOnceHanlders.set(header, [handler])
     }
   }
 
-  onOnceJson(channel: string, handler: Handler<object>): void {
-    if (this.jsonOnceHandlers.has(channel)) {
-      this.jsonOnceHandlers.get(channel)?.push(handler)
+  onOnceJson(header: string, handler: Handler<object>): void {
+    if (this.jsonOnceHandlers.has(header)) {
+      this.jsonOnceHandlers.get(header)?.push(handler)
     } else {
-      this.jsonOnceHandlers.set(channel, [handler])
+      this.jsonOnceHandlers.set(header, [handler])
     }
   }
 
-  async readMessage(channel: string): Promise<string> {
+  async readMessage(header: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      this.onOnceMessage(channel, (msg) => {
+      this.onOnceMessage(header, (msg) => {
         resolve(msg)
       })
     })
   }
 
-  async readJson(channel: string): Promise<any> {
+  async readJson(header: string): Promise<any> {
     return new Promise<any>((resolve, reject) => {
-      this.onOnceJson(channel, (json) => {
+      this.onOnceJson(header, (json) => {
         resolve(json)
       })
     })
