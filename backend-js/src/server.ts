@@ -39,7 +39,10 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
   // If central is defined and not empty, it will try connecting to every central.
   if (config.node?.length && config.publicKey && config.privateKey) {
-    setupAsNode(config as any as MeshAsNodeConfig)
+    setupAsNode(config as any as MeshAsNodeConfig, {
+      onRebuildFileTree() { },
+      offListeners() { },
+    })
   }
 
   // If posscode is enabled.

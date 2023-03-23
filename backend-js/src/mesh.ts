@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
 import { Net } from "./net.js"
+import { type FileTree } from "./file.js"
 export enum ForwardType {
   socket = "socket",
   redirect = "redirect",
@@ -50,11 +52,15 @@ export async function setupAsCentral(config: MeshAsCentralConfig, server?: any):
   // as central
   const wss = new WebSocketServer({
     server,
+    port: server ? undefined : config.port,
     path: "/ws",
   })
   log.info(`Central websocket is running on ws://localhost:${config.port}/ws.`)
   wss.on("connection", (ws: WebSocket) => {
     const net = new Net(ws)
+    net.debug = (id, message) => {
+      log.debug(id, message)
+    }
     net.startDaemonWatch()
     log.trace("A websocket is established.")
     ws.on("error", (error) => { log.error(error) })
@@ -67,22 +73,44 @@ export async function setupAsCentral(config: MeshAsCentralConfig, server?: any):
     })
   })
 }
+export interface NodeBehavior {
+  onRebuildFileTree: (id: string, listener: (
+    { json, jsonString, tree }: { json: object, jsonString: string, tree: FileTree }
+  ) => void) => void
+  offListeners: (id?: string) => void
+}
 
-export async function setupAsNode(config: MeshAsNodeConfig): Promise<void> {
+export async function setupAsNode(
+  config: MeshAsNodeConfig,
+  behavior: NodeBehavior
+): Promise<void> {
+  const name2Central = {}
   for (const central of config.central) {
     const log = createLogger(`Node-${central.server}`)
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
     const net = new Net(ws)
+    net.debug = (id, message) => {
+      log.debug(id, message)
+    }
     let isConnected = false
     net.startDaemonWatch()
+    let centralInfo: CentralInfo | undefined
     ws.on("error", (error) => { log.error(error) })
-    ws.on("open", () => {
+    ws.on("open", async () => {
       isConnected = true
       log.info(`Connected to ${central.server}.`)
-      runAsNodeStateMachine(net, log, central, config)
+      centralInfo = await authenticateAsNode(net, log, central, config)
+      if (!centralInfo) return
+      name2Central[centralInfo.name] = net
+      behavior.onRebuildFileTree(centralInfo.name, ({ jsonString }) => {
+        net.sendText("file-tree-update", config.name, jsonString)
+      })
     })
     ws.on("close", () => {
       if (!isConnected) return
+      if (centralInfo) {
+        behavior.offListeners(centralInfo.name)
+      }
       log.info(`Disconnected from ${central.server}.`)
     })
     ws.on("message", (data) => {
@@ -114,6 +142,7 @@ async function runAsCentralStateMachine(
   log.info(`"${publicKey}" is challenging with "${challenge}".`)
   const challengeEncrypted = encrypt(challenge, nonce, publicKey, config.privateKey)
   net.sendJson("auth-challenge", {
+    name: config.name,
     challenge: challengeEncrypted,
     nonce: Buffer.from(nonce).toString("base64"),
     publicKey: config.publicKey,
@@ -143,17 +172,19 @@ async function runAsCentralStateMachine(
     return
   }
 }
-
-async function runAsNodeStateMachine(
+interface CentralInfo {
+  name: string
+}
+async function authenticateAsNode(
   net: Net,
   log: Logger,
   central: CentralConfig,
   config: MeshAsNodeConfig,
-): Promise<void> {
+): Promise<CentralInfo | undefined> {
   net.sendJson("auth-public-key", {
     publicKey: config.publicKey
   })
-  const { challenge, publicKey, nonce } = await net.getJson("auth-challenge")
+  const { name, challenge, publicKey, nonce } = await net.getJson("auth-challenge")
   const encrypted = Buffer.from(challenge, "base64")
   const resolved = decrypt(encrypted, nonce, publicKey, config.privateKey)
   if (resolved === null) {
@@ -192,6 +223,9 @@ async function runAsNodeStateMachine(
     log.error(`Passcode is conflict with the central "${central.server}"`)
     net.close()
     return
+  }
+  return {
+    name,
   }
 }
 

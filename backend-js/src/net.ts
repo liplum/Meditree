@@ -10,10 +10,11 @@ enum DataType {
 }
 type ChannlHanlder<Input> = Map<string, Handler<Input>[]>
 export class Net {
-  private readonly ws: WebSocket
-  private readonly messageHanlders: ChannlHanlder<string> = new Map()
-  private readonly jsonHandlers: ChannlHanlder<any> = new Map()
+  readonly ws: WebSocket
+  private readonly messageHandlers: ChannlHanlder<string | string[]> = new Map()
+  private readonly jsonHandlers: ChannlHanlder<any | any[]> = new Map()
   private unhandledMessageTasks: (() => void)[] = []
+  debug?: (id: string, message: any) => void
   constructor(ws: WebSocket) {
     this.ws = ws
   }
@@ -41,16 +42,36 @@ export class Net {
     const type = reader.uint8()
     const id = reader.string()
     if (type === DataType.text) {
-      const content = reader.string()
+      const count = reader.uint8()
+      let content: string | string[]
+      if (count === 1) {
+        content = reader.string()
+      } else {
+        content = []
+        for (let i = 0; i < count; i++) {
+          content.push(reader.string())
+        }
+      }
+      this.debug?.(id, content)
       this.handleText(id, content)
     } else if (type === DataType.json) {
-      const jobj = JSON.parse(reader.string())
+      const count = reader.uint8()
+      let jobj: any | any[]
+      if (count === 1) {
+        jobj = JSON.parse(reader.string())
+      } else {
+        jobj = []
+        for (let i = 0; i < count; i++) {
+          jobj.push(JSON.parse(reader.string()))
+        }
+      }
+      this.debug?.(id, jobj)
       this.handleJson(id, jobj)
     }
   }
 
-  private handleText(id: string, text: string): void {
-    const handlers = this.messageHanlders.get(id)
+  private handleText(id: string, text: string | string[]): void {
+    const handlers = this.messageHandlers.get(id)
     if (handlers) {
       handlers.forEach((handler) => {
         handler(text)
@@ -63,7 +84,7 @@ export class Net {
     }
   }
 
-  private handleJson(id: string, json: object): void {
+  private handleJson(id: string, json: any | any[]): void {
     const handlers = this.jsonHandlers.get(id)
     if (handlers) {
       handlers.forEach((handler) => {
@@ -77,19 +98,25 @@ export class Net {
     }
   }
 
-  sendText(id: string, msg: string): void {
+  sendText(id: string, ...msg: string[]): void {
     const writer = new BufferWriter()
     writer.uint8(DataType.text)
     writer.string(id)
-    writer.string(msg)
+    writer.uint8(msg.length)
+    for (let i = 0; i < msg.length; i++) {
+      writer.string(msg[i])
+    }
     this.ws.send(writer.buildBuffer())
   }
 
-  sendJson(id: string, json: any): void {
+  sendJson(id: string, ...json: any[]): void {
     const writer = new BufferWriter()
     writer.uint8(DataType.json)
     writer.string(id)
-    writer.string(JSON.stringify(json))
+    writer.uint8(json.length)
+    for (let i = 0; i < json.length; i++) {
+      writer.string(JSON.stringify(json[i]))
+    }
     this.ws.send(writer.buildBuffer())
   }
 
@@ -105,15 +132,15 @@ export class Net {
 
   }
 
-  onMessage(id: string, handler: Handler<string>): void {
-    if (this.messageHanlders.has(id)) {
-      this.messageHanlders.get(id)?.push(handler)
+  onText(id: string, handler: Handler<string | string[]>): void {
+    if (this.messageHandlers.has(id)) {
+      this.messageHandlers.get(id)?.push(handler)
     } else {
-      this.messageHanlders.set(id, [handler])
+      this.messageHandlers.set(id, [handler])
     }
   }
 
-  onJson(id: string, handler: Handler<object>): void {
+  onJson(id: string, handler: Handler<any | any[]>): void {
     if (this.jsonHandlers.has(id)) {
       this.jsonHandlers.get(id)?.push(handler)
     } else {
@@ -121,16 +148,16 @@ export class Net {
     }
   }
 
-  async getText(id: string): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-      this.onMessage(id, (msg) => {
+  async getText(id: string): Promise<string | string[]> {
+    return new Promise((resolve, reject) => {
+      this.onText(id, (msg) => {
         resolve(msg)
       })
     })
   }
 
-  async getJson(id: string): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
+  async getJson(id: string): Promise<any | any[]> {
+    return new Promise((resolve, reject) => {
       this.onJson(id, (json) => {
         resolve(json)
       })
