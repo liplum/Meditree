@@ -51,7 +51,7 @@ export class Net {
     }
   }
 
-  message(header: string, msg: string): void {
+  sendText(header: string, msg: string): void {
     const writer = new BufferWriter()
     writer.uint8(DataType.text)
     writer.string(header)
@@ -59,7 +59,7 @@ export class Net {
     this.ws.send(writer.buildBuffer())
   }
 
-  json(header: string, json: any): void {
+  sendJson(header: string, json: any): void {
     const writer = new BufferWriter()
     writer.uint8(DataType.json)
     writer.string(header)
