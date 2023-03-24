@@ -18,17 +18,18 @@ export async function startServer(config: AppConfig): Promise<void> {
     fileTypePattern: config.fileTypePattern,
     rebuildInterval: config.rebuildInterval
   })
-
-  // If node is defined and not empty, subnodes can connect to this.
-  if (config.node?.length && config.publicKey && config.privateKey) {
-    setupAsCentral(config as any as MeshAsCentralConfig, app)
-  }
   const centralName2Handler = new Map<string, {
     onLocalFileTreeRebuild?: LocalFileTreeRebuildCallback
   }>()
+
+  // If node is defined and not empty, subnodes can connect to this.
+  if (config.node?.length && config.publicKey && config.privateKey) {
+    await setupAsCentral(config as any as MeshAsCentralConfig, app)
+  }
+
   // If central is defined and not empty, it will try connecting to every central.
   if (config.central?.length && config.publicKey && config.privateKey) {
-    setupAsNode(config as any as MeshAsNodeConfig, {
+    await setupAsNode(config as any as MeshAsNodeConfig, {
       onLocalFileTreeRebuild(id, listener) {
         let handler = centralName2Handler.get(id)
         if (!handler) {
