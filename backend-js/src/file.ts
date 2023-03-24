@@ -3,7 +3,9 @@ import path from "path"
 import { promisify } from "util"
 
 type FileSystemEntry = File | FileTree
-
+export interface Readable {
+  
+}
 export type FileType = string | null
 export class File {
   type: FileType
@@ -35,7 +37,7 @@ export interface CreateFileTreeOptions {
   pruned: boolean
 }
 export interface FileTreeLike {
-  resolveFile: (filePath: string) => File | null
+  resolveFile: (pathParts: string[]) => File | null
 }
 export interface FileTreeJson {
   name: string
@@ -67,11 +69,10 @@ export class FileTree implements FileTreeLike {
     return parts.join("/")
   }
 
-  resolveFile(filePath: string): File | null {
-    const parts = filePath.split("/")
+  resolveFile(pathParts: string[]): File | null {
     let currentFsEntry: FileSystemEntry | undefined = this
-    while (parts.length > 0 && currentFsEntry instanceof FileTree) {
-      const currentPart = parts.shift()
+    while (pathParts.length > 0 && currentFsEntry instanceof FileTree) {
+      const currentPart = pathParts.shift()
       if (currentPart === undefined) break
       currentFsEntry = currentFsEntry.name2File.get(currentPart)
     }

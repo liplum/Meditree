@@ -98,8 +98,8 @@ export class HostTree implements FileTreeLike {
     this.rebuildTimer = null
   }
 
-  resolveFile(path: string): File | null {
-    return this.fileTree?.resolveFile(path)
+  resolveFile(pathParts: string[]): File | null {
+    return this.fileTree?.resolveFile(pathParts)
   }
 
   classifyByFilePath(filePath: string): FileType {

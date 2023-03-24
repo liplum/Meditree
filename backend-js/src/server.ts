@@ -100,7 +100,7 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   app.get("/file(/*)", (req, res) => {
     const path = removePrefix(decodeURI(req.baseUrl + req.path), "/file/")
-    const file = tree.resolveFile(path)
+    const file = tree.resolveFile(path.split("/"))
     if (file == null) {
       res.status(404)
       return
@@ -218,6 +218,8 @@ function getText(req: Request, res: Response, file: File): void {
   res.header({
     "Content-Type": file.type,
   })
+  const stream = fs.createReadStream(file.path)
+  stream.pipe(res)
   fs.readFile(file.path, "utf-8", (data) => {
     res.send(data)
   })
