@@ -2,21 +2,36 @@ import type WebSocket from "ws"
 
 export type Handler<Input> = ((data: Input) => void) | ((data: Input) => Promise<void>)
 
-enum DataType {
+export enum DataType {
   text = 1,
   json = 2,
   array = 3,
   file = 4,
   stream = 5,
 }
-type ChannlHanlder<Input> = Map<string, Handler<Input>[]>
+export type MessageHandler<Data> = Map<string, Handler<Data>[]>
+
+export type PrereadHook = ({ type, id, reader, debug }: {
+  type: DataType
+  id: string
+  reader: BufferReader
+  debug?: DebugCall
+}) => boolean
+export type ReadHook<Data> = ({ type, id, data }: {
+  type: DataType
+  id: string
+  data: Data
+}) => boolean
+export type DebugCall = (id: string, message: any) => void
 export class Net {
   readonly ws: WebSocket
-  private readonly messageHandlers: ChannlHanlder<string> = new Map()
-  private readonly jsonHandlers: ChannlHanlder<any> = new Map()
-  private readonly arrayHandlers: ChannlHanlder<any[]> = new Map()
+  private readonly messageHandlers: MessageHandler<string> = new Map()
+  private readonly jsonHandlers: MessageHandler<any> = new Map()
+  private readonly arrayHandlers: MessageHandler<any[]> = new Map()
   private unhandledMessageTasks: (() => void)[] = []
-  debug?: (id: string, message: any) => void
+  private readonly prereadHooks: PrereadHook[] = []
+  private readonly readHooks: ReadHook<any>[] = []
+  debug?: DebugCall
   constructor(ws: WebSocket) {
     this.ws = ws
   }
@@ -43,14 +58,23 @@ export class Net {
     const reader = new BufferReader(data)
     const type = reader.uint8()
     const id = reader.string()
+    for (const hook of this.prereadHooks) {
+      if (hook({ type, id, reader, debug: this.debug })) return
+    }
     if (type === DataType.text) {
       const content = reader.string()
       this.debug?.(id, content)
+      for (const hook of this.readHooks) {
+        if (hook({ type, id, data: content })) return
+      }
       this.handleText(id, content)
     } else if (type === DataType.json) {
-      const jobj = JSON.parse(reader.string())
-      this.debug?.(id, jobj)
-      this.handleJson(id, jobj)
+      const json = JSON.parse(reader.string())
+      this.debug?.(id, json)
+      for (const hook of this.readHooks) {
+        if (hook({ type, id, data: json })) return
+      }
+      this.handleJson(id, json)
     } else if (type === DataType.array) {
       const count = reader.uint8()
       const content: any[] = []
@@ -63,6 +87,9 @@ export class Net {
         }
       }
       this.debug?.(id, content)
+      for (const hook of this.readHooks) {
+        if (hook({ type, id, data: content })) return
+      }
       this.handleArray(id, content)
     }
   }
@@ -193,13 +220,21 @@ export class Net {
       })
     })
   }
-  
+
   async getArray(id: string): Promise<any[]> {
     return new Promise((resolve, reject) => {
       this.onArray(id, (arr) => {
         resolve(arr)
       })
     })
+  }
+
+  addPrereadHook(hook: PrereadHook): void {
+    this.prereadHooks.push(hook)
+  }
+
+  addReadHook<Data>(hook: ReadHook<Data>): void {
+    this.readHooks.push(hook)
   }
 }
 

@@ -3,7 +3,8 @@ import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
 import { Net } from "./net.js"
-import { type File, type FileTreeLike, type FileTree } from "./file.js"
+import { type File, type FileTreeLike, type FileTree, type FileTreeJson, type FileTreeJsonEntry } from "./file.js"
+import "./netx.js"
 export enum ForwardType {
   socket = "socket",
   redirect = "redirect",
@@ -48,8 +49,16 @@ type NodeMeta = {
 } & ForwardConfig
 
 class MeshTree implements FileTreeLike {
+  nodes: Record<string, FileTreeJsonEntry> = {}
+
   resolveFile(filePath: string): File | null {
     return null
+  }
+  getFileTreeOfNode(nodeName: string) {
+
+  }
+  getMetaList(): string[] {
+    return []
   }
 }
 
@@ -76,12 +85,17 @@ export async function setupAsCentral(config: MeshAsCentralConfig, server?: any):
     ws.on("message", (data) => {
       net.handleReceivedData(data as Buffer)
     })
-    await authenticateNodeAsCentral(net, log, config)
+    const nodeMeta = await authenticateNodeAsCentral(net, log, config)
+    if (!nodeMeta) return
+    net.addBubbleHook(config.name, (id, arr) => {
+      if (id !== "file-tree-rebuild") return
+      log.info(arr)
+    })
   })
 }
 export interface NodeBehavior {
   onLocalFileTreeRebuild: (id: string, listener: (
-    { json, jsonString, tree }: { json: object, jsonString: string, tree: FileTree }
+    { json, jsonString, tree }: { json: FileTreeJson, jsonString: string, tree: FileTree }
   ) => void) => void
   offListeners: (id?: string) => void
 }
@@ -109,7 +123,7 @@ export async function setupAsNode(
       if (!centralInfo) return
       name2Central[centralInfo.name] = net
       behavior.onLocalFileTreeRebuild(centralInfo.name, ({ jsonString }) => {
-        net.sendArray("file-tree-update", [config.name, jsonString])
+        net.sendBubble("file-tree-rebuild", config.name, [jsonString])
       })
     })
     ws.on("close", () => {
@@ -139,7 +153,7 @@ async function authenticateNodeAsCentral(
   net: Net,
   log: Logger,
   config: MeshAsCentralConfig,
-): Promise<void> {
+): Promise<NodeMeta | undefined> {
   const nonce = nacl.randomBytes(24)
   const challenge = Math.random().toString()
   const { publicKey }: { publicKey: string } = await net.getJson("auth-public-key")
@@ -177,6 +191,7 @@ async function authenticateNodeAsCentral(
     net.close()
     return
   }
+  return nodeMeta
 }
 interface CentralInfo {
   name: string

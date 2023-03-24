@@ -2,7 +2,7 @@ import { HostTree } from "./host.js"
 import { type AppConfig, FileType } from "./config.js"
 import express, { type Request, type Response } from "express"
 import fs from "fs"
-import { File, FileTree } from "./file.js"
+import { File, FileTree, type FileTreeJson } from "./file.js"
 import cors from "cors"
 import ms from "mediaserver"
 import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode } from "./mesh.js"
@@ -18,14 +18,12 @@ export async function startServer(config: AppConfig): Promise<void> {
     fileTypePattern: config.fileTypePattern,
     rebuildInterval: config.rebuildInterval
   })
-  let treeJsonObjectCache: object | null
+  let treeJsonObjectCache: FileTreeJson | null
   let treeJsonStringCache: string | null
   let treeIndexHtmlCache: string | null
   tree.onRebuild(() => {
-    treeJsonObjectCache = {
-      name: config.name,
-      files: tree.fileTree.toJSON()
-    }
+    treeJsonObjectCache = tree.convertJson()
+    treeJsonObjectCache.name = config.name
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 2)
     treeIndexHtmlCache = buildIndexHtml(tree.fileTree)
     log.info("FileTree is rebuilt.")
