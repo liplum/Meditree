@@ -1,4 +1,4 @@
-import { Net, DataType } from "./net"
+import { Net, DataType } from "./net.js"
 
 declare module "./net.js" {
   interface Net {
@@ -12,7 +12,7 @@ Net.prototype.sendBubble = function (id: string, nodeId: string, arr: any[]): vo
 
 Net.prototype.addBubbleHook = function (nodeId: string, handler: (id: string, arr: any[]) => void) {
   this.addReadHook(({ type, id, data }: { type: DataType, id: string, data: [string[], any[]] }) => {
-    if (type === DataType.array) return
+    if (type !== DataType.array) return
     if (!id.startsWith("[bubble]")) return
     const [nodeIds, arr] = data
     // If nodeIds contains current node, it means the bubble is recursive, so stop the bubbling.

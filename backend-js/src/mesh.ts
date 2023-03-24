@@ -88,16 +88,17 @@ export async function setupAsCentral(config: MeshAsCentralConfig, server?: any):
     const nodeMeta = await authenticateNodeAsCentral(net, log, config)
     if (!nodeMeta) return
     net.addBubbleHook(config.name, (id, arr) => {
+      log.info(`Received a bubble message from ${id}.`)
       if (id !== "file-tree-rebuild") return
-      log.info(arr)
     })
   })
 }
+export type LocalFileTreeRebuildCallback = (
+  { json, jsonString, tree }: { json: FileTreeJson, jsonString: string, tree: FileTree }
+) => void
 export interface NodeBehavior {
-  onLocalFileTreeRebuild: (id: string, listener: (
-    { json, jsonString, tree }: { json: FileTreeJson, jsonString: string, tree: FileTree }
-  ) => void) => void
-  offListeners: (id?: string) => void
+  onLocalFileTreeRebuild: (id: string, listener: LocalFileTreeRebuildCallback) => void
+  offListeners: (id: string) => void
 }
 
 export async function setupAsNode(
@@ -191,6 +192,10 @@ async function authenticateNodeAsCentral(
     net.close()
     return
   }
+  net.sendJson("node-meta-result", {
+    result: NodeMetaResult.success,
+  })
+  log.info(`Node[${nodeMeta.name}] is accepted.`)
   return nodeMeta
 }
 interface CentralInfo {

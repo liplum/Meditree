@@ -5,7 +5,7 @@ import fs from "fs"
 import { File, FileTree, type FileTreeJson } from "./file.js"
 import cors from "cors"
 import ms from "mediaserver"
-import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode } from "./mesh.js"
+import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback } from "./mesh.js"
 import { createLogger } from "./logger.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
@@ -18,6 +18,29 @@ export async function startServer(config: AppConfig): Promise<void> {
     fileTypePattern: config.fileTypePattern,
     rebuildInterval: config.rebuildInterval
   })
+
+  // If node is defined and not empty, subnodes can connect to this.
+  if (config.node?.length && config.publicKey && config.privateKey) {
+    setupAsCentral(config as any as MeshAsCentralConfig, app)
+  }
+  const centralName2Handler = new Map<string, {
+    onLocalFileTreeRebuild?: LocalFileTreeRebuildCallback
+  }>()
+  // If central is defined and not empty, it will try connecting to every central.
+  if (config.central?.length && config.publicKey && config.privateKey) {
+    setupAsNode(config as any as MeshAsNodeConfig, {
+      onLocalFileTreeRebuild(id, listener) {
+        let handler = centralName2Handler.get(id)
+        if (!handler) {
+          handler = {}
+          centralName2Handler.set(id, handler)
+        }
+        handler.onLocalFileTreeRebuild = listener
+      },
+      offListeners(id) { centralName2Handler.delete(id) },
+    })
+  }
+
   let treeJsonObjectCache: FileTreeJson | null
   let treeJsonStringCache: string | null
   let treeIndexHtmlCache: string | null
@@ -26,22 +49,18 @@ export async function startServer(config: AppConfig): Promise<void> {
     treeJsonObjectCache.name = config.name
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 2)
     treeIndexHtmlCache = buildIndexHtml(tree.fileTree)
+    for (const [name, handler] of centralName2Handler.entries()) {
+      log.info(`Send rebuilt file tree to ${name}.`)
+      handler?.onLocalFileTreeRebuild?.({
+        json: treeJsonObjectCache,
+        jsonString: treeJsonStringCache,
+        tree: tree.fileTree,
+      })
+    }
     log.info("FileTree is rebuilt.")
   })
   tree.startWatching()
   await tree.rebuildFileTree()
-
-  // If node is defined and not empty, subnodes can connect to this.
-  if (config.central?.length && config.publicKey && config.privateKey) {
-    setupAsCentral(config as any as MeshAsCentralConfig, app)
-  }
-  // If central is defined and not empty, it will try connecting to every central.
-  if (config.node?.length && config.publicKey && config.privateKey) {
-    setupAsNode(config as any as MeshAsNodeConfig, {
-      onLocalFileTreeRebuild() { },
-      offListeners() { },
-    })
-  }
 
   // If posscode is enabled.
   if (config.passcode) {
