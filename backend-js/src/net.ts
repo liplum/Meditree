@@ -13,7 +13,7 @@ export enum StreamState {
   on = 1,
   error = 2,
 }
-export type MessageHandler<Data> = Map<string, Handler<Data>[]>
+export type MessageHandlerMap<Data> = Map<string, Handler<Data>[]>
 
 export type PrereadHook = ({ type, id, reader, debug }: {
   type: DataType
@@ -29,9 +29,10 @@ export type ReadHook<Data> = ({ type, id, data }: {
 export type DebugCall = (id: string, message: any) => void
 export class Net {
   readonly ws: WebSocket
-  private readonly messageHandlers: MessageHandler<string> = new Map()
-  private readonly jsonHandlers: MessageHandler<any> = new Map()
-  private readonly arrayHandlers: MessageHandler<any[]> = new Map()
+  private readonly textHandlers: MessageHandlerMap<string> = new Map()
+  private readonly jsonHandlers: MessageHandlerMap<any> = new Map()
+  private readonly arrayHandlers: MessageHandlerMap<any[]> = new Map()
+  private readonly streamHandlers: MessageHandlerMap<Readable> = new Map()
   private unhandledMessageTasks: (() => void)[] = []
   private readonly prereadHooks: PrereadHook[] = []
   private readonly readHooks: ReadHook<any>[] = []
@@ -99,7 +100,7 @@ export class Net {
   }
 
   private handleText(id: string, text: string): void {
-    const handlers = this.messageHandlers.get(id)
+    const handlers = this.textHandlers.get(id)
     if (handlers) {
       handlers.forEach((handler) => {
         handler(text)
@@ -197,32 +198,31 @@ export class Net {
     })
   }
 
-  onStream(id: string, handler: Handler<any>): void {
-
+  private addHandler<Data>(
+    handlers: MessageHandlerMap<Data>,
+    id: string, handler: Handler<Data>
+  ): void {
+    if (handlers.has(id)) {
+      handlers.get(id)?.push(handler)
+    } else {
+      handlers.set(id, [handler])
+    }
   }
 
   onText(id: string, handler: Handler<string>): void {
-    if (this.messageHandlers.has(id)) {
-      this.messageHandlers.get(id)?.push(handler)
-    } else {
-      this.messageHandlers.set(id, [handler])
-    }
+    this.addHandler(this.textHandlers, id, handler)
   }
-
+  
   onJson(id: string, handler: Handler<any>): void {
-    if (this.jsonHandlers.has(id)) {
-      this.jsonHandlers.get(id)?.push(handler)
-    } else {
-      this.jsonHandlers.set(id, [handler])
-    }
+    this.addHandler(this.jsonHandlers, id, handler)
   }
-
+  
   onArray(id: string, handler: Handler<any[]>): void {
-    if (this.arrayHandlers.has(id)) {
-      this.arrayHandlers.get(id)?.push(handler)
-    } else {
-      this.arrayHandlers.set(id, [handler])
-    }
+    this.addHandler(this.arrayHandlers, id, handler)
+  }
+  
+  onStream(id: string, handler: Handler<Readable>): void {
+    this.addHandler(this.streamHandlers, id, handler)
   }
 
   async getText(id: string): Promise<string> {
@@ -245,6 +245,14 @@ export class Net {
     return new Promise((resolve, reject) => {
       this.onArray(id, (arr) => {
         resolve(arr)
+      })
+    })
+  }
+
+  async getStream(id: string): Promise<Readable> {
+    return new Promise((resolve, reject) => {
+      this.onStream(id, (stream) => {
+        resolve(stream)
       })
     })
   }
