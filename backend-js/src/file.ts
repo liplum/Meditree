@@ -3,9 +3,6 @@ import path from "path"
 import { promisify } from "util"
 
 type FileSystemEntry = File | FileTree
-export interface Readable {
-  
-}
 export type FileType = string | null
 export class File {
   type: FileType

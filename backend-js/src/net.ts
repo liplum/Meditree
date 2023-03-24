@@ -159,7 +159,7 @@ export class Net {
   /**
    * 
    * @param id 
-   * @param arr string or any
+   * @param arr string or json object
    */
   sendArray(id: string, arr: any[]): void {
     const writer = new BufferWriter()
