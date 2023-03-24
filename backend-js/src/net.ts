@@ -1,6 +1,5 @@
 import type WebSocket from "ws"
 import { Readable } from "stream"
-
 export type Handler<Input> = ((data: Input) => void) | ((data: Input) => Promise<void>)
 
 export enum DataType {
@@ -8,6 +7,11 @@ export enum DataType {
   json = 2,
   array = 3,
   stream = 4,
+}
+export enum StreamState {
+  end = 0,
+  on = 1,
+  error = 2,
 }
 export type MessageHandler<Data> = Map<string, Handler<Data>[]>
 
@@ -176,12 +180,20 @@ export class Net {
 
   stream(id: string, stream: Readable): void {
     stream.on("readable", () => {
+      let chunk: Buffer
+      while ((chunk = stream.read()) !== null) {
+        const writer = new BufferWriter()
+        writer.uint8(DataType.stream)
+        writer.string(id)
+        writer.uint8(StreamState.on)
+        writer.buffer(chunk)
+        this.ws.send(writer.buildBuffer())
+      }
       const writer = new BufferWriter()
       writer.uint8(DataType.stream)
-      let chunk: Buffer | string
-      while ((chunk = stream.read()) !== null) {
-        console.log(`Got ${chunk.length} bytes of data`)
-      }
+      writer.string(id)
+      writer.uint8(StreamState.end)
+      this.ws.send(writer.buildBuffer())
     })
   }
 
@@ -246,7 +258,7 @@ export class Net {
   }
 }
 
-class BufferWriter {
+export class BufferWriter {
   private backend: Buffer
   private cursor: number = 0
 
@@ -342,7 +354,7 @@ class BufferWriter {
   }
 }
 
-class BufferReader {
+export class BufferReader {
   private readonly backend: Buffer
   private cursor: number = 0
 

@@ -2,6 +2,7 @@
 import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
+import { v4 as uuidv4 } from "uuid"
 import { Net } from "./net.js"
 import { type File, type FileTreeLike, type FileTree, type FileTreeJson, type FileTreeJsonEntry } from "./file.js"
 import "./netx.js"
@@ -163,7 +164,7 @@ async function authenticateNodeAsCentral(
   config: MeshAsCentralConfig,
 ): Promise<NodeMeta | undefined> {
   const nonce = nacl.randomBytes(24)
-  const challenge = Math.random().toString()
+  const challenge = uuidv4()
   const { publicKey }: { publicKey: string } = await net.getJson("auth-public-key")
   log.trace(publicKey)
   if (!config.node.includes(publicKey)) throw new Error(`${publicKey} unregistered.`)
@@ -229,7 +230,9 @@ async function authenticateAsNode(
   net.sendJson("auth-challenge-solution", {
     resolved
   })
-  const challengeResultPayload: { result: ChallengeResult } = await net.getJson("auth-challenge-solution-result")
+  const challengeResultPayload: {
+    result: ChallengeResult
+  } = await net.getJson("auth-challenge-solution-result")
   if (challengeResultPayload.result !== ChallengeResult.success) {
     log.error("challenge failed.")
     net.close()
@@ -251,7 +254,9 @@ async function authenticateAsNode(
     }
   }
   net.sendJson("node-meta", nodeMeta)
-  const nodeMetaResultPayload: { result: NodeMetaResult } = await net.getJson("node-meta-result")
+  const nodeMetaResultPayload: {
+    result: NodeMetaResult
+  } = await net.getJson("node-meta-result")
   if (nodeMetaResultPayload.result === NodeMetaResult.passcodeConflict) {
     log.error(`Passcode is conflict with the central "${central.server}"`)
     net.close()
