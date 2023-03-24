@@ -1,4 +1,5 @@
 import type WebSocket from "ws"
+import { Readable } from "stream"
 
 export type Handler<Input> = ((data: Input) => void) | ((data: Input) => Promise<void>)
 
@@ -6,8 +7,7 @@ export enum DataType {
   text = 1,
   json = 2,
   array = 3,
-  file = 4,
-  stream = 5,
+  stream = 4,
 }
 export type MessageHandler<Data> = Map<string, Handler<Data>[]>
 
@@ -152,6 +152,11 @@ export class Net {
     this.ws.send(writer.buildBuffer())
   }
 
+  /**
+   * 
+   * @param id 
+   * @param arr string or any
+   */
   sendArray(id: string, arr: any[]): void {
     const writer = new BufferWriter()
     writer.uint8(DataType.array)
@@ -169,12 +174,15 @@ export class Net {
     this.ws.send(writer.buildBuffer())
   }
 
-  file(id: string, filePath: string): void {
-
-  }
-
-  stream(id: string): void {
-
+  stream(id: string, stream: Readable): void {
+    stream.on("readable", () => {
+      const writer = new BufferWriter()
+      writer.uint8(DataType.stream)
+      let chunk: Buffer | string
+      while ((chunk = stream.read()) !== null) {
+        console.log(`Got ${chunk.length} bytes of data`)
+      }
+    })
   }
 
   onStream(id: string, handler: Handler<any>): void {
