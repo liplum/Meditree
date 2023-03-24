@@ -3,7 +3,7 @@ import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
 import { Net } from "./net.js"
-import { type FileTree } from "./file.js"
+import { type File, type FileTreeLike, type FileTree } from "./file.js"
 export enum ForwardType {
   socket = "socket",
   redirect = "redirect",
@@ -47,6 +47,12 @@ type NodeMeta = {
   passcode?: string
 } & ForwardConfig
 
+class MeshTree implements FileTreeLike {
+  resolveFile(filePath: string): File | null {
+    return null
+  }
+}
+
 export async function setupAsCentral(config: MeshAsCentralConfig, server?: any): Promise<void> {
   const log = createLogger("Central")
   // as central
@@ -56,7 +62,7 @@ export async function setupAsCentral(config: MeshAsCentralConfig, server?: any):
     path: "/ws",
   })
   log.info(`Central websocket is running on ws://localhost:${config.port}/ws.`)
-  wss.on("connection", (ws: WebSocket) => {
+  wss.on("connection", async (ws: WebSocket) => {
     const net = new Net(ws)
     net.debug = (id, message) => {
       log.debug(id, message)
@@ -67,14 +73,14 @@ export async function setupAsCentral(config: MeshAsCentralConfig, server?: any):
     ws.on("close", () => {
       log.trace("A websocket is closed.")
     })
-    runAsCentralStateMachine(net, log, config)
     ws.on("message", (data) => {
       net.handleReceivedData(data as Buffer)
     })
+    await authenticateNodeAsCentral(net, log, config)
   })
 }
 export interface NodeBehavior {
-  onRebuildFileTree: (id: string, listener: (
+  onLocalFileTreeRebuild: (id: string, listener: (
     { json, jsonString, tree }: { json: object, jsonString: string, tree: FileTree }
   ) => void) => void
   offListeners: (id?: string) => void
@@ -102,8 +108,8 @@ export async function setupAsNode(
       centralInfo = await authenticateAsNode(net, log, central, config)
       if (!centralInfo) return
       name2Central[centralInfo.name] = net
-      behavior.onRebuildFileTree(centralInfo.name, ({ jsonString }) => {
-        net.sendText("file-tree-update", config.name, jsonString)
+      behavior.onLocalFileTreeRebuild(centralInfo.name, ({ jsonString }) => {
+        net.sendArray("file-tree-update", [config.name, jsonString])
       })
     })
     ws.on("close", () => {
@@ -129,7 +135,7 @@ enum NodeMetaResult {
   success = "success",
 }
 
-async function runAsCentralStateMachine(
+async function authenticateNodeAsCentral(
   net: Net,
   log: Logger,
   config: MeshAsCentralConfig,

@@ -5,14 +5,16 @@ export type Handler<Input> = ((data: Input) => void) | ((data: Input) => Promise
 enum DataType {
   text = 1,
   json = 2,
-  file = 3,
-  stream = 4,
+  array = 3,
+  file = 4,
+  stream = 5,
 }
 type ChannlHanlder<Input> = Map<string, Handler<Input>[]>
 export class Net {
   readonly ws: WebSocket
-  private readonly messageHandlers: ChannlHanlder<string | string[]> = new Map()
-  private readonly jsonHandlers: ChannlHanlder<any | any[]> = new Map()
+  private readonly messageHandlers: ChannlHanlder<string> = new Map()
+  private readonly jsonHandlers: ChannlHanlder<any> = new Map()
+  private readonly arrayHandlers: ChannlHanlder<any[]> = new Map()
   private unhandledMessageTasks: (() => void)[] = []
   debug?: (id: string, message: any) => void
   constructor(ws: WebSocket) {
@@ -42,35 +44,30 @@ export class Net {
     const type = reader.uint8()
     const id = reader.string()
     if (type === DataType.text) {
-      const count = reader.uint8()
-      let content: string | string[]
-      if (count === 1) {
-        content = reader.string()
-      } else {
-        content = []
-        for (let i = 0; i < count; i++) {
-          content.push(reader.string())
-        }
-      }
+      const content = reader.string()
       this.debug?.(id, content)
       this.handleText(id, content)
     } else if (type === DataType.json) {
-      const count = reader.uint8()
-      let jobj: any | any[]
-      if (count === 1) {
-        jobj = JSON.parse(reader.string())
-      } else {
-        jobj = []
-        for (let i = 0; i < count; i++) {
-          jobj.push(JSON.parse(reader.string()))
-        }
-      }
+      const jobj = JSON.parse(reader.string())
       this.debug?.(id, jobj)
       this.handleJson(id, jobj)
+    } else if (type === DataType.array) {
+      const count = reader.uint8()
+      const content: any[] = []
+      for (let i = 0; i < count; i++) {
+        const etype = reader.uint8()
+        if (etype === DataType.text) {
+          content.push(reader.string())
+        } else if (etype === DataType.json) {
+          content.push(JSON.parse(reader.string()))
+        }
+      }
+      this.debug?.(id, content)
+      this.handleArray(id, content)
     }
   }
 
-  private handleText(id: string, text: string | string[]): void {
+  private handleText(id: string, text: string): void {
     const handlers = this.messageHandlers.get(id)
     if (handlers) {
       handlers.forEach((handler) => {
@@ -84,7 +81,7 @@ export class Net {
     }
   }
 
-  private handleJson(id: string, json: any | any[]): void {
+  private handleJson(id: string, json: any): void {
     const handlers = this.jsonHandlers.get(id)
     if (handlers) {
       handlers.forEach((handler) => {
@@ -98,24 +95,49 @@ export class Net {
     }
   }
 
-  sendText(id: string, ...msg: string[]): void {
+  private handleArray(id: string, arr: any[]): void {
+    const handlers = this.arrayHandlers.get(id)
+    if (handlers) {
+      handlers.forEach((handler) => {
+        handler(arr)
+      })
+      handlers.splice(0)
+    } else {
+      this.unhandledMessageTasks.push(() => {
+        this.handleArray(id, arr)
+      })
+    }
+  }
+
+  sendText(id: string, msg: string): void {
     const writer = new BufferWriter()
     writer.uint8(DataType.text)
     writer.string(id)
-    writer.uint8(msg.length)
-    for (let i = 0; i < msg.length; i++) {
-      writer.string(msg[i])
-    }
+    writer.string(msg)
     this.ws.send(writer.buildBuffer())
   }
 
-  sendJson(id: string, ...json: any[]): void {
+  sendJson(id: string, json: any): void {
     const writer = new BufferWriter()
     writer.uint8(DataType.json)
     writer.string(id)
-    writer.uint8(json.length)
-    for (let i = 0; i < json.length; i++) {
-      writer.string(JSON.stringify(json[i]))
+    writer.string(JSON.stringify(json))
+    this.ws.send(writer.buildBuffer())
+  }
+
+  sendArray(id: string, arr: any[]): void {
+    const writer = new BufferWriter()
+    writer.uint8(DataType.array)
+    writer.string(id)
+    writer.uint8(arr.length)
+    for (let i = 0; i < arr.length; i++) {
+      if (typeof arr[i] === "string") {
+        writer.uint8(DataType.text)
+        writer.string(arr[i])
+      } else {
+        writer.uint8(DataType.json)
+        writer.string(JSON.stringify(arr[i]))
+      }
     }
     this.ws.send(writer.buildBuffer())
   }
@@ -132,7 +154,7 @@ export class Net {
 
   }
 
-  onText(id: string, handler: Handler<string | string[]>): void {
+  onText(id: string, handler: Handler<string>): void {
     if (this.messageHandlers.has(id)) {
       this.messageHandlers.get(id)?.push(handler)
     } else {
@@ -140,7 +162,7 @@ export class Net {
     }
   }
 
-  onJson(id: string, handler: Handler<any | any[]>): void {
+  onJson(id: string, handler: Handler<any>): void {
     if (this.jsonHandlers.has(id)) {
       this.jsonHandlers.get(id)?.push(handler)
     } else {
@@ -148,7 +170,15 @@ export class Net {
     }
   }
 
-  async getText(id: string): Promise<string | string[]> {
+  onArray(id: string, handler: Handler<any[]>): void {
+    if (this.arrayHandlers.has(id)) {
+      this.arrayHandlers.get(id)?.push(handler)
+    } else {
+      this.arrayHandlers.set(id, [handler])
+    }
+  }
+
+  async getText(id: string): Promise<string> {
     return new Promise((resolve, reject) => {
       this.onText(id, (msg) => {
         resolve(msg)
@@ -156,10 +186,18 @@ export class Net {
     })
   }
 
-  async getJson(id: string): Promise<any | any[]> {
+  async getJson(id: string): Promise<any> {
     return new Promise((resolve, reject) => {
       this.onJson(id, (json) => {
         resolve(json)
+      })
+    })
+  }
+  
+  async getArray(id: string): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      this.onArray(id, (arr) => {
+        resolve(arr)
       })
     })
   }
