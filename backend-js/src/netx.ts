@@ -14,18 +14,18 @@ declare module "./net.js" {
   }
 }
 Net.prototype.sendBubble = function (id: string, nodeId: string, arr: any[]): void {
-  this.sendArray(`[bubble]${id}`, [[nodeId], arr])
+  this.sendArray(`[bubble]${id}`, arr, [nodeId])
 }
 
 Net.prototype.addBubbleHook = function (nodeId: string, handler: (id: string, arr: any[]) => void) {
-  this.addReadHook(({ type, id, data }: { type: DataType, id: string, data: [string[], any[]] }) => {
+  this.addReadHook(({ type, id, data, header }: { type: DataType, id: string, data: any[], header?: any }) => {
     if (type !== DataType.array) return
     if (!id.startsWith("[bubble]")) return
-    const [nodeIds, arr] = data
+    const nodeIds = header as string[]
     // If nodeIds contains current node, it means the bubble is recursive, so stop the bubbling.
     if (nodeIds.includes(nodeId)) return
-    this.sendArray(id, [[...nodeIds, nodeId], arr])
-    handler(removePrefix(id, "[bubble]"), arr)
+    this.sendArray(id, data, [...nodeIds, nodeId])
+    handler(removePrefix(id, "[bubble]"), data)
   })
 }
 
