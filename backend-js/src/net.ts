@@ -56,6 +56,8 @@ export class Net {
     this.ws.close()
   }
 
+  id2Stream = new Map<string, Readable>()
+
   /**
    * Call this in ws.on("message")
    */
@@ -96,6 +98,21 @@ export class Net {
         if (hook({ type, id, data: content })) return
       }
       this.handleArray(id, content)
+    } else if (type === DataType.stream) {
+      let stream = this.id2Stream.get(id)
+      if (!stream) {
+        stream = new Readable()
+        this.id2Stream.set(id, stream)
+        this.handleStream(id, stream)
+      }
+      const state: StreamState = reader.uint8()
+      if (state === StreamState.on) {
+        const chunk = reader.buffer()
+        stream.push(chunk)
+      } else {
+        stream.push(null)
+        this.id2Stream.delete(id)
+      }
     }
   }
 
@@ -137,6 +154,20 @@ export class Net {
     } else {
       this.unhandledMessageTasks.push(() => {
         this.handleArray(id, arr)
+      })
+    }
+  }
+
+  private handleStream(id: string, stream: Readable): void {
+    const handlers = this.streamHandlers.get(id)
+    if (handlers) {
+      handlers.forEach((handler) => {
+        handler(stream)
+      })
+      handlers.splice(0)
+    } else {
+      this.unhandledMessageTasks.push(() => {
+        this.handleStream(id, stream)
       })
     }
   }
@@ -212,15 +243,15 @@ export class Net {
   onText(id: string, handler: Handler<string>): void {
     this.addHandler(this.textHandlers, id, handler)
   }
-  
+
   onJson(id: string, handler: Handler<any>): void {
     this.addHandler(this.jsonHandlers, id, handler)
   }
-  
+
   onArray(id: string, handler: Handler<any[]>): void {
     this.addHandler(this.arrayHandlers, id, handler)
   }
-  
+
   onStream(id: string, handler: Handler<Readable>): void {
     this.addHandler(this.streamHandlers, id, handler)
   }
