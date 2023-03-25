@@ -165,42 +165,42 @@ async function authenticateNodeAsCentral(
 ): Promise<NodeMeta | undefined> {
   const nonce = nacl.randomBytes(24)
   const challenge = uuidv4()
-  const { publicKey }: { publicKey: string } = await net.getJson("auth-public-key")
+  const { publicKey }: { publicKey: string } = await net.getMessage("auth-public-key")
   log.trace(publicKey)
   if (!config.node.includes(publicKey)) throw new Error(`${publicKey} unregistered.`)
   log.info(`"${publicKey}" is challenging with "${challenge}".`)
   const challengeEncrypted = encrypt(challenge, nonce, publicKey, config.privateKey)
-  net.sendJson("auth-challenge", {
+  net.send("auth-challenge", {
     name: config.name,
     challenge: challengeEncrypted,
     nonce: Buffer.from(nonce).toString("base64"),
     publicKey: config.publicKey,
   })
-  const { resolved } = await net.getJson("auth-challenge-solution")
+  const { resolved } = await net.getMessage("auth-challenge-solution")
   if (resolved !== challenge) {
     log.info(`"${publicKey}" challenge failed.`)
-    net.sendJson("auth-challenge-solution-result", {
+    net.send("auth-challenge-solution-result", {
       result: ChallengeResult.failure,
     })
     net.close()
     return
   }
   log.info(`"${publicKey}" is authenticated.`)
-  net.sendJson("auth-challenge-solution-result", {
+  net.send("auth-challenge-solution-result", {
     result: ChallengeResult.success,
   })
-  const nodeMeta: NodeMeta = await net.getJson("node-meta")
+  const nodeMeta: NodeMeta = await net.getMessage("node-meta")
   log.info(`Receieved node meta "${JSON.stringify(nodeMeta)}".`)
   // If the node has passcode and it doesn't match this central's passcode, then report an error
   if (nodeMeta.passcode && nodeMeta.passcode !== config.passcode) {
-    net.sendJson("node-meta-result", {
+    net.send("node-meta-result", {
       result: NodeMetaResult.passcodeConflict,
     })
     log.info(`Node[${nodeMeta.name}] conflicts with this passcode.`)
     net.close()
     return
   }
-  net.sendJson("node-meta-result", {
+  net.send("node-meta-result", {
     result: NodeMetaResult.success,
   })
   log.info(`Node[${nodeMeta.name}] is accepted.`)
@@ -215,10 +215,10 @@ async function authenticateAsNode(
   central: CentralConfig,
   config: MeshAsNodeConfig,
 ): Promise<CentralInfo | undefined> {
-  net.sendJson("auth-public-key", {
+  net.send("auth-public-key", {
     publicKey: config.publicKey
   })
-  const { name, challenge, publicKey, nonce } = await net.getJson("auth-challenge")
+  const { name, challenge, publicKey, nonce } = await net.getMessage("auth-challenge")
   const encrypted = Buffer.from(challenge, "base64")
   const resolved = decrypt(encrypted, nonce, publicKey, config.privateKey)
   if (resolved === null) {
@@ -227,12 +227,12 @@ async function authenticateAsNode(
     return
   }
   log.info(`Resolved challenge "${resolved}" from ${central.server}.`)
-  net.sendJson("auth-challenge-solution", {
+  net.send("auth-challenge-solution", {
     resolved
   })
   const challengeResultPayload: {
     result: ChallengeResult
-  } = await net.getJson("auth-challenge-solution-result")
+  } = await net.getMessage("auth-challenge-solution-result")
   if (challengeResultPayload.result !== ChallengeResult.success) {
     log.error("challenge failed.")
     net.close()
@@ -253,10 +253,10 @@ async function authenticateAsNode(
       passcode: config.passcode,
     }
   }
-  net.sendJson("node-meta", nodeMeta)
+  net.send("node-meta", nodeMeta)
   const nodeMetaResultPayload: {
     result: NodeMetaResult
-  } = await net.getJson("node-meta-result")
+  } = await net.getMessage("node-meta-result")
   if (nodeMetaResultPayload.result === NodeMetaResult.passcodeConflict) {
     log.error(`Passcode is conflict with the central "${central.server}"`)
     net.close()

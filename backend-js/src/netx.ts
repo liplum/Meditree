@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
-import { Net, DataType, BufferWriter } from "./net.js"
+import { Net, MessageType, BufferWriter } from "./net.js"
 
 declare module "./net.js" {
   interface Net {
@@ -13,18 +13,18 @@ declare module "./net.js" {
     ) => void
   }
 }
-Net.prototype.sendBubble = function (id: string, nodeId: string, arr: any[]): void {
-  this.sendArray(`[bubble]${id}`, arr, [nodeId])
+Net.prototype.sendBubble = function (id: string, nodeId: string, data: any): void {
+  this.send(`[bubble]${id}`, data, [nodeId])
 }
 
-Net.prototype.addBubbleHook = function (nodeId: string, handler: (id: string, arr: any[]) => void) {
-  this.addReadHook(({ type, id, data, header }: { type: DataType, id: string, data: any[], header?: any }) => {
-    if (type !== DataType.array) return
+Net.prototype.addBubbleHook = function (nodeId: string, handler: (id: string, data: any) => void) {
+  this.addReadHook(({ type, id, data, header }: { type: MessageType, id: string, data: any, header?: any }) => {
+    if (type !== MessageType.object) return
     if (!id.startsWith("[bubble]")) return
     const nodeIds = header as string[]
     // If nodeIds contains current node, it means the bubble is recursive, so stop the bubbling.
     if (nodeIds.includes(nodeId)) return
-    this.sendArray(id, data, [...nodeIds, nodeId])
+    this.send(id, data, [...nodeIds, nodeId])
     handler(removePrefix(id, "[bubble]"), data)
   })
 }

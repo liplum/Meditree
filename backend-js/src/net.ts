@@ -4,10 +4,13 @@ import { Readable } from "stream"
 export type Handler<Data> = (data: Data, header?: any) => void | Promise<void>
 
 export enum DataType {
-  text = 1,
-  json = 2,
+  string = 1,
+  object = 2,
   array = 3,
-  stream = 4,
+}
+export enum MessageType {
+  object = 1,
+  stream = 2,
 }
 export enum StreamState {
   end = 0,
@@ -17,13 +20,13 @@ export enum StreamState {
 export type MessageHandlerMap<Data> = Map<string, Handler<Data>[]>
 
 export type PrereadHook = ({ type, id, reader, header }: {
-  type: DataType
+  type: MessageType
   id: string
   header?: any
   reader: BufferReader
 }) => boolean
 export type ReadHook<Data> = ({ type, id, data, header }: {
-  type: DataType
+  type: MessageType
   id: string
   header?: any
   data: Data
@@ -32,9 +35,7 @@ export type ReadHook<Data> = ({ type, id, data, header }: {
 export type DebugCall = (id: string, data: any, header?: any) => void
 export class Net {
   readonly ws: WebSocket
-  private readonly textHandlers: MessageHandlerMap<string> = new Map()
-  private readonly jsonHandlers: MessageHandlerMap<any> = new Map()
-  private readonly arrayHandlers: MessageHandlerMap<any[]> = new Map()
+  private readonly messageHandlers: MessageHandlerMap<any> = new Map()
   private readonly streamHandlers: MessageHandlerMap<Readable> = new Map()
   private unhandledMessageTasks: (() => void)[] = []
   private readonly prereadHooks: PrereadHook[] = []
@@ -74,40 +75,15 @@ export class Net {
     for (const hook of this.prereadHooks) {
       if (hook(prereadHookArgs)) return
     }
-    if (type === DataType.text) {
-      const content = reader.string()
-      this.debug?.(id, content, header)
-      const readHookArgs = { type, id, data: content, header }
+    if (type === MessageType.object) {
+      const data = readObject(reader)
+      this.debug?.(id, data, header)
+      const readHookArgs = { type, id, data, header }
       for (const hook of this.readHooks) {
         if (hook(readHookArgs)) return
       }
-      this.handleText(id, content)
-    } else if (type === DataType.json) {
-      const json = JSON.parse(reader.string())
-      this.debug?.(id, json, header)
-      for (const hook of this.readHooks) {
-        const readHookArgs = { type, id, data: json, header }
-        if (hook(readHookArgs)) return
-      }
-      this.handleJson(id, json)
-    } else if (type === DataType.array) {
-      const count = reader.uint8()
-      const content: any[] = []
-      for (let i = 0; i < count; i++) {
-        const etype = reader.uint8()
-        if (etype === DataType.text) {
-          content.push(reader.string())
-        } else if (etype === DataType.json) {
-          content.push(JSON.parse(reader.string()))
-        }
-      }
-      this.debug?.(id, content, header)
-      const readHookArgs = { type, id, data: content, header }
-      for (const hook of this.readHooks) {
-        if (hook(readHookArgs)) return
-      }
-      this.handleArray(id, content)
-    } else if (type === DataType.stream) {
+      this.handleMessage(id, data, header)
+    } else if (type === MessageType.stream) {
       let stream = this.id2Stream.get(id)
       if (!stream) {
         stream = new Readable()
@@ -130,30 +106,16 @@ export class Net {
     }
   }
 
-  private handleText(id: string, text: string, header?: any): void {
-    const handlers = this.textHandlers.get(id)
+  private handleMessage(id: string, data: any, header?: any): void {
+    const handlers = this.messageHandlers.get(id)
     if (handlers) {
       handlers.forEach((handler) => {
-        handler(text, header)
+        handler(data, header)
       })
       handlers.splice(0)
     } else {
       this.unhandledMessageTasks.push(() => {
-        this.handleText(id, text, header)
-      })
-    }
-  }
-
-  private handleJson(id: string, json: any, header?: any): void {
-    const handlers = this.jsonHandlers.get(id)
-    if (handlers) {
-      handlers.forEach((handler) => {
-        handler(json, header)
-      })
-      handlers.splice(0)
-    } else {
-      this.unhandledMessageTasks.push(() => {
-        this.handleJson(id, json, header)
+        this.handleMessage(id, data, header)
       })
     }
   }
@@ -186,44 +148,12 @@ export class Net {
     }
   }
 
-  sendText(id: string, msg: string, header?: any): void {
+  send(id: string, data: any, header?: any): void {
     const writer = new BufferWriter()
-    writer.uint8(DataType.text)
+    writer.uint8(MessageType.object)
     writer.string(id)
     writeHeader(writer, JSON.stringify(header))
-    writer.string(msg)
-    this.ws.send(writer.buildBuffer())
-  }
-
-  sendJson(id: string, json: any, header?: any): void {
-    const writer = new BufferWriter()
-    writer.uint8(DataType.json)
-    writer.string(id)
-    writeHeader(writer, JSON.stringify(header))
-    writer.string(JSON.stringify(json))
-    this.ws.send(writer.buildBuffer())
-  }
-
-  /**
-   * 
-   * @param id 
-   * @param arr string or json object
-   */
-  sendArray(id: string, arr: any[], header?: any): void {
-    const writer = new BufferWriter()
-    writer.uint8(DataType.array)
-    writer.string(id)
-    writeHeader(writer, JSON.stringify(header))
-    writer.uint8(arr.length)
-    for (let i = 0; i < arr.length; i++) {
-      if (typeof arr[i] === "string") {
-        writer.uint8(DataType.text)
-        writer.string(arr[i])
-      } else {
-        writer.uint8(DataType.json)
-        writer.string(JSON.stringify(arr[i]))
-      }
-    }
+    writeObject(writer, data)
     this.ws.send(writer.buildBuffer())
   }
 
@@ -233,7 +163,7 @@ export class Net {
       let chunk: Buffer
       while ((chunk = stream.read()) !== null) {
         const writer = new BufferWriter()
-        writer.uint8(DataType.stream)
+        writer.uint8(MessageType.stream)
         writer.string(id)
         writeHeader(writer, header)
         writer.uint8(StreamState.on)
@@ -241,7 +171,7 @@ export class Net {
         this.ws.send(writer.buildBuffer())
       }
       const writer = new BufferWriter()
-      writer.uint8(DataType.stream)
+      writer.uint8(MessageType.stream)
       writer.string(id)
       writeHeader(writer, header)
       writer.uint8(StreamState.end)
@@ -260,42 +190,18 @@ export class Net {
     }
   }
 
-  onText(id: string, handler: Handler<string>): void {
-    this.addHandler(this.textHandlers, id, handler)
-  }
-
-  onJson(id: string, handler: Handler<any>): void {
-    this.addHandler(this.jsonHandlers, id, handler)
-  }
-
-  onArray(id: string, handler: Handler<any[]>): void {
-    this.addHandler(this.arrayHandlers, id, handler)
+  onMessage(id: string, handler: Handler<any>): void {
+    this.addHandler(this.messageHandlers, id, handler)
   }
 
   onStream(id: string, handler: Handler<Readable>): void {
     this.addHandler(this.streamHandlers, id, handler)
   }
 
-  async getText(id: string): Promise<string> {
+  async getMessage(id: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.onText(id, (msg) => {
-        resolve(msg)
-      })
-    })
-  }
-
-  async getJson(id: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this.onJson(id, (json) => {
+      this.onMessage(id, (json) => {
         resolve(json)
-      })
-    })
-  }
-
-  async getArray(id: string): Promise<any[]> {
-    return new Promise((resolve, reject) => {
-      this.onArray(id, (arr) => {
-        resolve(arr)
       })
     })
   }
@@ -332,6 +238,36 @@ function readHeader(reader: BufferReader): string | undefined {
     return reader.string()
   } else {
     return undefined
+  }
+}
+
+function writeObject(writer: BufferWriter, data: any): void {
+  if (typeof data === "string") {
+    writer.uint8(DataType.string)
+    writer.string(data)
+  } else if (Array.isArray(data)) {
+    writer.uint32BE(data.length)
+    for (let i = 0; i < data.length; i++) {
+      writeObject(writer, data[i])
+    }
+  } else {
+    writer.uint8(DataType.object)
+    writer.string(JSON.stringify(data))
+  }
+}
+
+function readObject(reader: BufferReader): any {
+  const type: DataType = reader.uint8()
+  if (type === DataType.string) {
+    return reader.string()
+  } else if (type === DataType.object) {
+    return JSON.parse(reader.string())
+  } else {
+    const arr: any[] = []
+    const length = reader.uint32BE()
+    for (let i = 0; i < length; i++) {
+      arr.push(readObject(reader))
+    }
   }
 }
 
