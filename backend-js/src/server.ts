@@ -5,7 +5,7 @@ import fs from "fs"
 import { File, FileTree, type FileTreeJson } from "./file.js"
 import cors from "cors"
 import ms from "mediaserver"
-import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback } from "./mesh.js"
+import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback } from "./tree.js"
 import { createLogger } from "./logger.js"
 
 export async function startServer(config: AppConfig): Promise<void> {

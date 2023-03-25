@@ -1,7 +1,7 @@
 {
-  "name": "medimesh",
+  "name": "meditree",
   "version": "1.0.0",
-  "description": "The Medimesh server.",
+  "description": "The Meditree backend server.",
   "main": "dist/index.js",
   "type": "module",
   "module": "src/index.ts",

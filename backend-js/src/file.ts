@@ -4,6 +4,12 @@ import { promisify } from "util"
 
 type FileSystemEntry = File | FileTree
 export type FileType = string | null
+/**
+ * A file entity represents a 
+ */
+interface FileEntity {
+
+}
 export class File {
   type: FileType
   path: string

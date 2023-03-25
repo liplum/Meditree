@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-const configFileName = "medimesh.json"
+const configFileName = "meditree.json"
 
 func loadConfig() (*map[string]any, error) {
 	if bytes, err := os.ReadFile(configFileName); err == nil {

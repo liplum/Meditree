@@ -1,7 +1,5 @@
 import fs from "fs"
 import path from "path"
-import nacl from "tweetnacl"
-import { v4 as uuidv4 } from "uuid"
 
 export enum FileType {
   video = "video",
@@ -46,33 +44,22 @@ export interface FindConfigArgs<T> {
   defaultConfig: T
 }
 
-export function findConfig<T>(args: FindConfigArgs<T | Partial<T>>): T {
+export function findConfig<T>(args: FindConfigArgs<T | Partial<T>>, setup?: (config: any) => void): T {
   const { rootDir, filename, defaultConfig } = args
-  function readConfig(configFile: string): T {
-    const config = Object.assign({}, defaultConfig, JSON.parse(fs.readFileSync(configFile).toString()))
-    if (config.privateKey) {
-      if (!config.publicKey) {
-        config.publicKey = Buffer.from(nacl.box.keyPair.fromSecretKey(config.privateKey).publicKey).toString("base64")
-      }
-    } else if (!config.publicKey) {
-      const { publicKey, secretKey } = nacl.box.keyPair()
-      config.publicKey = Buffer.from(publicKey).toString("base64")
-      config.privateKey = Buffer.from(secretKey).toString("base64")
-    }
-    if (!config.name) {
-      config.name = uuidv4()
-    }
-    fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
-    return config
-  }
   const curDir = rootDir
   let configFile = findFsEntryInTree(curDir, filename)
-  if (!configFile) {
+  if (configFile) {
+    const config = Object.assign({}, defaultConfig, JSON.parse(fs.readFileSync(configFile).toString()))
+    setup?.(config)
+    fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
+    return config
+  } else {
     configFile = path.join(curDir, filename)
-    fs.writeFileSync(configFile, JSON.stringify(defaultConfig, null, 2))
+    const config = { ...defaultConfig }
+    setup?.(config)
+    fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     throw new Error(`Configuration not found. ${configFile} is created.`)
   }
-  return readConfig(configFile)
 }
 
 function findFsEntryInTree(dir: string, fileName: string): string | null {
