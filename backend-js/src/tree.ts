@@ -4,7 +4,7 @@ import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
 import { Net } from "./net.js"
-import { type File, type FileTreeLike, type FileTree, type FileTreeJson, type FileTreeJsonEntry } from "./file.js"
+import { type File, type FileTreeLike, type FileTree, type FileTreeJson } from "./file.js"
 import "./netx.js"
 export enum ForwardType {
   socket = "socket",

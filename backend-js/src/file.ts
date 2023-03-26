@@ -42,6 +42,10 @@ export interface CreateFileTreeOptions {
 export interface FileTreeLike {
   resolveFile: (pathParts: string[]) => File | null
 }
+export interface FileTreeJson {
+  name: string
+  files: FileTreeJsonEntry
+}
 export interface FileTreeJsonEntry {
   [name: string]: string | FileTreeJsonEntry
 }
