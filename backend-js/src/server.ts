@@ -213,6 +213,7 @@ function getVideo(req: Request, res: Response, file: File): void {
     }
   })
 }
+
 function getText(req: Request, res: Response, file: File): void {
   res.status(200)
   res.header({
@@ -221,12 +222,14 @@ function getText(req: Request, res: Response, file: File): void {
   const stream = fs.createReadStream(file.path)
   stream.pipe(res)
 }
+
 function getImage(req: Request, res: Response, file: File): void {
   res.status(200)
   res.header({
     "Content-Type": file.type,
   })
-  res.sendFile(file.path)
+  const stream = fs.createReadStream(file.path)
+  stream.pipe(res)
 }
 
 function getAudio(req: Request, res: Response, file: File): void {
