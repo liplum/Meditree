@@ -122,7 +122,7 @@ export class FileTree implements FileTreeLike {
       try {
         files = await readdirAsync(currentDirectory)
       } catch (e) {
-        console.error(e.message)
+        console.error(e)
         return
       }
       for (const fileName of files) {

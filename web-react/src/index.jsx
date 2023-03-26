@@ -10,12 +10,14 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './index.css'
 import {
   ConnectDialog,
+  load as connectDialogLoader,
   action as connectDialogAction,
 } from './connect'
 const router = createBrowserRouter([
   {
     index: true,
     element: <ConnectDialog />,
+    loader: connectDialogLoader,
     action: connectDialogAction,
   },
   {

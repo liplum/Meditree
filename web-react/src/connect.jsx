@@ -14,6 +14,21 @@ import "./connect.css"
 import { i18n } from './i18n.js';
 import { removePrefix } from './utils.jsx';
 
+export async function load() {
+  const backendUrl = import.meta.env.VITE_BACKEND
+  const passcode = import.meta.env.VITE_PASSCODE
+  if (backendUrl) {
+    const protocol = backendUrl.startsWith("https://") ? "https" : "http"
+    const server = protocol === "https" ? removePrefix(backendUrl, "https://") : removePrefix(backendUrl, "http://")
+    if (passcode) {
+      return redirect(`/connect?protocol=${protocol}&server=${server}&passcode=${passcode}`)
+    } else {
+      return redirect(`/connect?protocol=${protocol}&server=${server}`)
+    }
+  }
+  return null
+}
+
 /**
  * Handle log in
  */

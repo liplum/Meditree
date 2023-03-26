@@ -120,20 +120,6 @@ export class Net {
     }
   }
 
-  private handleArray(id: string, arr: any[], header?: any): void {
-    const handlers = this.arrayHandlers.get(id)
-    if (handlers) {
-      handlers.forEach((handler) => {
-        handler(arr, header)
-      })
-      handlers.splice(0)
-    } else {
-      this.unhandledMessageTasks.push(() => {
-        this.handleArray(id, arr, header)
-      })
-    }
-  }
-
   private handleStream(id: string, stream: Readable, header?: any): void {
     const handlers = this.streamHandlers.get(id)
     if (handlers) {
