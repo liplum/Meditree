@@ -19,7 +19,6 @@ export function createDelegate(rootFileTree, rootName = "") {
         const obj = {
           key: curKey,
           title: name,
-          selectable: false,
           children: myChildren,
         }
         children.push(obj)
@@ -30,7 +29,6 @@ export function createDelegate(rootFileTree, rootName = "") {
           key: curKey,
           path: path,
           type: file,
-          selectable: false,
           tracking: [...parentKeys, curKey],
         })
         // otherwise, it presents a file
