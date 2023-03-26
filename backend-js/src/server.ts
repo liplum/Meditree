@@ -2,11 +2,17 @@ import { HostTree } from "./host.js"
 import { type AppConfig, FileType } from "./config.js"
 import express, { type Request, type Response } from "express"
 import fs from "fs"
-import { File, FileTree, type FileTreeJson } from "./file.js"
+import { File, FileTree, type FileTreeJsonEntry } from "./file.js"
 import cors from "cors"
 import ms from "mediaserver"
 import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback } from "./tree.js"
 import { createLogger } from "./logger.js"
+
+interface FileTreeJson {
+  name: string
+  displayName?: string
+  files: FileTreeJsonEntry
+}
 
 export async function startServer(config: AppConfig): Promise<void> {
   const app = express()
@@ -46,8 +52,11 @@ export async function startServer(config: AppConfig): Promise<void> {
   let treeJsonStringCache: string | null
   let treeIndexHtmlCache: string | null
   tree.onRebuild(() => {
-    treeJsonObjectCache = tree.convertJson()
-    treeJsonObjectCache.name = config.name
+    treeJsonObjectCache = {
+      name: config.name,
+      displayName: config.displayName,
+      files: tree.fileTree.toJSON()
+    }
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 2)
     treeIndexHtmlCache = buildIndexHtml(tree.fileTree)
     for (const [name, handler] of centralName2Handler.entries()) {
