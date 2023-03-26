@@ -20,6 +20,7 @@ const type2Render = {
   "audio/mpeg": renderAudio,
   "audio/ogg": renderAudio,
   "text/markdown": renderMarkdown,
+  "text/plain": renderPlainText,
 }
 
 export function FileDisplayBoard(props) {
@@ -122,13 +123,6 @@ function renderAudio(file) {
     className={"video-view"} />
 }
 
-function renderMarkdown(file) {
-  return <MarkdownFromURL
-    src={file.url}
-    alt={file.path}
-  />
-}
-
 function MarkdownFromURL({ src, alt }) {
   const [markdown, setMarkdown] = useState(alt);
 
@@ -141,4 +135,30 @@ function MarkdownFromURL({ src, alt }) {
   return <ReactMarkdown remarkPlugins={[remarkGfm]}>
     {markdown}
   </ReactMarkdown>
+}
+
+function renderMarkdown(file) {
+  return <MarkdownFromURL
+    src={file.url}
+    alt={file.path}
+  />
+}
+function PlainText({ src, alt }) {
+  const [text, setText] = useState(alt);
+
+  useEffect(() => {
+    fetch(src)
+      .then(response => response.text())
+      .then(text => setText(text));
+  }, [src])
+
+  return <Typography>
+    {text}
+  </Typography>
+}
+
+function renderPlainText(file) {
+  return <PlainText
+    src={file.url}
+    alt={file.path} />
 }
