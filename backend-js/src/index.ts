@@ -16,13 +16,19 @@ const defaultConfig: Partial<AppConfig> = {
     "video/mp4": FileType.video,
     "image/png": FileType.image,
     "image/jpeg": FileType.image,
+    "image/svg+xml": FileType.image,
     "audio/mpeg": FileType.audio,
+    "text/markdown": FileType.text,
+    "text/plain": FileType.text,
   },
   fileTypePattern: {
     "**/*.mp4": "video/mp4",
+    "**/*.svg": "image/svg+xml",
     "**/*.png": "image/png",
     "**/*.+(jpeg|jpg)": "image/jpeg",
     "**/*.mp3": "audio/mpeg",
+    "**/*.md": "text/markdown",
+    "**/*.txt": "text/plain",
   },
 }
 

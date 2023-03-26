@@ -1,5 +1,5 @@
 import './playground.css'
-import React, { useContext, useRef } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { goNextFile, goPreviousFile } from "./event";
 
 import { isMobile } from "react-device-detect"
@@ -9,13 +9,17 @@ import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from './env';
 import useForceUpdate from 'use-force-update';
 import { i18n } from './i18n';
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 const type2Render = {
   "video/mp4": renderVideo,
   "image/png": renderImage,
   "image/jpeg": renderImage,
+  "image/svg+xml": renderImage,
   "audio/mpeg": renderAudio,
   "audio/ogg": renderAudio,
+  "text/markdown": renderMarkdown,
 }
 
 export function FileDisplayBoard(props) {
@@ -116,4 +120,25 @@ function renderAudio(file) {
     src={file.url}
     alt={file.path}
     className={"video-view"} />
+}
+
+function renderMarkdown(file) {
+  return <MarkdownFromURL
+    src={file.url}
+    alt={file.path}
+  />
+}
+
+function MarkdownFromURL({ src, alt }) {
+  const [markdown, setMarkdown] = useState(alt);
+
+  useEffect(() => {
+    fetch(src)
+      .then(response => response.text())
+      .then(text => setMarkdown(text));
+  }, [src])
+
+  return <ReactMarkdown remarkPlugins={[remarkGfm]}>
+    {markdown}
+  </ReactMarkdown>
 }

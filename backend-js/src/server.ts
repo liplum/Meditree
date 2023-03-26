@@ -220,21 +220,20 @@ function getText(req: Request, res: Response, file: File): void {
   })
   const stream = fs.createReadStream(file.path)
   stream.pipe(res)
-  fs.readFile(file.path, "utf-8", (data) => {
-    res.send(data)
-  })
 }
 function getImage(req: Request, res: Response, file: File): void {
   res.status(200)
   res.header({
     "Content-Type": file.type,
   })
-  const path = file.path
-  res.sendFile(path)
+  res.sendFile(file.path)
 }
 
 function getAudio(req: Request, res: Response, file: File): void {
   res.status(200)
+  res.header({
+    "Content-Type": file.type,
+  })
   ms.pipe(req, res, file.path)
 }
 
