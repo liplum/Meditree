@@ -2,7 +2,7 @@ import type fs from "fs"
 import chokidar from "chokidar"
 import minimatch, { type MinimatchOptions } from "minimatch"
 import { clearInterval } from "timers"
-import type { FileTreeLike, File, FileType } from "./file.js"
+import type { FileTreeLike, File, FileType, FileTreeJson } from "./file.js"
 import { FileTree } from "./file.js"
 export interface HostTreeOptions {
   /**
@@ -25,6 +25,10 @@ export class HostTree implements FileTreeLike {
     options: HostTreeOptions
   ) {
     this.options = options
+  }
+
+  toJSON(): FileTreeJson {
+    return this.fileTree.toJSON()
   }
 
   updateOptions(options: HostTreeOptions): void {
@@ -78,7 +82,6 @@ export class HostTree implements FileTreeLike {
     const tree = await FileTree.createFrom({
       root: this.options.root,
       classifier: (path) => this.classifyByFilePath(path),
-      allowNullFileType: false,
       pruned: true,
     })
     this.fileTree = tree

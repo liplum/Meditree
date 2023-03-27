@@ -4,12 +4,7 @@ import { promisify } from "util"
 
 type FileSystemEntry = File | FileTree
 export type FileType = string | null
-/**
- * A file entity represents a 
- */
-interface FileEntity {
 
-}
 export class File {
   type: FileType
   path: string
@@ -33,7 +28,6 @@ export type FileClassifier = (path: string) => FileType
 export interface CreateFileTreeOptions {
   root: string
   classifier: FileClassifier
-  allowNullFileType: boolean
   /**
    * whether to ignore the empty file tree
    */
@@ -129,7 +123,7 @@ export class FileTree implements FileTreeLike {
           const stat = fs.statSync(filePath)
           if (stat.isFile()) {
             const fileType = options.classifier(filePath)
-            if (options.allowNullFileType || fileType != null) {
+            if (fileType != null) {
               const file = new File(filePath, fileType)
               tree.addFileSystemEntry(fileName, file)
             }

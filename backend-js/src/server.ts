@@ -167,7 +167,6 @@ function getVideo(req: Request, res: Response, file: File): void {
       }
     }
   }
-
   res.setHeader("content-type", "video/mp4")
 
   fs.stat(filePath, (err, stat) => {
