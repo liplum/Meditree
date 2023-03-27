@@ -9,6 +9,7 @@ export const i18n = new LocalizedStrings({
     playground: {
       starBtn: "Add To Star",
       unstarBtn: "Remove From Star",
+      failedToDisplay: "Failed to display this file."
     },
     loading: {
       text: "Loading...",

@@ -4,19 +4,22 @@ import { goNextFile, goPreviousFile } from "./event";
 
 import { isMobile } from "react-device-detect"
 import { AstrologyContext, BackendContext, ResponsiveAppBar, SelectedFileContext } from './dashboard';
-import { Tooltip, IconButton, Typography } from "@mui/material"
+import { Tooltip, IconButton, Typography, CircularProgress } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from './env';
 import useForceUpdate from 'use-force-update';
 import { i18n } from './i18n';
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Failed } from './loading';
 
 const type2Render = {
   "video/mp4": renderVideo,
   "image/png": renderImage,
   "image/jpeg": renderImage,
   "image/svg+xml": renderImage,
+  "image/gif": renderImage,
+  "image/webp": renderImage,
   "audio/mpeg": renderAudio,
   "audio/ogg": renderAudio,
   "text/markdown": renderMarkdown,
@@ -94,7 +97,9 @@ export function FileDisplayBoard(props) {
         </Tooltip>
       }
     </ResponsiveAppBar>
-    {content}
+    <ErrorBoundary fallback={<Failed text={i18n.playground.failedToDisplay} />}>
+      {content}
+    </ErrorBoundary>
   </>
 }
 
@@ -123,42 +128,91 @@ function renderAudio(file) {
     className={"video-view"} />
 }
 
-function MarkdownFromURL({ src, alt }) {
-  const [markdown, setMarkdown] = useState(alt);
+function MarkdownFromURL({ src, alt, parentDir }) {
+  const [markdown, setMarkdown] = useState()
+  const { baseUrl, passcode } = useContext(BackendContext)
 
   useEffect(() => {
     fetch(src)
       .then(response => response.text())
-      .then(text => setMarkdown(text));
+      .then(text => setMarkdown(text))
+      .catch(() => setMarkdown(alt))
   }, [src])
-
-  return <ReactMarkdown remarkPlugins={[remarkGfm]}>
-    {markdown}
-  </ReactMarkdown>
+  if (!markdown) {
+    return <CircularProgress />
+  } else {
+    // TODO: Better scrolling
+    return <div style={{ height: "90%", overflow: "auto" }}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        transformImageUri={uri => {
+          if (uri.startsWith("http://") || uri.startsWith("https://")) {
+            return uri
+          } else {
+            return backend.reolsveFileUrl(baseUrl, `${parentDir}/${uri}`, passcode)
+          }
+        }}
+      >
+        {markdown}
+      </ReactMarkdown>
+    </div>
+  }
 }
 
 function renderMarkdown(file) {
+  const pathParts = file.path.split("/")
+  pathParts.pop()
   return <MarkdownFromURL
     src={file.url}
     alt={file.path}
+    parentDir={pathParts.join("/")}
   />
 }
 function PlainText({ src, alt }) {
-  const [text, setText] = useState(alt);
+  const [text, setText] = useState()
 
   useEffect(() => {
     fetch(src)
       .then(response => response.text())
-      .then(text => setText(text));
+      .then(text => setText(text))
+      .catch(() => setText(alt))
   }, [src])
 
-  return <Typography>
-    {text}
-  </Typography>
+  if (!text) {
+    return <CircularProgress />
+  } else {
+    return <Typography>
+      {text}
+    </Typography>
+  }
 }
 
 function renderPlainText(file) {
   return <PlainText
     src={file.url}
     alt={file.path} />
+}
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    // Update state so the next render will show the fallback UI.
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, info) {
+    console.error(error)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // You can render any custom fallback UI
+      return this.props.fallback;
+    }
+
+    return this.props.children;
+  }
 }

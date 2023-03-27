@@ -9,7 +9,7 @@ import {
   defer,
   Await,
 } from "react-router-dom";
-import { Box, Divider, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
+import { Box, Divider,Button, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend, storage } from "./env";
 import { FileDisplayBoard } from "./playground";
@@ -18,6 +18,7 @@ import { SearchBar } from "./searchbar";
 import "./dashboard.css"
 import { Failed, Loading } from "./loading";
 import useForceUpdate from "use-force-update";
+import { useNavigate } from 'react-router-dom';
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
@@ -55,6 +56,7 @@ export async function loader({ request }) {
 }
 export function App(props) {
   const { fileTreeDelegate, params } = useLoaderData();
+  const navigate = useNavigate()
 
   return (
     <main>
@@ -63,7 +65,13 @@ export function App(props) {
       >
         <Await
           resolve={fileTreeDelegate}
-          errorElement={<Failed text={i18n.loading.failed} />}
+          errorElement={<Failed text={i18n.loading.failed}>
+            <Button variant="outlined" onClick={() => {
+              navigate(-1);
+            }}>
+              Back
+            </Button>
+          </Failed>}
         >
           {(delegate) => (
             <Body fileTreeDelegate={delegate} params={params} />

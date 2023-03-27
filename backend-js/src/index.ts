@@ -17,6 +17,8 @@ const defaultConfig: Partial<AppConfig> = {
     "image/png": FileType.image,
     "image/jpeg": FileType.image,
     "image/svg+xml": FileType.image,
+    "image/gif": FileType.image,
+    "image/webp": FileType.image,
     "audio/mpeg": FileType.audio,
     "text/markdown": FileType.text,
     "text/plain": FileType.text,
@@ -29,6 +31,8 @@ const defaultConfig: Partial<AppConfig> = {
     "**/*.mp3": "audio/mpeg",
     "**/*.md": "text/markdown",
     "**/*.txt": "text/plain",
+    "**/*.gif": "image/gif",
+    "**/*.webp": "image/webp",
   },
 }
 
