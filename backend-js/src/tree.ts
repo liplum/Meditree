@@ -49,12 +49,25 @@ type NodeMeta = {
   passcode?: string
 } & ForwardConfig
 
-interface NodeAccessDelegate {
+class NodeTree implements FileTreeLike {
+  readonly name: string
+  tree: FileTreeJson
+  constructor(name: string, tree: FileTreeJson) {
+    this.name = name
+    this.tree = tree
+  }
 
+  resolveFile(pathParts: string[]): File | null {
+    return null
+  }
+
+  toJSON(): FileTreeJson {
+    return {}
+  }
 }
 
-class MeshTree implements FileTreeLike {
-  name2Node = new Map<string, NodeAccessDelegate>()
+class GlobalTree implements FileTreeLike {
+  name2Node = new Map<string, NodeTree>()
 
   resolveFile(pathParts: string[]): File | null {
     const nodeName = pathParts.shift()
@@ -65,8 +78,12 @@ class MeshTree implements FileTreeLike {
     return null
   }
 
-  getNodeList(): string[] {
-    return Array.from(this.name2Node.keys())
+  toJSON(): FileTreeJson {
+    const obj: FileTreeJson = {}
+    for (const [name, node] of this.name2Node.entries()) {
+      obj[name] = node.tree
+    }
+    return obj
   }
 }
 

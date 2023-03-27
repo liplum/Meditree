@@ -29,11 +29,6 @@ export interface AppConfig {
    */
   name: string
   /**
-   * The name for display only.
-   * If not specified, {@link name} will be used.
-   */
-  displayName?: string
-  /**
    * If set, requests need passcode in authentication headers, body or cookies.
    */
   passcode?: string

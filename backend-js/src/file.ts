@@ -41,13 +41,11 @@ export interface CreateFileTreeOptions {
 }
 export interface FileTreeLike {
   resolveFile: (pathParts: string[]) => File | null
+  toJSON: () => FileTreeJson
 }
+
 export interface FileTreeJson {
-  name: string
-  files: FileTreeJsonEntry
-}
-export interface FileTreeJsonEntry {
-  [name: string]: string | FileTreeJsonEntry
+  [name: string]: string | FileTreeJson
 }
 export class FileTree implements FileTreeLike {
   parent: FileTree | null = null
@@ -160,7 +158,7 @@ export class FileTree implements FileTreeLike {
     return subtree
   }
 
-  toJSON(): FileTreeJsonEntry {
+  toJSON(): FileTreeJson {
     const obj = Object()
     for (const [name, file] of this.name2File.entries()) {
       if (file instanceof File) {
