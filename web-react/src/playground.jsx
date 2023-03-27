@@ -181,7 +181,7 @@ function PlainText({ src, alt }) {
   if (!text) {
     return <CircularProgress />
   } else {
-    return <Typography>
+    return <Typography variant="p" component="div" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
       {text}
     </Typography>
   }
