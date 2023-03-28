@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
-import { Net, MessageType, BufferWriter } from "./net.js"
+import { BufferWriter } from "./buffer.js"
+import { Net, MessageType } from "./net.js"
 
 declare module "./net.js" {
   interface Net {
     sendBubble: (id: string, nodeId: string, arr: any[]) => void
     addBubbleHook: (nodeId: string, handler: (id: string, arr: any[]) => void) => void
   }
+}
+declare module "./buffer.js" {
   interface BufferWriter {
     strings: (
       writing: (write: (value: string) => void) => void,
