@@ -5,7 +5,7 @@ import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
 import { Net } from "./net.js"
 import { type File, type FileTreeLike, type FileTree, type FileTreeJson } from "./file.js"
-import "./netx.js"
+import "./node-tree.js"
 export enum ForwardType {
   socket = "socket",
   redirect = "redirect",

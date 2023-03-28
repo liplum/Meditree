@@ -37,7 +37,6 @@ export type DebugCall = (id: string, data: any, header?: any) => void
 export class Net {
   readonly ws: WebSocket
   private readonly messageHandlers: MessageHandlerMap<any> = new Map()
-  private readonly streamHandlers: MessageHandlerMap<Readable> = new Map()
   private unhandledMessageTasks: (() => void)[] = []
   private readonly prereadHooks: PrereadHook[] = []
   private readonly readHooks: ReadHook<any>[] = []
@@ -89,7 +88,7 @@ export class Net {
       if (!stream) {
         stream = new Readable()
         this.id2Stream.set(id, stream)
-        this.handleStream(id, stream)
+        this.handleMessage(id, stream, header)
       }
       const state: StreamState = reader.uint8()
       let chunk: Buffer | null = null
@@ -121,49 +120,35 @@ export class Net {
     }
   }
 
-  private handleStream(id: string, stream: Readable, header?: any): void {
-    const handlers = this.streamHandlers.get(id)
-    if (handlers) {
-      handlers.forEach((handler) => {
-        handler(stream, header)
-      })
-      handlers.splice(0)
-    } else {
-      this.unhandledMessageTasks.push(() => {
-        this.handleStream(id, stream, header)
-      })
-    }
-  }
-
   send(id: string, data: any, header?: any): void {
-    const writer = new BufferWriter()
-    writer.uint8(MessageType.object)
-    writer.string(id)
-    writeHeader(writer, JSON.stringify(header))
-    writeObject(writer, data)
-    this.ws.send(writer.buildBuffer())
-  }
-
-  stream(id: string, stream: Readable, header?: any): void {
-    header = JSON.stringify(header)
-    stream.on("readable", () => {
-      let chunk: Buffer
-      while ((chunk = stream.read()) !== null) {
+    if (data instanceof Readable) {
+      header = JSON.stringify(header)
+      data.on("readable", () => {
+        let chunk: Buffer
+        while ((chunk = data.read()) !== null) {
+          const writer = new BufferWriter()
+          writer.uint8(MessageType.stream)
+          writer.string(id)
+          writeHeader(writer, header)
+          writer.uint8(StreamState.on)
+          writer.buffer(chunk)
+          this.ws.send(writer.buildBuffer())
+        }
         const writer = new BufferWriter()
         writer.uint8(MessageType.stream)
         writer.string(id)
         writeHeader(writer, header)
-        writer.uint8(StreamState.on)
-        writer.buffer(chunk)
+        writer.uint8(StreamState.end)
         this.ws.send(writer.buildBuffer())
-      }
+      })
+    } else {
       const writer = new BufferWriter()
-      writer.uint8(MessageType.stream)
+      writer.uint8(MessageType.object)
       writer.string(id)
-      writeHeader(writer, header)
-      writer.uint8(StreamState.end)
+      writeHeader(writer, JSON.stringify(header))
+      writeObject(writer, data)
       this.ws.send(writer.buildBuffer())
-    })
+    }
   }
 
   private addHandler<Data>(
@@ -177,26 +162,14 @@ export class Net {
     }
   }
 
-  onMessage(id: string, handler: Handler<any>): void {
+  onMessage<T = any>(id: string, handler: Handler<T>): void {
     this.addHandler(this.messageHandlers, id, handler)
   }
 
-  onStream(id: string, handler: Handler<Readable>): void {
-    this.addHandler(this.streamHandlers, id, handler)
-  }
-
-  async getMessage(id: string): Promise<any> {
+  async getMessage<T = any>(id: string): Promise<T> {
     return new Promise((resolve, reject) => {
-      this.onMessage(id, (json) => {
-        resolve(json)
-      })
-    })
-  }
-
-  async getStream(id: string): Promise<Readable> {
-    return new Promise((resolve, reject) => {
-      this.onStream(id, (stream) => {
-        resolve(stream)
+      this.onMessage<T>(id, (msg) => {
+        resolve(msg)
       })
     })
   }
