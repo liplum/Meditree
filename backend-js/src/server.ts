@@ -10,6 +10,7 @@ import { createLogger } from "./logger.js"
 import { type Readable } from "stream"
 
 export async function startServer(config: AppConfig): Promise<void> {
+  console.time("Start Server")
   const app = express()
   app.use(cors())
   app.use(express.json())
@@ -51,7 +52,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       name: config.name,
       files: tree.fileTree.toJSON()
     }
-    treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 2)
+    treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 1)
     treeIndexHtmlCache = buildIndexHtml(tree.fileTree)
     for (const [name, handler] of centralName2Handler.entries()) {
       log.info(`Send rebuilt file tree to ${name}.`)
@@ -123,6 +124,7 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   const onRunning = (): void => {
     log.info(`Server running at http://localhost:${config.port}/`)
+    console.timeEnd("Start Server")
   }
   if (config.hostname) {
     app.listen(config.port, config.hostname, onRunning)

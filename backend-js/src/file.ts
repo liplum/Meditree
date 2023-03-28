@@ -3,14 +3,16 @@ import path from "path"
 import { promisify } from "util"
 
 type FileSystemEntry = File | FileTree
-export type FileType = string | null
+export type FileType = string
 
 export class File {
   type: FileType
   path: string
-  constructor(path: string, type: FileType = null) {
+  size: number
+  constructor(path: string, type: FileType, size: number) {
     this.path = path
     this.type = type
+    this.size = size
   }
 
   toJSON(): object {
@@ -24,7 +26,7 @@ export class File {
 export const statAsync = promisify(fs.stat)
 export const readdirAsync = promisify(fs.readdir)
 export type PathFilter = (path: string) => boolean
-export type FileClassifier = (path: string) => FileType
+export type FileClassifier = (path: string) => FileType | null
 export interface CreateFileTreeOptions {
   root: string
   classifier: FileClassifier
@@ -39,7 +41,7 @@ export interface FileTreeLike {
 }
 
 export interface FileTreeJson {
-  [name: string]: string | FileTreeJson
+  [name: string]: { type: string, size: number } | FileTreeJson
 }
 export class FileTree implements FileTreeLike {
   parent: FileTree | null = null
@@ -124,7 +126,7 @@ export class FileTree implements FileTreeLike {
           if (stat.isFile()) {
             const fileType = options.classifier(filePath)
             if (fileType != null) {
-              const file = new File(filePath, fileType)
+              const file = new File(filePath, fileType, stat.size)
               tree.addFileSystemEntry(fileName, file)
             }
           } else if (stat.isDirectory()) {
@@ -153,21 +155,17 @@ export class FileTree implements FileTreeLike {
   }
 
   toJSON(): FileTreeJson {
-    const obj = Object()
+    const obj = {}
     for (const [name, file] of this.name2File.entries()) {
       if (file instanceof File) {
-        obj[name] = file.type
+        obj[name] = {
+          type: file.type,
+          size: file.size
+        }
       } else if (file instanceof FileTree) {
         obj[name] = file.toJSON()
       }
     }
     return obj
-  }
-
-  convertJson(): FileTreeJson {
-    return {
-      name: this.name,
-      files: this.toJSON(),
-    }
   }
 }

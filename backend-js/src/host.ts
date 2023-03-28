@@ -79,11 +79,13 @@ export class HostTree implements FileTreeLike {
 
   async rebuildFileTree(): Promise<void> {
     this.shouldRebuild = false
+    console.time("Build File Tree")
     const tree = await FileTree.createFrom({
       root: this.options.root,
       classifier: (path) => this.classifyByFilePath(path),
       pruned: true,
     })
+    console.timeEnd("Build File Tree")
     this.fileTree = tree
     for (const listener of this.rebuildListeners) {
       listener()
@@ -105,7 +107,7 @@ export class HostTree implements FileTreeLike {
     return this.fileTree?.resolveFile(pathParts)
   }
 
-  classifyByFilePath(filePath: string): FileType {
+  classifyByFilePath(filePath: string): FileType | null {
     const patterns = this.options.fileTypePattern
     if (patterns == null) return null
     for (const [pattern, type] of Object.entries(patterns)) {

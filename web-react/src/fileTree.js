@@ -15,28 +15,31 @@ export function createDelegate(rootFileTree, rootName = "") {
       const path = parentUrl.length > 0 ? `${parentUrl}/${name}` : name
       if (file instanceof Object) {
         // if file is an object, it presents a directory
-        const myChildren = []
-        const obj = {
-          key: curKey,
-          title: name,
-          children: myChildren,
+        if (file.type) {
+          key2File.set(curKey, {
+            name,
+            key: curKey,
+            path: path,
+            type: file.type,
+            size: file.size,
+            tracking: [...parentKeys, curKey],
+          })
+          // otherwise, it presents a file
+          children.push({
+            key: curKey,
+            isLeaf: true,
+            title: name,
+          })
+        } else {
+          const myChildren = []
+          const obj = {
+            key: curKey,
+            title: name,
+            children: myChildren,
+          }
+          children.push(obj)
+          createNode(path, [...parentKeys, curKey], myChildren, file)
         }
-        children.push(obj)
-        createNode(path, [...parentKeys, curKey], myChildren, file)
-      } else {
-        key2File.set(curKey, {
-          name,
-          key: curKey,
-          path: path,
-          type: file,
-          tracking: [...parentKeys, curKey],
-        })
-        // otherwise, it presents a file
-        children.push({
-          key: curKey,
-          isLeaf: true,
-          title: name,
-        })
       }
     }
   }
