@@ -4,7 +4,7 @@ import { goNextFile, goPreviousFile } from "./event";
 
 import { isMobile } from "react-device-detect"
 import { AstrologyContext, BackendContext, ResponsiveAppBar, SelectedFileContext } from './dashboard';
-import { Tooltip, IconButton, Typography, CircularProgress } from "@mui/material"
+import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from './env';
 import useForceUpdate from 'use-force-update';
@@ -12,6 +12,7 @@ import { i18n } from './i18n';
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Failed } from './loading';
+import {filesize} from "filesize";
 
 const type2Render = {
   "video/mp4": renderVideo,
@@ -83,18 +84,21 @@ export function FileDisplayBoard(props) {
         </Typography>
       </Tooltip>
       {file && // only display if any file is selected
-        <Tooltip title={
-          isFileStarred ? i18n.playground.unstarBtn
-            : i18n.playground.starBtn
-        }>
-          <IconButton onClick={() => {
-            if (isFileStarred) unstar(file)
-            else star(file)
-            forceUpdate()
-          }}>
-            {isFileStarred ? <Star /> : <StarBorder />}
-          </IconButton>
-        </Tooltip>
+        <>
+          <Chip label={filesize(file.size, {base: 2, standard: "jedec"})}/>
+          <Tooltip title={
+            isFileStarred ? i18n.playground.unstarBtn
+              : i18n.playground.starBtn
+          }>
+            <IconButton onClick={() => {
+              if (isFileStarred) unstar(file)
+              else star(file)
+              forceUpdate()
+            }}>
+              {isFileStarred ? <Star /> : <StarBorder />}
+            </IconButton>
+          </Tooltip>
+        </>
       }
     </ResponsiveAppBar>
     <ErrorBoundary fallback={<Failed text={i18n.playground.failedToDisplay} />}>
