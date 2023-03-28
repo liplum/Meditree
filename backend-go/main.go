@@ -85,7 +85,9 @@ func CreateFileTree(root string, classifier func(path string) FileType) *FileTre
 
 const configFileName = "meditree.json"
 
-func loadConfig() (*map[string]any, error) {
+type Config = map[string]any
+
+func loadConfig() (*Config, error) {
 	if bytes, err := os.ReadFile(configFileName); err == nil {
 		var config map[string]any
 		err := json.Unmarshal(bytes, &config)
@@ -98,15 +100,13 @@ func loadConfig() (*map[string]any, error) {
 	}
 }
 
-func main() {
-	_config, err := loadConfig()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	var config = *_config
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
+func buildFileTree(config *Config) *FileTree {
 	pattern2type := make(map[string]string)
-	for k, v := range config["fileTypePattern"].(map[string]any) {
+	for k, v := range (*config)["fileTypePattern"].(map[string]any) {
 		pattern2type[k] = v.(string)
 	}
 	fileClassifier := func(path string) FileType {
@@ -117,8 +117,20 @@ func main() {
 		}
 		return ""
 	}
-	tree := CreateFileTree(config["root"].(string), fileClassifier)
-	jsonData, err := json.MarshalIndent(tree.ToJson(), "", " ")
+	return CreateFileTree((*config)["root"].(string), fileClassifier)
+}
+
+func main() {
+	config, err := loadConfig()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	tree := buildFileTree(config)
+	jsonData, err := json.MarshalIndent(map[string]any{
+		"name":  (*config)["name"],
+		"files": tree.ToJson(),
+	}, "", " ")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -126,16 +138,17 @@ func main() {
 	}
 
 	http.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
+		enableCors(&w)
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(jsonData)
 	})
 
-	port := int(config["port"].(float64))
+	port := int((*config)["port"].(float64))
+	fmt.Printf("Server is running on http://localhost:%v\n", port)
 	err = http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 		return
 	}
-	fmt.Printf("Server is running on http://localhost:%v\n", port)
 }
