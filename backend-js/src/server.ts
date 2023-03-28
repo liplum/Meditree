@@ -7,6 +7,7 @@ import cors from "cors"
 import ms from "mediaserver"
 import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback } from "./tree.js"
 import { createLogger } from "./logger.js"
+import { type Readable } from "stream"
 
 export async function startServer(config: AppConfig): Promise<void> {
   const app = express()
@@ -138,13 +139,6 @@ function removePrefix(origin: string, prefix: string): string {
 function getVideo(req: Request, res: Response, file: File): void {
   // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
   const filePath = file.path
-  const options: {
-    start: number | undefined
-    end: number | undefined
-  } = {
-    start: undefined,
-    end: undefined,
-  }
 
   let start: number
   let end: number
@@ -158,11 +152,11 @@ function getVideo(req: Request, res: Response, file: File): void {
       if (parts.length === 2) {
         const rangeStart = parts[0]?.trim()
         if (rangeStart && rangeStart.length > 0) {
-          options.start = start = parseInt(rangeStart)
+          start = parseInt(rangeStart)
         }
         const rangeEnd = parts[1]?.trim()
         if (rangeEnd && rangeEnd.length > 0) {
-          options.end = end = parseInt(rangeEnd)
+          end = parseInt(rangeEnd)
         }
       }
     }
@@ -179,39 +173,34 @@ function getVideo(req: Request, res: Response, file: File): void {
 
     const contentLength = stat.size
 
-    if (req.method === "HEAD") {
-      res.statusCode = 200
-      res.setHeader("accept-ranges", "bytes")
-      res.setHeader("content-length", contentLength)
-      res.end()
+    let retrievedLength: number
+    if (start !== undefined && end !== undefined) {
+      retrievedLength = (end + 1) - start
+    } else if (start !== undefined) {
+      retrievedLength = contentLength - start
+    } else if (end !== undefined) {
+      retrievedLength = (end + 1)
     } else {
-      let retrievedLength: number
-      if (start !== undefined && end !== undefined) {
-        retrievedLength = (end + 1) - start
-      } else if (start !== undefined) {
-        retrievedLength = contentLength - start
-      } else if (end !== undefined) {
-        retrievedLength = (end + 1)
-      } else {
-        retrievedLength = contentLength
-      }
-
-      res.statusCode = start !== undefined || end !== undefined ? 206 : 200
-
-      res.setHeader("content-length", retrievedLength)
-
-      if (range !== undefined) {
-        res.setHeader("content-range", `bytes ${start || 0}-${end || (contentLength - 1)}/${contentLength}`)
-        res.setHeader("accept-ranges", "bytes")
-      }
-
-      const fileStream = fs.createReadStream(filePath, options)
-      fileStream.on("error", (_) => {
-        res.sendStatus(500)
-      })
-
-      fileStream.pipe(res)
+      retrievedLength = contentLength
     }
+
+    res.statusCode = start !== undefined || end !== undefined ? 206 : 200
+
+    res.setHeader("content-length", retrievedLength)
+
+    if (range !== undefined) {
+      res.setHeader("content-range", `bytes ${start || 0}-${end || (contentLength - 1)}/${contentLength}`)
+      res.setHeader("accept-ranges", "bytes")
+    }
+
+    const fileStream = fs.createReadStream(filePath, {
+      start, end,
+    })
+    fileStream.on("error", (_) => {
+      res.sendStatus(500)
+    })
+
+    fileStream.pipe(res)
   })
 }
 
@@ -220,7 +209,7 @@ function getText(req: Request, res: Response, file: File): void {
   res.header({
     "Content-Type": file.type,
   })
-  const stream = fs.createReadStream(file.path)
+  const stream = openTextReadStream(file)
   stream.pipe(res)
 }
 
@@ -229,7 +218,7 @@ function getImage(req: Request, res: Response, file: File): void {
   res.header({
     "Content-Type": file.type,
   })
-  const stream = fs.createReadStream(file.path)
+  const stream = openImageReadStream(file)
   stream.pipe(res)
 }
 
@@ -239,6 +228,14 @@ function getAudio(req: Request, res: Response, file: File): void {
     "Content-Type": file.type,
   })
   ms.pipe(req, res, file.path)
+}
+
+function openImageReadStream(file: File): Readable {
+  return fs.createReadStream(file.path)
+}
+
+function openTextReadStream(file: File): Readable {
+  return fs.createReadStream(file.path)
 }
 
 function buildIndexHtml(tree: FileTree): string {
