@@ -35,6 +35,7 @@ export interface AppConfig {
   rebuildInterval: number
   fileTypePattern: Record<string, string>
   fileType: Record<string, FileType>
+  ignore?: string[]
   [key: string]: any
 }
 

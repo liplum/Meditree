@@ -18,7 +18,8 @@ export async function startServer(config: AppConfig): Promise<void> {
   const tree = new HostTree({
     root: config.root,
     fileTypePattern: config.fileTypePattern,
-    rebuildInterval: config.rebuildInterval
+    rebuildInterval: config.rebuildInterval,
+    ignorePattern: config.ignore ?? [],
   })
   const centralName2Handler = new Map<string, {
     onLocalFileTreeRebuild?: LocalFileTreeRebuildCallback

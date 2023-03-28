@@ -30,6 +30,7 @@ export type FileClassifier = (path: string) => FileType | null
 export interface CreateFileTreeOptions {
   root: string
   classifier: FileClassifier
+  includes: (path: string) => boolean
   /**
    * whether to ignore the empty file tree
    */
@@ -101,13 +102,12 @@ export class FileTree implements FileTreeLike {
   }
 
   static async createFrom(options: CreateFileTreeOptions): Promise<FileTree> {
-    const root = options.root
+    const { root, pruned, classifier, includes } = options
     const stats = await statAsync(root)
     if (!stats.isDirectory()) {
       throw Error(`${root} isn't a directory`)
     }
     const tree = new FileTree(root)
-    const pruned = options.pruned
     const walk = async (
       tree: FileTree,
       currentDirectory: string,
@@ -121,10 +121,11 @@ export class FileTree implements FileTreeLike {
       }
       for (const fileName of files) {
         const filePath = path.join(currentDirectory, fileName)
+        if (!includes(filePath)) continue
         try {
           const stat = fs.statSync(filePath)
           if (stat.isFile()) {
-            const fileType = options.classifier(filePath)
+            const fileType = classifier(filePath)
             if (fileType != null) {
               const file = new File(filePath, fileType, stat.size)
               tree.addFileSystemEntry(fileName, file)

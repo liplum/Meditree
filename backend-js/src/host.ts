@@ -9,8 +9,9 @@ export interface HostTreeOptions {
   * The absolute path of root directory.
   */
   root: string
-  fileTypePattern: object | null
+  fileTypePattern: Record<string, string>
   rebuildInterval: number
+  ignorePattern: string[]
 }
 
 const minimatchOptions: MinimatchOptions = {
@@ -21,14 +22,32 @@ export class HostTree implements FileTreeLike {
   fileTree: FileTree
   protected fileWatcher: fs.FSWatcher | null = null
   private readonly rebuildListeners: (() => void)[] = []
-  constructor(
-    options: HostTreeOptions
-  ) {
+  constructor(options: HostTreeOptions) {
     this.options = options
   }
 
   toJSON(): FileTreeJson {
     return this.fileTree.toJSON()
+  }
+
+  isFileOrDirectoryIncluded = (path: string): boolean => {
+    for (const ignore of this.options.ignorePattern) {
+      if (minimatch(path, ignore, minimatchOptions)) {
+        return false
+      }
+    }
+    return true
+  }
+
+  classifyByFilePath = (filePath: string): FileType | null => {
+    const patterns = this.options.fileTypePattern
+    for (const [pattern, type] of Object.entries(patterns)) {
+      if (minimatch(filePath, pattern, minimatchOptions)) {
+        return type
+      }
+    }
+    // if not matching any one
+    return null
   }
 
   updateOptions(options: HostTreeOptions): void {
@@ -82,7 +101,8 @@ export class HostTree implements FileTreeLike {
     console.time("Build File Tree")
     const tree = await FileTree.createFrom({
       root: this.options.root,
-      classifier: (path) => this.classifyByFilePath(path),
+      classifier: this.classifyByFilePath,
+      includes: this.isFileOrDirectoryIncluded,
       pruned: true,
     })
     console.timeEnd("Build File Tree")
@@ -105,18 +125,6 @@ export class HostTree implements FileTreeLike {
 
   resolveFile(pathParts: string[]): File | null {
     return this.fileTree?.resolveFile(pathParts)
-  }
-
-  classifyByFilePath(filePath: string): FileType | null {
-    const patterns = this.options.fileTypePattern
-    if (patterns == null) return null
-    for (const [pattern, type] of Object.entries(patterns)) {
-      if (minimatch(filePath, pattern, minimatchOptions)) {
-        return type
-      }
-    }
-    // if not matching any one
-    return null
   }
 }
 

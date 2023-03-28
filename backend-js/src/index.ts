@@ -36,6 +36,13 @@ const defaultConfig: Partial<AppConfig> = {
   },
 }
 
+// default to ignore application on macOS
+if (process.platform === "darwin") {
+  defaultConfig.ignore = [
+    "**/*.app"
+  ]
+}
+
 const config = findConfig({
   rootDir: path.dirname(fileURLToPath(import.meta.url)),
   filename: "meditree.json",
