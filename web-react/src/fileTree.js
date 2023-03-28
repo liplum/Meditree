@@ -50,6 +50,14 @@ export function createDelegate(rootFileTree, rootName = "") {
     maxKey: key,
   }
 }
+
+export function getFirstFile(fileTreeDelegate){
+  for (const [key, file] of fileTreeDelegate.key2File.entries()) {
+    return file
+  }
+  return null
+}
+
 /**
  *  @author chatGPT
  *  @returns the render tree

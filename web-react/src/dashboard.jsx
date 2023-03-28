@@ -9,7 +9,7 @@ import {
   defer,
   Await,
 } from "react-router-dom";
-import { Box, Divider,Button, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
+import { Box, Divider, Button, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend, storage } from "./env";
 import { FileDisplayBoard } from "./playground";
@@ -86,7 +86,7 @@ function Body(props) {
   const { fileTreeDelegate, params } = props
   const { baseUrl } = params
   const [isDrawerOpen, setIsDrawerOpen] = useState()
-  const lastSelectedFile = storage.getLastSelectedFileOf(baseUrl)
+  const lastSelectedFile = storage.getLastSelectedFileOf(baseUrl) ?? ft.getFirstFile(fileTreeDelegate)
   const [selectedFile, setSelectedFile] = useState(lastSelectedFile)
   const [searchPrompt, setSearchPrompt] = useState()
   const [onlyShowStarred, setOnlyShowStarred] = useState()
