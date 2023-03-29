@@ -36,12 +36,17 @@ class SubNode implements FileTreeLike {
 }
 export type RouteMsgCallback<Header = any> = (id: string, data: any, header: Header) => void
 export declare interface MeditreeNode {
-  on(event: "bubble-pass", listener: RouteMsgCallback<BubbleHeader>): this
-  on(event: "bubble-end", listener: RouteMsgCallback<BubbleHeader>): this
-  on(event: "tunnel-pass", listener: RouteMsgCallback<TunnelHeader>): this
-  on(event: "tunnel-end", listener: RouteMsgCallback<TunnelHeader>): this
+  on(event: "bubble-pass", listener: (id: string, data: any, header: BubbleHeader) => void): this
+  on(event: "bubble-end", listener: (id: string, data: any, header: BubbleHeader) => void): this
+  on(event: "tunnel-pass", listener: (id: string, data: any, header: TunnelHeader) => void): this
+  on(event: "tunnel-end", listener: (id: string, data: any, header: TunnelHeader) => void): this
   on(event: "file-tree-update", listener: (name: string, tree: FileTreeJson) => void): this
 
+  emit(event: "bubble-pass", id: string, data: any, header: BubbleHeader): boolean
+  emit(event: "bubble-end", id: string, data: any, header: BubbleHeader): boolean
+  emit(event: "tunnel-pass", id: string, data: any, header: TunnelHeader): boolean
+  emit(event: "tunnel-end", id: string, data: any, header: TunnelHeader): boolean
+  emit(event: "file-tree-update", name: string, tree: FileTreeJson | FileTreeLike): boolean
 }
 export class MeditreeNode extends EventEmitter implements FileTreeLike {
   readonly name: string
