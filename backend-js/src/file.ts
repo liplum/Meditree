@@ -11,6 +11,9 @@ export interface File {
 export interface LocalFile extends File {
   path: string
 }
+export interface RemoteFile extends File {
+  nodeName: string
+}
 
 export const statAsync = promisify(fs.stat)
 export const readdirAsync = promisify(fs.readdir)
@@ -26,7 +29,7 @@ export interface CreateFileTreeOptions {
   pruned: boolean
 }
 export interface FileTreeLike {
-  resolveFile: (pathParts: string[]) => LocalFile | null
+  resolveFile: (pathParts: string[]) => File | null
   toJSON: () => FileTreeJson
 }
 

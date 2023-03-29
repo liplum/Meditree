@@ -4,9 +4,10 @@ import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
 import { Net, MessageType } from "./net.js"
-import { type LocalFile, type FileTreeLike, type FileTree, type FileTreeJson } from "./file.js"
+import { type LocalFile, type FileTreeLike, type FileTree, type FileTreeJson, type File } from "./file.js"
 import EventEmitter from "events"
-
+import { type Readable } from "stream"
+import fs from "fs"
 class ChildNode {
   readonly net: Net
   readonly name: string
@@ -16,7 +17,6 @@ class ChildNode {
     this.net = net
   }
 }
-
 export class MeditreeNode extends EventEmitter implements FileTreeLike {
   readonly name: string
   readonly name2Parent = new Map<string, Net>()
@@ -32,6 +32,15 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     const node = this.name2Child.get(nodeName)
     if (!node) return null
     return null
+  }
+
+  createReadStream(file: File, options?: BufferEncoding | any): Readable {
+    // if the file has a path, it's a local file
+    if ("path" in file) {
+      return fs.createReadStream((file as LocalFile).path, options)
+    } else {
+      return fs.createReadStream(".")
+    }
   }
 
   toJSON(): FileTreeJson {

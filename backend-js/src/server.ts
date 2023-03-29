@@ -2,7 +2,7 @@ import { HostTree } from "./host.js"
 import { type AppConfig, FileType } from "./config.js"
 import express, { type Request, type Response } from "express"
 import fs from "fs"
-import { type LocalFile, FileTree } from "./file.js"
+import { type LocalFile, FileTree, type File } from "./file.js"
 import cors from "cors"
 import ms from "mediaserver"
 import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback, MeditreeNode } from "./meditree.js"
@@ -127,58 +127,32 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
   })
 
-  const onRunning = (): void => {
-    log.info(`Server running at http://localhost:${config.port}/`)
-    console.timeEnd("Start Server")
-  }
-  if (config.hostname) {
-    app.listen(config.port, config.hostname, onRunning)
-  } else {
-    app.listen(config.port, onRunning)
-  }
-}
+  function getVideo(req: Request, res: Response, file: File): void {
+    // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
+    let start: number | undefined
+    let end: number | undefined
 
-function removePrefix(origin: string, prefix: string): string {
-  if (origin.startsWith(prefix)) return origin.substring(prefix.length,)
-  else return origin
-}
-
-function getVideo(req: Request, res: Response, file: LocalFile): void {
-  // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
-  const filePath: string = file.path
-
-  let start: number
-  let end: number
-
-  const range = req.headers.range
-  if (range) {
-    const bytesPrefix = "bytes="
-    if (range.startsWith(bytesPrefix)) {
-      const bytesRange = range.substring(bytesPrefix.length)
-      const parts = bytesRange.split("-")
-      if (parts.length === 2) {
-        const rangeStart = parts[0]?.trim()
-        if (rangeStart && rangeStart.length > 0) {
-          start = parseInt(rangeStart)
-        }
-        const rangeEnd = parts[1]?.trim()
-        if (rangeEnd && rangeEnd.length > 0) {
-          end = parseInt(rangeEnd)
+    const range = req.headers.range
+    if (range) {
+      const bytesPrefix = "bytes="
+      if (range.startsWith(bytesPrefix)) {
+        const bytesRange = range.substring(bytesPrefix.length)
+        const parts = bytesRange.split("-")
+        if (parts.length === 2) {
+          const rangeStart = parts[0]?.trim()
+          if (rangeStart && rangeStart.length > 0) {
+            start = parseInt(rangeStart)
+          }
+          const rangeEnd = parts[1]?.trim()
+          if (rangeEnd && rangeEnd.length > 0) {
+            end = parseInt(rangeEnd)
+          }
         }
       }
     }
-  }
-  res.setHeader("content-type", "video/mp4")
+    res.setHeader("content-type", "video/mp4")
 
-  fs.stat(filePath, (err, stat) => {
-    if (err != null) {
-      console.error(`File stat error for ${filePath}.`)
-      console.error(err)
-      res.sendStatus(500)
-      return
-    }
-
-    const contentLength = stat.size
+    const contentLength = file.size
 
     let retrievedLength: number
     if (start !== undefined && end !== undefined) {
@@ -196,11 +170,11 @@ function getVideo(req: Request, res: Response, file: LocalFile): void {
     res.setHeader("content-length", retrievedLength)
 
     if (range !== undefined) {
-      res.setHeader("content-range", `bytes ${start || 0}-${end || (contentLength - 1)}/${contentLength}`)
+      res.setHeader("content-range", `bytes ${start ?? 0}-${end ?? (contentLength - 1)}/${contentLength}`)
       res.setHeader("accept-ranges", "bytes")
     }
 
-    const fileStream = fs.createReadStream(filePath, {
+    const fileStream = node.createReadStream(file, {
       start, end,
     })
     fileStream.on("error", (_) => {
@@ -208,41 +182,48 @@ function getVideo(req: Request, res: Response, file: LocalFile): void {
     })
 
     fileStream.pipe(res)
-  })
+  }
+
+  function getText(req: Request, res: Response, file: LocalFile): void {
+    res.status(200)
+    res.header({
+      "Content-Type": file.type,
+    })
+    const stream = node.createReadStream(file)
+    stream.pipe(res)
+  }
+
+  function getImage(req: Request, res: Response, file: LocalFile): void {
+    res.status(200)
+    res.header({
+      "Content-Type": file.type,
+    })
+    const stream = node.createReadStream(file)
+    stream.pipe(res)
+  }
+
+  function getAudio(req: Request, res: Response, file: LocalFile): void {
+    res.status(200)
+    res.header({
+      "Content-Type": file.type,
+    })
+    ms.pipe(req, res, file.path)
+  }
+
+  const onRunning = (): void => {
+    log.info(`Server running at http://localhost:${config.port}/`)
+    console.timeEnd("Start Server")
+  }
+  if (config.hostname) {
+    app.listen(config.port, config.hostname, onRunning)
+  } else {
+    app.listen(config.port, onRunning)
+  }
 }
 
-function getText(req: Request, res: Response, file: LocalFile): void {
-  res.status(200)
-  res.header({
-    "Content-Type": file.type,
-  })
-  const stream = openTextReadStream(file)
-  stream.pipe(res)
-}
-
-function getImage(req: Request, res: Response, file: LocalFile): void {
-  res.status(200)
-  res.header({
-    "Content-Type": file.type,
-  })
-  const stream = openImageReadStream(file)
-  stream.pipe(res)
-}
-
-function getAudio(req: Request, res: Response, file: LocalFile): void {
-  res.status(200)
-  res.header({
-    "Content-Type": file.type,
-  })
-  ms.pipe(req, res, file.path)
-}
-
-function openImageReadStream(file: LocalFile): Readable {
-  return fs.createReadStream(file.path)
-}
-
-function openTextReadStream(file: LocalFile): Readable {
-  return fs.createReadStream(file.path)
+function removePrefix(origin: string, prefix: string): string {
+  if (origin.startsWith(prefix)) return origin.substring(prefix.length,)
+  else return origin
 }
 
 function buildIndexHtml(tree: FileTree): string {
