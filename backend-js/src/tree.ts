@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid"
 import { Net } from "./net.js"
 import { type File, type FileTreeLike, type FileTree, type FileTreeJson } from "./file.js"
 import "./node-tree.js"
+import { MessageNode } from "./node-tree.js"
 export enum ForwardType {
   socket = "socket",
   redirect = "redirect",
@@ -86,18 +87,26 @@ class GlobalTree implements FileTreeLike {
     return obj
   }
 }
+export interface CentralBehavior {
+  node: MessageNode
+  server?: any
+}
 
-export async function setupAsCentral(config: MeshAsCentralConfig, server?: any): Promise<void> {
+export async function setupAsCentral(
+  config: MeshAsCentralConfig,
+  $: CentralBehavior,
+): Promise<void> {
   const log = createLogger("Central")
   // as central
   const wss = new WebSocketServer({
-    server,
-    port: server ? undefined : config.port,
+    server: $.server,
+    port: $.server ? undefined : config.port,
     path: "/ws",
   })
   log.info(`Central websocket is running on ws://localhost:${config.port}/ws.`)
   wss.on("connection", async (ws: WebSocket) => {
     const net = new Net(ws)
+    $.node.attachHooks(net)
     net.debug = (id, message) => {
       log.debug(id, message)
     }
@@ -108,29 +117,34 @@ export async function setupAsCentral(config: MeshAsCentralConfig, server?: any):
       log.trace("A websocket is closed.")
     })
     ws.on("message", (data) => {
-      net.handleReceivedData(data as Buffer)
+      net.handleDatapack(data as Buffer)
     })
     const nodeMeta = await authenticateNodeAsCentral(net, log, config)
     if (!nodeMeta) return
-    net.addBubbleHook(config.name, (id, arr) => {
-      log.info(`Received a bubble message from ${id}.`)
-      if (id !== "file-tree-rebuild") return
+    $.node.name2Child.set(nodeMeta.name, net)
+    // net.addBubbleHook(config.name, (id, arr) => {
+    //   log.info(`Received a bubble message from ${id}.`)
+    //   if (id !== "file-tree-rebuild") return
+    // })
+    ws.on("close", () => {
+      $.node.name2Child.delete(nodeMeta.name)
     })
   })
 }
 export type LocalFileTreeRebuildCallback = (
   { json, jsonString, tree }: { json: FileTreeJson, jsonString: string, tree: FileTree }
 ) => void
+
 export interface NodeBehavior {
+  node: MessageNode
   onLocalFileTreeRebuild: (id: string, listener: LocalFileTreeRebuildCallback) => void
   offListeners: (id: string) => void
 }
 
 export async function setupAsNode(
   config: MeshAsNodeConfig,
-  behavior: NodeBehavior
+  $: NodeBehavior
 ): Promise<void> {
-  const name2Central = {}
   for (const central of config.central) {
     const log = createLogger(`Node-${central.server}`)
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
@@ -138,6 +152,7 @@ export async function setupAsNode(
     net.debug = (id, message) => {
       log.debug(id, message)
     }
+    $.node.attachHooks(net)
     let isConnected = false
     net.startDaemonWatch()
     let centralInfo: CentralInfo | undefined
@@ -147,20 +162,23 @@ export async function setupAsNode(
       log.info(`Connected to ${central.server}.`)
       centralInfo = await authenticateAsNode(net, log, central, config)
       if (!centralInfo) return
-      name2Central[centralInfo.name] = net
-      behavior.onLocalFileTreeRebuild(centralInfo.name, ({ jsonString }) => {
-        net.sendBubble("file-tree-rebuild", config.name, [jsonString])
+      $.node.name2Parent.set(centralInfo.name, net)
+      $.onLocalFileTreeRebuild(centralInfo.name, ({ jsonString }) => {
+        $.node.sendBubbleUnrouted("file-tree-rebuild", jsonString, {
+          from: $.node.name,
+        })
       })
     })
     ws.on("close", () => {
       if (!isConnected) return
       if (centralInfo) {
-        behavior.offListeners(centralInfo.name)
+        $.offListeners(centralInfo.name)
+        $.node.name2Parent.delete(centralInfo.name)
       }
       log.info(`Disconnected from ${central.server}.`)
     })
     ws.on("message", (data) => {
-      net.handleReceivedData(data as Buffer)
+      net.handleDatapack(data as Buffer)
     })
   }
 }

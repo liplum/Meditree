@@ -25,14 +25,14 @@ export type PrereadHook = ({ type, id, reader, header }: {
   id: string
   header?: any
   reader: BufferReader
-}) => boolean
+}) => boolean | undefined
 export type ReadHook<Data> = ({ type, id, data, header }: {
   type: MessageType
   id: string
   header?: any
   data: Data
   chunk?: Buffer | null
-}) => boolean
+}) => boolean | undefined
 export type DebugCall = (id: string, data: any, header?: any) => void
 export class Net {
   readonly ws: WebSocket
@@ -65,7 +65,7 @@ export class Net {
   /**
    * Call this in ws.on("message")
    */
-  handleReceivedData(data: Buffer): void {
+  handleDatapack(data: Buffer): void {
     const reader = new BufferReader(data)
     const type = reader.uint8()
     const id = reader.string()

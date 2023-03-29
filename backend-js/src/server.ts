@@ -8,6 +8,7 @@ import ms from "mediaserver"
 import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback } from "./tree.js"
 import { createLogger } from "./logger.js"
 import { type Readable } from "stream"
+import { MessageNode } from "./node-tree.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
@@ -24,15 +25,19 @@ export async function startServer(config: AppConfig): Promise<void> {
   const centralName2Handler = new Map<string, {
     onLocalFileTreeRebuild?: LocalFileTreeRebuildCallback
   }>()
-
+  const node = new MessageNode(config.name)
   // If node is defined and not empty, subnodes can connect to this.
   if (config.node?.length && config.publicKey && config.privateKey) {
-    await setupAsCentral(config as any as MeshAsCentralConfig, app)
+    await setupAsCentral(config as any as MeshAsCentralConfig, {
+      node,
+      server: app
+    })
   }
 
   // If central is defined and not empty, it will try connecting to every central.
   if (config.central?.length && config.publicKey && config.privateKey) {
     await setupAsNode(config as any as MeshAsNodeConfig, {
+      node,
       onLocalFileTreeRebuild(id, listener) {
         let handler = centralName2Handler.get(id)
         if (!handler) {
