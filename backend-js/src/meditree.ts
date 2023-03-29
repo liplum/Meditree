@@ -56,8 +56,14 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   attachHooks(net: Net): void {
     net.addReadHook(({ type, id, data, header }) => {
       if (type !== MessageType.object) return
-      if (!header || header.type !== "Bubble") return
+      if (!header || header.type !== "bubble") return
       this.receiveBubble(id, data, header as BubbleHeader)
+      return true
+    })
+    net.addReadHook(({ type, id, data, header }) => {
+      if (type !== MessageType.object) return
+      if (!header || header.type !== "tunnel") return
+      this.receiveTunnel(id, data, header as TunnelHeader)
       return true
     })
   }
@@ -65,7 +71,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   sendBubbleUnrouted(id: string, data: any, header: any): void {
     const msgHeader: BubbleHeader = {
       ...header,
-      type: "Bubble",
+      type: "bubble",
       routed: false,
       path: [this.name]
     }
@@ -79,7 +85,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     if (nextNode) {
       const msgHeader: BubbleHeader = {
         ...header,
-        type: "Bubble",
+        type: "bubble",
         routed: true,
         path: route,
       }
@@ -106,13 +112,58 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       }
     }
   }
+  
+  sendTunnelUnrouted(id: string, data: any, header: any): void {
+    const msgHeader: TunnelHeader = {
+      ...header,
+      type: "tunnel",
+      routed: false,
+      path: [this.name]
+    }
+    for (const node of this.name2Child.values()) {
+      node.net.send(id, data, msgHeader)
+    }
+  }
+
+  sendTunnelRouted(id: string, data: any, header: any, route: string[]): void {
+    const nextNode = this.name2Child.get(route[0])
+    if (nextNode) {
+      const msgHeader: TunnelHeader = {
+        ...header,
+        type: "tunnel",
+        routed: true,
+        path: route,
+      }
+      nextNode.net.send(id, data, msgHeader)
+    }
+  }
+
+  receiveTunnel(id: string, data: any, header: TunnelHeader): void {
+    if (header.routed) {
+      const nextNode = this.name2Child.get(header.path[header.path.indexOf(this.name) + 1])
+      if (nextNode) {
+        // handle message content
+        this.emit("tunnel-pass", id, data, header)
+        nextNode.net.send(id, data, header)
+      } else {
+        // Reach end
+        this.emit("tunnel-end", id, data, header)
+      }
+    } else {
+      header.path.push(this.name)
+      this.emit("tunnel-pass", id, data, header)
+      for (const node of this.name2Child.values()) {
+        node.net.send(id, data, header)
+      }
+    }
+  }
 }
 
 /**
  * Bubble message travels up the node tree.
  */
 export interface BubbleHeader {
-  type: "Bubble"
+  type: "bubble"
   /**
   * If true, the message has a clear route to pass through.
   * {@link path} means the route. e.g.: ["leaf", "parent1", "parent2", "root"].
@@ -128,7 +179,7 @@ export interface BubbleHeader {
  * Tunnel message travels down the node tree.
  */
 export interface TunnelHeader {
-  type: "Tunnel"
+  type: "tunnel"
   /**
    * If true, the message has a clear route to pass through.
    * {@link path} means the route. e.g.: ["root", "sub1", "sub2", "leaf"].
