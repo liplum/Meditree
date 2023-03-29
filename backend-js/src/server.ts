@@ -5,10 +5,9 @@ import fs from "fs"
 import { File, FileTree } from "./file.js"
 import cors from "cors"
 import ms from "mediaserver"
-import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback } from "./tree.js"
+import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback, MeditreeNode } from "./meditree.js"
 import { createLogger } from "./logger.js"
 import { type Readable } from "stream"
-import { MessageNode } from "./node-tree.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
@@ -25,7 +24,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   const centralName2Handler = new Map<string, {
     onLocalFileTreeRebuild?: LocalFileTreeRebuildCallback
   }>()
-  const node = new MessageNode(config.name)
+  const node = new MeditreeNode(config.name)
   // If node is defined and not empty, subnodes can connect to this.
   if (config.node?.length && config.publicKey && config.privateKey) {
     await setupAsCentral(config as any as MeshAsCentralConfig, {

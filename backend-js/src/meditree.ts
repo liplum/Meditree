@@ -3,10 +3,107 @@ import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
-import { Net } from "./net.js"
+import { Net, MessageType } from "./net.js"
 import { type File, type FileTreeLike, type FileTree, type FileTreeJson } from "./file.js"
-import "./node-tree.js"
-import { MessageNode } from "./node-tree.js"
+import EventEmitter from "events"
+
+export class MeditreeNode extends EventEmitter {
+  readonly name: string
+  readonly name2Parent = new Map<string, Net>()
+  readonly name2Child = new Map<string, Net>()
+  constructor(name: string) {
+    super()
+    this.name = name
+  }
+
+  attachHooks(net: Net): void {
+    net.addReadHook(({ type, id, data, header }) => {
+      if (type !== MessageType.object) return
+      if (!header || header.type !== "Bubble") return
+      this.receiveBubble(id, data, header as BubbleHeader)
+      return true
+    })
+  }
+
+  sendBubbleUnrouted(id: string, data: any, header: any): void {
+    const msgHeader: BubbleHeader = {
+      ...header,
+      type: "Bubble",
+      routed: false,
+      path: [this.name]
+    }
+    for (const net of this.name2Parent.values()) {
+      net.send(id, data, msgHeader)
+    }
+  }
+
+  sendBubbleRouted(id: string, data: any, header: any, route: string[]): void {
+    const nextNode = this.name2Parent.get(route[0])
+    if (nextNode) {
+      const msgHeader: BubbleHeader = {
+        ...header,
+        type: "Bubble",
+        routed: true,
+        path: route,
+      }
+      nextNode.send(id, data, msgHeader)
+    }
+  }
+
+  receiveBubble(id: string, data: any, header: BubbleHeader): void {
+    if (header.routed) {
+      const nextNode = this.name2Parent.get(header.path[header.path.indexOf(this.name) + 1])
+      if (nextNode) {
+        // handle message content
+        this.emit("bubble-pass", id, data, header)
+        nextNode.send(id, data, header)
+      } else {
+        // Reach end
+        this.emit("bubble-end", id, data, header)
+      }
+    } else {
+      header.path.push(this.name)
+      this.emit("bubble-pass", id, data, header)
+      for (const net of this.name2Parent.values()) {
+        net.send(id, data, header)
+      }
+    }
+  }
+}
+
+/**
+ * Bubble message travels up the node tree.
+ */
+export interface BubbleHeader {
+  type: "Bubble"
+  /**
+  * If true, the message has a clear route to pass through.
+  * {@link path} means the route. e.g.: ["leaf", "parent1", "parent2", "root"].
+  * 
+  * If false, the message doesn't map out a route.
+  * {@link path} means the nodes this message has passed through. e.g.: ["leaf", "parent1"].
+  */
+  routed: boolean
+  path: string[]
+  [key: string]: any
+}
+/**
+ * Tunnel message travels down the node tree.
+ */
+export interface TunnelHeader {
+  type: "Tunnel"
+  /**
+   * If true, the message has a clear route to pass through.
+   * {@link path} means the route. e.g.: ["root", "sub1", "sub2", "leaf"].
+   * 
+   * If false, the message doesn't map out a route.
+   * {@link path} means the nodes this message has passed through. e.g.: ["root", "sub1"].
+   */
+  routed: boolean
+  path: string[]
+  [key: string]: any
+}
+
 export enum ForwardType {
   socket = "socket",
   redirect = "redirect",
@@ -88,7 +185,7 @@ class GlobalTree implements FileTreeLike {
   }
 }
 export interface CentralBehavior {
-  node: MessageNode
+  node: MeditreeNode
   server?: any
 }
 
@@ -122,10 +219,6 @@ export async function setupAsCentral(
     const nodeMeta = await authenticateNodeAsCentral(net, log, config)
     if (!nodeMeta) return
     $.node.name2Child.set(nodeMeta.name, net)
-    // net.addBubbleHook(config.name, (id, arr) => {
-    //   log.info(`Received a bubble message from ${id}.`)
-    //   if (id !== "file-tree-rebuild") return
-    // })
     ws.on("close", () => {
       $.node.name2Child.delete(nodeMeta.name)
     })
@@ -136,7 +229,7 @@ export type LocalFileTreeRebuildCallback = (
 ) => void
 
 export interface NodeBehavior {
-  node: MessageNode
+  node: MeditreeNode
   onLocalFileTreeRebuild: (id: string, listener: LocalFileTreeRebuildCallback) => void
   offListeners: (id: string) => void
 }
