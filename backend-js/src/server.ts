@@ -1,13 +1,12 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { HostTree } from "./host.js"
 import { type AppConfig, FileType } from "./config.js"
 import express, { type Request, type Response } from "express"
-import fs from "fs"
 import { type LocalFile, FileTree, type File } from "./file.js"
 import cors from "cors"
 import ms from "mediaserver"
 import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback, MeditreeNode } from "./meditree.js"
 import { createLogger } from "./logger.js"
-import { type Readable } from "stream"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
@@ -24,7 +23,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   const centralName2Handler = new Map<string, {
     onLocalFileTreeRebuild?: LocalFileTreeRebuildCallback
   }>()
-  const node = new MeditreeNode(config.name)
+  const node = new MeditreeNode(config.name, tree)
   // If node is defined and not empty, subnodes can connect to this.
   if (config.node?.length && config.publicKey && config.privateKey) {
     await setupAsCentral(config as any as MeshAsCentralConfig, {
@@ -52,11 +51,8 @@ export async function startServer(config: AppConfig): Promise<void> {
   let treeJsonObjectCache: any | null
   let treeJsonStringCache: string | null
   let treeIndexHtmlCache: string | null
-  tree.onRebuild(() => {
-    treeJsonObjectCache = {
-      name: config.name,
-      files: tree.fileTree.toJSON()
-    }
+
+  function updateCache(treeJsonObjectCache: any | null): void {
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 1)
     treeIndexHtmlCache = buildIndexHtml(tree.fileTree)
     for (const [name, handler] of centralName2Handler.entries()) {
@@ -67,11 +63,25 @@ export async function startServer(config: AppConfig): Promise<void> {
         tree: tree.fileTree,
       })
     }
+  }
+  tree.onRebuild(() => {
+    treeJsonObjectCache = {
+      name: config.name,
+      files: node.toJSON()
+    }
+    updateCache(treeJsonObjectCache)
     log.info("FileTree is rebuilt.")
   })
   tree.startWatching()
   await tree.rebuildFileTree()
-
+  node.on("file-tree-update", () => {
+    treeJsonObjectCache = {
+      name: config.name,
+      files: node.toJSON()
+    }
+    updateCache(treeJsonObjectCache)
+    log.info("FileTree from sub-node is updated.")
+  })
   // If posscode is enabled.
   if (config.passcode) {
     app.use((req, res, next) => {
@@ -107,7 +117,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     [FileType.text]: getText,
   }
 
-  app.get("/file(/*)", (req, res) => {
+  app.get("/file(/*)", async (req, res) => {
     const path = removePrefix(decodeURI(req.baseUrl + req.path), "/file/")
     const file = tree.resolveFile(path.split("/"))
     if (file == null) {
@@ -123,11 +133,11 @@ export async function startServer(config: AppConfig): Promise<void> {
     if (!handler) {
       return res.status(404).end()
     } else {
-      handler(req, res, file)
+      await handler(req, res, file)
     }
   })
 
-  function getVideo(req: Request, res: Response, file: File): void {
+  async function getVideo(req: Request, res: Response, file: File): Promise<void> {
     // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
     let start: number | undefined
     let end: number | undefined
@@ -174,7 +184,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.setHeader("accept-ranges", "bytes")
     }
 
-    const fileStream = node.createReadStream(file, {
+    const fileStream = await node.createReadStream(file, {
       start, end,
     })
     fileStream.on("error", (_) => {
@@ -184,25 +194,25 @@ export async function startServer(config: AppConfig): Promise<void> {
     fileStream.pipe(res)
   }
 
-  function getText(req: Request, res: Response, file: LocalFile): void {
+  async function getText(req: Request, res: Response, file: LocalFile): Promise<void> {
     res.status(200)
     res.header({
       "Content-Type": file.type,
     })
-    const stream = node.createReadStream(file)
+    const stream = await node.createReadStream(file)
     stream.pipe(res)
   }
 
-  function getImage(req: Request, res: Response, file: LocalFile): void {
+  async function getImage(req: Request, res: Response, file: LocalFile): Promise<void> {
     res.status(200)
     res.header({
       "Content-Type": file.type,
     })
-    const stream = node.createReadStream(file)
+    const stream = await node.createReadStream(file)
     stream.pipe(res)
   }
 
-  function getAudio(req: Request, res: Response, file: LocalFile): void {
+  async function getAudio(req: Request, res: Response, file: LocalFile): Promise<void> {
     res.status(200)
     res.header({
       "Content-Type": file.type,

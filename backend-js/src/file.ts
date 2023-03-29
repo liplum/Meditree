@@ -32,9 +32,8 @@ export interface FileTreeLike {
   resolveFile: (pathParts: string[]) => File | null
   toJSON: () => FileTreeJson
 }
-
 export interface FileTreeJson {
-  [name: string]: { type: string, size: number } | FileTreeJson
+  [name: string]: File | FileTreeJson
 }
 export class FileTree implements FileTreeLike {
   parent: FileTree | null = null

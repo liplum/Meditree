@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/method-signature-style */
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
@@ -8,33 +9,65 @@ import { type LocalFile, type FileTreeLike, type FileTree, type FileTreeJson, ty
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
-class ChildNode {
-  readonly net: Net
+class SubNode implements FileTreeLike {
   readonly name: string
   tree: FileTreeJson
-  constructor(name: string, net: Net) {
+  constructor(name: string) {
     this.name = name
-    this.net = net
   }
+
+  resolveFile(pathParts: string[]): File | null {
+    let cur: File | FileTreeJson = this.tree
+    while (pathParts.length > 0 && !cur.type) {
+      const currentPart = pathParts.shift()
+      if (currentPart === undefined) break
+      cur = cur[currentPart]
+    }
+    if (cur.type) {
+      return cur as File
+    } else {
+      return null
+    }
+  }
+
+  toJSON(): FileTreeJson {
+    return this.tree
+  }
+}
+export type RouteMsgCallback<Header = any> = (id: string, data: any, header: Header) => void
+export declare interface MeditreeNode {
+  on(event: "bubble-pass", listener: RouteMsgCallback<BubbleHeader>): this
+  on(event: "bubble-end", listener: RouteMsgCallback<BubbleHeader>): this
+  on(event: "tunnel-pass", listener: RouteMsgCallback<TunnelHeader>): this
+  on(event: "tunnel-end", listener: RouteMsgCallback<TunnelHeader>): this
+  on(event: "file-tree-update", listener: (name: string, tree: FileTreeJson) => void): this
+
 }
 export class MeditreeNode extends EventEmitter implements FileTreeLike {
   readonly name: string
   readonly name2Parent = new Map<string, Net>()
-  readonly name2Child = new Map<string, ChildNode>()
-  constructor(name: string) {
+  readonly name2Child = new Map<string, Net>()
+  readonly name2SubNode = new Map<string, SubNode>()
+  readonly localTree: FileTreeLike
+  constructor(name: string, localTree: FileTreeLike) {
     super()
     this.name = name
+    this.localTree = localTree
   }
 
-  resolveFile(pathParts: string[]): LocalFile | null {
+  resolveFile(pathParts: string[]): File | null {
     const nodeName = pathParts.shift()
     if (!nodeName) return null
-    const node = this.name2Child.get(nodeName)
-    if (!node) return null
-    return null
+    if (nodeName === this.name) {
+      return this.localTree.resolveFile(pathParts)
+    } else {
+      const node = this.name2SubNode.get(nodeName)
+      if (!node) return null
+      return node.resolveFile(pathParts)
+    }
   }
 
-  createReadStream(file: File, options?: BufferEncoding | any): Readable {
+  async createReadStream(file: File, options?: BufferEncoding | any): Promise<Readable> {
     // if the file has a path, it's a local file
     if ("path" in file) {
       return fs.createReadStream((file as LocalFile).path, options)
@@ -43,13 +76,24 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     }
   }
 
+  addOrUpdateSubNode(name: string, tree: FileTreeJson): void {
+    let node = this.name2SubNode.get(name)
+    if (!node) {
+      node = new SubNode(name)
+      this.name2SubNode.set(name, node)
+    }
+    node.tree = tree
+    this.emit("file-tree-update", name, tree)
+  }
+
   toJSON(): FileTreeJson {
     const obj: FileTreeJson = {}
-    for (const [name, node] of this.name2Child.entries()) {
+    for (const [name, node] of this.name2SubNode.entries()) {
       if (node.tree) {
         obj[name] = node.tree
       }
     }
+    obj[this.name] = this.localTree.toJSON()
     return obj
   }
 
@@ -75,8 +119,8 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       routed: false,
       path: [this.name]
     }
-    for (const net of this.name2Parent.values()) {
-      net.send(id, data, msgHeader)
+    for (const node of this.name2Parent.values()) {
+      node.send(id, data, msgHeader)
     }
   }
 
@@ -107,12 +151,12 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     } else {
       header.path.push(this.name)
       this.emit("bubble-pass", id, data, header)
-      for (const net of this.name2Parent.values()) {
-        net.send(id, data, header)
+      for (const node of this.name2Parent.values()) {
+        node.send(id, data, header)
       }
     }
   }
-  
+
   sendTunnelUnrouted(id: string, data: any, header: any): void {
     const msgHeader: TunnelHeader = {
       ...header,
@@ -121,7 +165,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       path: [this.name]
     }
     for (const node of this.name2Child.values()) {
-      node.net.send(id, data, msgHeader)
+      node.send(id, data, msgHeader)
     }
   }
 
@@ -134,7 +178,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
         routed: true,
         path: route,
       }
-      nextNode.net.send(id, data, msgHeader)
+      nextNode.send(id, data, msgHeader)
     }
   }
 
@@ -144,7 +188,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       if (nextNode) {
         // handle message content
         this.emit("tunnel-pass", id, data, header)
-        nextNode.net.send(id, data, header)
+        nextNode.send(id, data, header)
       } else {
         // Reach end
         this.emit("tunnel-end", id, data, header)
@@ -153,7 +197,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       header.path.push(this.name)
       this.emit("tunnel-pass", id, data, header)
       for (const node of this.name2Child.values()) {
-        node.net.send(id, data, header)
+        node.send(id, data, header)
       }
     }
   }
@@ -269,7 +313,14 @@ export async function setupAsCentral(
     })
     const nodeMeta = await authenticateNodeAsCentral(net, log, config)
     if (!nodeMeta) return
-    $.node.name2Child.set(nodeMeta.name, new ChildNode(nodeMeta.name, net))
+    $.node.name2Child.set(nodeMeta.name, net)
+    $.node.on("bubble-pass", (id, data, header) => {
+      if (id === "file-tree-rebuild") {
+        const fileTree: { name: string, files: FileTreeJson } = JSON.parse(data)
+        const source = header.path[0]
+        $.node.addOrUpdateSubNode(source, fileTree.files)
+      }
+    })
     ws.on("close", () => {
       $.node.name2Child.delete(nodeMeta.name)
     })
@@ -309,7 +360,6 @@ export async function setupAsNode(
       $.node.name2Parent.set(centralInfo.name, net)
       $.onLocalFileTreeRebuild(centralInfo.name, ({ jsonString }) => {
         $.node.sendBubbleUnrouted("file-tree-rebuild", jsonString, {
-          from: $.node.name,
         })
       })
     })
