@@ -2,7 +2,7 @@ import { HostTree } from "./host.js"
 import { type AppConfig, FileType } from "./config.js"
 import express, { type Request, type Response } from "express"
 import fs from "fs"
-import { File, FileTree } from "./file.js"
+import { type LocalFile, FileTree } from "./file.js"
 import cors from "cors"
 import ms from "mediaserver"
 import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback, MeditreeNode } from "./meditree.js"
@@ -143,9 +143,9 @@ function removePrefix(origin: string, prefix: string): string {
   else return origin
 }
 
-function getVideo(req: Request, res: Response, file: File): void {
+function getVideo(req: Request, res: Response, file: LocalFile): void {
   // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
-  const filePath = file.path
+  const filePath: string = file.path
 
   let start: number
   let end: number
@@ -211,7 +211,7 @@ function getVideo(req: Request, res: Response, file: File): void {
   })
 }
 
-function getText(req: Request, res: Response, file: File): void {
+function getText(req: Request, res: Response, file: LocalFile): void {
   res.status(200)
   res.header({
     "Content-Type": file.type,
@@ -220,7 +220,7 @@ function getText(req: Request, res: Response, file: File): void {
   stream.pipe(res)
 }
 
-function getImage(req: Request, res: Response, file: File): void {
+function getImage(req: Request, res: Response, file: LocalFile): void {
   res.status(200)
   res.header({
     "Content-Type": file.type,
@@ -229,7 +229,7 @@ function getImage(req: Request, res: Response, file: File): void {
   stream.pipe(res)
 }
 
-function getAudio(req: Request, res: Response, file: File): void {
+function getAudio(req: Request, res: Response, file: LocalFile): void {
   res.status(200)
   res.header({
     "Content-Type": file.type,
@@ -237,11 +237,11 @@ function getAudio(req: Request, res: Response, file: File): void {
   ms.pipe(req, res, file.path)
 }
 
-function openImageReadStream(file: File): Readable {
+function openImageReadStream(file: LocalFile): Readable {
   return fs.createReadStream(file.path)
 }
 
-function openTextReadStream(file: File): Readable {
+function openTextReadStream(file: LocalFile): Readable {
   return fs.createReadStream(file.path)
 }
 
@@ -253,15 +253,15 @@ function buildIndexHtml(tree: FileTree): string {
     const style = `style="margin-left: ${indentLength * indent}px;"`
     for (const [name, file] of curTree.name2File.entries()) {
       const fullPath = ancestorPath.length === 0 ? name : `${ancestorPath}/${name}`
-      if (file instanceof File) {
-        html.push(`<a href="/file/${fullPath}" ${style}>${name}</a>`)
-        html.push("<br>")
-      } else if (file instanceof FileTree) {
+      if (file instanceof FileTree) {
         html.push("<div>")
         html.push(`<a" ${style}>${name}\\</a>`)
         html.push("<br>")
         buildSubtree(fullPath, file, indent + 2)
         html.push("</div>")
+      } else {
+        html.push(`<a href="/file/${fullPath}" ${style}>${name}</a>`)
+        html.push("<br>")
       }
     }
   }

@@ -4,16 +4,44 @@ import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
 import { Net, MessageType } from "./net.js"
-import { type File, type FileTreeLike, type FileTree, type FileTreeJson } from "./file.js"
+import { type LocalFile, type FileTreeLike, type FileTree, type FileTreeJson } from "./file.js"
 import EventEmitter from "events"
 
-export class MeditreeNode extends EventEmitter {
+class ChildNode {
+  readonly net: Net
+  readonly name: string
+  tree: FileTreeJson
+  constructor(name: string, net: Net) {
+    this.name = name
+    this.net = net
+  }
+}
+
+export class MeditreeNode extends EventEmitter implements FileTreeLike {
   readonly name: string
   readonly name2Parent = new Map<string, Net>()
-  readonly name2Child = new Map<string, Net>()
+  readonly name2Child = new Map<string, ChildNode>()
   constructor(name: string) {
     super()
     this.name = name
+  }
+
+  resolveFile(pathParts: string[]): LocalFile | null {
+    const nodeName = pathParts.shift()
+    if (!nodeName) return null
+    const node = this.name2Child.get(nodeName)
+    if (!node) return null
+    return null
+  }
+
+  toJSON(): FileTreeJson {
+    const obj: FileTreeJson = {}
+    for (const [name, node] of this.name2Child.entries()) {
+      if (node.tree) {
+        obj[name] = node.tree
+      }
+    }
+    return obj
   }
 
   attachHooks(net: Net): void {
@@ -147,43 +175,6 @@ type NodeMeta = {
   passcode?: string
 } & ForwardConfig
 
-class NodeTree implements FileTreeLike {
-  readonly name: string
-  tree: FileTreeJson
-  constructor(name: string, tree: FileTreeJson) {
-    this.name = name
-    this.tree = tree
-  }
-
-  resolveFile(pathParts: string[]): File | null {
-    return null
-  }
-
-  toJSON(): FileTreeJson {
-    return {}
-  }
-}
-
-class GlobalTree implements FileTreeLike {
-  name2Node = new Map<string, NodeTree>()
-
-  resolveFile(pathParts: string[]): File | null {
-    const nodeName = pathParts.shift()
-    if (!nodeName) return null
-    const node = this.name2Node.get(nodeName)
-    if (!node) return null
-
-    return null
-  }
-
-  toJSON(): FileTreeJson {
-    const obj: FileTreeJson = {}
-    for (const [name, node] of this.name2Node.entries()) {
-      obj[name] = node.tree
-    }
-    return obj
-  }
-}
 export interface CentralBehavior {
   node: MeditreeNode
   server?: any
@@ -218,7 +209,7 @@ export async function setupAsCentral(
     })
     const nodeMeta = await authenticateNodeAsCentral(net, log, config)
     if (!nodeMeta) return
-    $.node.name2Child.set(nodeMeta.name, net)
+    $.node.name2Child.set(nodeMeta.name, new ChildNode(nodeMeta.name, net))
     ws.on("close", () => {
       $.node.name2Child.delete(nodeMeta.name)
     })

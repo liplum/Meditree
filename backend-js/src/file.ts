@@ -2,25 +2,14 @@ import fs from "fs"
 import path from "path"
 import { promisify } from "util"
 
-type FileSystemEntry = File | FileTree
+type FileSystemEntry = LocalFile | FileTree
 export type FileType = string
-
-export class File {
+export interface File {
   type: FileType
-  path: string
   size: number
-  constructor(path: string, type: FileType, size: number) {
-    this.path = path
-    this.type = type
-    this.size = size
-  }
-
-  toJSON(): object {
-    return {
-      type: this.type,
-      path: this.path
-    }
-  }
+}
+export interface LocalFile extends File {
+  path: string
 }
 
 export const statAsync = promisify(fs.stat)
@@ -37,7 +26,7 @@ export interface CreateFileTreeOptions {
   pruned: boolean
 }
 export interface FileTreeLike {
-  resolveFile: (pathParts: string[]) => File | null
+  resolveFile: (pathParts: string[]) => LocalFile | null
   toJSON: () => FileTreeJson
 }
 
@@ -67,17 +56,17 @@ export class FileTree implements FileTreeLike {
     return parts.join("/")
   }
 
-  resolveFile(pathParts: string[]): File | null {
+  resolveFile(pathParts: string[]): LocalFile | null {
     let currentFsEntry: FileSystemEntry | undefined = this
     while (pathParts.length > 0 && currentFsEntry instanceof FileTree) {
       const currentPart = pathParts.shift()
       if (currentPart === undefined) break
       currentFsEntry = currentFsEntry.name2File.get(currentPart)
     }
-    if (currentFsEntry instanceof File) {
-      return currentFsEntry
-    } else {
+    if (currentFsEntry instanceof FileTree) {
       return null
+    } else {
+      return currentFsEntry as LocalFile
     }
   }
 
@@ -127,8 +116,11 @@ export class FileTree implements FileTreeLike {
           if (stat.isFile()) {
             const fileType = classifier(filePath)
             if (fileType != null) {
-              const file = new File(filePath, fileType, stat.size)
-              tree.addFileSystemEntry(fileName, file)
+              tree.addFileSystemEntry(fileName, {
+                path: filePath,
+                type: fileType,
+                size: stat.size,
+              })
             }
           } else if (stat.isDirectory()) {
             const subtree = tree.createSubtree(filePath)
@@ -158,13 +150,13 @@ export class FileTree implements FileTreeLike {
   toJSON(): FileTreeJson {
     const obj = {}
     for (const [name, file] of this.name2File.entries()) {
-      if (file instanceof File) {
+      if (file instanceof FileTree) {
+        obj[name] = file.toJSON()
+      } else {
         obj[name] = {
           type: file.type,
           size: file.size
         }
-      } else if (file instanceof FileTree) {
-        obj[name] = file.toJSON()
       }
     }
     return obj

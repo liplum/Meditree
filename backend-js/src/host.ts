@@ -2,7 +2,7 @@ import type fs from "fs"
 import chokidar from "chokidar"
 import minimatch, { type MinimatchOptions } from "minimatch"
 import { clearInterval } from "timers"
-import type { FileTreeLike, File, FileType, FileTreeJson } from "./file.js"
+import type { FileTreeLike, LocalFile, FileType, FileTreeJson } from "./file.js"
 import { FileTree } from "./file.js"
 export interface HostTreeOptions {
   /**
@@ -123,7 +123,7 @@ export class HostTree implements FileTreeLike {
     this.rebuildTimer = null
   }
 
-  resolveFile(pathParts: string[]): File | null {
+  resolveFile(pathParts: string[]): LocalFile | null {
     return this.fileTree?.resolveFile(pathParts)
   }
 }
