@@ -1,10 +1,8 @@
-import { type AppConfig, findConfig, FileType } from "./config.js"
+import { type AppConfig, findConfig, FileType, setupConfig } from "./config.js"
 import { startServer } from "./server.js"
 import { install as installSourceMap } from "source-map-support"
 import path from "path"
-import { fileURLToPath } from "url"
-import nacl from "tweetnacl"
-import { v4 as uuidv4 } from "uuid"
+import { fileURLToPath, pathToFileURL } from "url"
 
 installSourceMap()
 
@@ -43,23 +41,12 @@ if (process.platform === "darwin") {
   ]
 }
 
-const config = findConfig({
-  rootDir: path.dirname(fileURLToPath(import.meta.url)),
-  filename: "meditree.json",
-  defaultConfig,
-}, (config) => {
-  if (config.privateKey) {
-    if (!config.publicKey) {
-      config.publicKey = Buffer.from(nacl.box.keyPair.fromSecretKey(config.privateKey).publicKey).toString("base64")
-    }
-  } else if (!config.publicKey) {
-    const { publicKey, secretKey } = nacl.box.keyPair()
-    config.publicKey = Buffer.from(publicKey).toString("base64")
-    config.privateKey = Buffer.from(secretKey).toString("base64")
-  }
-  if (!config.name) {
-    config.name = uuidv4()
-  }
-})
-
-startServer(config)
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const config = findConfig({
+    rootDir: path.dirname(fileURLToPath(import.meta.url)),
+    filename: "meditree.json",
+    defaultConfig,
+  }, setupConfig)
+  // module was not imported but called directly
+  startServer(config)
+}

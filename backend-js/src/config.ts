@@ -1,5 +1,7 @@
 import fs from "fs"
 import path from "path"
+import nacl from "tweetnacl"
+import { v4 as uuidv4 } from "uuid"
 
 export enum FileType {
   video = "video",
@@ -37,6 +39,21 @@ export interface AppConfig {
   fileType: Record<string, FileType>
   ignore?: string[]
   [key: string]: any
+}
+
+export function setupConfig(config: AppConfig): void {
+  if (config.privateKey) {
+    if (!config.publicKey) {
+      config.publicKey = Buffer.from(nacl.box.keyPair.fromSecretKey(config.privateKey).publicKey).toString("base64")
+    }
+  } else if (!config.publicKey) {
+    const { publicKey, secretKey } = nacl.box.keyPair()
+    config.publicKey = Buffer.from(publicKey).toString("base64")
+    config.privateKey = Buffer.from(secretKey).toString("base64")
+  }
+  if (!config.name) {
+    config.name = uuidv4()
+  }
 }
 
 export interface FindConfigArgs<T> {
