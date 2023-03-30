@@ -25,6 +25,14 @@ export async function startServer(config: AppConfig): Promise<void> {
     onLocalFileTreeRebuild?: LocalFileTreeRebuildCallback
   }>()
   const node = new MeditreeNode(config.name, localTree)
+  node.on("bubble-pass", (id, data, header) => {
+    if (id === "file-tree-rebuild") {
+      const fileTree: { name: string, files: FileTreeJson } = JSON.parse(data)
+      const source = header.path[0]
+      node.addOrUpdateSubNode(source, fileTree.files)
+    }
+  })
+
   // If node is defined and not empty, subnodes can connect to this.
   if (config.node?.length && config.publicKey && config.privateKey) {
     await setupAsCentral(config as any as MeshAsCentralConfig, {

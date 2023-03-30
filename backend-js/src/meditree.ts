@@ -42,6 +42,12 @@ export declare interface MeditreeNode {
   on(event: "tunnel-end", listener: (id: string, data: any, header: TunnelHeader) => void): this
   on(event: "file-tree-update", listener: (name: string, tree: FileTreeJson) => void): this
 
+  off(event: "bubble-pass", listener: (id: string, data: any, header: BubbleHeader) => void): this
+  off(event: "bubble-end", listener: (id: string, data: any, header: BubbleHeader) => void): this
+  off(event: "tunnel-pass", listener: (id: string, data: any, header: TunnelHeader) => void): this
+  off(event: "tunnel-end", listener: (id: string, data: any, header: TunnelHeader) => void): this
+  off(event: "file-tree-update", listener: (name: string, tree: FileTreeJson) => void): this
+
   emit(event: "bubble-pass", id: string, data: any, header: BubbleHeader): boolean
   emit(event: "bubble-end", id: string, data: any, header: BubbleHeader): boolean
   emit(event: "tunnel-pass", id: string, data: any, header: TunnelHeader): boolean
@@ -319,13 +325,6 @@ export async function setupAsCentral(
     const nodeMeta = await authenticateNodeAsCentral(net, log, config)
     if (!nodeMeta) return
     $.node.name2Child.set(nodeMeta.name, net)
-    $.node.on("bubble-pass", (id, data, header) => {
-      if (id === "file-tree-rebuild") {
-        const fileTree: { name: string, files: FileTreeJson } = JSON.parse(data)
-        const source = header.path[0]
-        $.node.addOrUpdateSubNode(source, fileTree.files)
-      }
-    })
     ws.on("close", () => {
       $.node.name2Child.delete(nodeMeta.name)
     })
