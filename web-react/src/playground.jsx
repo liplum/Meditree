@@ -12,7 +12,7 @@ import { i18n } from './i18n';
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Failed } from './loading';
-import filesize from "filesize";
+import { filesize } from "filesize";
 
 const type2Render = {
   "video/mp4": renderVideo,
