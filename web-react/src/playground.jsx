@@ -129,6 +129,9 @@ function renderAudio(file) {
     controls
     src={file.url}
     alt={file.path}
+    onMouseDown={(event) => {
+      event.stopPropagation();
+    }}
     className={"video-view"} />
 }
 
