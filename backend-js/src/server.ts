@@ -7,6 +7,7 @@ import cors from "cors"
 import ms from "mediaserver"
 import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback, MeditreeNode } from "./meditree.js"
 import { createLogger } from "./logger.js"
+import { buildIndexHtml } from "./page.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
@@ -54,7 +55,7 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   function updateCache(treeJsonObjectCache: any | null): void {
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 1)
-    treeIndexHtmlCache = buildIndexHtml(localTree.fileTree)
+    treeIndexHtmlCache = buildIndexHtml(config.name, localTree.fileTree)
     for (const [name, handler] of centralName2Handler.entries()) {
       log.info(`Send rebuilt file tree to parent node[${name}].`)
       handler?.onLocalFileTreeRebuild?.({
@@ -232,29 +233,4 @@ export async function startServer(config: AppConfig): Promise<void> {
 function removePrefix(origin: string, prefix: string): string {
   if (origin.startsWith(prefix)) return origin.substring(prefix.length,)
   else return origin
-}
-
-function buildIndexHtml(tree: FileTree): string {
-  const html: string[] = []
-  html.push("<div>")
-  function buildSubtree(ancestorPath: string, curTree: FileTree, indent: number): void {
-    const indentLength = 15
-    const style = `style="margin-left: ${indentLength * indent}px;"`
-    for (const [name, file] of curTree.name2File.entries()) {
-      const fullPath = ancestorPath.length === 0 ? name : `${ancestorPath}/${name}`
-      if (file instanceof FileTree) {
-        html.push("<div>")
-        html.push(`<a" ${style}>${name}\\</a>`)
-        html.push("<br>")
-        buildSubtree(fullPath, file, indent + 2)
-        html.push("</div>")
-      } else {
-        html.push(`<a href="/file/${fullPath}" ${style}>${name}</a>`)
-        html.push("<br>")
-      }
-    }
-  }
-  buildSubtree("", tree, 0)
-  html.push("</div>")
-  return html.join("")
 }
