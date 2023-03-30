@@ -137,6 +137,9 @@ export async function startServer(config: AppConfig): Promise<void> {
     if (!handler) {
       return res.status(404).end()
     } else {
+      res.header({
+        "Content-Type": file.type,
+      })
       await handler(req, res, file)
     }
   })
@@ -145,29 +148,7 @@ export async function startServer(config: AppConfig): Promise<void> {
    */
   async function pipeRangedFile(req: Request, res: Response, file: File): Promise<void> {
     // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
-    let start: number | undefined
-    let end: number | undefined
-
-    const range = req.headers.range
-    if (range) {
-      const bytesPrefix = "bytes="
-      if (range.startsWith(bytesPrefix)) {
-        const bytesRange = range.substring(bytesPrefix.length)
-        const parts = bytesRange.split("-")
-        if (parts.length === 2) {
-          const rangeStart = parts[0]?.trim()
-          if (rangeStart && rangeStart.length > 0) {
-            start = parseInt(rangeStart)
-          }
-          const rangeEnd = parts[1]?.trim()
-          if (rangeEnd && rangeEnd.length > 0) {
-            end = parseInt(rangeEnd)
-          }
-        }
-      }
-    }
-    res.setHeader("content-type", "vide`o/mp4")
-
+    const { start, end } = resolveRange(req.headers.range)
     const contentLength = file.size
 
     let retrievedLength: number
@@ -184,14 +165,10 @@ export async function startServer(config: AppConfig): Promise<void> {
     res.statusCode = start !== undefined || end !== undefined ? 206 : 200
 
     res.setHeader("content-length", retrievedLength)
-
-    if (range !== undefined) {
+    if (req.headers.range) {
       res.setHeader("content-range", `bytes ${start ?? 0}-${end ?? (contentLength - 1)}/${contentLength}`)
       res.setHeader("accept-ranges", "bytes")
     }
-    console.log({
-      start, end,
-    })
     const fileStream = await node.createReadStream(file, {
       start, end,
     })
@@ -204,9 +181,6 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   async function pipeFile(req: Request, res: Response, file: File): Promise<void> {
     res.status(200)
-    res.header({
-      "Content-Type": file.type,
-    })
     const stream = await node.createReadStream(file)
     stream.pipe(res)
   }
@@ -225,4 +199,25 @@ export async function startServer(config: AppConfig): Promise<void> {
 function removePrefix(origin: string, prefix: string): string {
   if (origin.startsWith(prefix)) return origin.substring(prefix.length,)
   else return origin
+}
+
+function resolveRange(range?: string): { start?: number, end?: number } {
+  if (!range) return {}
+  let start: number | undefined
+  let end: number | undefined
+
+  if (range.startsWith("bytes=")) {
+    const parts = removePrefix(range, "bytes=").split("-")
+    if (parts.length === 2) {
+      const rangeStart = parts[0]?.trim()
+      if (rangeStart && rangeStart.length > 0) {
+        start = parseInt(rangeStart)
+      }
+      const rangeEnd = parts[1]?.trim()
+      if (rangeEnd && rangeEnd.length > 0) {
+        end = parseInt(rangeEnd)
+      }
+    }
+  }
+  return { start, end }
 }

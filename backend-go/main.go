@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type FileType = string
@@ -20,7 +24,9 @@ type FileTree struct {
 func (tree *FileTree) String() string {
 	return fmt.Sprintf("%s [%s]", tree.Name, tree.Type)
 }
+func (tree *FileTree) ResolveFile() *string {
 
+}
 func (tree *FileTree) ToJson() map[string]any {
 	res := make(map[string]any)
 	for name, file := range tree.Name2File {
@@ -120,6 +126,34 @@ func buildFileTree(config *Config) *FileTree {
 	return CreateFileTree((*config)["root"].(string), fileClassifier)
 }
 
+func readFullFile(filePath string) (*bufio.Reader, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	reader := io.Reader(file)
+	return bufio.NewReader(reader), nil
+}
+
+func readPartialFile(filePath string, start, end int64) (*bufio.Reader, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Seek to the start position
+	_, err = file.Seek(start, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a limited reader to read the desired number of bytes
+	limitReader := io.LimitReader(file, end-start+1)
+	bufferedReader := bufio.NewReader(limitReader)
+
+	return bufferedReader, nil
+}
+
 func main() {
 	config, err := loadConfig()
 	if err != nil {
@@ -142,7 +176,16 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(jsonData)
 	})
-
+	http.HandleFunc("/file/", func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		path, err := url.PathUnescape(path)
+		if err != nil {
+			http.Error(w, "Invalid URL path", http.StatusBadRequest)
+			return
+		}
+		path = strings.TrimPrefix(path, "/file/")
+		fmt.Println(path)
+	})
 	port := int((*config)["port"].(float64))
 	fmt.Printf("Server is running on http://localhost:%v\n", port)
 	err = http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
