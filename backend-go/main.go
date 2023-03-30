@@ -324,6 +324,7 @@ func main() {
 				http.Error(w, "cannot send file", http.StatusBadRequest)
 				return
 			}
+			//w.WriteHeader(http.StatusPartialContent)
 			w.WriteHeader(http.StatusOK)
 			_, err = io.Copy(w, stream)
 			if err != nil {

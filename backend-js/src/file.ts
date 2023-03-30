@@ -2,7 +2,6 @@ import fs from "fs"
 import path from "path"
 import { promisify } from "util"
 
-type FileSystemEntry = LocalFile | FileTree
 export type FileType = string
 export interface File {
   type: FileType
@@ -37,7 +36,7 @@ export interface FileTreeJson {
 }
 export class FileTree implements FileTreeLike {
   parent: FileTree | null = null
-  name2File = new Map<string, FileSystemEntry>()
+  name2File = new Map<string, File | FileTree>()
   rootPath: string
   readonly name: string
   constructor(rootPath: string) {
@@ -59,16 +58,16 @@ export class FileTree implements FileTreeLike {
   }
 
   resolveFile(pathParts: string[]): LocalFile | null {
-    let currentFsEntry: FileSystemEntry | undefined = this
-    while (pathParts.length > 0 && currentFsEntry instanceof FileTree) {
+    let cur: File | FileTree | undefined = this
+    while (pathParts.length > 0 && cur instanceof FileTree) {
       const currentPart = pathParts.shift()
       if (currentPart === undefined) break
-      currentFsEntry = currentFsEntry.name2File.get(currentPart)
+      cur = cur.name2File.get(currentPart)
     }
-    if (currentFsEntry instanceof FileTree) {
+    if (cur instanceof FileTree) {
       return null
     } else {
-      return currentFsEntry as LocalFile
+      return cur as LocalFile
     }
   }
 
@@ -84,11 +83,11 @@ export class FileTree implements FileTreeLike {
     return total
   }
 
-  addFileSystemEntry(name: string, file: FileSystemEntry): void {
+  addFile<T extends File = File>(name: string, file: T | FileTree): void {
     this.name2File.set(name, file)
   }
 
-  removeFileSystemEntry(name: string): void {
+  removeFile(name: string): void {
     this.name2File.delete(name)
   }
 
@@ -118,7 +117,7 @@ export class FileTree implements FileTreeLike {
           if (stat.isFile()) {
             const fileType = classifier(filePath)
             if (fileType != null) {
-              tree.addFileSystemEntry(fileName, {
+              tree.addFile(fileName, {
                 path: filePath,
                 type: fileType,
                 size: stat.size,
@@ -126,10 +125,10 @@ export class FileTree implements FileTreeLike {
             }
           } else if (stat.isDirectory()) {
             const subtree = tree.createSubtree(filePath)
-            tree.addFileSystemEntry(fileName, subtree)
+            tree.addFile(fileName, subtree)
             await walk(subtree, filePath)
             if (pruned && subtree.subtreeChildrenCount === 0) {
-              tree.removeFileSystemEntry(fileName)
+              tree.removeFile(fileName)
             }
           } else {
             console.log("Unknown file type", filePath)

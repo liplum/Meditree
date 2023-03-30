@@ -3,7 +3,7 @@ import path from "path"
 import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
 
-export enum FileType {
+export enum MediaType {
   video = "video",
   image = "image",
   audio = "audio",
@@ -41,7 +41,7 @@ export interface AppConfig {
   passcode?: string
   rebuildInterval: number
   fileTypePattern: Record<string, string>
-  fileType: Record<string, FileType>
+  mediaType: Record<string, MediaType>
   ignore?: string[]
   [key: string]: any
 }
@@ -50,16 +50,16 @@ const defaultConfig: Partial<AppConfig> = {
   root: ".",
   port: 80,
   rebuildInterval: 3000,
-  fileType: {
-    "video/mp4": FileType.video,
-    "image/png": FileType.image,
-    "image/jpeg": FileType.image,
-    "image/svg+xml": FileType.image,
-    "image/gif": FileType.image,
-    "image/webp": FileType.image,
-    "audio/mpeg": FileType.audio,
-    "text/markdown": FileType.text,
-    "text/plain": FileType.text,
+  mediaType: {
+    "video/mp4": MediaType.video,
+    "image/png": MediaType.image,
+    "image/jpeg": MediaType.image,
+    "image/svg+xml": MediaType.image,
+    "image/gif": MediaType.image,
+    "image/webp": MediaType.image,
+    "audio/mpeg": MediaType.audio,
+    "text/markdown": MediaType.text,
+    "text/plain": MediaType.text,
   },
   fileTypePattern: {
     "**/*.mp4": "video/mp4",
