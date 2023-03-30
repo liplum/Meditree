@@ -8,7 +8,8 @@ export interface HostTreeOptions {
   /**
   * The absolute path of root directory.
   */
-  root: string
+  rootPath: string
+  name: string
   fileTypePattern: Record<string, string>
   rebuildInterval: number
   ignorePattern: string[]
@@ -54,7 +55,7 @@ export class HostTree implements FileTreeLike {
     const oldOptions = this.options
     if (shallowEqual(oldOptions, options)) return
     this.options = options
-    if (oldOptions.root !== options.root) {
+    if (oldOptions.rootPath !== options.rootPath) {
       this.stopWatching()
       this.startWatching()
     }
@@ -76,7 +77,7 @@ export class HostTree implements FileTreeLike {
         this.rebuildFileTree()
       }
     }, this.options.rebuildInterval)
-    this.fileWatcher = chokidar.watch(this.options.root, {
+    this.fileWatcher = chokidar.watch(this.options.rootPath, {
       ignoreInitial: true,
     }).on("all", (event, filePath) => {
       this.onWatch(event, filePath)
@@ -100,7 +101,8 @@ export class HostTree implements FileTreeLike {
     this.shouldRebuild = false
     console.time("Build File Tree")
     const tree = await FileTree.createFrom({
-      root: this.options.root,
+      rootPath: this.options.rootPath,
+      initPath: [this.options.name],
       classifier: this.classifyByFilePath,
       includes: this.isFileOrDirectoryIncluded,
       pruned: true,

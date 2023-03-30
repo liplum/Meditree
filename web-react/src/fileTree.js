@@ -7,30 +7,29 @@ export function createDelegate(rootFileTree, rootName = "") {
     children: rootChildren
   }
   const key2File = new Map()
-  function createNode(parentUrl, parentKeys, children, fileTree) {
+  function createNode(parentKeys, children, fileTree) {
     const entries = Object.entries(fileTree)
     reorder(entries)
     for (const [name, file] of entries) {
       let curKey = key++
-      const path = parentUrl.length > 0 ? `${parentUrl}/${name}` : name
       if (file instanceof Object) {
-        // if file is an object, it presents a directory
+        // if file has a type, it presents a file
         if (file.type) {
           key2File.set(curKey, {
             name,
             key: curKey,
-            path: path,
+            path: file.path,
             type: file.type,
             size: file.size,
             tracking: [...parentKeys, curKey],
           })
-          // otherwise, it presents a file
           children.push({
             key: curKey,
             isLeaf: true,
             title: name,
           })
         } else {
+          // otherwise, it presents a directory
           const myChildren = []
           const obj = {
             key: curKey,
@@ -38,12 +37,12 @@ export function createDelegate(rootFileTree, rootName = "") {
             children: myChildren,
           }
           children.push(obj)
-          createNode(path, [...parentKeys, curKey], myChildren, file)
+          createNode([...parentKeys, curKey], myChildren, file)
         }
       }
     }
   }
-  createNode("", [], rootChildren, rootFileTree)
+  createNode([], rootChildren, rootFileTree)
   return {
     renderTree: rootRenderTree,
     key2File,

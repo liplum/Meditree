@@ -15,7 +15,8 @@ export async function startServer(config: AppConfig): Promise<void> {
   app.use(express.json())
   const log = createLogger("Main")
   const localTree = new HostTree({
-    root: config.root,
+    rootPath: config.root,
+    name: config.name,
     fileTypePattern: config.fileTypePattern,
     rebuildInterval: config.rebuildInterval,
     ignorePattern: config.ignore ?? [],

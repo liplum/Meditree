@@ -5,7 +5,7 @@ import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
 import { Net, MessageType } from "./net.js"
-import { type LocalFile, type FileTreeLike, type FileTree, type FileTreeJson, type File, type RemoteFile } from "./file.js"
+import { LocalFile, type FileTreeLike, type FileTree, type FileTreeJson, type File, type RemoteFile } from "./file.js"
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
@@ -20,7 +20,6 @@ class SubNode implements FileTreeLike {
   }
 
   resolveFile(pathParts: string[]): RemoteFile | null {
-    const full = pathParts.join("/")
     let cur: RemoteFile | FileTreeJson = this.tree
     while (pathParts.length > 0 && !cur.type) {
       const currentPart = pathParts.shift()
@@ -29,7 +28,6 @@ class SubNode implements FileTreeLike {
     }
     if (cur.type) {
       cur.nodeName = this.name
-      cur.remotePath = full
       return cur as RemoteFile
     } else {
       return null
@@ -85,16 +83,14 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
 
   async createReadStream(file: File, options?: BufferEncoding | any): Promise<Readable> {
     // if the file has a path, it's a local file
-    if ("path" in file) {
-      const localFile = file as LocalFile
-      return fs.createReadStream(localFile.path, options)
+    if (file instanceof LocalFile) {
+      return fs.createReadStream(file.localPath, options)
     } else {
       const remoteFile = file as RemoteFile
       const node = this.name2Child.get(remoteFile.nodeName)
       if (!node) throw new Error(`Node[${remoteFile.nodeName}] not found.`)
-      const path = remoteFile.remotePath
       const id = uuidv4()
-      node.net.send("get-file", { path, options, id })
+      node.net.send("get-file", { path: remoteFile.path, options, id })
       const stream = await node.net.getMessage("get-file", (header) => header && header.id === id)
       return stream
     }
