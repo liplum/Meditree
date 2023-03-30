@@ -79,7 +79,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   })
   node.on("file-tree-update", (name) => {
     treeJsonObjectCache = {
-      name: config.name,
+      name: config.displayName ?? config.name,
       files: node.toJSON()
     }
     updateCache(treeJsonObjectCache)

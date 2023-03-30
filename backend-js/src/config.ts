@@ -31,6 +31,11 @@ export interface AppConfig {
    */
   name: string
   /**
+   * The display name of the server.
+   * If not specified, {@link name} will be used.
+   */
+  displayName?: string
+  /**
    * If set, requests need passcode in authentication headers, body or cookies.
    */
   passcode?: string
