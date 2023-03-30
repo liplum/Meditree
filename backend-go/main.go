@@ -1,26 +1,17 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
+	"time"
 )
 
 type FileType = string
-
-const (
-	Text  string = "text"
-	Image        = "image"
-	Audio        = "audio"
-	Video        = "video"
-)
 
 type FileTree struct {
 	Name      string
@@ -95,8 +86,10 @@ func CreateFileTree(root string, classifier func(path string) FileType) *FileTre
 					Path:      childPath,
 					Name2File: make(map[string]*FileTree),
 				}
-				tree.Name2File[fileName] = subTree
 				createSubTree(subTree, childPath)
+				if len(subTree.Name2File) != 0 {
+					tree.Name2File[fileName] = subTree
+				}
 			} else {
 				// If the child is a file, add it to the file tree
 				if fileType := classifier(fileName); fileType != "" {
@@ -128,7 +121,6 @@ type AppConfig struct {
 	Root            string
 	Port            int
 	FileTypePattern map[string]string
-	MediaType       map[string]string
 }
 
 func loadConfig() (*AppConfig, error) {
@@ -158,20 +150,11 @@ func loadConfig() (*AppConfig, error) {
 		for k, v := range fileTypePatternRaw {
 			fileTypePattern[k] = v.(string)
 		}
-		mediaTypeRaw, ok := config["mediaType"].(map[string]any)
-		if !ok {
-			return nil, fmt.Errorf("\"mediaType\" not given")
-		}
-		mediaType := make(map[string]string)
-		for k, v := range mediaTypeRaw {
-			mediaType[k] = v.(string)
-		}
 		return &AppConfig{
 			Name:            name,
 			Root:            root,
 			Port:            int(port),
 			FileTypePattern: fileTypePattern,
-			MediaType:       mediaType,
 		}, nil
 	} else if os.IsNotExist(err) {
 		_, _ = os.Create(configFileName)
@@ -197,55 +180,6 @@ func buildFileTree(config *AppConfig) *FileTree {
 	return CreateFileTree(config.Root, fileClassifier)
 }
 
-func readFullFile(filePath string) (*bufio.Reader, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	reader := io.Reader(file)
-	return bufio.NewReader(reader), nil
-}
-
-func readPartialFile(filePath string, start, end int64) (*bufio.Reader, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-
-	// Seek to the start position
-	_, err = file.Seek(start, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a limited reader to read the desired number of bytes
-	limitReader := io.LimitReader(file, end-start+1)
-	bufferedReader := bufio.NewReader(limitReader)
-
-	return bufferedReader, nil
-}
-
-func resolveRange(r string) (start, end int64) {
-	if r == "" {
-		return 0, 0
-	}
-	if !strings.HasPrefix(r, "bytes=") {
-		return 0, 0
-	}
-	r = strings.TrimPrefix(r, "bytes=")
-	parts := strings.Split(r, "-")
-	if len(parts) != 2 {
-		return 0, 0
-	}
-	if parts[0] != "" {
-		start, _ = strconv.ParseInt(parts[0], 10, 64)
-	}
-	if parts[1] != "" {
-		end, _ = strconv.ParseInt(parts[1], 10, 64)
-	}
-	return start, end
-}
-
 func main() {
 	config, err := loadConfig()
 	if err != nil {
@@ -254,7 +188,7 @@ func main() {
 	}
 	tree := buildFileTree(config)
 	jsonData, err := json.MarshalIndent(map[string]any{
-		"Name":  config.Name,
+		"name":  config.Name,
 		"files": tree.ToJson(),
 	}, "", " ")
 	if err != nil {
@@ -270,6 +204,7 @@ func main() {
 		_, _ = w.Write(jsonData)
 	})
 	http.HandleFunc("/file/", func(w http.ResponseWriter, r *http.Request) {
+		enableCors(&w)
 		path := r.URL.Path
 		path, err := url.PathUnescape(path)
 		if err != nil {
@@ -282,56 +217,12 @@ func main() {
 		if file == nil {
 			http.NotFound(w, r)
 		}
-		mediaType, found := config.MediaType[file.Type]
-		if !found {
-			http.NotFound(w, r)
+		video, err := os.Open(file.Path)
+		if err != nil {
+			http.Error(w, "cannot send file", http.StatusBadRequest)
+			return
 		}
-		fmt.Println(file.Path)
-		if mediaType == Text || mediaType == Image {
-			stream, err := readFullFile(file.Path)
-			if err != nil {
-				http.Error(w, "cannot send file", http.StatusBadRequest)
-				return
-			}
-			_, err = io.Copy(w, stream)
-			if err != nil {
-				http.Error(w, "cannot send file", http.StatusBadRequest)
-				return
-			}
-		} else if mediaType == Video || mediaType == Audio {
-			start, end := resolveRange(r.Header.Get("Range"))
-			retrievedLength := file.Size
-			if start < 0 {
-				start = 0
-			}
-			if end <= 0 {
-				end = file.Size - 1
-			}
-			if start > 0 && end > 0 {
-				retrievedLength = (end + 1) - start
-			} else if start > 0 {
-				retrievedLength = file.Size - start
-			} else if end > 0 {
-				retrievedLength = end + 1
-			}
-			r.Header.Set("content-length", strconv.FormatInt(retrievedLength, 10))
-			if r.Header.Get("Range") != "" {
-				r.Header.Set("content-range", fmt.Sprint("bytes ", start, "-", end, "/", file.Size))
-				r.Header.Set("accept-ranges", "bytes")
-			}
-			stream, err := readPartialFile(file.Path, start, end)
-			if err != nil {
-				http.Error(w, "cannot send file", http.StatusBadRequest)
-				return
-			}
-			//w.WriteHeader(http.StatusPartialContent)
-			w.WriteHeader(http.StatusOK)
-			_, err = io.Copy(w, stream)
-			if err != nil {
-				http.Error(w, "cannot send file", http.StatusBadRequest)
-				return
-			}
-		}
+		http.ServeContent(w, r, file.Name, time.Time{}, video)
 	})
 	fmt.Printf("Server is running on http://localhost:%v\n", config.Port)
 	err = http.ListenAndServe(fmt.Sprintf(":%v", config.Port), nil)
