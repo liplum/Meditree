@@ -28,8 +28,8 @@ export const statAsync = promisify(fs.stat)
 export const readdirAsync = promisify(fs.readdir)
 export type PathFilter = (path: string) => boolean
 export type FileClassifier = (path: string) => FileType | null
-export interface FileTreeLike {
-  resolveFile: (pathParts: string[]) => File | null
+export interface FileTreeLike<TFile = File> {
+  resolveFile: (pathParts: string[]) => TFile | null
   toJSON: () => FileTreeJson
 }
 export interface FileTreeJson {

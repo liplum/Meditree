@@ -186,7 +186,7 @@ export class Net {
     this.prereadHooks.push(hook)
   }
 
-  addReadHook<Data>(hook: ReadHook<Data>): void {
+  addReadHook<Data = any>(hook: ReadHook<Data>): void {
     this.readHooks.push(hook)
   }
 }

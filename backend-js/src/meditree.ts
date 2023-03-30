@@ -62,8 +62,8 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   readonly name: string
   readonly name2Parent = new Map<string, Net>()
   readonly name2Child = new Map<string, SubNode>()
-  readonly localTree: FileTreeLike
-  constructor(name: string, localTree: FileTreeLike) {
+  readonly localTree: FileTreeLike<LocalFile>
+  constructor(name: string, localTree: FileTreeLike<LocalFile>) {
     super()
     this.name = name
     this.localTree = localTree
@@ -89,9 +89,9 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       const remoteFile = file as RemoteFile
       const node = this.name2Child.get(remoteFile.nodeName)
       if (!node) throw new Error(`Node[${remoteFile.nodeName}] not found.`)
-      const id = uuidv4()
-      node.net.send("get-file", { path: remoteFile.path, options, id })
-      const stream = await node.net.getMessage("get-file", (header) => header && header.id === id)
+      const uuid = uuidv4()
+      node.net.send("get-file", { path: remoteFile.path, options, uuid })
+      const stream = await node.net.getMessage("send-file", (header) => header && header.uuid === uuid)
       return stream
     }
   }
@@ -118,15 +118,31 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     net.addReadHook(({ type, id, data, header }) => {
       if (type !== MessageType.object) return
       if (!header || header.type !== "bubble") return
-      this.receiveBubble(id, data, header as BubbleHeader)
+      this.handleBubble(id, data, header as BubbleHeader)
       return true
     })
     net.addReadHook(({ type, id, data, header }) => {
       if (type !== MessageType.object) return
       if (!header || header.type !== "tunnel") return
-      this.receiveTunnel(id, data, header as TunnelHeader)
+      this.handleTunnel(id, data, header as TunnelHeader)
       return true
     })
+    net.addReadHook(({ type, id, data }) => {
+      if (id !== "get-file") return
+      if (type !== MessageType.object) return
+      const { path, options, uuid } = data
+      this.handleGetFile(path, uuid, net, options)
+      return true
+    })
+  }
+
+  private handleGetFile(path: string, uuid: string, receiver: Net, options?: BufferEncoding | any): void {
+    const pathParts = path.split("/")
+    const file = this.localTree.resolveFile(pathParts)
+    if (file) {
+      const stream = fs.createReadStream(file.localPath, options)
+      receiver.send("send-file", stream, { uuid })
+    }
   }
 
   sendBubbleUnrouted(id: string, data: any, header: any): void {
@@ -154,7 +170,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     }
   }
 
-  receiveBubble(id: string, data: any, header: BubbleHeader): void {
+  private handleBubble(id: string, data: any, header: BubbleHeader): void {
     if (header.routed) {
       const nextNode = this.name2Parent.get(header.path[header.path.indexOf(this.name) + 1])
       if (nextNode) {
@@ -199,7 +215,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     }
   }
 
-  receiveTunnel(id: string, data: any, header: TunnelHeader): void {
+  private handleTunnel(id: string, data: any, header: TunnelHeader): void {
     if (header.routed) {
       const nextNode = this.name2Child.get(header.path[header.path.indexOf(this.name) + 1])
       if (nextNode) {
