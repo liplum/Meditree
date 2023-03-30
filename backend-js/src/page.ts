@@ -142,5 +142,4 @@ previewLinks.forEach(link => {
     }
   });
 });
-
 `

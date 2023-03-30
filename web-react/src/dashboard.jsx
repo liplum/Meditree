@@ -25,7 +25,9 @@ export const IsDrawerOpenContext = createContext()
 export const AstrologyContext = createContext()
 export const SelectedFileContext = createContext()
 export const BackendContext = createContext()
-const drawerWidth = 320;
+
+/// TODO: Drawer looks bad on tablet portrait mode.
+const drawerWidth = "320px";
 
 export async function loader({ request }) {
   const url = new URL(request.url);
@@ -219,7 +221,7 @@ function Body(props) {
       </Box>
       <Box
         component="main"
-        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
+        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth})` } }}
       >
         <CssBaseline />
         <Toolbar />
@@ -245,8 +247,8 @@ export function ResponsiveAppBar(props) {
   return <AppBar
     position="fixed"
     sx={{
-      width: { sm: `calc(100% - ${drawerWidth}px)` },
-      ml: { sm: `${drawerWidth}px` },
+      width: { sm: `calc(100% - ${drawerWidth})` },
+      ml: { sm: `${drawerWidth}` },
     }}
   >
     <Toolbar>
