@@ -1,5 +1,5 @@
 // Import required modules
-import { Button, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, DialogActions, DialogTitle } from '@mui/material';
+import { Button, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, DialogActions, DialogTitle, Card, CardActions } from '@mui/material';
 import React, { useState } from 'react';
 import {
   redirect,
@@ -55,7 +55,7 @@ export function ConnectDialog(props) {
   // true means "http", while false means "https"
   const [protocol, setProtocol] = useState(lastConnected?.protocol ?? "http")
   return (
-    <div id="connect-dialog">
+    <Card id="connect-dialog">
       <h1>{i18n.connect.title}</h1>
       <Form method="post" id="connect-form" style={{
         flexDirection: "column", display: "flex",
@@ -105,6 +105,6 @@ export function ConnectDialog(props) {
           <Button type="submit">{"Connect"}</Button>
         </DialogActions>
       </Form>
-    </div>
+    </Card>
   );
 };

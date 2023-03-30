@@ -3,9 +3,6 @@
   transform: translate(-50%, -50%);
   top: 50%;
   left: 50%;
-  background-color: #2F2F2F;
-  border-radius: 16px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   min-width: min(560px, 80%);
   text-align: center;
 }

@@ -9,7 +9,7 @@ import {
   defer,
   Await,
 } from "react-router-dom";
-import { Box, Divider, Button, Drawer, CssBaseline, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
+import { Box, Divider, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend, storage } from "./env";
 import { FileDisplayBoard } from "./playground";
@@ -27,7 +27,8 @@ export const SelectedFileContext = createContext()
 export const BackendContext = createContext()
 
 /// TODO: Drawer looks bad on tablet portrait mode.
-const drawerWidth = "320px";
+const drawerWidth = "min(max(30%,20rem),30rem)";
+//const drawerWidth = "20rem";
 
 export async function loader({ request }) {
   const url = new URL(request.url);
@@ -188,7 +189,7 @@ function Body(props) {
     <Box sx={{
       display: 'flex', height: "100vh",
     }}>
-      <Box
+      <Box // left drawer
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
       >
@@ -219,11 +220,10 @@ function Body(props) {
           {drawer}
         </Drawer>
       </Box>
-      <Box
+      <Box // right content
         component="main"
-        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth})` } }}
+        sx={{ padding: "1rem", flexGrow: 1, width: { sm: `calc(100% - ${drawerWidth})` } }}
       >
-        <CssBaseline />
         <Toolbar />
         <FileDisplayBoard />
       </Box>
