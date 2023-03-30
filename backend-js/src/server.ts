@@ -2,7 +2,7 @@
 import { HostTree } from "./host.js"
 import { type AppConfig, MediaType, type AsCentralConfig, type AsNodeConfig } from "./config.js"
 import express, { type Request, type Response } from "express"
-import { FileTree, type File, type FileTreeJson } from "./file.js"
+import { type File, type FileTreeJson } from "./file.js"
 import cors from "cors"
 import { setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback, MeditreeNode } from "./meditree.js"
 import { createLogger } from "./logger.js"
@@ -101,15 +101,18 @@ export async function startServer(config: AppConfig): Promise<void> {
     })
   }
 
-  app.get("/", (req, res) => {
-    res.redirect("/index.html")
-  })
-
-  app.get("/index.html", (req, res) => {
-    res.status(200)
-    res.contentType("html")
-    res.send(treeIndexHtmlCache)
-  })
+  const homepage = config.homepage
+  if (typeof homepage === "string") {
+    app.get("/", (req, res) => {
+      res.redirect(homepage)
+    })
+  } else if (homepage === undefined || homepage === null || homepage) {
+    app.get("/", (req, res) => {
+      res.status(200)
+      res.contentType("html")
+      res.send(treeIndexHtmlCache)
+    })
+  }
 
   app.get("/list", (req, res) => {
     res.status(200)

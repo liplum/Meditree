@@ -73,6 +73,12 @@ export interface AppConfig extends AsCentralConfig, AsNodeConfig {
    * If set, requests need passcode in authentication headers, body or cookies.
    */
   passcode?: string
+  /**
+   * Serve "/" with a homepage.
+   * If not specified or set to true, a built-in homepage will be served.
+   * If a string is given, it will be considered as the URL of homepage.
+   */
+  homepage?: boolean | string
   rebuildInterval: number
   fileTypePattern: Record<string, string>
   mediaType: Record<string, MediaType>
