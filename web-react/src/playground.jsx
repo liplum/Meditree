@@ -12,7 +12,7 @@ import { i18n } from './i18n';
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Failed } from './loading';
-import {filesize} from "filesize";
+import filesize from "filesize";
 
 const type2Render = {
   "video/mp4": renderVideo,
@@ -85,7 +85,7 @@ export function FileDisplayBoard(props) {
       </Tooltip>
       {file && // only display if any file is selected
         <>
-          <Chip label={filesize(file.size, {base: 2, standard: "jedec"})}/>
+          <Chip label={filesize(file.size, { base: 2, standard: "jedec" })} />
           <Tooltip title={
             isFileStarred ? i18n.playground.unstarBtn
               : i18n.playground.starBtn
