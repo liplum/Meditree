@@ -82,34 +82,33 @@ if (process.platform === "darwin") {
   ]
 }
 
-function setupConfig(config: AppConfig | Partial<AppConfig>): AppConfig {
-  config = Object.assign({}, config, defaultConfig)
-  if (config.privateKey) {
-    if (!config.publicKey) {
-      config.publicKey = Buffer.from(nacl.box.keyPair.fromSecretKey(config.privateKey).publicKey).toString("base64")
+function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
+  const newConfig = Object.assign({}, config ?? {}, defaultConfig)
+  if (newConfig.privateKey) {
+    if (!newConfig.publicKey) {
+      newConfig.publicKey = Buffer.from(nacl.box.keyPair.fromSecretKey(newConfig.privateKey).publicKey).toString("base64")
     }
-  } else if (!config.publicKey) {
+  } else if (!newConfig.publicKey) {
     const { publicKey, secretKey } = nacl.box.keyPair()
-    config.publicKey = Buffer.from(publicKey).toString("base64")
-    config.privateKey = Buffer.from(secretKey).toString("base64")
+    newConfig.publicKey = Buffer.from(publicKey).toString("base64")
+    newConfig.privateKey = Buffer.from(secretKey).toString("base64")
   }
-  if (!config.name) {
-    config.name = uuidv4()
+  if (!newConfig.name) {
+    newConfig.name = uuidv4()
   }
-  return config as AppConfig
+  return newConfig as AppConfig
 }
 
 export function findConfig({ rootDir, filename }: { rootDir: string, filename: string }): AppConfig {
   const curDir = rootDir
   let configFile = findFsEntryInTree(curDir, filename)
   if (configFile) {
-    const config = Object.assign({}, defaultConfig, JSON.parse(fs.readFileSync(configFile).toString()))
-    setupConfig(config)
+    const config = setupConfig(JSON.parse(fs.readFileSync(configFile).toString()) ?? {})
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     return config
   } else {
     configFile = path.join(curDir, filename)
-    fs.writeFileSync(configFile, JSON.stringify(setupConfig({}), null, 2))
+    fs.writeFileSync(configFile, JSON.stringify(setupConfig(), null, 2))
     throw new Error(`Configuration not found. ${configFile} is created.`)
   }
 }
