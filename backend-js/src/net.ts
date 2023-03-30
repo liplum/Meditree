@@ -89,15 +89,19 @@ export class Net {
     } else if (type === MessageType.stream) {
       let stream = this.id2Stream.get(id)
       if (!stream) {
-        stream = new Readable()
+        stream = new Readable({
+          read() {
+            // do nothing
+          }
+        })
         this.id2Stream.set(id, stream)
-        this.handleMessage(id, stream, header)
       }
       const state: StreamState = reader.uint8()
       let chunk: Buffer | null = null
       if (state === StreamState.on) {
         chunk = reader.buffer()
       }
+      stream.push(chunk)
       if (chunk === null) {
         this.id2Stream.delete(id)
       }
@@ -105,7 +109,7 @@ export class Net {
       for (const hook of this.readHooks) {
         if (hook(readHookArgs)) return
       }
-      stream.push(chunk)
+      this.handleMessage(id, stream, header)
     }
   }
 
