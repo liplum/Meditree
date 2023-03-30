@@ -23,7 +23,6 @@
     "esbuild": "0.17.10",
     "express": "^4.18.2",
     "log4js": "^6.9.1",
-    "mediaserver": "^0.1.1",
     "minimatch": "^6.2.0",
     "source-map-support": "^0.5.21",
     "tweetnacl": "^1.0.3",

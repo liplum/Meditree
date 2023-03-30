@@ -4,7 +4,6 @@ import { type AppConfig, FileType } from "./config.js"
 import express, { type Request, type Response } from "express"
 import { FileTree, type File, type FileTreeJson } from "./file.js"
 import cors from "cors"
-import ms from "mediaserver"
 import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback, MeditreeNode } from "./meditree.js"
 import { createLogger } from "./logger.js"
 import { buildIndexHtml } from "./page.js"
@@ -116,10 +115,10 @@ export async function startServer(config: AppConfig): Promise<void> {
   })
 
   const fileType2handler = {
-    [FileType.video]: getVideo,
-    [FileType.image]: getImage,
-    [FileType.audio]: getAudio,
-    [FileType.text]: getText,
+    [FileType.image]: pipeFile,
+    [FileType.text]: pipeFile,
+    [FileType.video]: pipeRangedFile,
+    [FileType.audio]: pipeRangedFile,
   }
 
   app.get("/file(/*)", async (req, res) => {
@@ -141,8 +140,10 @@ export async function startServer(config: AppConfig): Promise<void> {
       await handler(req, res, file)
     }
   })
-
-  async function getVideo(req: Request, res: Response, file: File): Promise<void> {
+  /**
+   * Ranged is for videos and audios. On Safari mobile, range headers is used.
+   */
+  async function pipeRangedFile(req: Request, res: Response, file: File): Promise<void> {
     // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
     let start: number | undefined
     let end: number | undefined
@@ -165,7 +166,7 @@ export async function startServer(config: AppConfig): Promise<void> {
         }
       }
     }
-    res.setHeader("content-type", "video/mp4")
+    res.setHeader("content-type", "vide`o/mp4")
 
     const contentLength = file.size
 
@@ -188,7 +189,9 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.setHeader("content-range", `bytes ${start ?? 0}-${end ?? (contentLength - 1)}/${contentLength}`)
       res.setHeader("accept-ranges", "bytes")
     }
-
+    console.log({
+      start, end,
+    })
     const fileStream = await node.createReadStream(file, {
       start, end,
     })
@@ -199,32 +202,13 @@ export async function startServer(config: AppConfig): Promise<void> {
     fileStream.pipe(res)
   }
 
-  async function getText(req: Request, res: Response, file: File): Promise<void> {
+  async function pipeFile(req: Request, res: Response, file: File): Promise<void> {
     res.status(200)
     res.header({
       "Content-Type": file.type,
     })
     const stream = await node.createReadStream(file)
     stream.pipe(res)
-  }
-
-  async function getImage(req: Request, res: Response, file: File): Promise<void> {
-    res.status(200)
-    res.header({
-      "Content-Type": file.type,
-    })
-    const stream = await node.createReadStream(file)
-    stream.pipe(res)
-  }
-
-  async function getAudio(req: Request, res: Response, file: File): Promise<void> {
-    res.status(200)
-    res.header({
-      "Content-Type": file.type,
-    })
-    const stream = await node.createReadStream(file)
-    stream.pipe(res)
-    // ms.pipe(req, res, file.path)
   }
 
   const onRunning = (): void => {
