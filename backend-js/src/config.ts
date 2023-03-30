@@ -9,8 +9,42 @@ export enum MediaType {
   audio = "audio",
   text = "text",
 }
+export enum ForwardType {
+  socket = "socket",
+  redirect = "redirect",
+}
+export type CentralConfig = {
+  server: string
+  forward: ForwardType
+} & ForwardConfig
 
-export interface AppConfig {
+export type ForwardConfig = {
+  forward: ForwardType.socket
+} | {
+  forward: ForwardType.redirect
+  redirectTo: string
+}
+export interface AsCentralConfig {
+  name: string
+  port: number
+  /**
+   * The public key of node.
+   */
+  node: string[]
+  publicKey: string
+  privateKey: string
+  passcode?: string
+}
+
+export interface AsNodeConfig {
+  name: string
+  central: CentralConfig[]
+  publicKey: string
+  privateKey: string
+  passcode?: string
+}
+
+export interface AppConfig extends AsCentralConfig, AsNodeConfig {
   /** 
    * The network interface on which the application will listen for incoming connections.
    * Default is for all interfaces.
@@ -72,6 +106,8 @@ const defaultConfig: Partial<AppConfig> = {
     "**/*.gif": "image/gif",
     "**/*.webp": "image/webp",
   },
+  central: [],
+  node: [],
 }
 
 // default to ignore application on macOS
@@ -82,11 +118,11 @@ if (process.platform === "darwin") {
   ]
 }
 
-function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
-  const newConfig = Object.assign({}, config ?? {}, defaultConfig)
+export function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
+  const newConfig: AppConfig = Object.assign({}, defaultConfig, config ?? {}) as AppConfig
   if (newConfig.privateKey) {
     if (!newConfig.publicKey) {
-      newConfig.publicKey = Buffer.from(nacl.box.keyPair.fromSecretKey(newConfig.privateKey).publicKey).toString("base64")
+      newConfig.publicKey = Buffer.from(nacl.box.keyPair.fromSecretKey(Uint8Array.from(Buffer.from(newConfig.privateKey))).publicKey).toString("base64")
     }
   } else if (!newConfig.publicKey) {
     const { publicKey, secretKey } = nacl.box.keyPair()
@@ -96,7 +132,7 @@ function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
   if (!newConfig.name) {
     newConfig.name = uuidv4()
   }
-  return newConfig as AppConfig
+  return newConfig
 }
 
 export function findConfig({ rootDir, filename }: { rootDir: string, filename: string }): AppConfig {

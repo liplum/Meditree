@@ -9,6 +9,8 @@ import { LocalFile, type FileTreeLike, type FileTree, type FileTreeJson, type Fi
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
+import { ForwardType, type ForwardConfig, type AsCentralConfig, type AsNodeConfig, type CentralConfig } from "./config.js"
+import type expressWs from "express-ws"
 
 class SubNode implements FileTreeLike {
   readonly name: string
@@ -269,43 +271,6 @@ export interface TunnelHeader {
   [key: string]: any
 }
 
-export enum ForwardType {
-  socket = "socket",
-  redirect = "redirect",
-}
-
-export type CentralConfig = {
-  server: string
-  forward: ForwardType
-} & ForwardConfig
-
-export type ForwardConfig = {
-  forward: ForwardType.socket
-} | {
-  forward: ForwardType.redirect
-  redirectTo: string
-}
-
-export interface MeshAsCentralConfig {
-  name: string
-  port: number
-  /**
-   * The public key of node.
-   */
-  node: string[]
-  publicKey: string
-  privateKey: string
-  passcode?: string
-}
-
-export interface MeshAsNodeConfig {
-  name: string
-  central: CentralConfig[]
-  publicKey: string
-  privateKey: string
-  passcode?: string
-}
-
 type NodeMeta = {
   name: string
   forward: ForwardType
@@ -314,27 +279,32 @@ type NodeMeta = {
 
 export interface CentralBehavior {
   node: MeditreeNode
-  server?: any
+  app?: expressWs.Application
 }
 
 export async function setupAsCentral(
-  config: MeshAsCentralConfig,
+  config: AsCentralConfig,
   $: CentralBehavior,
 ): Promise<void> {
   const log = createLogger("Central")
   // as central
-  const wss = new WebSocketServer({
-    server: $.server,
-    port: $.server ? undefined : config.port,
-    path: "/ws",
-  })
+  if ($.app) {
+    $.app.ws("/ws", async (ws, req) => {
+      await setupWs(ws)
+    })
+  } else {
+    const wss = new WebSocketServer({
+      port: config.port,
+      path: "/ws",
+    })
+    wss.on("connection", async (ws: WebSocket) => {
+      await setupWs(ws)
+    })
+  }
   log.info(`Central websocket is running on ws://localhost:${config.port}/ws.`)
-  wss.on("connection", async (ws: WebSocket) => {
+  async function setupWs(ws: WebSocket): Promise<void> {
     const net = new Net(ws)
     $.node.attachHooks(net)
-    net.debug = (id, message) => {
-      log.debug(id, message)
-    }
     net.startDaemonWatch()
     log.trace("A websocket is established.")
     ws.on("error", (error) => { log.error(error) })
@@ -342,7 +312,12 @@ export async function setupAsCentral(
       log.trace("A websocket is closed.")
     })
     ws.on("message", (data) => {
-      net.handleDatapack(data as Buffer)
+      try {
+        net.handleDatapack(data as Buffer)
+      } catch (error) {
+        log.trace("A websocket is aborted due to an error.")
+        net.close()
+      }
     })
     const nodeMeta = await authenticateNodeAsCentral(net, log, config)
     if (!nodeMeta) return
@@ -350,7 +325,7 @@ export async function setupAsCentral(
     ws.on("close", () => {
       $.node.name2Child.delete(nodeMeta.name)
     })
-  })
+  }
 }
 export type LocalFileTreeRebuildCallback = (
   { json, jsonString, tree }: { json: FileTreeJson, jsonString: string, tree: FileTree }
@@ -363,16 +338,13 @@ export interface NodeBehavior {
 }
 
 export async function setupAsNode(
-  config: MeshAsNodeConfig,
+  config: AsNodeConfig,
   $: NodeBehavior
 ): Promise<void> {
   for (const central of config.central) {
     const log = createLogger(`Node-${central.server}`)
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
     const net = new Net(ws)
-    net.debug = (id, message) => {
-      log.debug(id, message)
-    }
     $.node.attachHooks(net)
     let isConnected = false
     net.startDaemonWatch()
@@ -416,12 +388,11 @@ enum NodeMetaResult {
 async function authenticateNodeAsCentral(
   net: Net,
   log: Logger,
-  config: MeshAsCentralConfig,
+  config: AsCentralConfig,
 ): Promise<NodeMeta | undefined> {
   const nonce = nacl.randomBytes(24)
   const challenge = uuidv4()
   const { publicKey }: { publicKey: string } = await net.getMessage("auth-public-key")
-  log.trace(publicKey)
   if (!config.node.includes(publicKey)) throw new Error(`${publicKey} unregistered.`)
   log.info(`"${publicKey}" is challenging with "${challenge}".`)
   const challengeEncrypted = encrypt(challenge, nonce, publicKey, config.privateKey)
@@ -468,7 +439,7 @@ async function authenticateAsNode(
   net: Net,
   log: Logger,
   central: CentralConfig,
-  config: MeshAsNodeConfig,
+  config: AsNodeConfig,
 ): Promise<CentralInfo | undefined> {
   net.send("auth-public-key", {
     publicKey: config.publicKey

@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { HostTree } from "./host.js"
-import { type AppConfig, MediaType } from "./config.js"
+import { type AppConfig, MediaType, type AsCentralConfig, type AsNodeConfig } from "./config.js"
 import express, { type Request, type Response } from "express"
 import { FileTree, type File, type FileTreeJson } from "./file.js"
 import cors from "cors"
-import { type MeshAsCentralConfig, type MeshAsNodeConfig, setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback, MeditreeNode } from "./meditree.js"
+import { setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback, MeditreeNode } from "./meditree.js"
 import { createLogger } from "./logger.js"
 import { buildIndexHtml } from "./page.js"
+import expressWs from "express-ws"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
@@ -35,15 +36,16 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   // If node is defined and not empty, subnodes can connect to this.
   if (config.node?.length && config.publicKey && config.privateKey) {
-    await setupAsCentral(config as any as MeshAsCentralConfig, {
+    expressWs(app)
+    await setupAsCentral(config as any as AsCentralConfig, {
       node,
-      server: app
+      app: app as any as expressWs.Application
     })
   }
 
   // If central is defined and not empty, it will try connecting to every central.
   if (config.central?.length && config.publicKey && config.privateKey) {
-    await setupAsNode(config as any as MeshAsNodeConfig, {
+    await setupAsNode(config as any as AsNodeConfig, {
       node,
       onLocalFileTreeRebuild(id, listener) {
         let handler = centralName2Handler.get(id)
