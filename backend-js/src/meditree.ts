@@ -23,12 +23,14 @@ class SubNode implements FileTreeLike {
 
   resolveFile(pathParts: string[]): RemoteFile | null {
     let cur: RemoteFile | FileTreeJson = this.tree
-    while (pathParts.length > 0 && !cur.type) {
+    while (pathParts.length > 0 && cur) {
       const currentPart = pathParts.shift()
       if (currentPart === undefined) break
-      cur = cur[currentPart]
+      if (!cur.type) {
+        cur = cur[currentPart]
+      }
     }
-    if (cur.type) {
+    if (cur?.type) {
       cur.nodeName = this.name
       return cur as RemoteFile
     } else {
@@ -79,6 +81,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     } else {
       const node = this.name2Child.get(nodeName)
       if (!node) return null
+      pathParts.unshift(nodeName)
       return node.resolveFile(pathParts)
     }
   }
@@ -107,9 +110,11 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
 
   toJSON(): FileTreeJson {
     const obj: FileTreeJson = {}
-    for (const [name, node] of this.name2Child.entries()) {
+    for (const [nodeName, node] of this.name2Child.entries()) {
       if (node.tree) {
-        obj[name] = node.tree
+        for (const [fileName, file] of Object.entries(node.tree)) {
+          obj[fileName] = file
+        }
       }
     }
     obj[this.name] = this.localTree.toJSON()
@@ -138,11 +143,11 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     })
   }
 
-  private handleGetFile(path: string, uuid: string, receiver: Net, options?: BufferEncoding | any): void {
+  private async handleGetFile(path: string, uuid: string, receiver: Net, options?: BufferEncoding | any): Promise<void> {
     const pathParts = path.split("/")
-    const file = this.localTree.resolveFile(pathParts)
+    const file = this.resolveFile(pathParts)
     if (file) {
-      const stream = fs.createReadStream(file.localPath, options)
+      const stream = await this.createReadStream(file, options)
       receiver.send("send-file", stream, { uuid })
     }
   }
