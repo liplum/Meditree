@@ -107,10 +107,12 @@ export class BufferWriter {
   }
 
   buffer(buffer: Buffer): void {
-    this.ensureCapacity(buffer.length + 4)
+    const length = buffer.length
+    this.ensureCapacity(length + 4)
+    this.backend.writeInt32BE(length, this.cursor)
     this.cursor += 4
-    buffer.copy(this.backend, this.cursor, 0)
-    this.cursor += buffer.length
+    buffer.copy(this.backend, this.cursor)
+    this.cursor += length
   }
 
   buildBuffer(): Buffer {

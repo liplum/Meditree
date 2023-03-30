@@ -347,6 +347,9 @@ export async function setupAsNode(
   $: NodeBehavior
 ): Promise<void> {
   for (const central of config.central) {
+    await connectTo(central)
+  }
+  async function connectTo(central: CentralConfig): Promise<void> {
     const log = createLogger(`Node-${central.server}`)
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
     const net = new Net(ws)

@@ -90,27 +90,32 @@ export class Net {
       const uuid = reader.string()
       let stream = this.id2Stream.get(uuid)
       if (!stream) {
+        console.log(`Stream[${uuid}] is on.`)
         stream = new Readable({
-          read() {
-            // do nothing
-          }
+          read() { }
         })
         this.id2Stream.set(uuid, stream)
+        let isHookHandled = false
+        const readHookArgs = { type, id, data: stream, header }
+        for (const hook of this.readHooks) {
+          if (hook(readHookArgs)) {
+            isHookHandled = true
+            break
+          }
+        }
+        if (!isHookHandled) {
+          this.handleMessage(id, stream, header)
+        }
       }
       const state: StreamState = reader.uint8()
-      let chunk: Buffer | null = null
+
       if (state === StreamState.on) {
-        chunk = reader.buffer()
-      }
-      stream.push(chunk)
-      if (chunk === null) {
+        const chunk: Buffer = reader.buffer()
+        stream.push(chunk)
+      } else if (state === StreamState.end) {
+        stream.push(null)
         this.id2Stream.delete(uuid)
       }
-      const readHookArgs = { type, id, data: stream, chunk, header }
-      for (const hook of this.readHooks) {
-        if (hook(readHookArgs)) return
-      }
-      this.handleMessage(id, stream, header)
     }
   }
 
@@ -145,6 +150,8 @@ export class Net {
           writer.buffer(chunk)
           this.ws.send(writer.buildBuffer())
         }
+      })
+      data.on("close", () => {
         const writer = new BufferWriter()
         writer.uint8(MessageType.stream)
         writer.string(id)
