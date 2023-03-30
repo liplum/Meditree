@@ -2,7 +2,10 @@ import type WebSocket from "ws"
 import { Readable } from "stream"
 import { BufferReader, BufferWriter } from "./buffer.js"
 
-export type Handler<Data> = (data: Data, header?: any) => void | Promise<void>
+/**
+ * returns whether the message is handled
+ */
+export type Handler<Data> = (data: Data, header?: any) => boolean | Promise<boolean>
 
 export enum DataType {
   string = 1,
@@ -108,12 +111,13 @@ export class Net {
 
   private handleMessage(id: string, data: any, header?: any): void {
     const handlers = this.messageHandlers.get(id)
+    const handlerLengthBefore = handlers?.length
     if (handlers) {
-      handlers.forEach((handler) => {
-        handler(data, header)
+      handlers.filter((handler) => {
+        return !handler(data, header)
       })
-      handlers.splice(0)
-    } else {
+    }
+    if (handlers?.length !== handlerLengthBefore) {
       this.unhandledMessageTasks.push(() => {
         this.handleMessage(id, data, header)
       })
@@ -166,10 +170,14 @@ export class Net {
     this.addHandler(this.messageHandlers, id, handler)
   }
 
-  async getMessage<T = any>(id: string): Promise<T> {
+  async getMessage<T = any>(id: string, headerMatcher?: (header?: any) => boolean): Promise<T> {
     return new Promise((resolve, reject) => {
-      this.onMessage<T>(id, (msg) => {
-        resolve(msg)
+      this.onMessage<T>(id, (data, header) => {
+        if (!headerMatcher || headerMatcher(header)) {
+          resolve(data)
+          return true
+        }
+        return false
       })
     })
   }

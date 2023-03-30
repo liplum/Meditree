@@ -9,6 +9,7 @@ import { type LocalFile, type FileTreeLike, type FileTree, type FileTreeJson, ty
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
+
 class SubNode implements FileTreeLike {
   readonly name: string
   readonly net: Net
@@ -19,6 +20,7 @@ class SubNode implements FileTreeLike {
   }
 
   resolveFile(pathParts: string[]): RemoteFile | null {
+    const full = pathParts.join("/")
     let cur: RemoteFile | FileTreeJson = this.tree
     while (pathParts.length > 0 && !cur.type) {
       const currentPart = pathParts.shift()
@@ -27,6 +29,7 @@ class SubNode implements FileTreeLike {
     }
     if (cur.type) {
       cur.nodeName = this.name
+      cur.remotePath = full
       return cur as RemoteFile
     } else {
       return null
@@ -89,8 +92,11 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       const remoteFile = file as RemoteFile
       const node = this.name2Child.get(remoteFile.nodeName)
       if (!node) throw new Error(`Node[${remoteFile.nodeName}] not found.`)
-      //node.net.send("get-file",{fileName})
-      return fs.createReadStream(".")
+      const path = remoteFile.remotePath
+      const id = uuidv4()
+      node.net.send("get-file", { path, options, id })
+      const stream = await node.net.getMessage("get-file", (header) => header && header.id === id)
+      return stream
     }
   }
 

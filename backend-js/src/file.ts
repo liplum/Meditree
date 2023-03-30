@@ -12,6 +12,7 @@ export interface LocalFile extends File {
 }
 export interface RemoteFile extends File {
   nodeName: string
+  remotePath: string
 }
 
 export const statAsync = promisify(fs.stat)

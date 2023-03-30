@@ -40,5 +40,6 @@ module.exports = {
     "no-return-await": "off",
     "@typescript-eslint/return-await": "off",
     "no-useless-return": "off",
+    "@typescript-eslint/method-signature-style": "off",
   }
 }
