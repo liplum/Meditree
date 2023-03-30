@@ -1,7 +1,7 @@
 import type WebSocket from "ws"
 import { Readable } from "stream"
 import { BufferReader, BufferWriter } from "./buffer.js"
-
+import { v4 as uuidv4 } from "uuid"
 /**
  * returns whether the message is handled
  */
@@ -87,14 +87,15 @@ export class Net {
       }
       this.handleMessage(id, data, header)
     } else if (type === MessageType.stream) {
-      let stream = this.id2Stream.get(id)
+      const uuid = reader.string()
+      let stream = this.id2Stream.get(uuid)
       if (!stream) {
         stream = new Readable({
           read() {
             // do nothing
           }
         })
-        this.id2Stream.set(id, stream)
+        this.id2Stream.set(uuid, stream)
       }
       const state: StreamState = reader.uint8()
       let chunk: Buffer | null = null
@@ -103,7 +104,7 @@ export class Net {
       }
       stream.push(chunk)
       if (chunk === null) {
-        this.id2Stream.delete(id)
+        this.id2Stream.delete(uuid)
       }
       const readHookArgs = { type, id, data: stream, chunk, header }
       for (const hook of this.readHooks) {
@@ -131,6 +132,7 @@ export class Net {
   send(id: string, data: any, header?: any): void {
     if (data instanceof Readable) {
       header = JSON.stringify(header)
+      const uuid = uuidv4()
       data.on("readable", () => {
         let chunk: Buffer
         while ((chunk = data.read()) !== null) {
@@ -138,6 +140,7 @@ export class Net {
           writer.uint8(MessageType.stream)
           writer.string(id)
           writeHeader(writer, header)
+          writer.string(uuid)
           writer.uint8(StreamState.on)
           writer.buffer(chunk)
           this.ws.send(writer.buildBuffer())
@@ -146,6 +149,7 @@ export class Net {
         writer.uint8(MessageType.stream)
         writer.string(id)
         writeHeader(writer, header)
+        writer.string(uuid)
         writer.uint8(StreamState.end)
         this.ws.send(writer.buildBuffer())
       })
