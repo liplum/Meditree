@@ -48,7 +48,6 @@ export async function action({ request }) {
   }
 }
 
-
 const serverPattern = /^((http|https):\/\/)?[^\s/$.?#].[^\s]*$/;
 export function ConnectDialog(props) {
   const lastConnected = storage.lastConnected

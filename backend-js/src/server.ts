@@ -63,13 +63,13 @@ export async function startServer(config: AppConfig): Promise<void> {
   let treeJsonStringCache: string | null
   let treeIndexHtmlCache: string | null
 
-  function updateCache(treeJsonObjectCache: any | null): void {
-    treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 1)
-    treeIndexHtmlCache = buildIndexHtml(config.name, localTree.fileTree)
+  function updateCache(filetreeJson: FileTreeJson): void {
+    treeJsonStringCache = JSON.stringify(filetreeJson, null, 1)
+    treeIndexHtmlCache = buildIndexHtml(filetreeJson)
     for (const [name, handler] of centralName2Handler.entries()) {
       log.info(`Send rebuilt file tree to parent node[${name}].`)
       handler?.onLocalFileTreeRebuild?.({
-        json: treeJsonObjectCache,
+        json: filetreeJson,
         jsonString: treeJsonStringCache,
         tree: localTree.fileTree,
       })
@@ -84,7 +84,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       name: config.displayName ?? config.name,
       files: node.toJSON()
     }
-    updateCache(treeJsonObjectCache)
+    updateCache(treeJsonObjectCache.files)
     log.info(`The file tree from node[${name}] is updated.`)
   })
   localTree.startWatching()
