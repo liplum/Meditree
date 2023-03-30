@@ -41,7 +41,44 @@ export interface AppConfig {
   [key: string]: any
 }
 
-export function setupConfig(config: AppConfig): void {
+const defaultConfig: Partial<AppConfig> = {
+  root: ".",
+  port: 80,
+  rebuildInterval: 3000,
+  fileType: {
+    "video/mp4": FileType.video,
+    "image/png": FileType.image,
+    "image/jpeg": FileType.image,
+    "image/svg+xml": FileType.image,
+    "image/gif": FileType.image,
+    "image/webp": FileType.image,
+    "audio/mpeg": FileType.audio,
+    "text/markdown": FileType.text,
+    "text/plain": FileType.text,
+  },
+  fileTypePattern: {
+    "**/*.mp4": "video/mp4",
+    "**/*.svg": "image/svg+xml",
+    "**/*.png": "image/png",
+    "**/*.+(jpeg|jpg)": "image/jpeg",
+    "**/*.mp3": "audio/mpeg",
+    "**/*.md": "text/markdown",
+    "**/*.txt": "text/plain",
+    "**/*.gif": "image/gif",
+    "**/*.webp": "image/webp",
+  },
+}
+
+// default to ignore application on macOS
+if (process.platform === "darwin") {
+  defaultConfig.ignore = [
+    "**/*.app",
+    "**/*.DS_Store"
+  ]
+}
+
+function setupConfig(config: AppConfig | Partial<AppConfig>): AppConfig {
+  config = Object.assign({}, config, defaultConfig)
   if (config.privateKey) {
     if (!config.publicKey) {
       config.publicKey = Buffer.from(nacl.box.keyPair.fromSecretKey(config.privateKey).publicKey).toString("base64")
@@ -54,28 +91,20 @@ export function setupConfig(config: AppConfig): void {
   if (!config.name) {
     config.name = uuidv4()
   }
+  return config as AppConfig
 }
 
-export interface FindConfigArgs<T> {
-  rootDir: string
-  filename: string
-  defaultConfig: T
-}
-
-export function findConfig<T>(args: FindConfigArgs<T | Partial<T>>, setup?: (config: any) => void): T {
-  const { rootDir, filename, defaultConfig } = args
+export function findConfig({ rootDir, filename }: { rootDir: string, filename: string }): AppConfig {
   const curDir = rootDir
   let configFile = findFsEntryInTree(curDir, filename)
   if (configFile) {
     const config = Object.assign({}, defaultConfig, JSON.parse(fs.readFileSync(configFile).toString()))
-    setup?.(config)
+    setupConfig(config)
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     return config
   } else {
     configFile = path.join(curDir, filename)
-    const config = { ...defaultConfig }
-    setup?.(config)
-    fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
+    fs.writeFileSync(configFile, JSON.stringify(setupConfig({}), null, 2))
     throw new Error(`Configuration not found. ${configFile} is created.`)
   }
 }

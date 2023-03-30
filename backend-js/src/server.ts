@@ -56,7 +56,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     treeJsonStringCache = JSON.stringify(treeJsonObjectCache, null, 1)
     treeIndexHtmlCache = buildIndexHtml(localTree.fileTree)
     for (const [name, handler] of centralName2Handler.entries()) {
-      log.info(`Send rebuilt file tree to ${name}.`)
+      log.info(`Send rebuilt file tree to parent node[${name}].`)
       handler?.onLocalFileTreeRebuild?.({
         json: treeJsonObjectCache,
         jsonString: treeJsonStringCache,
@@ -66,7 +66,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
   localTree.onRebuild(() => {
     node.emit("file-tree-update", config.name, localTree)
-    log.info("Local filetree is rebuilt.")
+    log.info("Local file tree is rebuilt.")
   })
   node.on("file-tree-update", (name) => {
     treeJsonObjectCache = {
@@ -74,7 +74,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       files: node.toJSON()
     }
     updateCache(treeJsonObjectCache)
-    log.info(`Filetree from node[${name}] is updated.`)
+    log.info(`The file tree from node[${name}] is updated.`)
   })
   localTree.startWatching()
   await localTree.rebuildFileTree()
@@ -84,9 +84,9 @@ export async function startServer(config: AppConfig): Promise<void> {
       const passcode = req.query.passcode ?? req.body.passcode
       if (passcode !== config.passcode) {
         res.status(401).json({ error: "wrong passcode" })
-        return
+      } else {
+        next()
       }
-      next()
     })
   }
 
