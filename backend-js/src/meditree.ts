@@ -110,7 +110,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
 
   toJSON(): FileTreeJson {
     const obj: FileTreeJson = {}
-    for (const [nodeName, node] of this.name2Child.entries()) {
+    for (const node of this.name2Child.values()) {
       if (node.tree) {
         for (const [fileName, file] of Object.entries(node.tree)) {
           obj[fileName] = file
@@ -501,10 +501,6 @@ async function authenticateAsNode(
   }
 }
 
-async function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => { setTimeout(resolve, ms) })
-}
-
 function castUint8Array(raw: string | Uint8Array, encoding?: BufferEncoding): Uint8Array {
   return raw instanceof Uint8Array ? raw : Buffer.from(raw, encoding)
 }
@@ -538,6 +534,7 @@ function decrypt(
   )
   return decrypted === null ? null : Buffer.from(decrypted).toString()
 }
+
 function convertUrlToWs(mayBeUrl: string): string {
   if (mayBeUrl.startsWith("http://")) {
     return `ws://${removePrefix(mayBeUrl, "http://")}`
@@ -551,13 +548,6 @@ function convertUrlToWs(mayBeUrl: string): string {
 function removePrefix(str: string, prefix: string): string {
   if (str.startsWith(prefix)) {
     return str.slice(prefix.length)
-  }
-  return str
-}
-
-function removeSuffix(str: string, suffix: string): string {
-  if (str.endsWith(suffix)) {
-    return str.slice(0, -suffix.length)
   }
   return str
 }
