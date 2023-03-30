@@ -5,26 +5,29 @@ import { createLogger, type Logger } from "./logger.js"
 import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
 import { Net, MessageType } from "./net.js"
-import { type LocalFile, type FileTreeLike, type FileTree, type FileTreeJson, type File } from "./file.js"
+import { type LocalFile, type FileTreeLike, type FileTree, type FileTreeJson, type File, type RemoteFile } from "./file.js"
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
 class SubNode implements FileTreeLike {
   readonly name: string
+  readonly net: Net
   tree: FileTreeJson
-  constructor(name: string) {
+  constructor(name: string, net: Net) {
     this.name = name
+    this.net = net
   }
 
-  resolveFile(pathParts: string[]): File | null {
-    let cur: File | FileTreeJson = this.tree
+  resolveFile(pathParts: string[]): RemoteFile | null {
+    let cur: RemoteFile | FileTreeJson = this.tree
     while (pathParts.length > 0 && !cur.type) {
       const currentPart = pathParts.shift()
       if (currentPart === undefined) break
       cur = cur[currentPart]
     }
     if (cur.type) {
-      return cur as File
+      cur.nodeName = this.name
+      return cur as RemoteFile
     } else {
       return null
     }
@@ -57,8 +60,7 @@ export declare interface MeditreeNode {
 export class MeditreeNode extends EventEmitter implements FileTreeLike {
   readonly name: string
   readonly name2Parent = new Map<string, Net>()
-  readonly name2Child = new Map<string, Net>()
-  readonly name2SubNode = new Map<string, SubNode>()
+  readonly name2Child = new Map<string, SubNode>()
   readonly localTree: FileTreeLike
   constructor(name: string, localTree: FileTreeLike) {
     super()
@@ -72,7 +74,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     if (nodeName === this.name) {
       return this.localTree.resolveFile(pathParts)
     } else {
-      const node = this.name2SubNode.get(nodeName)
+      const node = this.name2Child.get(nodeName)
       if (!node) return null
       return node.resolveFile(pathParts)
     }
@@ -81,25 +83,27 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   async createReadStream(file: File, options?: BufferEncoding | any): Promise<Readable> {
     // if the file has a path, it's a local file
     if ("path" in file) {
-      return fs.createReadStream((file as LocalFile).path, options)
+      const localFile = file as LocalFile
+      return fs.createReadStream(localFile.path, options)
     } else {
+      const remoteFile = file as RemoteFile
+      const node = this.name2Child.get(remoteFile.nodeName)
+      if (!node) throw new Error(`Node[${remoteFile.nodeName}] not found.`)
+      //node.net.send("get-file",{fileName})
       return fs.createReadStream(".")
     }
   }
 
-  addOrUpdateSubNode(name: string, tree: FileTreeJson): void {
-    let node = this.name2SubNode.get(name)
-    if (!node) {
-      node = new SubNode(name)
-      this.name2SubNode.set(name, node)
-    }
+  updateFileTreeFromSubNode(name: string, tree: FileTreeJson): void {
+    const node = this.name2Child.get(name)
+    if (!node) throw new Error(`Node[${name}] not found.`)
     node.tree = tree
     this.emit("file-tree-update", name, tree)
   }
 
   toJSON(): FileTreeJson {
     const obj: FileTreeJson = {}
-    for (const [name, node] of this.name2SubNode.entries()) {
+    for (const [name, node] of this.name2Child.entries()) {
       if (node.tree) {
         obj[name] = node.tree
       }
@@ -176,7 +180,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       path: [this.name]
     }
     for (const node of this.name2Child.values()) {
-      node.send(id, data, msgHeader)
+      node.net.send(id, data, msgHeader)
     }
   }
 
@@ -189,7 +193,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
         routed: true,
         path: route,
       }
-      nextNode.send(id, data, msgHeader)
+      nextNode.net.send(id, data, msgHeader)
     }
   }
 
@@ -199,7 +203,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       if (nextNode) {
         // handle message content
         this.emit("tunnel-pass", id, data, header)
-        nextNode.send(id, data, header)
+        nextNode.net.send(id, data, header)
       } else {
         // Reach end
         this.emit("tunnel-end", id, data, header)
@@ -208,7 +212,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       header.path.push(this.name)
       this.emit("tunnel-pass", id, data, header)
       for (const node of this.name2Child.values()) {
-        node.send(id, data, header)
+        node.net.send(id, data, header)
       }
     }
   }
@@ -324,7 +328,7 @@ export async function setupAsCentral(
     })
     const nodeMeta = await authenticateNodeAsCentral(net, log, config)
     if (!nodeMeta) return
-    $.node.name2Child.set(nodeMeta.name, net)
+    $.node.name2Child.set(nodeMeta.name, new SubNode(nodeMeta.name, net))
     ws.on("close", () => {
       $.node.name2Child.delete(nodeMeta.name)
     })

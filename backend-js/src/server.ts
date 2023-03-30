@@ -28,7 +28,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     if (id === "file-tree-rebuild") {
       const fileTree: { name: string, files: FileTreeJson } = JSON.parse(data)
       const source = header.path[0]
-      node.addOrUpdateSubNode(source, fileTree.files)
+      node.updateFileTreeFromSubNode(source, fileTree.files)
     }
   })
 
