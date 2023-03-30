@@ -9,10 +9,19 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
 type FileType = string
+
+const (
+	Text  string = "text"
+	Image        = "image"
+	Audio        = "audio"
+	Video        = "video"
+)
+
 type FileTree struct {
 	Name      string
 	Path      string
@@ -21,16 +30,40 @@ type FileTree struct {
 	Name2File map[string]*FileTree
 }
 
+func (tree *FileTree) IsDir() bool {
+	return tree.Name2File != nil
+}
+
+func (tree *FileTree) IsFile() bool {
+	return tree.Name2File == nil
+}
+
 func (tree *FileTree) String() string {
 	return fmt.Sprintf("%s [%s]", tree.Name, tree.Type)
 }
-func (tree *FileTree) ResolveFile() *string {
 
+func (tree *FileTree) ResolveFile(pathParts []string) *FileTree {
+	cur := tree
+	for len(pathParts) > 0 {
+		currentPart := pathParts[0]
+		pathParts = pathParts[1:]
+		file, ok := cur.Name2File[currentPart]
+		if !ok {
+			return nil
+		}
+		cur = file
+	}
+	if cur.IsFile() {
+		return cur
+	} else {
+		return nil
+	}
 }
+
 func (tree *FileTree) ToJson() map[string]any {
 	res := make(map[string]any)
 	for name, file := range tree.Name2File {
-		if file.Name2File == nil {
+		if file.IsFile() {
 			res[name] = map[string]any{
 				"type": file.Type,
 				"size": file.Size,
@@ -41,7 +74,6 @@ func (tree *FileTree) ToJson() map[string]any {
 	}
 	return res
 }
-
 func CreateFileTree(root string, classifier func(path string) FileType) *FileTree {
 	var createSubTree func(tree *FileTree, curDir string)
 	createSubTree = func(tree *FileTree, curDir string) {
@@ -91,13 +123,56 @@ func CreateFileTree(root string, classifier func(path string) FileType) *FileTre
 
 const configFileName = "meditree.json"
 
-type Config = map[string]any
+type AppConfig struct {
+	Name            string
+	Root            string
+	Port            int
+	FileTypePattern map[string]string
+	MediaType       map[string]string
+}
 
-func loadConfig() (*Config, error) {
+func loadConfig() (*AppConfig, error) {
 	if bytes, err := os.ReadFile(configFileName); err == nil {
 		var config map[string]any
 		err := json.Unmarshal(bytes, &config)
-		return &config, err
+		if err != nil {
+			return nil, err
+		}
+		name, ok := config["name"].(string)
+		if !ok {
+			return nil, fmt.Errorf("\"name\" not given")
+		}
+		root, ok := config["root"].(string)
+		if !ok {
+			return nil, fmt.Errorf("\"root\" not given")
+		}
+		port, ok := config["port"].(float64)
+		if !ok {
+			return nil, fmt.Errorf("\"port\" not given")
+		}
+		fileTypePatternRaw, ok := config["fileTypePattern"].(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("\"fileTypePattern\" not given")
+		}
+		fileTypePattern := make(map[string]string)
+		for k, v := range fileTypePatternRaw {
+			fileTypePattern[k] = v.(string)
+		}
+		mediaTypeRaw, ok := config["mediaType"].(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("\"mediaType\" not given")
+		}
+		mediaType := make(map[string]string)
+		for k, v := range mediaTypeRaw {
+			mediaType[k] = v.(string)
+		}
+		return &AppConfig{
+			Name:            name,
+			Root:            root,
+			Port:            int(port),
+			FileTypePattern: fileTypePattern,
+			MediaType:       mediaType,
+		}, nil
 	} else if os.IsNotExist(err) {
 		_, _ = os.Create(configFileName)
 		return nil, err
@@ -110,20 +185,16 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
-func buildFileTree(config *Config) *FileTree {
-	pattern2type := make(map[string]string)
-	for k, v := range (*config)["fileTypePattern"].(map[string]any) {
-		pattern2type[k] = v.(string)
-	}
+func buildFileTree(config *AppConfig) *FileTree {
 	fileClassifier := func(path string) FileType {
-		for pattern, filetype := range pattern2type {
+		for pattern, filetype := range config.FileTypePattern {
 			if matched, _ := filepath.Match(pattern, path); matched {
 				return filetype
 			}
 		}
 		return ""
 	}
-	return CreateFileTree((*config)["root"].(string), fileClassifier)
+	return CreateFileTree(config.Root, fileClassifier)
 }
 
 func readFullFile(filePath string) (*bufio.Reader, error) {
@@ -154,6 +225,27 @@ func readPartialFile(filePath string, start, end int64) (*bufio.Reader, error) {
 	return bufferedReader, nil
 }
 
+func resolveRange(r string) (start, end int64) {
+	if r == "" {
+		return 0, 0
+	}
+	if !strings.HasPrefix(r, "bytes=") {
+		return 0, 0
+	}
+	r = strings.TrimPrefix(r, "bytes=")
+	parts := strings.Split(r, "-")
+	if len(parts) != 2 {
+		return 0, 0
+	}
+	if parts[0] != "" {
+		start, _ = strconv.ParseInt(parts[0], 10, 64)
+	}
+	if parts[1] != "" {
+		end, _ = strconv.ParseInt(parts[1], 10, 64)
+	}
+	return start, end
+}
+
 func main() {
 	config, err := loadConfig()
 	if err != nil {
@@ -162,7 +254,7 @@ func main() {
 	}
 	tree := buildFileTree(config)
 	jsonData, err := json.MarshalIndent(map[string]any{
-		"name":  (*config)["name"],
+		"Name":  config.Name,
 		"files": tree.ToJson(),
 	}, "", " ")
 	if err != nil {
@@ -174,6 +266,7 @@ func main() {
 	http.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
 		enableCors(&w)
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(jsonData)
 	})
 	http.HandleFunc("/file/", func(w http.ResponseWriter, r *http.Request) {
@@ -184,11 +277,63 @@ func main() {
 			return
 		}
 		path = strings.TrimPrefix(path, "/file/")
-		fmt.Println(path)
+		pathParts := strings.Split(path, "/")
+		file := tree.ResolveFile(pathParts)
+		if file == nil {
+			http.NotFound(w, r)
+		}
+		mediaType, found := config.MediaType[file.Type]
+		if !found {
+			http.NotFound(w, r)
+		}
+		fmt.Println(file.Path)
+		if mediaType == Text || mediaType == Image {
+			stream, err := readFullFile(file.Path)
+			if err != nil {
+				http.Error(w, "cannot send file", http.StatusBadRequest)
+				return
+			}
+			_, err = io.Copy(w, stream)
+			if err != nil {
+				http.Error(w, "cannot send file", http.StatusBadRequest)
+				return
+			}
+		} else if mediaType == Video || mediaType == Audio {
+			start, end := resolveRange(r.Header.Get("Range"))
+			retrievedLength := file.Size
+			if start < 0 {
+				start = 0
+			}
+			if end <= 0 {
+				end = file.Size - 1
+			}
+			if start > 0 && end > 0 {
+				retrievedLength = (end + 1) - start
+			} else if start > 0 {
+				retrievedLength = file.Size - start
+			} else if end > 0 {
+				retrievedLength = end + 1
+			}
+			r.Header.Set("content-length", strconv.FormatInt(retrievedLength, 10))
+			if r.Header.Get("Range") != "" {
+				r.Header.Set("content-range", fmt.Sprint("bytes ", start, "-", end, "/", file.Size))
+				r.Header.Set("accept-ranges", "bytes")
+			}
+			stream, err := readPartialFile(file.Path, start, end)
+			if err != nil {
+				http.Error(w, "cannot send file", http.StatusBadRequest)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			_, err = io.Copy(w, stream)
+			if err != nil {
+				http.Error(w, "cannot send file", http.StatusBadRequest)
+				return
+			}
+		}
 	})
-	port := int((*config)["port"].(float64))
-	fmt.Printf("Server is running on http://localhost:%v\n", port)
-	err = http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
+	fmt.Printf("Server is running on http://localhost:%v\n", config.Port)
+	err = http.ListenAndServe(fmt.Sprintf(":%v", config.Port), nil)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

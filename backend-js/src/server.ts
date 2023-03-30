@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { HostTree } from "./host.js"
-import { type AppConfig, FileType } from "./config.js"
+import { type AppConfig, MediaType } from "./config.js"
 import express, { type Request, type Response } from "express"
 import { FileTree, type File, type FileTreeJson } from "./file.js"
 import cors from "cors"
@@ -115,10 +115,10 @@ export async function startServer(config: AppConfig): Promise<void> {
   })
 
   const fileType2handler = {
-    [FileType.image]: pipeFile,
-    [FileType.text]: pipeFile,
-    [FileType.video]: pipeRangedFile,
-    [FileType.audio]: pipeRangedFile,
+    [MediaType.image]: pipeFile,
+    [MediaType.text]: pipeFile,
+    [MediaType.video]: pipeRangedFile,
+    [MediaType.audio]: pipeRangedFile,
   }
 
   app.get("/file(/*)", async (req, res) => {
@@ -133,7 +133,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.status(404)
       return
     }
-    const handler = fileType2handler[config.fileType[fileType]]
+    const handler = fileType2handler[config.mediaType[fileType]]
     if (!handler) {
       return res.status(404).end()
     } else {
@@ -149,24 +149,23 @@ export async function startServer(config: AppConfig): Promise<void> {
   async function pipeRangedFile(req: Request, res: Response, file: File): Promise<void> {
     // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
     const { start, end } = resolveRange(req.headers.range)
-    const contentLength = file.size
 
     let retrievedLength: number
     if (start !== undefined && end !== undefined) {
       retrievedLength = (end + 1) - start
     } else if (start !== undefined) {
-      retrievedLength = contentLength - start
+      retrievedLength = file.size - start
     } else if (end !== undefined) {
       retrievedLength = (end + 1)
     } else {
-      retrievedLength = contentLength
+      retrievedLength = file.size
     }
 
     res.statusCode = start !== undefined || end !== undefined ? 206 : 200
 
     res.setHeader("content-length", retrievedLength)
     if (req.headers.range) {
-      res.setHeader("content-range", `bytes ${start ?? 0}-${end ?? (contentLength - 1)}/${contentLength}`)
+      res.setHeader("content-range", `bytes ${start ?? 0}-${end ?? (file.size - 1)}/${file.size}`)
       res.setHeader("accept-ranges", "bytes")
     }
     const fileStream = await node.createReadStream(file, {
