@@ -87,7 +87,6 @@ export interface AppConfig extends AsCentralConfig, AsNodeConfig {
 }
 
 const defaultConfig: Partial<AppConfig> = {
-  root: ".",
   port: 80,
   rebuildInterval: 3000,
   mediaType: {
