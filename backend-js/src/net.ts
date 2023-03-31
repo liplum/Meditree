@@ -1,4 +1,3 @@
-import type WebSocket from "ws"
 import { Readable } from "stream"
 import { BufferReader, BufferWriter } from "./buffer.js"
 import { v4 as uuidv4 } from "uuid"
@@ -37,15 +36,19 @@ export type ReadHook<Data> = ({ type, id, data, header }: {
   chunk?: Buffer | null
 }) => boolean | undefined
 export type DebugCall = (id: string, data: any, header?: any) => void
+export interface SocketLike {
+  close: () => void
+  send: (buffer: Buffer) => void
+}
 export class Net {
-  readonly ws: WebSocket
+  readonly socket: SocketLike
   private readonly messageHandlers: MessageHandlerMap<any> = new Map()
   private unhandledMessageTasks: (() => void)[] = []
   private readonly prereadHooks: PrereadHook[] = []
   private readonly readHooks: ReadHook<any>[] = []
   debug?: DebugCall
-  constructor(ws: WebSocket) {
-    this.ws = ws
+  constructor(socket: SocketLike) {
+    this.socket = socket
   }
 
   startDaemonWatch(): void {
@@ -60,7 +63,7 @@ export class Net {
   }
 
   close(): void {
-    this.ws.close()
+    this.socket.close()
   }
 
   id2Stream = new Map<string, Readable>()
@@ -147,7 +150,7 @@ export class Net {
           writer.string(uuid)
           writer.uint8(StreamState.on)
           writer.buffer(chunk)
-          this.ws.send(writer.buildBuffer())
+          this.socket.send(writer.buildBuffer())
         }
       })
       data.on("close", () => {
@@ -157,7 +160,7 @@ export class Net {
         writeHeader(writer, header)
         writer.string(uuid)
         writer.uint8(StreamState.end)
-        this.ws.send(writer.buildBuffer())
+        this.socket.send(writer.buildBuffer())
       })
     } else {
       const writer = new BufferWriter()
@@ -165,7 +168,7 @@ export class Net {
       writer.string(id)
       writeHeader(writer, JSON.stringify(header))
       writeObject(writer, data)
-      this.ws.send(writer.buildBuffer())
+      this.socket.send(writer.buildBuffer())
     }
   }
 
