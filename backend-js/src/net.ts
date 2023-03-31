@@ -20,7 +20,6 @@ export enum StreamState {
   on = 1,
   error = 2,
 }
-export type MessageHandlerMap<Data> = Map<string, Handler<Data>[]>
 
 export type PrereadHook = ({ type, id, reader, header }: {
   type: MessageType
@@ -42,10 +41,11 @@ export interface SocketLike {
 }
 export class Net {
   readonly socket: SocketLike
-  private readonly messageHandlers: MessageHandlerMap<any> = new Map()
+  private readonly messageHandlers = new Map<string, Handler<any>[]>()
   private unhandledMessageTasks: (() => void)[] = []
   private readonly prereadHooks: PrereadHook[] = []
   private readonly readHooks: ReadHook<any>[] = []
+  private readonly id2Stream = new Map<string, Readable>()
   debug?: DebugCall
   constructor(socket: SocketLike) {
     this.socket = socket
@@ -65,8 +65,6 @@ export class Net {
   close(): void {
     this.socket.close()
   }
-
-  id2Stream = new Map<string, Readable>()
 
   /**
    * Call this in ws.on("message")
@@ -117,6 +115,9 @@ export class Net {
       } else if (state === StreamState.end) {
         stream.push(null)
         this.id2Stream.delete(uuid)
+      } else {
+        stream.emit("error")
+        this.id2Stream.delete(uuid)
       }
     }
   }
@@ -138,42 +139,59 @@ export class Net {
 
   send(id: string, data: any, header?: any): void {
     if (data instanceof Readable) {
-      header = JSON.stringify(header)
-      const uuid = uuidv4()
-      data.on("readable", () => {
-        let chunk: Buffer
-        while ((chunk = data.read()) !== null) {
-          const writer = new BufferWriter()
-          writer.uint8(MessageType.stream)
-          writer.string(id)
-          writeHeader(writer, header)
-          writer.string(uuid)
-          writer.uint8(StreamState.on)
-          writer.buffer(chunk)
-          this.socket.send(writer.buildBuffer())
-        }
-      })
-      data.on("close", () => {
+      this.sendStream(id, data, header)
+    } else {
+      this.sendObject(id, data, header)
+    }
+  }
+
+  private sendObject(id: string, data: any, header?: any): void {
+    const writer = new BufferWriter()
+    writer.uint8(MessageType.object)
+    writer.string(id)
+    writeHeader(writer, JSON.stringify(header))
+    writeObject(writer, data)
+    this.socket.send(writer.buildBuffer())
+  }
+
+  private sendStream(id: string, stream: Readable, header?: any): void {
+    header = JSON.stringify(header)
+    const uuid = uuidv4()
+    stream.on("readable", () => {
+      let chunk: Buffer
+      while ((chunk = stream.read()) !== null) {
         const writer = new BufferWriter()
         writer.uint8(MessageType.stream)
         writer.string(id)
         writeHeader(writer, header)
         writer.string(uuid)
-        writer.uint8(StreamState.end)
+        writer.uint8(StreamState.on)
+        writer.buffer(chunk)
         this.socket.send(writer.buildBuffer())
-      })
-    } else {
+      }
+    })
+    stream.on("close", () => {
       const writer = new BufferWriter()
-      writer.uint8(MessageType.object)
+      writer.uint8(MessageType.stream)
       writer.string(id)
-      writeHeader(writer, JSON.stringify(header))
-      writeObject(writer, data)
+      writeHeader(writer, header)
+      writer.string(uuid)
+      writer.uint8(StreamState.end)
       this.socket.send(writer.buildBuffer())
-    }
+    })
+    stream.on("error", () => {
+      const writer = new BufferWriter()
+      writer.uint8(MessageType.stream)
+      writer.string(id)
+      writeHeader(writer, header)
+      writer.string(uuid)
+      writer.uint8(StreamState.error)
+      this.socket.send(writer.buildBuffer())
+    })
   }
 
   private addHandler<Data>(
-    handlers: MessageHandlerMap<Data>,
+    handlers: Map<string, Handler<Data>[]>,
     id: string, handler: Handler<Data>
   ): void {
     if (handlers.has(id)) {
