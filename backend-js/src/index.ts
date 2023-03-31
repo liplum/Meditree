@@ -3,13 +3,22 @@ import { startServer } from "./server.js"
 import { install as installSourceMap } from "source-map-support"
 import path from "path"
 import { fileURLToPath, pathToFileURL } from "url"
+import commandLineArgs from "command-line-args"
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   installSourceMap()
+  const optionDefinitions = [
+    { name: "root", type: String, defaultOption: true },
+    { name: "name", type: String, defaultOption: true },
+    { name: "config", type: String },
+  ]
+  const options = commandLineArgs(optionDefinitions)
   const config = findConfig({
-    rootDir: path.dirname(fileURLToPath(import.meta.url)),
-    filename: "meditree.json",
+    rootDir: options.root ?? path.dirname(fileURLToPath(import.meta.url)),
+    filename: options.config ?? "meditree.json",
   })
-  // module was not imported but called directly
+  if (options.name) {
+    config.name = options.name
+  }
   startServer(config)
 }
