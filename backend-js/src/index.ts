@@ -9,7 +9,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   installSourceMap()
   const optionDefinitions = [
     { name: "root", type: String, defaultOption: true },
-    { name: "name", type: String, defaultOption: true },
+    { name: "name", type: String },
     { name: "config", type: String },
   ]
   const options = commandLineArgs(optionDefinitions)
