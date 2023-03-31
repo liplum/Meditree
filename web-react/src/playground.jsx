@@ -110,7 +110,6 @@ export function FileDisplayBoard(props) {
 function renderVideo(file) {
   return <video controls
     src={file.url}
-    autoPlay
     onMouseDown={(event) => {
       event.stopPropagation();
     }}
