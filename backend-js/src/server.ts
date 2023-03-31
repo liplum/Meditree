@@ -36,18 +36,18 @@ export async function startServer(config: AppConfig): Promise<void> {
   let fullTreeCache: { obj: FileTreeInfo, json: string, html?: string }
   updateTreeJsonCache({})
 
-  node.on("file-tree-update", (fullTree) => {
-    updateTreeJsonCache(fullTree)
+  node.on("file-tree-update", (entireFree) => {
+    updateTreeJsonCache(entireFree)
   })
 
-  function updateTreeJsonCache(fullTree: FileTreeJson): void {
+  function updateTreeJsonCache(entireFree: FileTreeJson): void {
     let html: string | undefined
     if (typeof homepage !== "string" && (homepage === undefined || homepage === null || homepage)) {
-      html = buildIndexHtml(config.mediaType, fullTree)
+      html = buildIndexHtml(config.mediaType, entireFree)
     }
     const info: FileTreeInfo = {
       name: config.name,
-      files: fullTree,
+      files: entireFree,
     }
     const infoString = JSON.stringify(info, null, 1)
     fullTreeCache = {

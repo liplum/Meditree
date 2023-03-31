@@ -48,11 +48,11 @@ export interface FileTreeInfo {
 }
 export type RouteMsgCallback<Header = any> = (id: string, data: any, header: Header) => void
 export declare interface MeditreeNode {
-  on(event: "file-tree-update", listener: (fullTree: FileTreeJson) => void): this
+  on(event: "file-tree-update", listener: (entireFree: FileTreeJson) => void): this
 
-  off(event: "file-tree-update", listener: (fullTree: FileTreeJson) => void): this
+  off(event: "file-tree-update", listener: (entireFree: FileTreeJson) => void): this
 
-  emit(event: "file-tree-update", fullTree: FileTreeJson): boolean
+  emit(event: "file-tree-update", entireFree: FileTreeJson): boolean
 }
 export class MeditreeNode extends EventEmitter implements FileTreeLike {
   private readonly name2Parent = new Map<string, Net>()
@@ -101,15 +101,13 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     if (!node) throw new Error(`Node[${name}] not found.`)
     console.log(`File Tree from node[${name}] is updated.`)
     node.tree = tree
-    const fullTree = this.toJSON()
-    this.emit("file-tree-update", fullTree)
+    this.emit("file-tree-update", this.toJSON())
   }
 
   updateFileTreeFromLocal(name: string, tree: FileTreeLike<LocalFile>): void {
     const json = tree.toJSON()
     this.localTree = { name, tree, json }
-    const fullTree = this.toJSON()
-    this.emit("file-tree-update", fullTree)
+    this.emit("file-tree-update", this.toJSON())
   }
 
   toJSON(): FileTreeJson {
@@ -149,6 +147,8 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
 
   removeChildNode(name: string): void {
     this.name2Child.delete(name)
+    // when a child is removed, rebuild the entire tree
+    this.emit("file-tree-update", this.toJSON())
   }
 
   addParentNode(name: string, net: Net): void {
