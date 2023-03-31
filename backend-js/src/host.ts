@@ -4,6 +4,7 @@ import minimatch, { type MinimatchOptions } from "minimatch"
 import { clearInterval } from "timers"
 import type { FileTreeLike, LocalFile, FileType, FileTreeJson } from "./file.js"
 import { FileTree } from "./file.js"
+import EventEmitter from "events"
 export interface HostTreeOptions {
   /**
   * The absolute path of root directory.
@@ -18,12 +19,21 @@ export interface HostTreeOptions {
 const minimatchOptions: MinimatchOptions = {
   nocase: true,
 }
-export class HostTree implements FileTreeLike {
+
+export declare interface HostTree {
+  on(event: "rebuild", listener: (fileTree: FileTree) => void): this
+
+  off(event: "rebuild", listener: (fileTree: FileTree) => void): this
+
+  emit(event: "rebuild", fileTree: FileTree): boolean
+}
+
+export class HostTree extends EventEmitter implements FileTreeLike {
   protected options: HostTreeOptions
   fileTree: FileTree
   protected fileWatcher: fs.FSWatcher | null = null
-  private readonly rebuildListeners: (() => void)[] = []
   constructor(options: HostTreeOptions) {
+    super()
     this.options = options
   }
 
@@ -93,10 +103,6 @@ export class HostTree implements FileTreeLike {
     }
   }
 
-  onRebuild(listener: () => void): void {
-    this.rebuildListeners.push(listener)
-  }
-
   async rebuildFileTree(): Promise<void> {
     this.shouldRebuild = false
     console.time("Build File Tree")
@@ -109,9 +115,7 @@ export class HostTree implements FileTreeLike {
     })
     console.timeEnd("Build File Tree")
     this.fileTree = tree
-    for (const listener of this.rebuildListeners) {
-      listener()
-    }
+    this.emit("rebuild", tree)
   }
 
   stopWatching(): void {

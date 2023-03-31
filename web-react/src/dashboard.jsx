@@ -9,7 +9,7 @@ import {
   defer,
   Await,
 } from "react-router-dom";
-import { Box, Divider, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
+import { Box, Divider, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip, CssBaseline } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend, storage } from "./env";
 import { FileDisplayBoard } from "./playground";
@@ -28,7 +28,6 @@ export const BackendContext = createContext()
 
 /// TODO: Drawer looks bad on tablet portrait mode.
 const drawerWidth = "min(max(30%,20rem),30rem)";
-//const drawerWidth = "20rem";
 
 export async function loader({ request }) {
   const url = new URL(request.url);

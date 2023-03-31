@@ -90,7 +90,7 @@ export class Net {
       const uuid = reader.string()
       let stream = this.id2Stream.get(uuid)
       if (!stream) {
-        console.log(`Stream[${uuid}] is on.`)
+        console.log(`Stream[${uuid}] starts.`)
         stream = new Readable({
           read() { }
         })
@@ -113,6 +113,7 @@ export class Net {
         const chunk: Buffer = reader.buffer()
         stream.push(chunk)
       } else if (state === StreamState.end) {
+        console.log(`Stream[${uuid}] ends.`)
         stream.push(null)
         this.id2Stream.delete(uuid)
       }

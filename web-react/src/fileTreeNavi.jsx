@@ -19,7 +19,7 @@ export function FileTreeNavigation(props) {
       setRenderTree(newRenderTree)
     }
   }, [props.searchDelegate, delegate])
-  
+
   const theme = useTheme()
   if (!renderTree) return
   return (

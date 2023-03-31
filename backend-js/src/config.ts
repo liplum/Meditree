@@ -56,9 +56,9 @@ export interface AppConfig extends AsCentralConfig, AsNodeConfig {
   port: number
   /**
    * The root directory to host.
-   * Default is ".".
+   * If not specified, no local file tree will be created.
    */
-  root: string
+  root?: string
   /**
    * The unique name of hosted file tree.
    * If not specified, a uuid v4 will be generated.
@@ -124,8 +124,13 @@ if (process.platform === "darwin") {
   ]
 }
 
-export function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
+export function topupDefaultConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
   const newConfig: AppConfig = Object.assign({}, defaultConfig, config ?? {}) as AppConfig
+  return newConfig
+}
+
+export function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
+  const newConfig = (config ? { ...config } : {}) as AppConfig
   if (newConfig.privateKey) {
     if (!newConfig.publicKey) {
       newConfig.publicKey = Buffer.from(nacl.box.keyPair.fromSecretKey(Uint8Array.from(Buffer.from(newConfig.privateKey))).publicKey).toString("base64")
@@ -138,6 +143,12 @@ export function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig 
   if (!newConfig.name) {
     newConfig.name = uuidv4()
   }
+  if (!newConfig.fileTypePattern) {
+    newConfig.fileTypePattern = defaultConfig.fileTypePattern as any
+  }
+  if (!newConfig.mediaType) {
+    newConfig.mediaType = defaultConfig.mediaType as any
+  }
   return newConfig
 }
 
@@ -149,8 +160,9 @@ export function findConfig({ rootDir, filename }: { rootDir: string, filename: s
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     return config
   } else {
+    const config: AppConfig = setupConfig(defaultConfig)
     configFile = path.join(curDir, filename)
-    fs.writeFileSync(configFile, JSON.stringify(setupConfig(), null, 2))
+    fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     throw new Error(`Configuration not found. ${configFile} is created.`)
   }
 }

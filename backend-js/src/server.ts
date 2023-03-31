@@ -4,91 +4,75 @@ import { type AppConfig, MediaType, type AsCentralConfig, type AsNodeConfig } fr
 import express, { type Request, type Response } from "express"
 import { type File, type FileTreeJson } from "./file.js"
 import cors from "cors"
-import { setupAsCentral, setupAsNode, type LocalFileTreeRebuildCallback, MeditreeNode } from "./meditree.js"
+import { setupAsCentral, setupAsNode, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { createLogger } from "./logger.js"
 import { buildIndexHtml } from "./page.js"
 import expressWs from "express-ws"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
+  const homepage = config.homepage
   const app = express()
   app.use(cors())
   app.use(express.json())
   const log = createLogger("Main")
-  const localTree = new HostTree({
-    rootPath: config.root,
-    name: config.name,
-    fileTypePattern: config.fileTypePattern,
-    rebuildInterval: config.rebuildInterval,
-    ignorePattern: config.ignore ?? [],
+  const localTree = !config.root
+    ? undefined
+    : new HostTree({
+      rootPath: config.root,
+      name: config.name,
+      fileTypePattern: config.fileTypePattern,
+      rebuildInterval: config.rebuildInterval,
+      ignorePattern: config.ignore ?? [],
+    })
+  const node = new MeditreeNode()
+
+  if (localTree) {
+    localTree.on("rebuild", (fileTree) => {
+      node.updateFileTreeFromLocal(config.name, fileTree)
+      log.info("Local file tree is rebuilt.")
+    })
+  }
+  let fullTreeCache: { obj: FileTreeInfo, json: string, html?: string }
+  updateTreeJsonCache({})
+
+  node.on("file-tree-update", (fullTree) => {
+    updateTreeJsonCache(fullTree)
   })
-  const centralName2Handler = new Map<string, {
-    onLocalFileTreeRebuild?: LocalFileTreeRebuildCallback
-  }>()
-  const node = new MeditreeNode(config.name, localTree)
-  node.on("bubble-pass", (id, data, header) => {
-    if (id === "file-tree-rebuild") {
-      const fileTree: { name: string, files: FileTreeJson } = JSON.parse(data)
-      const source = header.path[0]
-      node.updateFileTreeFromSubNode(source, fileTree.files)
+
+  function updateTreeJsonCache(fullTree: FileTreeJson): void {
+    let html: string | undefined
+    if (typeof homepage !== "string" && (homepage === undefined || homepage === null || homepage)) {
+      html = buildIndexHtml(config.mediaType, fullTree)
     }
-  })
+    const info: FileTreeInfo = {
+      name: config.name,
+      files: fullTree,
+    }
+    const infoString = JSON.stringify(info, null, 1)
+    fullTreeCache = {
+      obj: info,
+      json: infoString,
+      html,
+    }
+  }
 
   // If node is defined and not empty, subnodes can connect to this.
   if (config.node?.length && config.publicKey && config.privateKey) {
     expressWs(app)
-    await setupAsCentral(config as any as AsCentralConfig, {
-      node,
-      app: app as any as expressWs.Application
-    })
+    await setupAsCentral(node, config as any as AsCentralConfig,
+      app as any as expressWs.Application)
   }
 
   // If central is defined and not empty, it will try connecting to every central.
   if (config.central?.length && config.publicKey && config.privateKey) {
-    await setupAsNode(config as any as AsNodeConfig, {
-      node,
-      onLocalFileTreeRebuild(id, listener) {
-        let handler = centralName2Handler.get(id)
-        if (!handler) {
-          handler = {}
-          centralName2Handler.set(id, handler)
-        }
-        handler.onLocalFileTreeRebuild = listener
-      },
-      offListeners(id) { centralName2Handler.delete(id) },
-    })
+    await setupAsNode(node, config as any as AsNodeConfig)
   }
 
-  let treeJsonObjectCache: { name: string, files: FileTreeJson } | null
-  let treeJsonStringCache: string | null
-  let treeIndexHtmlCache: string | null
-
-  function updateCache(filetreeJson: { name: string, files: FileTreeJson }): void {
-    treeJsonStringCache = JSON.stringify(filetreeJson, null, 1)
-    treeIndexHtmlCache = buildIndexHtml(config.mediaType, filetreeJson.files)
-    for (const [name, handler] of centralName2Handler.entries()) {
-      log.info(`Send rebuilt file tree to parent node[${name}].`)
-      handler?.onLocalFileTreeRebuild?.({
-        json: filetreeJson.files,
-        jsonString: treeJsonStringCache,
-        tree: localTree.fileTree,
-      })
-    }
+  if (localTree) {
+    localTree.startWatching()
+    await localTree.rebuildFileTree()
   }
-  localTree.onRebuild(() => {
-    node.emit("file-tree-update", config.name, localTree)
-    log.info("Local file tree is rebuilt.")
-  })
-  node.on("file-tree-update", (name) => {
-    treeJsonObjectCache = {
-      name: config.displayName ?? config.name,
-      files: node.toJSON()
-    }
-    updateCache(treeJsonObjectCache)
-    log.info(`The file tree from node[${name}] is updated.`)
-  })
-  localTree.startWatching()
-  await localTree.rebuildFileTree()
   // If posscode is enabled.
   if (config.passcode) {
     app.use((req, res, next) => {
@@ -101,7 +85,6 @@ export async function startServer(config: AppConfig): Promise<void> {
     })
   }
 
-  const homepage = config.homepage
   if (typeof homepage === "string") {
     app.get("/", (req, res) => {
       res.redirect(homepage)
@@ -110,14 +93,14 @@ export async function startServer(config: AppConfig): Promise<void> {
     app.get("/", (req, res) => {
       res.status(200)
       res.contentType("html")
-      res.send(treeIndexHtmlCache)
+      res.send(fullTreeCache.html)
     })
   }
 
   app.get("/list", (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
-    res.send(treeJsonStringCache)
+    res.send(fullTreeCache.json)
   })
 
   const fileType2handler = {
@@ -131,12 +114,12 @@ export async function startServer(config: AppConfig): Promise<void> {
     const path = removePrefix(decodeURI(req.baseUrl + req.path), "/file/")
     const file = node.resolveFile(path.split("/"))
     if (file == null) {
-      res.status(404)
+      res.status(404).end()
       return
     }
     const fileType = file.type
     if (fileType == null) {
-      res.status(404)
+      res.status(404).end()
       return
     }
     const handler = fileType2handler[config.mediaType[fileType]]
