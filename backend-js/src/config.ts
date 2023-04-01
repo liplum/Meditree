@@ -42,6 +42,7 @@ export interface AsNodeConfig {
   publicKey: string
   privateKey: string
   passcode?: string
+  reconnectInterval?: number
 }
 
 export interface AppConfig extends AsCentralConfig, AsNodeConfig {

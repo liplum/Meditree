@@ -199,7 +199,7 @@ export async function setupAsCentral(
   const log = createLogger("Central")
   // as central
   if (app) {
-    app.ws("/ws", async (ws, req) => {
+    app.ws("/ws", async (ws, _req) => {
       await setupWs(ws)
     })
   } else {
@@ -254,16 +254,18 @@ export async function setupAsNode(
         await connectTo(central)
       }
     }
-  }, 1).unref()
+  }, config.reconnectInterval ?? 3600).unref()
   async function connectTo(central: CentralConfig): Promise<void> {
     const log = createLogger(`Node-${central.server}`)
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
     const net = new Net(ws)
     connected.push(central.server)
     net.startDaemonWatch()
+    let isConnected = false
     let centralInfo: CentralInfo | undefined
-    ws.on("error", (error) => { log.error(error) })
+    ws.on("error", () => { })
     ws.on("open", async () => {
+      isConnected = true
       log.info(`Connected to ${central.server}.`)
       centralInfo = await authenticateAsNode(net, log, central, config)
       if (!centralInfo) return
@@ -271,6 +273,7 @@ export async function setupAsNode(
     })
     ws.on("close", () => {
       connected.splice(connected.indexOf(central.server), 1)
+      if (!isConnected) return
       if (centralInfo) {
         node.removeParentNode(centralInfo.name)
       }
