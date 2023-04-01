@@ -263,7 +263,6 @@ enum ChallengeResult {
 }
 
 enum NodeMetaResult {
-  passcodeConflict = "passcodeConflict",
   success = "success",
 }
 
@@ -299,15 +298,6 @@ async function authenticateNodeAsCentral(
   })
   const nodeMeta: NodeMeta = await net.getMessage("node-meta")
   log.info(`Receieved node meta "${JSON.stringify(nodeMeta)}".`)
-  // If the node has passcode and it doesn't match this central's passcode, then report an error
-  if (nodeMeta.passcode && nodeMeta.passcode !== config.passcode) {
-    net.send("node-meta-result", {
-      result: NodeMetaResult.passcodeConflict,
-    })
-    log.info(`Node[${nodeMeta.name}] conflicts with this passcode.`)
-    net.close()
-    return
-  }
   net.send("node-meta-result", {
     result: NodeMetaResult.success,
   })
@@ -365,8 +355,8 @@ async function authenticateAsNode(
   const nodeMetaResultPayload: {
     result: NodeMetaResult
   } = await net.getMessage("node-meta-result")
-  if (nodeMetaResultPayload.result === NodeMetaResult.passcodeConflict) {
-    log.error(`Passcode is conflict with the central "${central.server}"`)
+  if (nodeMetaResultPayload.result !== NodeMetaResult.success) {
+    log.error(`Central["${central.server}"] rejects this node.`)
     net.close()
     return
   }
