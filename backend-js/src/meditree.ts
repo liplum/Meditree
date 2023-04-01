@@ -270,7 +270,7 @@ export async function setupAsNode(
       node.addParentNode(centralInfo.name, central.server, net)
     })
     ws.on("close", () => {
-      connected.unshift(central.server)
+      connected.splice(connected.indexOf(central.server), 1)
       if (centralInfo) {
         node.removeParentNode(centralInfo.name)
       }

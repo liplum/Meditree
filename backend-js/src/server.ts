@@ -129,6 +129,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.header({
         "Content-Type": file.type,
       })
+      res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)
       await handler(req, res, file)
     }
   })

@@ -83,12 +83,17 @@ export interface AppConfig extends AsCentralConfig, AsNodeConfig {
   fileTypePattern: Record<string, string>
   mediaType: Record<string, MediaType>
   ignore?: string[]
+  /**
+   * Default is 7 days.
+   */
+  cacheMaxAge: number
   [key: string]: any
 }
 
 const defaultConfig: Partial<AppConfig> = {
   port: 80,
   rebuildInterval: 3000,
+  cacheMaxAge: 604800,
   mediaType: {
     "video/mp4": MediaType.video,
     "image/png": MediaType.image,
