@@ -13,7 +13,7 @@ export enum ForwardType {
   socket = "socket",
   redirect = "redirect",
 }
-export type CentralConfig = {
+export type ParentEntry = {
   server: string
   forward: ForwardType
 } & ForwardConfig
@@ -38,7 +38,7 @@ export interface AsParentConfig {
 
 export interface AsChildConfig {
   name: string
-  parent: CentralConfig[]
+  parent: ParentEntry[]
   publicKey: string
   privateKey: string
   passcode?: string

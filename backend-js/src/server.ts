@@ -58,11 +58,15 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   node.on("parent-node-change", (parent, isAdded) => {
-    if (isAdded) {
-      parent.net.send("file-tree-rebuild", fullTreeCache.obj)
-    }
+    if (!isAdded) return
+    parent.net.send("file-tree-rebuild", fullTreeCache.obj.files)
   })
 
+  if (localTree) {
+    localTree.startWatching()
+    await localTree.rebuildFileTree()
+  }
+  
   // If node is defined and not empty, subnodes can connect to this.
   if (config.child?.length && config.publicKey && config.privateKey) {
     expressWs(app)
@@ -75,10 +79,6 @@ export async function startServer(config: AppConfig): Promise<void> {
     await setupAsChild(node, config as any as AsChildConfig)
   }
 
-  if (localTree) {
-    localTree.startWatching()
-    await localTree.rebuildFileTree()
-  }
   // If posscode is enabled.
   if (config.passcode) {
     app.use((req, res, next) => {

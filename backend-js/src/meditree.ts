@@ -8,7 +8,7 @@ import { LocalFile, type FileTreeLike, type FileTreeJson, type File, type Remote
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
-import { ForwardType, type ForwardConfig, type AsParentConfig, type AsChildConfig, type CentralConfig } from "./config.js"
+import { ForwardType, type ForwardConfig, type AsParentConfig, type AsChildConfig, type ParentEntry } from "./config.js"
 import type expressWs from "express-ws"
 import { encrypt, decrypt, generateNonce } from "./crypt.js"
 
@@ -263,41 +263,41 @@ export async function setupAsChild(
   config: AsChildConfig,
 ): Promise<void> {
   const connected: string[] = []
-  for (const central of config.parent) {
-    await connectTo(central)
+  for (const parent of config.parent) {
+    await connectTo(parent)
   }
   if (config.reconnectInterval) {
     setInterval(async () => {
-      for (const central of config.parent) {
-        if (!connected.includes(central.server)) {
-          await connectTo(central)
+      for (const parent of config.parent) {
+        if (!connected.includes(parent.server)) {
+          await connectTo(parent)
         }
       }
     }, config.reconnectInterval).unref()
   }
-  async function connectTo(central: CentralConfig): Promise<void> {
-    const log = createLogger(`Parent[${central.server}]`)
-    const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
+  async function connectTo(parent: ParentEntry): Promise<void> {
+    const log = createLogger(`Parent[${parent.server}]`)
+    const ws = new WebSocket(`${convertUrlToWs(parent.server)}/ws`)
     const net = new Net(ws)
-    connected.push(central.server)
+    connected.push(parent.server)
     net.startDaemonWatch()
     let isConnected = false
     let centralInfo: CentralInfo | undefined
-    ws.on("error", () => { })
+    ws.on("error", (error) => { log.error(error) })
     ws.on("open", async () => {
       isConnected = true
-      log.info(`Connected to ${central.server}.`)
-      centralInfo = await authenticateForParent(net, log, central, config)
+      log.info(`Connected to ${parent.server}.`)
+      centralInfo = await authenticateForParent(net, log, parent, config)
       if (!centralInfo) return
-      node.addParentNode(centralInfo.name, central.server, net)
+      node.addParentNode(centralInfo.name, parent.server, net)
     })
     ws.on("close", () => {
-      connected.splice(connected.indexOf(central.server), 1)
+      connected.splice(connected.indexOf(parent.server), 1)
       if (!isConnected) return
       if (centralInfo) {
         node.removeParentNode(centralInfo.name)
       }
-      log.info(`Disconnected from ${central.server}.`)
+      log.info(`Disconnected from ${parent.server}.`)
     })
     ws.on("message", (data) => {
       net.handleDatapack(data as Buffer)
@@ -358,7 +358,7 @@ interface CentralInfo {
 async function authenticateForParent(
   net: Net,
   log: Logger,
-  central: CentralConfig,
+  central: ParentEntry,
   config: AsChildConfig,
 ): Promise<CentralInfo | undefined> {
   net.send("auth-public-key", {
