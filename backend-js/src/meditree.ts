@@ -59,10 +59,16 @@ export interface FileTreeInfo {
 export type RouteMsgCallback<Header = any> = (id: string, data: any, header: Header) => void
 export declare interface MeditreeNode {
   on(event: "file-tree-update", listener: (entireFree: FileTreeJson) => void): this
+  on(event: "child-node-change", listener: (child: SubNode, isAdded: boolean) => void): this
+  on(event: "parent-node-change", listener: (parent: ParentNode, isAdded: boolean) => void): this
 
   off(event: "file-tree-update", listener: (entireFree: FileTreeJson) => void): this
+  off(event: "child-node-change", listener: (child: SubNode, isAdded: boolean) => void): this
+  off(event: "parent-node-change", listener: (parent: ParentNode, isAdded: boolean) => void): this
 
   emit(event: "file-tree-update", entireFree: FileTreeJson): boolean
+  emit(event: "child-node-change", child: SubNode, isAdded: boolean): boolean
+  emit(event: "parent-node-change", parent: ParentNode, isAdded: boolean): this
 }
 export class MeditreeNode extends EventEmitter implements FileTreeLike {
   private readonly name2Parent = new Map<string, ParentNode>()
@@ -145,7 +151,8 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   }
 
   addChildNode(name: string, net: Net): void {
-    this.name2Child.set(name, new SubNode(name, net))
+    const node = new SubNode(name, net)
+    this.name2Child.set(name, node)
     net.addReadHook(({ type, id, data }) => {
       if (type !== MessageType.object) return
       if (id !== "file-tree-rebuild") return
@@ -153,16 +160,22 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       this.updateFileTreeFromSubNode(name, files)
       return true
     })
+    this.emit("child-node-change", node, true)
   }
 
   removeChildNode(name: string): void {
-    this.name2Child.delete(name)
-    // when a child is removed, rebuild the entire tree
-    this.emit("file-tree-update", this.toJSON())
+    const node = this.name2Child.get(name)
+    if (node) {
+      this.name2Child.delete(name)
+      this.emit("child-node-change", node, false)
+      // when a child is removed, rebuild the entire tree
+      this.emit("file-tree-update", this.toJSON())
+    }
   }
 
   addParentNode(name: string, address: string, net: Net): void {
-    this.name2Parent.set(name, new ParentNode(name, address, net))
+    const node = new ParentNode(name, address, net)
+    this.name2Parent.set(name, node)
     net.addReadHook(({ type, id, data }) => {
       if (id !== "get-file") return
       if (type !== MessageType.object) return
@@ -170,10 +183,15 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       this.handleGetFile(path, uuid, net, options)
       return true
     })
+    this.emit("parent-node-change", node, true)
   }
 
   removeParentNode(name: string): void {
-    this.name2Parent.delete(name)
+    const node = this.name2Parent.get(name)
+    if (node) {
+      this.name2Parent.delete(name)
+      this.emit("parent-node-change", node, false)
+    }
   }
 
   get parents(): Iterable<[string, ParentNode]> {

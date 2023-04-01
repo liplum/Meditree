@@ -57,6 +57,12 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
   }
 
+  node.on("parent-node-change", (parent, isAdded) => {
+    if (isAdded) {
+      parent.net.send("file-tree-rebuild", fullTreeCache.obj)
+    }
+  })
+
   // If node is defined and not empty, subnodes can connect to this.
   if (config.node?.length && config.publicKey && config.privateKey) {
     expressWs(app)
