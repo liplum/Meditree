@@ -248,13 +248,15 @@ export async function setupAsNode(
   for (const central of config.central) {
     await connectTo(central)
   }
-  setInterval(async () => {
-    for (const central of config.central) {
-      if (!connected.includes(central.server)) {
-        await connectTo(central)
+  if (config.reconnectInterval) {
+    setInterval(async () => {
+      for (const central of config.central) {
+        if (!connected.includes(central.server)) {
+          await connectTo(central)
+        }
       }
-    }
-  }, config.reconnectInterval ?? 3600).unref()
+    }, config.reconnectInterval).unref()
+  }
   async function connectTo(central: CentralConfig): Promise<void> {
     const log = createLogger(`Node-${central.server}`)
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
