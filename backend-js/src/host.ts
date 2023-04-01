@@ -105,7 +105,6 @@ export class HostTree extends EventEmitter implements FileTreeLike {
 
   async rebuildFileTree(): Promise<void> {
     this.shouldRebuild = false
-    console.time("Build File Tree")
     const tree = await FileTree.createFrom({
       rootPath: this.options.rootPath,
       initPath: [this.options.name],
@@ -113,7 +112,6 @@ export class HostTree extends EventEmitter implements FileTreeLike {
       includes: this.isFileOrDirectoryIncluded,
       pruned: true,
     })
-    console.timeEnd("Build File Tree")
     this.fileTree = tree
     this.emit("rebuild", tree)
   }

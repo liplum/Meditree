@@ -9,7 +9,7 @@ import {
   defer,
   Await,
 } from "react-router-dom";
-import { Box, Divider, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
+import { Box, Divider, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip, Typography } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend, storage } from "./env";
 import { FileDisplayBoard } from "./playground";
@@ -92,10 +92,11 @@ export function App(props) {
 
 function Body(props) {
   const { fileTreeDelegate, params } = props
+  const hasAnyFile = fileTreeDelegate.key2File.size !== 0
   const { baseUrl } = params
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const lastSelectedFile = storage.getLastSelectedFileOf(baseUrl) ?? ft.getFirstFile(fileTreeDelegate)
-  const [selectedFile, setSelectedFile] = useState(lastSelectedFile)
+  const [selectedFile, setSelectedFile] = useState(hasAnyFile ? lastSelectedFile : null)
   const [searchPrompt, setSearchPrompt] = useState()
   const [onlyShowStarred, setOnlyShowStarred] = useState()
 
@@ -185,9 +186,13 @@ function Body(props) {
       />
     </div>
     <div style={{ flex: 1, overflow: 'auto' }}>
-      <FileTreeNavigation
-        searchDelegate={filterByPrompt}
-      />
+      {
+        !hasAnyFile
+          ? <EmptyFileTreeNavigation />
+          : <FileTreeNavigation
+            searchDelegate={filterByPrompt}
+          />
+      }
     </div>
   </div>
   const body = (
@@ -245,6 +250,12 @@ function Body(props) {
       </AstrologyContext.Provider>
     </FileTreeDeleagteContext.Provider>
   </IsDrawerOpenContext.Provider>
+}
+
+function EmptyFileTreeNavigation() {
+  return <Typography variant="h6" noWrap component="div" className="no-file-label">
+    {i18n.fileTreeNavi.noFile}
+  </Typography>
 }
 
 export function ResponsiveAppBar(props) {
