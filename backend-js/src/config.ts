@@ -24,28 +24,28 @@ export type ForwardConfig = {
   forward: ForwardType.redirect
   redirectTo: string
 }
-export interface AsCentralConfig {
+export interface AsParentConfig {
   name: string
   port: number
   /**
    * The public key of node.
    */
-  node: string[]
+  child: string[]
   publicKey: string
   privateKey: string
   passcode?: string
 }
 
-export interface AsNodeConfig {
+export interface AsChildConfig {
   name: string
-  central: CentralConfig[]
+  parent: CentralConfig[]
   publicKey: string
   privateKey: string
   passcode?: string
   reconnectInterval?: number
 }
 
-export interface AppConfig extends AsCentralConfig, AsNodeConfig {
+export interface AppConfig extends AsParentConfig, AsChildConfig {
   /** 
    * The network interface on which the application will listen for incoming connections.
    * Default is for all interfaces.
@@ -117,8 +117,8 @@ const defaultConfig: Partial<AppConfig> = {
     "**/*.gif": "image/gif",
     "**/*.webp": "image/webp",
   },
-  central: [],
-  node: [],
+  parent: [],
+  child: [],
 }
 
 // default to ignore application on macOS

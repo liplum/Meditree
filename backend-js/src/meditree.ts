@@ -8,7 +8,7 @@ import { LocalFile, type FileTreeLike, type FileTreeJson, type File, type Remote
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
-import { ForwardType, type ForwardConfig, type AsCentralConfig, type AsNodeConfig, type CentralConfig } from "./config.js"
+import { ForwardType, type ForwardConfig, type AsParentConfig, type AsChildConfig, type CentralConfig } from "./config.js"
 import type expressWs from "express-ws"
 import { encrypt, decrypt, generateNonce } from "./crypt.js"
 
@@ -209,9 +209,9 @@ type NodeMeta = {
   passcode?: string
 } & ForwardConfig
 
-export async function setupAsCentral(
+export async function setupAsParent(
   node: MeditreeNode,
-  config: AsCentralConfig,
+  config: AsParentConfig,
   app?: expressWs.Application,
 ): Promise<void> {
   const log = createLogger("Central")
@@ -249,7 +249,7 @@ export async function setupAsCentral(
         net.close()
       }
     })
-    const nodeMeta = await authenticateNodeAsCentral(net, log, config)
+    const nodeMeta = await authenticateChild(net, log, config)
     if (!nodeMeta) return
     node.addChildNode(nodeMeta.name, net)
     ws.on("close", () => {
@@ -258,17 +258,17 @@ export async function setupAsCentral(
   }
 }
 
-export async function setupAsNode(
+export async function setupAsChild(
   node: MeditreeNode,
-  config: AsNodeConfig,
+  config: AsChildConfig,
 ): Promise<void> {
   const connected: string[] = []
-  for (const central of config.central) {
+  for (const central of config.parent) {
     await connectTo(central)
   }
   if (config.reconnectInterval) {
     setInterval(async () => {
-      for (const central of config.central) {
+      for (const central of config.parent) {
         if (!connected.includes(central.server)) {
           await connectTo(central)
         }
@@ -276,7 +276,7 @@ export async function setupAsNode(
     }, config.reconnectInterval).unref()
   }
   async function connectTo(central: CentralConfig): Promise<void> {
-    const log = createLogger(`Node-${central.server}`)
+    const log = createLogger(`Parent[${central.server}]`)
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
     const net = new Net(ws)
     connected.push(central.server)
@@ -287,7 +287,7 @@ export async function setupAsNode(
     ws.on("open", async () => {
       isConnected = true
       log.info(`Connected to ${central.server}.`)
-      centralInfo = await authenticateAsNode(net, log, central, config)
+      centralInfo = await authenticateForParent(net, log, central, config)
       if (!centralInfo) return
       node.addParentNode(centralInfo.name, central.server, net)
     })
@@ -314,15 +314,15 @@ enum NodeMetaResult {
   success = "success",
 }
 
-async function authenticateNodeAsCentral(
+async function authenticateChild(
   net: Net,
   log: Logger,
-  config: AsCentralConfig,
+  config: AsParentConfig,
 ): Promise<NodeMeta | undefined> {
   const nonce = generateNonce()
   const challenge = uuidv4()
   const { publicKey }: { publicKey: string } = await net.getMessage("auth-public-key")
-  if (!config.node.includes(publicKey)) throw new Error(`${publicKey} unregistered.`)
+  if (!config.child.includes(publicKey)) throw new Error(`${publicKey} unregistered.`)
   log.info(`"${publicKey}" is challenging with "${challenge}".`)
   const challengeEncrypted = encrypt(challenge, nonce, publicKey, config.privateKey)
   net.send("auth-challenge", {
@@ -355,11 +355,11 @@ async function authenticateNodeAsCentral(
 interface CentralInfo {
   name: string
 }
-async function authenticateAsNode(
+async function authenticateForParent(
   net: Net,
   log: Logger,
   central: CentralConfig,
-  config: AsNodeConfig,
+  config: AsChildConfig,
 ): Promise<CentralInfo | undefined> {
   net.send("auth-public-key", {
     publicKey: config.publicKey

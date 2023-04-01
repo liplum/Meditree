@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { HostTree } from "./host.js"
-import { type AppConfig, MediaType, type AsCentralConfig, type AsNodeConfig } from "./config.js"
+import { type AppConfig, MediaType, type AsParentConfig, type AsChildConfig } from "./config.js"
 import express, { type Request, type Response } from "express"
 import { type File, type FileTreeJson } from "./file.js"
 import cors from "cors"
-import { setupAsCentral, setupAsNode, MeditreeNode, type FileTreeInfo } from "./meditree.js"
+import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { createLogger } from "./logger.js"
 import { buildIndexHtml } from "./page.js"
 import expressWs from "express-ws"
@@ -64,15 +64,15 @@ export async function startServer(config: AppConfig): Promise<void> {
   })
 
   // If node is defined and not empty, subnodes can connect to this.
-  if (config.node?.length && config.publicKey && config.privateKey) {
+  if (config.child?.length && config.publicKey && config.privateKey) {
     expressWs(app)
-    await setupAsCentral(node, config as any as AsCentralConfig,
+    await setupAsParent(node, config as any as AsParentConfig,
       app as any as expressWs.Application)
   }
 
   // If central is defined and not empty, it will try connecting to every central.
-  if (config.central?.length && config.publicKey && config.privateKey) {
-    await setupAsNode(node, config as any as AsNodeConfig)
+  if (config.parent?.length && config.publicKey && config.privateKey) {
+    await setupAsChild(node, config as any as AsChildConfig)
   }
 
   if (localTree) {
