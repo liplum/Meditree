@@ -78,7 +78,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     app.use((req, res, next) => {
       const passcode = decodeURI(req.query.passcode as string) ?? req.body.passcode
       if (passcode !== config.passcode) {
-        res.status(401).json({ error: "wrong passcode" })
+        res.status(401).json({ error: "incorrectPasscode" })
       } else {
         next()
       }

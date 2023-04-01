@@ -9,7 +9,7 @@ import {
   defer,
   Await,
 } from "react-router-dom";
-import { Box, Divider, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip, CssBaseline } from "@mui/material"
+import { Box, Divider, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend, storage } from "./env";
 import { FileDisplayBoard } from "./playground";
@@ -18,7 +18,7 @@ import { SearchBar } from "./searchbar";
 import "./dashboard.css"
 import { Failed, Loading } from "./loading";
 import useForceUpdate from "use-force-update";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useAsyncError } from 'react-router-dom';
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
@@ -34,31 +34,43 @@ export async function loader({ request }) {
   const urlParams = new URLSearchParams(url.search);
   const params = Object.fromEntries(urlParams.entries());
   params.baseUrl = `${params.protocol}://${params.server}`
-  const task = new Promise((resolve, reject) => {
-    const listUrl = backend.listUrl(params.baseUrl, params.passcode)
+  const listUrl = backend.listUrl(params.baseUrl, params.passcode)
+  const task = async () => {
     console.log(`fetching ${listUrl}`)
-    fetch(listUrl, {
+    const response = await fetch(listUrl, {
       method: "GET",
     })
-      .then((res) => res.json())
-      .then((data) => {
-        const fileTreeDelegate = ft.createDelegate(data.files, data.name)
-        document.title = data.name
-        resolve(fileTreeDelegate)
-      })
-      .catch((e) => {
-        console.error(e)
-        reject(e)
-      })
-  })
+    if (response.ok) {
+      const payload = await response.json()
+      const fileTreeDelegate = ft.createDelegate(payload.files, payload.name)
+      document.title = payload.name
+      return fileTreeDelegate
+    } else {
+      const { error } = await response.json()
+      throw new Error(error)
+    }
+  }
   return defer({
-    fileTreeDelegate: task,
+    fileTreeDelegate: task(),
     params,
   });
 }
+
+function LoadErrorBoundary() {
+  const error = useAsyncError()
+  const navigate = useNavigate()
+  console.error(error)
+  return <Failed text={i18n.loading.error[error.message] ?? i18n.loading.failed}>
+    <Button variant="outlined" onClick={() => {
+      navigate(-1);
+    }}>
+      Back
+    </Button>
+  </Failed>
+}
+
 export function App(props) {
   const { fileTreeDelegate, params } = useLoaderData();
-  const navigate = useNavigate()
 
   return (
     <main>
@@ -67,13 +79,7 @@ export function App(props) {
       >
         <Await
           resolve={fileTreeDelegate}
-          errorElement={<Failed text={i18n.loading.failed}>
-            <Button variant="outlined" onClick={() => {
-              navigate(-1);
-            }}>
-              Back
-            </Button>
-          </Failed>}
+          errorElement={<LoadErrorBoundary />}
         >
           {(delegate) => (
             <Body fileTreeDelegate={delegate} params={params} />

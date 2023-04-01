@@ -14,6 +14,9 @@ export const i18n = new LocalizedStrings({
     loading: {
       text: "Loading...",
       failed: "Failed to load content.",
+      error: {
+        incorrectPasscode: "Incorrect Passcode",
+      }
     },
     connect: {
       title: "Connect to server",
@@ -34,6 +37,9 @@ export const i18n = new LocalizedStrings({
     loading: {
       text: "加载中……",
       failed: "无法加载目录",
+      error: {
+        incorrectPasscode: "口令不正确",
+      }
     },
     connect: {
       title: "连接服务器",
