@@ -42,6 +42,16 @@ class SubNode implements FileTreeLike {
     return this.tree
   }
 }
+class ParentNode {
+  readonly name: string
+  readonly address: string
+  readonly net: Net
+  constructor(name: string, address: string, net: Net) {
+    this.name = name
+    this.address = address
+    this.net = net
+  }
+}
 export interface FileTreeInfo {
   name: string
   files: FileTreeJson
@@ -55,7 +65,7 @@ export declare interface MeditreeNode {
   emit(event: "file-tree-update", entireFree: FileTreeJson): boolean
 }
 export class MeditreeNode extends EventEmitter implements FileTreeLike {
-  private readonly name2Parent = new Map<string, Net>()
+  private readonly name2Parent = new Map<string, ParentNode>()
   private readonly name2Child = new Map<string, SubNode>()
   localTree?: { name: string, tree: FileTreeLike<LocalFile>, json: FileTreeJson }
 
@@ -63,7 +73,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     super()
     this.on("file-tree-update", (fullTree) => {
       for (const parent of this.name2Parent.values()) {
-        parent.send("file-tree-rebuild", fullTree)
+        parent.net.send("file-tree-rebuild", fullTree)
       }
     })
   }
@@ -151,8 +161,8 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     this.emit("file-tree-update", this.toJSON())
   }
 
-  addParentNode(name: string, net: Net): void {
-    this.name2Parent.set(name, net)
+  addParentNode(name: string, address: string, net: Net): void {
+    this.name2Parent.set(name, new ParentNode(name, address, net))
     net.addReadHook(({ type, id, data }) => {
       if (id !== "get-file") return
       if (type !== MessageType.object) return
@@ -164,6 +174,14 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
 
   removeParentNode(name: string): void {
     this.name2Parent.delete(name)
+  }
+
+  get parents(): Iterable<[string, ParentNode]> {
+    return this.name2Parent.entries()
+  }
+
+  get children(): Iterable<[string, SubNode]> {
+    return this.name2Child.entries()
   }
 }
 
@@ -226,13 +244,22 @@ export async function setupAsNode(
   node: MeditreeNode,
   config: AsNodeConfig,
 ): Promise<void> {
+  const connected: string[] = []
   for (const central of config.central) {
     await connectTo(central)
   }
+  setInterval(async () => {
+    for (const central of config.central) {
+      if (!connected.includes(central.server)) {
+        await connectTo(central)
+      }
+    }
+  }, 1)
   async function connectTo(central: CentralConfig): Promise<void> {
     const log = createLogger(`Node-${central.server}`)
     const ws = new WebSocket(`${convertUrlToWs(central.server)}/ws`)
     const net = new Net(ws)
+    connected.push(central.server)
     let isConnected = false
     net.startDaemonWatch()
     let centralInfo: CentralInfo | undefined
@@ -242,9 +269,10 @@ export async function setupAsNode(
       log.info(`Connected to ${central.server}.`)
       centralInfo = await authenticateAsNode(net, log, central, config)
       if (!centralInfo) return
-      node.addParentNode(centralInfo.name, net)
+      node.addParentNode(centralInfo.name, central.server, net)
     })
     ws.on("close", () => {
+      connected.unshift(central.server)
       if (!isConnected) return
       if (centralInfo) {
         node.removeParentNode(centralInfo.name)
