@@ -102,7 +102,7 @@ export function ConnectDialog(props) {
           name="passcode"
         />
         <DialogActions>
-          <Button type="submit">{"Connect"}</Button>
+          <Button type="submit">{i18n.connect.connectBtn}</Button>
         </DialogActions>
       </Form>
     </Card>
