@@ -8,6 +8,7 @@ import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./
 import { createLogger } from "./logger.js"
 import { buildIndexHtml } from "./page.js"
 import expressWs from "express-ws"
+import path from "path"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
@@ -144,26 +145,16 @@ export async function startServer(config: AppConfig): Promise<void> {
    */
   async function pipeRangedFile(req: Request, res: Response, file: File): Promise<void> {
     // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
-    const { start, end } = resolveRange(req.headers.range)
-
-    let retrievedLength: number
-    if (start !== undefined && end !== undefined) {
-      retrievedLength = (end + 1) - start
-    } else if (start !== undefined) {
-      retrievedLength = file.size - start
-    } else if (end !== undefined) {
-      retrievedLength = (end + 1)
-    } else {
-      retrievedLength = file.size
-    }
+    let { start, end } = resolveRange(req.headers.range)
+    start ??= 0
+    end ??= file.size - 1
+    const retrievedLength = (end + 1) - start
 
     res.statusCode = start !== undefined || end !== undefined ? 206 : 200
 
     res.setHeader("content-length", retrievedLength)
     if (req.headers.range) {
-      const cr = `bytes ${start ?? 0}-${end ?? (file.size - 1)}/${file.size}`
-      res.setHeader("content-range", cr)
-      console.log(file.path, cr)
+      res.setHeader("content-range", `bytes ${start}-${end}/${file.size}`)
       res.setHeader("accept-ranges", "bytes")
     }
     const fileStream = await node.createReadStream(file, {

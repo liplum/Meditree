@@ -13,6 +13,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Failed } from './loading';
 import { filesize } from "filesize";
+import { VideoJS } from "./video-player"
 
 const type2Render = {
   "video/mp4": renderVideo,
@@ -106,12 +107,29 @@ export function FileDisplayBoard(props) {
 }
 
 function renderVideo(file) {
-  return <video controls
-    src={file.url}
+  const videoJsOptions = {
+    autoplay: true,
+    controls: true,
+    responsive: true,
+    fluid: true,
+    sources: [{
+      src: file.url,
+      type: file.type,
+    }]
+  };
+  return <VideoJS
+    options={videoJsOptions}
     onMouseDown={(event) => {
       event.stopPropagation();
     }}
-    className={"video-view"} />
+  />
+  // built-in video player
+  // return <video controls
+  //   src={file.url}
+  //   onMouseDown={(event) => {
+  //     event.stopPropagation();
+  //   }}
+  //   className={"video-view"} />
 }
 
 function renderImage(file) {
