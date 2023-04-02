@@ -5,11 +5,11 @@ import { promisify } from "util"
 export type FileType = string
 export interface File {
   type: FileType
-  size: number
+  size?: number
   path: string
 }
 export class LocalFile implements File {
-  type: string
+  type: FileType
   size: number
   path: string
   localPath: string
@@ -19,9 +19,6 @@ export class LocalFile implements File {
     this.localPath = localPath
     this.path = path
   }
-}
-export interface RemoteFile extends File {
-  nodeName: string
 }
 
 export const statAsync = promisify(fs.stat)

@@ -8,7 +8,6 @@ import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./
 import { createLogger } from "./logger.js"
 import { buildIndexHtml } from "./page.js"
 import expressWs from "express-ws"
-import path from "path"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
@@ -144,26 +143,34 @@ export async function startServer(config: AppConfig): Promise<void> {
    * Ranged is for videos and audios. On Safari mobile, range headers is used.
    */
   async function pipeRangedFile(req: Request, res: Response, file: File): Promise<void> {
-    // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
-    let { start, end } = resolveRange(req.headers.range)
-    start ??= 0
-    end ??= file.size - 1
-    const retrievedLength = (end + 1) - start
+    if (file.size !== undefined) {
+      // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
+      let { start, end } = resolveRange(req.headers.range)
+      start ??= 0
+      end ??= file.size - 1
+      const retrievedLength = (end + 1) - start
 
-    res.statusCode = start !== undefined || end !== undefined ? 206 : 200
+      res.statusCode = start !== undefined || end !== undefined ? 206 : 200
 
-    res.setHeader("content-length", retrievedLength)
-    if (req.headers.range) {
-      res.setHeader("content-range", `bytes ${start}-${end}/${file.size}`)
-      res.setHeader("accept-ranges", "bytes")
+      res.setHeader("content-length", retrievedLength)
+      if (req.headers.range) {
+        res.setHeader("content-range", `bytes ${start}-${end}/${file.size}`)
+        res.setHeader("accept-ranges", "bytes")
+      }
+      const fileStream = await node.createReadStream(file, {
+        start, end,
+      })
+      fileStream.on("error", (_) => {
+        res.sendStatus(500)
+      })
+      fileStream.pipe(res)
+    } else {
+      const fileStream = await node.createReadStream(file)
+      fileStream.on("error", (_) => {
+        res.sendStatus(500)
+      })
+      fileStream.pipe(res)
     }
-    const fileStream = await node.createReadStream(file, {
-      start, end,
-    })
-    fileStream.on("error", (_) => {
-      res.sendStatus(500)
-    })
-    fileStream.pipe(res)
   }
 
   async function pipeFile(req: Request, res: Response, file: File): Promise<void> {

@@ -4,14 +4,16 @@ import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import { v4 as uuidv4 } from "uuid"
 import { Net, MessageType } from "./net.js"
-import { LocalFile, type FileTreeLike, type FileTreeJson, type File, type RemoteFile } from "./file.js"
+import { LocalFile, type FileTreeLike, type FileTreeJson, type File } from "./file.js"
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
 import { type AsParentConfig, type AsChildConfig, } from "./config.js"
 import type expressWs from "express-ws"
 import { encrypt, decrypt, generateNonce } from "./crypt.js"
-
+export interface RemoteFile extends File {
+  nodeName: string
+}
 interface NodeMeta {
   name: string
   passcode?: string

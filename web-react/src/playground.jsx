@@ -85,7 +85,9 @@ export function FileDisplayBoard(props) {
       </Tooltip>
       {file && // only display if any file is selected
         <>
-          <Chip label={filesize(file.size, { base: 2, standard: "jedec" })} />
+          {file.size && // only display if file has size property
+            <Chip label={filesize(file.size, { base: 2, standard: "jedec" })} />
+          }
           <Tooltip title={
             isFileStarred ? i18n.playground.unstarBtn
               : i18n.playground.starBtn
