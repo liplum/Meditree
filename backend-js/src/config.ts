@@ -2,7 +2,7 @@ import fs from "fs"
 import path from "path"
 import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
-import { HLSMediaType } from "./hls"
+import { HLSMediaType } from "./hls.js"
 
 export interface AsParentConfig {
   name: string
@@ -62,6 +62,7 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
   homepage?: boolean | string
   rebuildInterval: number
   fileType: Record<string, string>
+  plugin?: Record<string, Record<string, any>>
   ignore?: string[]
   /**
    * Default is 7 days.

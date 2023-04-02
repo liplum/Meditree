@@ -8,6 +8,7 @@ import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./
 import { createLogger } from "./logger.js"
 import { buildIndexHtml } from "./page.js"
 import expressWs from "express-ws"
+import { resolvePlguinFromConfig } from "./plugin.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
@@ -24,6 +25,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       fileTypePattern: config.fileType,
       rebuildInterval: config.rebuildInterval,
       ignorePattern: config.ignore ?? [],
+      plugins: config.plugin ? resolvePlguinFromConfig(config.plugin) : undefined,
     })
   const node = new MeditreeNode()
   const fileTypes = Array.from(Object.values(config.fileType))

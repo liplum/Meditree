@@ -1,10 +1,16 @@
 import path from "path"
-import { LocalFile, LocalFileTree } from "./file"
-import { type FileTreePlugin } from "./host"
+import { LocalFile, LocalFileTree } from "./file.js"
+import { type PlguinConfig, pluginTypes, type MeditreePlugin } from "./plugin.js"
 
 export const HLSMediaType = "application/x-mpegURL"
+// eslint-disable-next-line @typescript-eslint/dot-notation
+pluginTypes["hls"] = (config) => new HLSPlugin(config)
+export class HLSPlugin implements MeditreePlugin {
+  readonly config: PlguinConfig
+  constructor(config: PlguinConfig) {
+    this.config = config
+  }
 
-export class HLSPlugin implements FileTreePlugin {
   onPostGenerated(tree: LocalFileTree): void {
     for (let file of tree.visit((name, file) => {
       return file instanceof LocalFile && file["*type"] === HLSMediaType

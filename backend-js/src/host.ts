@@ -7,6 +7,7 @@ import { type FileTreeLike, LocalFile, type FileType, type FileTree, type Resolv
 import { LocalFileTree } from "./file.js"
 import EventEmitter from "events"
 import { promisify } from "util"
+import { type MeditreePlugin } from "./plugin.js"
 
 export interface HostTreeOptions {
   /**
@@ -17,6 +18,7 @@ export interface HostTreeOptions {
   fileTypePattern: Record<string, string>
   rebuildInterval: number
   ignorePattern: string[]
+  plugins?: MeditreePlugin[]
 }
 
 const minimatchOptions: MinimatchOptions = {
@@ -32,9 +34,9 @@ export declare interface HostTree {
 }
 
 export class HostTree extends EventEmitter implements FileTreeLike {
-  protected options: HostTreeOptions
-  fileTree: LocalFileTree
-  protected fileWatcher: fs.FSWatcher | null = null
+  private options: HostTreeOptions
+  private fileTree: LocalFileTree
+  private fileWatcher: fs.FSWatcher | null = null
   constructor(options: HostTreeOptions) {
     super()
     this.options = options
@@ -114,6 +116,7 @@ export class HostTree extends EventEmitter implements FileTreeLike {
       classifier: this.classifyByFilePath,
       includes: this.isFileOrDirectoryIncluded,
       pruned: true,
+      plugins: this.options.plugins,
     })
     this.fileTree = tree
     this.emit("rebuild", tree)
@@ -158,7 +161,7 @@ export interface FileTreePlugin {
   onPostGenerated(tree: FileTree): void
 }
 
-export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, pruned, classifier, includes }: {
+export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, pruned, classifier, includes, plugins }: {
   rootPath: string
   initPath?: string[]
   buildPath?: (pathParts: string[]) => string
@@ -168,6 +171,7 @@ export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, 
    * whether to ignore the empty file tree
    */
   pruned: boolean
+  plugins?: FileTreePlugin[]
 }): Promise<LocalFileTree> {
   const stats = await statAsync(root)
   if (!stats.isDirectory()) {
@@ -216,5 +220,10 @@ export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, 
     }
   }
   await walk(tree, root, initPath ?? [])
+  if (plugins?.length) {
+    for (const plugin of plugins) {
+      plugin.onPostGenerated(tree)
+    }
+  }
   return tree
 }
