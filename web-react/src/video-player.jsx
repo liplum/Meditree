@@ -1,5 +1,5 @@
-import videojs from 'video.js';
-import 'video.js/dist/video-js.css';
+import videojs from "video.js";
+import "video.js/dist/video-js.css";
 import React, { useEffect, useRef } from 'react'
 
 export function VideoJS(props) {

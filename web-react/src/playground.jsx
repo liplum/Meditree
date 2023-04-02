@@ -108,7 +108,7 @@ export function FileDisplayBoard(props) {
 
 function renderVideo(file) {
   const videoJsOptions = {
-    autoplay: true,
+    autoplay: false,
     controls: true,
     responsive: true,
     fluid: true,
