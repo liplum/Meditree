@@ -26,6 +26,7 @@ const type2Render = {
   "audio/ogg": renderAudio,
   "text/markdown": renderMarkdown,
   "text/plain": renderPlainText,
+  "application/x-mpegURL": renderVideo,
 }
 
 export function FileDisplayBoard(props) {
