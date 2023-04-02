@@ -7,30 +7,50 @@ export interface File {
   hide?: boolean
   path: string
 }
+export interface FileTree {
+  [name: string]: File | FileTree
+}
+
 export class LocalFile implements File {
   type: FileType
   size: number
   path: string
   localPath: string
+  hide?: boolean
   constructor(type: FileType, size: number, localPath: string, path: string) {
     this.type = type
     this.size = size
     this.localPath = localPath
     this.path = path
   }
+
+  toJSON(): File {
+    return {
+      type: this.type,
+      size: this.size,
+      hide: this.hide,
+      path: this.path,
+    }
+  }
 }
 
 export type PathFilter = (path: string) => boolean
-export interface FileTreeLike<TFile = File> {
-  resolveFile: (pathParts: string[]) => TFile | null
-  toJSON: () => FileTreeJson
+export class ResolvedFile {
+  inner: File
+  [key: string]: any
+  constructor(file: File) {
+    this.inner = file
+  }
 }
-export interface FileTreeJson {
-  [name: string]: File | FileTreeJson
+export interface FileTreeLike {
+  resolveFile: (pathParts: string[]) => ResolvedFile | null
+  toJSON: () => FileTree
 }
-export class FileTree implements FileTreeLike {
-  parent: FileTree | null = null
-  name2File = new Map<string, LocalFile | FileTree>()
+
+export class LocalFileTree implements FileTreeLike {
+  parent: LocalFileTree | null = null
+  hide?: boolean
+  name2File = new Map<string, LocalFile | LocalFileTree>()
   rootPath: string
   readonly name: string
   constructor(rootPath: string) {
@@ -51,24 +71,24 @@ export class FileTree implements FileTreeLike {
     return parts
   }
 
-  resolveFile(pathParts: string[]): LocalFile | null {
-    let cur: File | FileTree | undefined = this
-    while (pathParts.length > 0 && cur instanceof FileTree) {
+  resolveFile(pathParts: string[]): ResolvedFile | null {
+    let cur: LocalFile | LocalFileTree | undefined = this
+    while (pathParts.length > 0 && cur instanceof LocalFileTree) {
       const currentPart = pathParts.shift()
       if (currentPart === undefined) break
       cur = cur.name2File.get(currentPart)
     }
-    if (cur instanceof FileTree) {
+    if (cur instanceof LocalFileTree) {
       return null
     } else {
-      return cur as LocalFile
+      return new ResolvedFile(cur as LocalFile)
     }
   }
 
   get subtreeChildrenCount(): number {
     let total = 0
     for (const file of this.name2File.values()) {
-      if (file instanceof FileTree) {
+      if (file instanceof LocalFileTree) {
         total += file.subtreeChildrenCount
       } else {
         total++
@@ -77,7 +97,7 @@ export class FileTree implements FileTreeLike {
     return total
   }
 
-  addFile(name: string, file: LocalFile | FileTree): void {
+  addFile(name: string, file: LocalFile | LocalFileTree): void {
     this.name2File.set(name, file)
   }
 
@@ -85,38 +105,34 @@ export class FileTree implements FileTreeLike {
     this.name2File.delete(name)
   }
 
-  createSubtree(rootPath: string): FileTree {
-    const subtree = new FileTree(rootPath)
+  createSubtree(rootPath: string): LocalFileTree {
+    const subtree = new LocalFileTree(rootPath)
     subtree.parent = this
     return subtree
   }
 
-  toJSON(): FileTreeJson {
+  toJSON(): FileTree {
     const obj = {}
     for (const [name, file] of this.name2File.entries()) {
-      if (file instanceof FileTree) {
+      if (file instanceof LocalFileTree) {
         obj[name] = file.toJSON()
       } else if (file instanceof LocalFile) {
-        obj[name] = {
-          type: file.type,
-          path: file.path,
-          size: file.size,
-        }
+        obj[name] = file.toJSON()
       }
     }
     return obj
   }
 }
 
-export function filterFileTreeJson(tree: FileTreeJson, filter: (file: File) => boolean): FileTreeJson {
-  const filteredTree: FileTreeJson = {}
+export function filterFileTreeJson(tree: FileTree, filter: (file: File) => boolean): FileTree {
+  const filteredTree: FileTree = {}
   for (const [name, fileOrSubtree] of Object.entries(tree)) {
     if (fileOrSubtree.type) {
       if (filter(fileOrSubtree as File)) {
         filteredTree[name] = fileOrSubtree
       }
     } else {
-      const filteredSubtree = filterFileTreeJson(fileOrSubtree as FileTreeJson, filter)
+      const filteredSubtree = filterFileTreeJson(fileOrSubtree as FileTree, filter)
       if (Object.keys(filteredSubtree).length > 0) {
         filteredTree[name] = filteredSubtree
       }

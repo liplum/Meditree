@@ -2,7 +2,7 @@
 import { HostTree } from "./host.js"
 import { type AppConfig, MediaType, type AsParentConfig, type AsChildConfig } from "./config.js"
 import express, { type Request, type Response } from "express"
-import { type File, type FileTreeJson } from "./file.js"
+import { type ResolvedFile, type FileTree } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { createLogger } from "./logger.js"
@@ -44,7 +44,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     updateTreeJsonCache(entireFree)
   })
 
-  function updateTreeJsonCache(entireFree: FileTreeJson): void {
+  function updateTreeJsonCache(entireFree: FileTree): void {
     let html: string | undefined
     if (typeof homepage !== "string" && (homepage === undefined || homepage === null || homepage)) {
       html = buildIndexHtml(config.mediaType, entireFree)
@@ -127,7 +127,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.status(404).end()
       return
     }
-    const fileType = file.type
+    const fileType = file.inner.type
     if (fileType == null) {
       res.status(404).end()
       return
@@ -146,8 +146,8 @@ export async function startServer(config: AppConfig): Promise<void> {
   /**
    * Ranged is for videos and audios. On Safari mobile, range headers is used.
    */
-  async function pipeRangedFile(req: Request, res: Response, file: File): Promise<void> {
-    if (file.size !== undefined) {
+  async function pipeRangedFile(req: Request, res: Response, file: ResolvedFile): Promise<void> {
+    if (file.inner.size !== undefined) {
       // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
       let { start, end } = resolveRange(req.headers.range)
       start ??= 0
@@ -158,28 +158,40 @@ export async function startServer(config: AppConfig): Promise<void> {
 
       res.setHeader("content-length", retrievedLength)
       if (req.headers.range) {
-        res.setHeader("content-range", `bytes ${start}-${end}/${file.size}`)
+        res.setHeader("content-range", `bytes ${start}-${end}/${file.inner.size}`)
         res.setHeader("accept-ranges", "bytes")
       }
-      const fileStream = await node.createReadStream(file, {
+      const stream = await node.createReadStream(file, {
         start, end,
       })
-      fileStream.on("error", (_) => {
+      if (!stream) {
+        res.status(404).end()
+        return
+      }
+      stream.on("error", (_) => {
         res.sendStatus(500)
       })
-      fileStream.pipe(res)
+      stream.pipe(res)
     } else {
-      const fileStream = await node.createReadStream(file)
-      fileStream.on("error", (_) => {
+      const stream = await node.createReadStream(file)
+      if (!stream) {
+        res.status(404).end()
+        return
+      }
+      stream.on("error", (_) => {
         res.sendStatus(500)
       })
-      fileStream.pipe(res)
+      stream.pipe(res)
     }
   }
 
-  async function pipeFile(req: Request, res: Response, file: File): Promise<void> {
+  async function pipeFile(req: Request, res: Response, file: ResolvedFile): Promise<void> {
     res.status(200)
     const stream = await node.createReadStream(file)
+    if (!stream) {
+      res.status(404).end()
+      return
+    }
     stream.pipe(res)
   }
 

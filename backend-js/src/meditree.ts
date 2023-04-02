@@ -4,16 +4,14 @@ import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import { v4 as uuidv4 } from "uuid"
 import { Net, MessageType } from "./net.js"
-import { LocalFile, type FileTreeLike, type FileTreeJson, type File, filterFileTreeJson } from "./file.js"
+import { type FileTreeLike, type FileTree, type File, filterFileTreeJson, ResolvedFile, LocalFile } from "./file.js"
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
 import { type AsParentConfig, type AsChildConfig, } from "./config.js"
 import type expressWs from "express-ws"
 import { encrypt, decrypt, generateNonce } from "./crypt.js"
-export interface RemoteFile extends File {
-  nodeName: string
-}
+
 interface NodeMeta {
   name: string
   passcode?: string
@@ -22,24 +20,22 @@ interface NodeMeta {
 class SubNode implements FileTreeLike {
   readonly meta: NodeMeta
   readonly net: Net
-  tree: FileTreeJson
+  tree: FileTree
   constructor(meta: NodeMeta, net: Net) {
     this.meta = meta
     this.net = net
   }
 
-  resolveFile(pathParts: string[]): RemoteFile | null {
-    let cur: RemoteFile | FileTreeJson = this.tree
-    while (pathParts.length > 0 && cur) {
-      const currentPart = pathParts.shift()
-      if (currentPart === undefined) break
-      if (!cur.type) {
-        cur = cur[currentPart]
-      }
+  resolveFile(pathParts: string[]): ResolvedFile | null {
+    let cur: File | FileTree = this.tree
+    let curPart: string | undefined
+    while ((curPart = pathParts.shift()) !== undefined) {
+      if ((cur = cur[curPart]) === undefined) return null
     }
-    if (cur?.type) {
-      cur.nodeName = this.name
-      return cur as RemoteFile
+    if ("type" in cur) {
+      const resolved = new ResolvedFile(cur as File)
+      resolved.remoteNode = this.meta.name
+      return resolved
     } else {
       return null
     }
@@ -49,7 +45,7 @@ class SubNode implements FileTreeLike {
     return this.meta.name
   }
 
-  toJSON(): FileTreeJson {
+  toJSON(): FileTree {
     return this.tree
   }
 }
@@ -65,26 +61,26 @@ class ParentNode {
 }
 export interface FileTreeInfo {
   name: string
-  files: FileTreeJson
+  files: FileTree
 }
 export type RouteMsgCallback<Header = any> = (id: string, data: any, header: Header) => void
 export declare interface MeditreeNode {
-  on(event: "file-tree-update", listener: (entireFree: FileTreeJson) => void): this
+  on(event: "file-tree-update", listener: (entireFree: FileTree) => void): this
   on(event: "child-node-change", listener: (child: SubNode, isAdded: boolean) => void): this
   on(event: "parent-node-change", listener: (parent: ParentNode, isAdded: boolean) => void): this
 
-  off(event: "file-tree-update", listener: (entireFree: FileTreeJson) => void): this
+  off(event: "file-tree-update", listener: (entireFree: FileTree) => void): this
   off(event: "child-node-change", listener: (child: SubNode, isAdded: boolean) => void): this
   off(event: "parent-node-change", listener: (parent: ParentNode, isAdded: boolean) => void): this
 
-  emit(event: "file-tree-update", entireFree: FileTreeJson): boolean
+  emit(event: "file-tree-update", entireFree: FileTree): boolean
   emit(event: "child-node-change", child: SubNode, isAdded: boolean): boolean
   emit(event: "parent-node-change", parent: ParentNode, isAdded: boolean): this
 }
 export class MeditreeNode extends EventEmitter implements FileTreeLike {
   private readonly name2Parent = new Map<string, ParentNode>()
   private readonly name2Child = new Map<string, SubNode>()
-  localTree?: { name: string, tree: FileTreeLike<LocalFile>, json: FileTreeJson }
+  localTree?: { name: string, tree: FileTreeLike, json: FileTree }
   subNodeFilter?: (file: File) => boolean
 
   constructor() {
@@ -96,7 +92,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     })
   }
 
-  resolveFile(pathParts: string[]): File | null {
+  resolveFile(pathParts: string[]): ResolvedFile | null {
     const nodeName = pathParts.shift()
     if (!nodeName) return null
     if (this.localTree && nodeName === this.localTree.name) {
@@ -109,22 +105,23 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     }
   }
 
-  async createReadStream(file: File, options?: BufferEncoding | any): Promise<Readable> {
+  async createReadStream(file: ResolvedFile, options?: BufferEncoding | any): Promise<Readable | null> {
     // if the file has a path, it's a local file
-    if (file instanceof LocalFile) {
-      return fs.createReadStream(file.localPath, options)
-    } else {
-      const remoteFile = file as RemoteFile
-      const node = this.name2Child.get(remoteFile.nodeName)
-      if (!node) throw new Error(`Node[${remoteFile.nodeName}] not found.`)
+    if (file.inner instanceof LocalFile) {
+      return fs.createReadStream(file.inner.localPath, options)
+    } else if (file.remoteNode) {
+      const remoteNode: string = file.remoteNode
+      const node = this.name2Child.get(remoteNode)
+      if (!node) throw new Error(`Node[${remoteNode}] not found.`)
       const uuid = uuidv4()
-      node.net.send("get-file", { path: remoteFile.path, options, uuid })
+      node.net.send("get-file", { path: file.path, options, uuid })
       const stream = await node.net.getMessage("send-file", (header) => header && header.uuid === uuid)
       return stream
     }
+    return null
   }
 
-  updateFileTreeFromSubNode(name: string, tree: FileTreeJson): void {
+  updateFileTreeFromSubNode(name: string, tree: FileTree): void {
     const node = this.name2Child.get(name)
     if (!node) throw new Error(`Node[${name}] not found.`)
     console.log(`File Tree from node[${name}] is updated.`)
@@ -136,14 +133,14 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     this.emit("file-tree-update", this.toJSON())
   }
 
-  updateFileTreeFromLocal(name: string, tree: FileTreeLike<LocalFile>): void {
+  updateFileTreeFromLocal(name: string, tree: FileTreeLike): void {
     const json = tree.toJSON()
     this.localTree = { name, tree, json }
     this.emit("file-tree-update", this.toJSON())
   }
 
-  toJSON(): FileTreeJson {
-    const obj: FileTreeJson = {}
+  toJSON(): FileTree {
+    const obj: FileTree = {}
     for (const node of this.name2Child.values()) {
       if (node.tree) {
         for (const [fileName, file] of Object.entries(node.tree)) {
@@ -173,7 +170,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     net.addReadHook(({ type, id, data }) => {
       if (type !== MessageType.object) return
       if (id !== "file-tree-rebuild") return
-      const files: FileTreeJson = data
+      const files: FileTree = data
       this.updateFileTreeFromSubNode(meta.name, files)
       return true
     })

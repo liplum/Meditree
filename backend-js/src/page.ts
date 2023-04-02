@@ -1,8 +1,8 @@
 import { MediaType } from "./config.js"
-import { type FileTreeJson, type File } from "./file.js"
+import { type FileTree, type File } from "./file.js"
 export function buildIndexHtml(
   mediaType: Record<string, MediaType>,
-  fileTree: FileTreeJson,
+  fileTree: FileTree,
 ): string {
   let maxIndent = 0
   const indentClassName = (indent: number): string => `i${indent}`
@@ -70,14 +70,14 @@ function buildIndentStyleClass(
   return { tags, }
 }
 function buildFromFileTree(
-  tree: FileTreeJson,
+  tree: FileTree,
   mediaType: Record<string, MediaType>,
   getIndentClz: IndentClassNameBuilder,
 ): { tags: string[], maxIndent: number } {
   const div: string[] = []
   let maxIndent = 0
   div.push("<div>")
-  function buildSubtree(curTree: FileTreeJson, indent: number): void {
+  function buildSubtree(curTree: FileTree, indent: number): void {
     maxIndent = Math.max(indent, maxIndent)
     for (const [name, file] of Object.entries(curTree)) {
       if (file.type) {
@@ -90,7 +90,7 @@ function buildFromFileTree(
         div.push(`<details ${indent === 0 ? "open" : ""}>`)
         div.push(`<summary class="${getIndentClz(indent)}"><a>${name}\\</a></summary>`)
         div.push(`<div class="${getIndentClz(indent)}">`)
-        buildSubtree(file as FileTreeJson, indent + 1)
+        buildSubtree(file as FileTree, indent + 1)
         div.push("<div>")
         div.push("</details>")
       }

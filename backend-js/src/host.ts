@@ -3,8 +3,8 @@ import path from "path"
 import chokidar from "chokidar"
 import minimatch, { type MinimatchOptions } from "minimatch"
 import { clearInterval } from "timers"
-import { type FileTreeLike, LocalFile, type FileType, type FileTreeJson } from "./file.js"
-import { FileTree } from "./file.js"
+import { type FileTreeLike, LocalFile, type FileType, type FileTree, type ResolvedFile } from "./file.js"
+import { LocalFileTree } from "./file.js"
 import EventEmitter from "events"
 import { promisify } from "util"
 
@@ -24,23 +24,23 @@ const minimatchOptions: MinimatchOptions = {
 }
 
 export declare interface HostTree {
-  on(event: "rebuild", listener: (fileTree: FileTree) => void): this
+  on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this
 
-  off(event: "rebuild", listener: (fileTree: FileTree) => void): this
+  off(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this
 
-  emit(event: "rebuild", fileTree: FileTree): boolean
+  emit(event: "rebuild", fileTree: LocalFileTree): boolean
 }
 
 export class HostTree extends EventEmitter implements FileTreeLike {
   protected options: HostTreeOptions
-  fileTree: FileTree
+  fileTree: LocalFileTree
   protected fileWatcher: fs.FSWatcher | null = null
   constructor(options: HostTreeOptions) {
     super()
     this.options = options
   }
 
-  toJSON(): FileTreeJson {
+  toJSON(): FileTree {
     return this.fileTree.toJSON()
   }
 
@@ -130,7 +130,7 @@ export class HostTree extends EventEmitter implements FileTreeLike {
     this.rebuildTimer = null
   }
 
-  resolveFile(pathParts: string[]): LocalFile | null {
+  resolveFile(pathParts: string[]): ResolvedFile | null {
     return this.fileTree?.resolveFile(pathParts)
   }
 }
@@ -154,8 +154,8 @@ export const statAsync = promisify(fs.stat)
 export const readdirAsync = promisify(fs.readdir)
 export type FileClassifier = (path: string) => FileType | null
 
-interface FileTreePlugin{
-  
+interface FileTreePlugin {
+  aaaaa: 0
 }
 
 export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, pruned, classifier, includes }: {
@@ -168,14 +168,14 @@ export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, 
    * whether to ignore the empty file tree
    */
   pruned: boolean
-}): Promise<FileTree> {
+}): Promise<LocalFileTree> {
   const stats = await statAsync(root)
   if (!stats.isDirectory()) {
     throw Error(`${root} isn't a directory`)
   }
-  const tree = new FileTree(root)
+  const tree = new LocalFileTree(root)
   const walk = async (
-    tree: FileTree,
+    tree: LocalFileTree,
     currentDirectory: string,
     pathInTreeParts: string[],
   ): Promise<void> => {
