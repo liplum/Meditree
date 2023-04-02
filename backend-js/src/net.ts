@@ -89,35 +89,39 @@ export class Net {
       this.handleMessage(id, data, header)
     } else if (type === MessageType.stream) {
       const uuid = reader.string()
-      let stream = this.id2Stream.get(uuid)
-      if (!stream) {
-        stream = new Readable({
-          read() { }
-        })
-        this.id2Stream.set(uuid, stream)
-        let isHookHandled = false
-        const readHookArgs = { type, id, data: stream, header }
-        for (const hook of this.readHooks) {
-          if (hook(readHookArgs)) {
-            isHookHandled = true
-            break
-          }
-        }
-        if (!isHookHandled) {
-          this.handleMessage(id, stream, header)
-        }
-      }
       const state: StreamState = reader.uint8()
 
       if (state === StreamState.on) {
-        const chunk: Buffer = reader.buffer()
-        stream.push(chunk)
+        let stream = this.id2Stream.get(uuid)
+        if (!stream) {
+          stream = new Readable({
+            read() { }
+          })
+          this.id2Stream.set(uuid, stream)
+          let isHookHandled = false
+          const readHookArgs = { type, id, data: stream, header }
+          for (const hook of this.readHooks) {
+            if (hook(readHookArgs)) {
+              isHookHandled = true
+              break
+            }
+          }
+          if (!isHookHandled) {
+            this.handleMessage(id, stream, header)
+          }
+        }
       } else if (state === StreamState.end) {
-        stream.push(null)
-        this.id2Stream.delete(uuid)
+        const stream = this.id2Stream.get(uuid)
+        if (stream) {
+          stream.push(null)
+          this.id2Stream.delete(uuid)
+        }
       } else {
-        stream.emit("error")
-        this.id2Stream.delete(uuid)
+        const stream = this.id2Stream.get(uuid)
+        if (stream) {
+          stream.emit("error")
+          this.id2Stream.delete(uuid)
+        }
       }
     }
   }
