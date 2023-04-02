@@ -15,19 +15,21 @@ export function createDelegate(rootFileTree, rootName = "") {
       if (file instanceof Object) {
         // if file has a type, it presents a file
         if (file.type) {
-          key2File.set(curKey, {
-            name,
-            key: curKey,
-            path: file.path,
-            type: file.type,
-            size: file.size,
-            tracking: [...parentKeys, curKey],
-          })
-          children.push({
-            key: curKey,
-            isLeaf: true,
-            title: name,
-          })
+          if (!file.hide) {
+            key2File.set(curKey, {
+              name,
+              key: curKey,
+              path: file.path,
+              type: file.type,
+              size: file.size,
+              tracking: [...parentKeys, curKey],
+            })
+            children.push({
+              key: curKey,
+              isLeaf: true,
+              title: name,
+            })
+          }
         } else {
           // otherwise, it presents a directory
           const myChildren = []
@@ -50,7 +52,7 @@ export function createDelegate(rootFileTree, rootName = "") {
   }
 }
 
-export function getFirstFile(fileTreeDelegate){
+export function getFirstFile(fileTreeDelegate) {
   for (const [key, file] of fileTreeDelegate.key2File.entries()) {
     return file
   }

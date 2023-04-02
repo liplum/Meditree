@@ -1,10 +1,13 @@
-import type fs from "fs"
+import fs from "fs"
+import path from "path"
 import chokidar from "chokidar"
 import minimatch, { type MinimatchOptions } from "minimatch"
 import { clearInterval } from "timers"
-import type { FileTreeLike, LocalFile, FileType, FileTreeJson } from "./file.js"
+import { type FileTreeLike, LocalFile, type FileType, type FileTreeJson } from "./file.js"
 import { FileTree } from "./file.js"
 import EventEmitter from "events"
+import { promisify } from "util"
+
 export interface HostTreeOptions {
   /**
   * The absolute path of root directory.
@@ -105,7 +108,7 @@ export class HostTree extends EventEmitter implements FileTreeLike {
 
   async rebuildFileTree(): Promise<void> {
     this.shouldRebuild = false
-    const tree = await FileTree.createFrom({
+    const tree = await createFileTreeFrom({
       rootPath: this.options.rootPath,
       initPath: [this.options.name],
       classifier: this.classifyByFilePath,
@@ -146,4 +149,74 @@ function shallowEqual(obj1: any, obj2: any): boolean {
   }
 
   return true
+}
+export const statAsync = promisify(fs.stat)
+export const readdirAsync = promisify(fs.readdir)
+export type FileClassifier = (path: string) => FileType | null
+
+interface FileTreePlugin{
+  
+}
+
+export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, pruned, classifier, includes }: {
+  rootPath: string
+  initPath?: string[]
+  buildPath?: (pathParts: string[]) => string
+  classifier: FileClassifier
+  includes: (path: string) => boolean
+  /**
+   * whether to ignore the empty file tree
+   */
+  pruned: boolean
+}): Promise<FileTree> {
+  const stats = await statAsync(root)
+  if (!stats.isDirectory()) {
+    throw Error(`${root} isn't a directory`)
+  }
+  const tree = new FileTree(root)
+  const walk = async (
+    tree: FileTree,
+    currentDirectory: string,
+    pathInTreeParts: string[],
+  ): Promise<void> => {
+    let files: string[]
+    try {
+      files = await readdirAsync(currentDirectory)
+    } catch (e) {
+      console.error(e)
+      return
+    }
+    for (const fileName of files) {
+      const filePath = path.join(currentDirectory, fileName)
+      if (!includes(filePath)) continue
+      try {
+        const stat = fs.statSync(filePath)
+        const curPathInTreeParts = [...pathInTreeParts, fileName]
+        if (stat.isFile()) {
+          const fileType = classifier(filePath)
+          if (fileType != null) {
+            tree.addFile(fileName, new LocalFile(
+              fileType,
+              stat.size,
+              filePath,
+              buildPath ? buildPath(curPathInTreeParts) : curPathInTreeParts.join("/"),
+            ))
+          }
+        } else if (stat.isDirectory()) {
+          const subtree = tree.createSubtree(filePath)
+          tree.addFile(fileName, subtree)
+          await walk(subtree, filePath, curPathInTreeParts)
+          if (pruned && subtree.subtreeChildrenCount === 0) {
+            tree.removeFile(fileName)
+          }
+        } else {
+          console.log("Unknown file type", filePath)
+        }
+      } catch (e) {
+        continue
+      }
+    }
+  }
+  await walk(tree, root, initPath ?? [])
+  return tree
 }

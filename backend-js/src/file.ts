@@ -1,11 +1,10 @@
-import fs from "fs"
 import path from "path"
-import { promisify } from "util"
 
 export type FileType = string
 export interface File {
   type: FileType
   size?: number
+  hide?: boolean
   path: string
 }
 export class LocalFile implements File {
@@ -21,10 +20,7 @@ export class LocalFile implements File {
   }
 }
 
-export const statAsync = promisify(fs.stat)
-export const readdirAsync = promisify(fs.readdir)
 export type PathFilter = (path: string) => boolean
-export type FileClassifier = (path: string) => FileType | null
 export interface FileTreeLike<TFile = File> {
   resolveFile: (pathParts: string[]) => TFile | null
   toJSON: () => FileTreeJson
@@ -87,69 +83,6 @@ export class FileTree implements FileTreeLike {
 
   removeFile(name: string): void {
     this.name2File.delete(name)
-  }
-
-  static async createFrom({ rootPath: root, initPath, buildPath, pruned, classifier, includes }: {
-    rootPath: string
-    initPath?: string[]
-    buildPath?: (pathParts: string[]) => string
-    classifier: FileClassifier
-    includes: (path: string) => boolean
-    /**
-     * whether to ignore the empty file tree
-     */
-    pruned: boolean
-  }): Promise<FileTree> {
-    const stats = await statAsync(root)
-    if (!stats.isDirectory()) {
-      throw Error(`${root} isn't a directory`)
-    }
-    const tree = new FileTree(root)
-    const walk = async (
-      tree: FileTree,
-      currentDirectory: string,
-      pathInTreeParts: string[],
-    ): Promise<void> => {
-      let files: string[]
-      try {
-        files = await readdirAsync(currentDirectory)
-      } catch (e) {
-        console.error(e)
-        return
-      }
-      for (const fileName of files) {
-        const filePath = path.join(currentDirectory, fileName)
-        if (!includes(filePath)) continue
-        try {
-          const stat = fs.statSync(filePath)
-          const curPathInTreeParts = [...pathInTreeParts, fileName]
-          if (stat.isFile()) {
-            const fileType = classifier(filePath)
-            if (fileType != null) {
-              tree.addFile(fileName, new LocalFile(
-                fileType,
-                stat.size,
-                filePath,
-                buildPath ? buildPath(curPathInTreeParts) : curPathInTreeParts.join("/"),
-              ))
-            }
-          } else if (stat.isDirectory()) {
-            const subtree = tree.createSubtree(filePath)
-            tree.addFile(fileName, subtree)
-            await walk(subtree, filePath, curPathInTreeParts)
-            if (pruned && subtree.subtreeChildrenCount === 0) {
-              tree.removeFile(fileName)
-            }
-          } else {
-            console.log("Unknown file type", filePath)
-          }
-        } catch (e) {
-          continue
-        }
-      }
-    }
-    await walk(tree, root, initPath ?? [])
-    return tree
   }
 
   createSubtree(rootPath: string): FileTree {
