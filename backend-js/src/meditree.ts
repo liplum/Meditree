@@ -286,7 +286,11 @@ export async function setupAsChild(
     net.startDaemonWatch()
     let isConnected = false
     let centralInfo: CentralInfo | undefined
-    ws.on("error", (error) => { log.error(error) })
+    ws.on("error", (error) => {
+      // ignore connection errors
+      if (error.message === "Unexpected server response: 502") return
+      log.error(error)
+    })
     ws.on("open", async () => {
       isConnected = true
       log.info(`Connected to ${parent}.`)
