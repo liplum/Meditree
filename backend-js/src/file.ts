@@ -2,23 +2,24 @@ import path from "path"
 
 export type FileType = string
 export interface File {
-  type: FileType
+  "*type": FileType
   size?: number
-  hide?: boolean
+  "*hide"?: boolean
   path: string
 }
 export interface FileTree {
-  [name: string]: File | FileTree
+  ["*hide"]?: boolean
+  [name: string]: File | FileTree | any
 }
 
 export class LocalFile implements File {
-  type: FileType
+  "*type": FileType
   size: number
   path: string
   localPath: string
-  hide?: boolean
+  "*hide"?: boolean
   constructor(type: FileType, size: number, localPath: string, path: string) {
-    this.type = type
+    this["*type"] = type
     this.size = size
     this.localPath = localPath
     this.path = path
@@ -26,9 +27,9 @@ export class LocalFile implements File {
 
   toJSON(): File {
     return {
-      type: this.type,
+      "*type": this["*type"],
       size: this.size,
-      hide: this.hide,
+      "*hide": this["*hide"],
       path: this.path,
     }
   }
@@ -127,7 +128,7 @@ export class LocalFileTree implements FileTreeLike {
 export function filterFileTreeJson(tree: FileTree, filter: (file: File) => boolean): FileTree {
   const filteredTree: FileTree = {}
   for (const [name, fileOrSubtree] of Object.entries(tree)) {
-    if (fileOrSubtree.type) {
+    if (fileOrSubtree["*type"]) {
       if (filter(fileOrSubtree as File)) {
         filteredTree[name] = fileOrSubtree
       }

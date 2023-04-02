@@ -32,7 +32,7 @@ class SubNode implements FileTreeLike {
     while ((curPart = pathParts.shift()) !== undefined) {
       if ((cur = cur[curPart]) === undefined) return null
     }
-    if ("type" in cur) {
+    if (cur["*type"]) {
       const resolved = new ResolvedFile(cur as File)
       resolved.remoteNode = this.meta.name
       return resolved

@@ -80,10 +80,10 @@ function buildFromFileTree(
   function buildSubtree(curTree: FileTree, indent: number): void {
     maxIndent = Math.max(indent, maxIndent)
     for (const [name, file] of Object.entries(curTree)) {
-      if (file.type) {
+      if (file["*type"]) {
         // it's file
         const fi = file as File
-        const clz = mediaType[fi.type] === MediaType.image ? "class=\"has-preview\"" : ""
+        const clz = mediaType[fi["*type"]] === MediaType.image ? "class=\"has-preview\"" : ""
         div.push(`<a href="/file/${fi.path}" ${clz}>${name}</a>,`)
       } else {
         // it's directory

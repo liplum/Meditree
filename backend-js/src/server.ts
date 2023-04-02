@@ -28,7 +28,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   const node = new MeditreeNode()
   const fileTypes = Array.from(Object.values(config.fileTypePattern))
   node.subNodeFilter = (file) => {
-    return fileTypes.includes(file.type)
+    return fileTypes.includes(file["*type"])
   }
 
   if (localTree) {
@@ -127,7 +127,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.status(404).end()
       return
     }
-    const fileType = file.inner.type
+    const fileType = file.inner["*type"]
     if (fileType == null) {
       res.status(404).end()
       return
