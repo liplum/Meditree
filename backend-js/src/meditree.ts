@@ -4,7 +4,7 @@ import WebSocket, { WebSocketServer } from "ws"
 import { createLogger, type Logger } from "./logger.js"
 import { v4 as uuidv4 } from "uuid"
 import { Net, MessageType } from "./net.js"
-import { LocalFile, type FileTreeLike, type FileTreeJson, type File } from "./file.js"
+import { LocalFile, type FileTreeLike, type FileTreeJson, type File, filterFileTreeJson } from "./file.js"
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
@@ -85,6 +85,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   private readonly name2Parent = new Map<string, ParentNode>()
   private readonly name2Child = new Map<string, SubNode>()
   localTree?: { name: string, tree: FileTreeLike<LocalFile>, json: FileTreeJson }
+  subNodeFilter?: (file: File) => boolean
 
   constructor() {
     super()
@@ -127,7 +128,11 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     const node = this.name2Child.get(name)
     if (!node) throw new Error(`Node[${name}] not found.`)
     console.log(`File Tree from node[${name}] is updated.`)
-    node.tree = tree
+    if (this.subNodeFilter) {
+      node.tree = filterFileTreeJson(tree, this.subNodeFilter)
+    } else {
+      node.tree = tree
+    }
     this.emit("file-tree-update", this.toJSON())
   }
 

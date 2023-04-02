@@ -8,7 +8,6 @@ export function VideoJS(props) {
   const { options, onReady } = props;
 
   useEffect(() => {
-
     // Make sure Video.js player is only initialized once
     if (!playerRef.current) {
       // The Video.js player needs to be _inside_ the component el for React 18 Strict Mode. 
@@ -48,5 +47,5 @@ export function VideoJS(props) {
     <div data-vjs-player>
       <div ref={videoRef} />
     </div>
-  );
+  )
 }

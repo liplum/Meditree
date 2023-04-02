@@ -115,6 +115,7 @@ function renderVideo(file) {
     controls: true,
     responsive: true,
     fluid: true,
+    playbackRates: [0.1, 0.5, 1, 1.5, 2, 3, 5, 10],
     sources: [{
       src: file.url,
       type: file.type,

@@ -174,3 +174,20 @@ export class FileTree implements FileTreeLike {
     return obj
   }
 }
+
+export function filterFileTreeJson(tree: FileTreeJson, filter: (file: File) => boolean): FileTreeJson {
+  const filteredTree: FileTreeJson = {}
+  for (const [name, fileOrSubtree] of Object.entries(tree)) {
+    if (fileOrSubtree.type) {
+      if (filter(fileOrSubtree as File)) {
+        filteredTree[name] = fileOrSubtree
+      }
+    } else {
+      const filteredSubtree = filterFileTreeJson(fileOrSubtree as FileTreeJson, filter)
+      if (Object.keys(filteredSubtree).length > 0) {
+        filteredTree[name] = filteredSubtree
+      }
+    }
+  }
+  return filteredTree
+}

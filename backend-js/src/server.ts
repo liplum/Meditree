@@ -26,6 +26,10 @@ export async function startServer(config: AppConfig): Promise<void> {
       ignorePattern: config.ignore ?? [],
     })
   const node = new MeditreeNode()
+  const fileTypes = Array.from(Object.values(config.fileTypePattern))
+  node.subNodeFilter = (file) => {
+    return fileTypes.includes(file.type)
+  }
 
   if (localTree) {
     localTree.on("rebuild", (fileTree) => {
