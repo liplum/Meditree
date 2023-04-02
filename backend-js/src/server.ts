@@ -66,7 +66,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     localTree.startWatching()
     await localTree.rebuildFileTree()
   }
-  
+
   // If node is defined and not empty, subnodes can connect to this.
   if (config.child?.length && config.publicKey && config.privateKey) {
     expressWs(app)
@@ -161,7 +161,9 @@ export async function startServer(config: AppConfig): Promise<void> {
 
     res.setHeader("content-length", retrievedLength)
     if (req.headers.range) {
-      res.setHeader("content-range", `bytes ${start ?? 0}-${end ?? (file.size - 1)}/${file.size}`)
+      const cr = `bytes ${start ?? 0}-${end ?? (file.size - 1)}/${file.size}`
+      res.setHeader("content-range", cr)
+      console.log(file.path, cr)
       res.setHeader("accept-ranges", "bytes")
     }
     const fileStream = await node.createReadStream(file, {
@@ -170,7 +172,6 @@ export async function startServer(config: AppConfig): Promise<void> {
     fileStream.on("error", (_) => {
       res.sendStatus(500)
     })
-
     fileStream.pipe(res)
   }
 

@@ -154,8 +154,9 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     const pathParts = path.split("/")
     const file = this.resolveFile(pathParts)
     if (file) {
+      console.log(path, options)
       const stream = await this.createReadStream(file, options)
-      receiver.send("send-file", stream, { uuid })
+      receiver.send("send-file", stream, { uuid, path })
     }
   }
 
@@ -193,6 +194,9 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       return true
     })
     this.emit("parent-node-change", node, true)
+    setInterval(() => {
+      console.log(Array.from(net.id2ReadingStream.keys()))
+    }, 500)
   }
 
   removeParentNode(name: string): void {

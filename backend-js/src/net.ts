@@ -11,14 +11,21 @@ export enum DataType {
   object = 2,
   array = 3,
 }
+
 export enum MessageType {
   object = 1,
   stream = 2,
+  innerEvent = 3,
 }
+
 export enum StreamState {
   end = 0,
   on = 1,
   error = 2,
+}
+
+enum InnerEventType {
+  endStreamRequest = 1,
 }
 
 export type PrereadHook = ({ type, id, reader, header }: {
@@ -45,7 +52,8 @@ export class Net {
   private unhandledMessageTasks: (() => void)[] = []
   private readonly prereadHooks: PrereadHook[] = []
   private readonly readHooks: ReadHook<any>[] = []
-  private readonly id2Stream = new Map<string, Readable>()
+  private readonly id2SendingStream = new Map<string, Readable>()
+  readonly id2ReadingStream = new Map<string, Readable>()
   debug?: DebugCall
   constructor(socket: SocketLike) {
     this.socket = socket
@@ -72,6 +80,19 @@ export class Net {
   handleDatapack(data: Buffer): void {
     const reader = new BufferReader(data)
     const type = reader.uint8()
+    if (type === MessageType.innerEvent) {
+      const eventType = reader.uint8()
+      if (eventType === InnerEventType.endStreamRequest) {
+        // handled by the sender
+        const uuid = reader.string()
+        const stream = this.id2ReadingStream.get(uuid)
+        console.log(stream !== undefined)
+        if (stream) {
+          stream.emit("end")
+        }
+      }
+      return
+    }
     const id = reader.string()
     const headerString = readHeader(reader)
     const header: any | undefined = headerString ? JSON.parse(headerString) : undefined
@@ -92,12 +113,23 @@ export class Net {
       const state: StreamState = reader.uint8()
 
       if (state === StreamState.on) {
-        let stream = this.id2Stream.get(uuid)
+        let stream = this.id2SendingStream.get(uuid)
         if (!stream) {
           stream = new Readable({
             read() { }
           })
-          this.id2Stream.set(uuid, stream)
+          // when the stream needs to be ended.
+          stream.on("end", () => {
+            const writer = new BufferWriter(38)
+            // 1 byte
+            writer.uint8(MessageType.innerEvent)
+            // 1 byte
+            writer.uint8(InnerEventType.endStreamRequest)
+            // 36 bytes
+            writer.string(uuid)
+            this.socket.send(writer.buildBuffer())
+          })
+          this.id2SendingStream.set(uuid, stream)
           let isHookHandled = false
           const readHookArgs = { type, id, data: stream, header }
           for (const hook of this.readHooks) {
@@ -113,16 +145,16 @@ export class Net {
         const chunk = reader.buffer()
         stream.push(chunk)
       } else if (state === StreamState.end) {
-        const stream = this.id2Stream.get(uuid)
+        const stream = this.id2SendingStream.get(uuid)
         if (stream) {
           stream.push(null)
-          this.id2Stream.delete(uuid)
+          this.id2SendingStream.delete(uuid)
         }
       } else {
-        const stream = this.id2Stream.get(uuid)
+        const stream = this.id2SendingStream.get(uuid)
         if (stream) {
           stream.emit("error")
-          this.id2Stream.delete(uuid)
+          this.id2SendingStream.delete(uuid)
         }
       }
     }
@@ -163,9 +195,10 @@ export class Net {
   private sendStream(id: string, stream: Readable, header?: any): void {
     header = JSON.stringify(header)
     const uuid = uuidv4()
+    this.id2ReadingStream.set(uuid, stream)
     stream.on("readable", () => {
       let chunk: Buffer
-      while ((chunk = stream.read()) !== null) {
+      while ((chunk = stream.read(1024)) !== null) {
         const writer = new BufferWriter()
         writer.uint8(MessageType.stream)
         writer.string(id)
@@ -176,7 +209,9 @@ export class Net {
         this.socket.send(writer.buildBuffer())
       }
     })
-    const onEnd = (): void => {
+
+    stream.on("end", () => {
+      this.id2ReadingStream.delete(uuid)
       const writer = new BufferWriter()
       writer.uint8(MessageType.stream)
       writer.string(id)
@@ -184,10 +219,10 @@ export class Net {
       writer.string(uuid)
       writer.uint8(StreamState.end)
       this.socket.send(writer.buildBuffer())
-    }
-    stream.on("close", onEnd)
-    stream.on("end", onEnd)
+    })
+
     stream.on("error", () => {
+      this.id2ReadingStream.delete(uuid)
       const writer = new BufferWriter()
       writer.uint8(MessageType.stream)
       writer.string(id)
