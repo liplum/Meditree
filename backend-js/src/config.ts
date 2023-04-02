@@ -9,21 +9,7 @@ export enum MediaType {
   audio = "audio",
   text = "text",
 }
-export enum ForwardType {
-  socket = "socket",
-  redirect = "redirect",
-}
-export type ParentEntry = {
-  server: string
-  forward: ForwardType
-} & ForwardConfig
 
-export type ForwardConfig = {
-  forward: ForwardType.socket
-} | {
-  forward: ForwardType.redirect
-  redirectTo: string
-}
 export interface AsParentConfig {
   name: string
   port: number
@@ -38,7 +24,7 @@ export interface AsParentConfig {
 
 export interface AsChildConfig {
   name: string
-  parent: ParentEntry[]
+  parent: string[]
   publicKey: string
   privateKey: string
   passcode?: string

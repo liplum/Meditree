@@ -8,16 +8,21 @@ import { LocalFile, type FileTreeLike, type FileTreeJson, type File, type Remote
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
-import { ForwardType, type ForwardConfig, type AsParentConfig, type AsChildConfig, type ParentEntry } from "./config.js"
+import { type AsParentConfig, type AsChildConfig, } from "./config.js"
 import type expressWs from "express-ws"
 import { encrypt, decrypt, generateNonce } from "./crypt.js"
 
+interface NodeMeta {
+  name: string
+  passcode?: string
+}
+
 class SubNode implements FileTreeLike {
-  readonly name: string
+  readonly meta: NodeMeta
   readonly net: Net
   tree: FileTreeJson
-  constructor(name: string, net: Net) {
-    this.name = name
+  constructor(meta: NodeMeta, net: Net) {
+    this.meta = meta
     this.net = net
   }
 
@@ -36,6 +41,10 @@ class SubNode implements FileTreeLike {
     } else {
       return null
     }
+  }
+
+  get name(): string {
+    return this.meta.name
   }
 
   toJSON(): FileTreeJson {
@@ -150,14 +159,14 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     }
   }
 
-  addChildNode(name: string, net: Net): void {
-    const node = new SubNode(name, net)
-    this.name2Child.set(name, node)
+  addChildNode(meta: NodeMeta, net: Net): void {
+    const node = new SubNode(meta, net)
+    this.name2Child.set(meta.name, node)
     net.addReadHook(({ type, id, data }) => {
       if (type !== MessageType.object) return
       if (id !== "file-tree-rebuild") return
       const files: FileTreeJson = data
-      this.updateFileTreeFromSubNode(name, files)
+      this.updateFileTreeFromSubNode(meta.name, files)
       return true
     })
     this.emit("child-node-change", node, true)
@@ -203,12 +212,6 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   }
 }
 
-type NodeMeta = {
-  name: string
-  forward: ForwardType
-  passcode?: string
-} & ForwardConfig
-
 export async function setupAsParent(
   node: MeditreeNode,
   config: AsParentConfig,
@@ -251,7 +254,7 @@ export async function setupAsParent(
     })
     const nodeMeta = await authenticateChild(net, log, config)
     if (!nodeMeta) return
-    node.addChildNode(nodeMeta.name, net)
+    node.addChildNode(nodeMeta, net)
     ws.on("close", () => {
       node.removeChildNode(nodeMeta.name)
     })
@@ -269,35 +272,35 @@ export async function setupAsChild(
   if (config.reconnectInterval) {
     setInterval(async () => {
       for (const parent of config.parent) {
-        if (!connected.includes(parent.server)) {
+        if (!connected.includes(parent)) {
           await connectTo(parent)
         }
       }
     }, config.reconnectInterval).unref()
   }
-  async function connectTo(parent: ParentEntry): Promise<void> {
-    const log = createLogger(`Parent[${parent.server}]`)
-    const ws = new WebSocket(`${convertUrlToWs(parent.server)}/ws`)
+  async function connectTo(parent: string): Promise<void> {
+    const log = createLogger(`Parent[${parent}]`)
+    const ws = new WebSocket(`${convertUrlToWs(parent)}/ws`)
     const net = new Net(ws)
-    connected.push(parent.server)
+    connected.push(parent)
     net.startDaemonWatch()
     let isConnected = false
     let centralInfo: CentralInfo | undefined
     ws.on("error", (error) => { log.error(error) })
     ws.on("open", async () => {
       isConnected = true
-      log.info(`Connected to ${parent.server}.`)
+      log.info(`Connected to ${parent}.`)
       centralInfo = await authenticateForParent(net, log, parent, config)
       if (!centralInfo) return
-      node.addParentNode(centralInfo.name, parent.server, net)
+      node.addParentNode(centralInfo.name, parent, net)
     })
     ws.on("close", () => {
-      connected.splice(connected.indexOf(parent.server), 1)
+      connected.splice(connected.indexOf(parent), 1)
       if (!isConnected) return
       if (centralInfo) {
         node.removeParentNode(centralInfo.name)
       }
-      log.info(`Disconnected from ${parent.server}.`)
+      log.info(`Disconnected from ${parent}.`)
     })
     ws.on("message", (data) => {
       net.handleDatapack(data as Buffer)
@@ -358,7 +361,7 @@ interface CentralInfo {
 async function authenticateForParent(
   net: Net,
   log: Logger,
-  central: ParentEntry,
+  parent: string,
   config: AsChildConfig,
 ): Promise<CentralInfo | undefined> {
   net.send("auth-public-key", {
@@ -372,7 +375,7 @@ async function authenticateForParent(
     net.close()
     return
   }
-  log.info(`Resolved challenge "${resolved}" from ${central.server}.`)
+  log.info(`Resolved challenge "${resolved}" from ${parent}.`)
   net.send("auth-challenge-solution", {
     resolved
   })
@@ -384,27 +387,17 @@ async function authenticateForParent(
     net.close()
     return
   }
-  log.info(`Authenticated on ${central.server}.`)
-  let nodeMeta: NodeMeta
-  if (central.forward === ForwardType.socket) {
-    nodeMeta = {
-      name: config.name,
-      forward: central.forward,
-    }
-  } else { // redirect
-    nodeMeta = {
-      name: config.name,
-      forward: ForwardType.redirect,
-      redirectTo: central.redirectTo,
-      passcode: config.passcode,
-    }
+  log.info(`Authenticated on ${parent}.`)
+  const nodeMeta: NodeMeta = {
+    name: config.name,
+    passcode: config.passcode,
   }
   net.send("node-meta", nodeMeta)
   const nodeMetaResultPayload: {
     result: NodeMetaResult
   } = await net.getMessage("node-meta-result")
   if (nodeMetaResultPayload.result !== NodeMetaResult.success) {
-    log.error(`Central["${central.server}"] rejects this node.`)
+    log.error(`Central["${parent}"] rejects this node.`)
     net.close()
     return
   }
