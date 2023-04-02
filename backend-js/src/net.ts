@@ -110,6 +110,8 @@ export class Net {
             this.handleMessage(id, stream, header)
           }
         }
+        const chunk = reader.buffer()
+        stream.push(chunk)
       } else if (state === StreamState.end) {
         const stream = this.id2Stream.get(uuid)
         if (stream) {
@@ -174,7 +176,7 @@ export class Net {
         this.socket.send(writer.buildBuffer())
       }
     })
-    stream.on("close", () => {
+    const onEnd = (): void => {
       const writer = new BufferWriter()
       writer.uint8(MessageType.stream)
       writer.string(id)
@@ -182,7 +184,9 @@ export class Net {
       writer.string(uuid)
       writer.uint8(StreamState.end)
       this.socket.send(writer.buildBuffer())
-    })
+    }
+    stream.on("close", onEnd)
+    stream.on("end", onEnd)
     stream.on("error", () => {
       const writer = new BufferWriter()
       writer.uint8(MessageType.stream)

@@ -33,28 +33,6 @@ export function FileDisplayBoard(props) {
   const [file] = useContext(SelectedFileContext)
   const boardRef = useRef()
   const forceUpdate = useForceUpdate()
-  const onMouseDown = (e) => {
-    if (!isMobile) return
-    const { clientX } = e
-    const { left, width } = boardRef.current.getBoundingClientRect()
-
-    if (clientX < left + width / 2) {
-      // left side
-      goPreviousFile(file)
-    } else {
-      // right side
-      goNextFile(file)
-    }
-  }
-  const onKeyDown = (e) => {
-    if (e.key === "ArrowLeft") {
-      goPreviousFile(file)
-      e.preventDefault()
-    } else if (e.key === "ArrowRight") {
-      goNextFile(file)
-      e.preventDefault()
-    }
-  }
   let content = null
   if (file) {
     if (!file.url) {
@@ -64,8 +42,28 @@ export function FileDisplayBoard(props) {
     // wheel control works so bad when using trackpad.
     content = <div
       ref={boardRef}
-      onMouseDown={onMouseDown}
-      onKeyDown={onKeyDown}
+      onMouseDown={(e) => {
+        if (!isMobile) return
+        const { clientX } = e
+        const { left, width } = boardRef.current.getBoundingClientRect()
+
+        if (clientX < left + width / 2) {
+          // left side
+          goPreviousFile(file)
+        } else {
+          // right side
+          goNextFile(file)
+        }
+      }}
+      onKeyUp={(e) => {
+        if (e.key === "ArrowLeft") {
+          goPreviousFile(file)
+          e.preventDefault()
+        } else if (e.key === "ArrowRight") {
+          goNextFile(file)
+          e.preventDefault()
+        }
+      }}
       tabIndex="0"
       className="board">
       {
