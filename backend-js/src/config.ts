@@ -2,6 +2,7 @@ import fs from "fs"
 import path from "path"
 import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
+import { HLSMediaType } from "./hls"
 
 export interface AsParentConfig {
   name: string
@@ -60,7 +61,7 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
    */
   homepage?: boolean | string
   rebuildInterval: number
-  fileTypePattern: Record<string, string>
+  fileType: Record<string, string>
   ignore?: string[]
   /**
    * Default is 7 days.
@@ -73,7 +74,7 @@ const defaultConfig: Partial<AppConfig> = {
   port: 80,
   rebuildInterval: 3000,
   cacheMaxAge: 604800,
-  fileTypePattern: {
+  fileType: {
     "**/*.mp4": "video/mp4",
     "**/*.svg": "image/svg+xml",
     "**/*.png": "image/png",
@@ -83,6 +84,7 @@ const defaultConfig: Partial<AppConfig> = {
     "**/*.txt": "text/plain",
     "**/*.gif": "image/gif",
     "**/*.webp": "image/webp",
+    "**/*.m3u8": HLSMediaType,
   },
   parent: [],
   child: [],
@@ -115,8 +117,8 @@ export function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig 
   if (!newConfig.name) {
     newConfig.name = uuidv4()
   }
-  if (!newConfig.fileTypePattern) {
-    newConfig.fileTypePattern = defaultConfig.fileTypePattern as any
+  if (!newConfig.fileType) {
+    newConfig.fileType = defaultConfig.fileType as any
   }
   return newConfig
 }

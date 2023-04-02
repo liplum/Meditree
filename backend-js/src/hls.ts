@@ -1,5 +1,5 @@
 import path from "path"
-import { type FileType, type File, FileTree, LocalFile, LocalFileTree } from "./file"
+import { LocalFile, LocalFileTree } from "./file"
 import { type FileTreePlugin } from "./host"
 
 export const HLSMediaType = "application/x-mpegURL"

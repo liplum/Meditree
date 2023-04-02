@@ -21,12 +21,12 @@ export async function startServer(config: AppConfig): Promise<void> {
     : new HostTree({
       rootPath: config.root,
       name: config.name,
-      fileTypePattern: config.fileTypePattern,
+      fileTypePattern: config.fileType,
       rebuildInterval: config.rebuildInterval,
       ignorePattern: config.ignore ?? [],
     })
   const node = new MeditreeNode()
-  const fileTypes = Array.from(Object.values(config.fileTypePattern))
+  const fileTypes = Array.from(Object.values(config.fileType))
   node.subNodeFilter = (file) => {
     return fileTypes.includes(file["*type"])
   }
