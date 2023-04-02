@@ -174,11 +174,11 @@ export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, 
     throw Error(`${root} isn't a directory`)
   }
   const tree = new LocalFileTree(root)
-  const walk = async (
+  async function walk(
     tree: LocalFileTree,
     currentDirectory: string,
     pathInTreeParts: string[],
-  ): Promise<void> => {
+  ): Promise<void> {
     let files: string[]
     try {
       files = await readdirAsync(currentDirectory)
