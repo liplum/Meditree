@@ -11,36 +11,34 @@ export function createDelegate(rootFileTree, rootName = "") {
     const entries = Object.entries(fileTree)
     reorder(entries)
     for (const [name, file] of entries) {
+      if (!(file instanceof Object)) continue
+      if (file["*hiden"]) continue
       let curKey = key++
-      if (file instanceof Object) {
-        // if file has a type, it presents a file
-        if (file.type) {
-          if (!file.hide) {
-            key2File.set(curKey, {
-              name,
-              key: curKey,
-              path: file.path,
-              type: file.type,
-              size: file.size,
-              tracking: [...parentKeys, curKey],
-            })
-            children.push({
-              key: curKey,
-              isLeaf: true,
-              title: name,
-            })
-          }
-        } else {
-          // otherwise, it presents a directory
-          const myChildren = []
-          const obj = {
-            key: curKey,
-            title: name,
-            children: myChildren,
-          }
-          children.push(obj)
-          createNode([...parentKeys, curKey], myChildren, file)
+      // if file has a type, it presents a file
+      if (file["*type"]) {
+        key2File.set(curKey, {
+          name,
+          key: curKey,
+          path: file.path,
+          type: file["*type"],
+          size: file.size,
+          tracking: [...parentKeys, curKey],
+        })
+        children.push({
+          key: curKey,
+          isLeaf: true,
+          title: name,
+        })
+      } else {
+        // otherwise, it presents a directory
+        const myChildren = []
+        const obj = {
+          key: curKey,
+          title: name,
+          children: myChildren,
         }
+        children.push(obj)
+        createNode([...parentKeys, curKey], myChildren, file)
       }
     }
   }
