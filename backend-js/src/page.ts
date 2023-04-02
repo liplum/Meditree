@@ -1,12 +1,10 @@
-import { MediaType } from "./config.js"
 import { type FileTree, type File } from "./file.js"
 export function buildIndexHtml(
-  mediaType: Record<string, MediaType>,
   fileTree: FileTree,
 ): string {
   let maxIndent = 0
   const indentClassName = (indent: number): string => `i${indent}`
-  const local = buildFromFileTree(fileTree, mediaType, indentClassName)
+  const local = buildFromFileTree(fileTree, indentClassName)
   maxIndent = Math.max(maxIndent, local.maxIndent)
   const indent = buildIndentStyleClass(maxIndent, indentClassName, 15)
 
@@ -71,7 +69,6 @@ function buildIndentStyleClass(
 }
 function buildFromFileTree(
   tree: FileTree,
-  mediaType: Record<string, MediaType>,
   getIndentClz: IndentClassNameBuilder,
 ): { tags: string[], maxIndent: number } {
   const div: string[] = []
@@ -83,7 +80,7 @@ function buildFromFileTree(
       if (file["*type"]) {
         // it's file
         const fi = file as File
-        const clz = mediaType[fi["*type"]] === MediaType.image ? "class=\"has-preview\"" : ""
+        const clz = fi["*type"].startsWith("image") ? "class='has-preview'" : ""
         div.push(`<a href="/file/${fi.path}" ${clz}>${name}</a>,`)
       } else {
         // it's directory

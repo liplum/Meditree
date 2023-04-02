@@ -3,13 +3,6 @@ import path from "path"
 import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
 
-export enum MediaType {
-  video = "video",
-  image = "image",
-  audio = "audio",
-  text = "text",
-}
-
 export interface AsParentConfig {
   name: string
   port: number
@@ -68,7 +61,6 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
   homepage?: boolean | string
   rebuildInterval: number
   fileTypePattern: Record<string, string>
-  mediaType: Record<string, MediaType>
   ignore?: string[]
   /**
    * Default is 7 days.
@@ -81,17 +73,6 @@ const defaultConfig: Partial<AppConfig> = {
   port: 80,
   rebuildInterval: 3000,
   cacheMaxAge: 604800,
-  mediaType: {
-    "video/mp4": MediaType.video,
-    "image/png": MediaType.image,
-    "image/jpeg": MediaType.image,
-    "image/svg+xml": MediaType.image,
-    "image/gif": MediaType.image,
-    "image/webp": MediaType.image,
-    "audio/mpeg": MediaType.audio,
-    "text/markdown": MediaType.text,
-    "text/plain": MediaType.text,
-  },
   fileTypePattern: {
     "**/*.mp4": "video/mp4",
     "**/*.svg": "image/svg+xml",
@@ -136,9 +117,6 @@ export function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig 
   }
   if (!newConfig.fileTypePattern) {
     newConfig.fileTypePattern = defaultConfig.fileTypePattern as any
-  }
-  if (!newConfig.mediaType) {
-    newConfig.mediaType = defaultConfig.mediaType as any
   }
   return newConfig
 }

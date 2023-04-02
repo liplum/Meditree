@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { HostTree } from "./host.js"
-import { type AppConfig, MediaType, type AsParentConfig, type AsChildConfig } from "./config.js"
+import { type AppConfig, type AsParentConfig, type AsChildConfig } from "./config.js"
 import express, { type Request, type Response } from "express"
 import { type ResolvedFile, type FileTree } from "./file.js"
 import cors from "cors"
@@ -47,7 +47,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   function updateTreeJsonCache(entireFree: FileTree): void {
     let html: string | undefined
     if (typeof homepage !== "string" && (homepage === undefined || homepage === null || homepage)) {
-      html = buildIndexHtml(config.mediaType, entireFree)
+      html = buildIndexHtml(entireFree)
     }
     const info: FileTreeInfo = {
       name: config.name,
@@ -113,13 +113,6 @@ export async function startServer(config: AppConfig): Promise<void> {
     res.send(fullTreeCache.json)
   })
 
-  const fileType2handler = {
-    [MediaType.image]: pipeFile,
-    [MediaType.text]: pipeFile,
-    [MediaType.video]: pipeRangedFile,
-    [MediaType.audio]: pipeRangedFile,
-  }
-
   app.get("/file(/*)", async (req, res) => {
     const path = removePrefix(decodeURI(req.baseUrl + req.path), "/file/")
     const file = node.resolveFile(path.split("/"))
@@ -132,23 +125,17 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.status(404).end()
       return
     }
-    const handler = fileType2handler[config.mediaType[fileType]]
-    if (!handler) {
-      return res.status(404).end()
-    } else {
-      res.header({
-        "Content-Type": file.type,
-      })
-      res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)
-      await handler(req, res, file)
-    }
+    res.header({
+      "Content-Type": file.type,
+    })
+    res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)
+    await pipeFile(req, res, file)
   })
   /**
    * Ranged is for videos and audios. On Safari mobile, range headers is used.
    */
-  async function pipeRangedFile(req: Request, res: Response, file: ResolvedFile): Promise<void> {
+  async function pipeFile(req: Request, res: Response, file: ResolvedFile): Promise<void> {
     if (file.inner.size !== undefined) {
-      // learnt from https://github.com/bootstrapping-microservices/video-streaming-example
       let { start, end } = resolveRange(req.headers.range)
       start ??= 0
       end ??= file.size - 1
@@ -183,16 +170,6 @@ export async function startServer(config: AppConfig): Promise<void> {
       })
       stream.pipe(res)
     }
-  }
-
-  async function pipeFile(req: Request, res: Response, file: ResolvedFile): Promise<void> {
-    res.status(200)
-    const stream = await node.createReadStream(file)
-    if (!stream) {
-      res.status(404).end()
-      return
-    }
-    stream.pipe(res)
   }
 
   const onRunning = (): void => {

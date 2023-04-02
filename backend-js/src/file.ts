@@ -13,18 +13,22 @@ export interface FileTree {
 }
 
 export class LocalFile implements File {
-  "*type": FileType
-  size: number
-  path: string
-  localPath: string
+  readonly parent: LocalFileTree
+  readonly name: string
+  readonly "*type": FileType
+  readonly size: number
+  readonly path: string
+  readonly localPath: string
   "*hide"?: boolean
-  constructor(type: FileType, size: number, localPath: string, path: string) {
+  constructor(parent: LocalFileTree, name: string, type: FileType, size: number, localPath: string, path: string) {
+    this.parent = parent
+    this.name = name
     this["*type"] = type
     this.size = size
     this.localPath = localPath
     this.path = path
   }
-
+  
   toJSON(): File {
     return {
       "*type": this["*type"],
@@ -122,6 +126,18 @@ export class LocalFileTree implements FileTreeLike {
       }
     }
     return obj
+  }
+
+  * visit(predicate?: (name: string, file: LocalFile | FileTree) => boolean): Iterable<LocalFile | LocalFileTree> {
+    for (const [name, file] of this.name2File.entries()) {
+      if (!predicate || predicate(name, file)) {
+        if (file instanceof LocalFileTree) {
+          yield* file.visit(predicate)
+        } else {
+          yield file
+        }
+      }
+    }
   }
 }
 
