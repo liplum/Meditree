@@ -267,7 +267,7 @@ export async function setupAsParent(
       } catch (error) {
         log.trace("A websocket is aborted due to an error.")
         log.error(error)
-        net.close()
+        net.close(400)
       }
     })
     const nodeMeta = await authenticateChild(net, log, config)
@@ -362,7 +362,7 @@ async function authenticateChild(
     net.send("auth-challenge-solution-result", {
       result: ChallengeResult.failure,
     })
-    net.close()
+    net.close(401)
     return
   }
   log.info(`"${publicKey}" is authenticated.`)
@@ -394,7 +394,7 @@ async function authenticateForParent(
   const resolved = decrypt(encrypted, nonce, publicKey, config.privateKey)
   if (resolved === null) {
     log.error("challenge failed.")
-    net.close()
+    net.close(401)
     return
   }
   log.info(`Resolved challenge "${resolved}" from ${parent}.`)
@@ -406,7 +406,7 @@ async function authenticateForParent(
   } = await net.getMessage("auth-challenge-solution-result")
   if (challengeResultPayload.result !== ChallengeResult.success) {
     log.error("challenge failed.")
-    net.close()
+    net.close(401)
     return
   }
   log.info(`Authenticated on ${parent}.`)
@@ -420,7 +420,7 @@ async function authenticateForParent(
   } = await net.getMessage("node-meta-result")
   if (nodeMetaResultPayload.result !== NodeMetaResult.success) {
     log.error(`Central["${parent}"] rejects this node.`)
-    net.close()
+    net.close(403)
     return
   }
   return {

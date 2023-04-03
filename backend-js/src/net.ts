@@ -43,7 +43,7 @@ export type ReadHook<Data> = ({ type, id, data, header }: {
 }) => boolean | undefined
 export type DebugCall = (id: string, data: any, header?: any) => void
 export interface SocketLike {
-  close: () => void
+  close: (...args: any[]) => void
   send: (buffer: Buffer) => void
 }
 export class Net {
@@ -70,8 +70,8 @@ export class Net {
     timer.unref()
   }
 
-  close(): void {
-    this.socket.close()
+  close(...args: any[]): void {
+    this.socket.close(...args)
   }
 
   /**
