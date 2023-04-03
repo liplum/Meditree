@@ -1,5 +1,5 @@
 // Import required modules
-import { Button, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, DialogActions, DialogTitle, Card, CardActions } from '@mui/material';
+import { Button, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, DialogActions, DialogTitle, Card, CardActions, InputAdornment, IconButton, OutlinedInput, InputLabel } from '@mui/material';
 import React, { useState } from 'react';
 import {
   redirect,
@@ -13,6 +13,7 @@ import {
 import "./connect.css"
 import { i18n } from './i18n.js';
 import { removePrefix } from './utils.jsx';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 export async function load() {
   const backendUrl = import.meta.env.VITE_BACKEND
@@ -54,6 +55,7 @@ export function ConnectDialog(props) {
   const [server, setServer] = useState(lastConnected?.server)
   // true means "http", while false means "https"
   const [protocol, setProtocol] = useState(lastConnected?.protocol ?? "http")
+  const [showPasscode, setShowPasscode] = useState(false)
   return (
     <Card id="connect-dialog">
       <h1>{i18n.connect.title}</h1>
@@ -92,15 +94,27 @@ export function ConnectDialog(props) {
           }}
           label={i18n.connect.server}
         />
-        <TextField
-          multiline
-          rows={3}
-          type="password"
-          label={i18n.connect.passcode}
-          placeholder={i18n.connect.passcodePlaceholder}
-          defaultValue={lastConnected?.passcode}
-          name="passcode"
-        />
+        <FormControl variant="outlined">
+          <InputLabel htmlFor="outlined-adornment-password">{i18n.connect.passcode}</InputLabel>
+          <OutlinedInput
+            type={showPasscode ? 'text' : 'password'}
+            label={i18n.connect.passcode}
+            placeholder={i18n.connect.passcodePlaceholder}
+            defaultValue={lastConnected?.passcode}
+            name="passcode"
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => { setShowPasscode(!showPasscode) }}
+                  onMouseDown={() => { setShowPasscode(!showPasscode) }}
+                  aria-label="toggle password visibility"
+                >
+                  {showPasscode ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            }
+          />
+        </FormControl>
         <DialogActions>
           <Button type="submit">{i18n.connect.connectBtn}</Button>
         </DialogActions>
