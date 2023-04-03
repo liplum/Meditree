@@ -118,12 +118,23 @@ function VideoRenderer({ file }) {
       return options;
     }
   }, [passcode])
-
+  // for HLS support on mobile safari
+  const overrideNative = false
   const videoJsOptions = {
     autoplay: false,
     controls: true,
     responsive: true,
     fluid: true,
+    liveui: true,
+    usingNativeControls: false,
+    html5: {
+      vhs: {
+        overrideNative: overrideNative
+      }
+    },
+    nativeVideoTracks: !overrideNative,
+    nativeAudioTracks: !overrideNative,
+    nativeTextTracks: !overrideNative,
     playbackRates: [0.1, 0.5, 1, 1.5, 2, 3, 5, 10],
     sources: [{
       src: file.url,
