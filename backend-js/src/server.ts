@@ -6,15 +6,16 @@ import { type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { createLogger } from "./logger.js"
-import CreateExpressWs from "express-ws"
 import { resolvePlguinFromConfig } from "./plugin.js"
+import http from "http"
 // import for side effects
 import "./plugin/homepage.js"
 import "./plugin/minify.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
-  const app = CreateExpressWs(express()).app
+  const app = express()
+  const server = http.createServer(app)
   app.use(cors())
   app.use(express.json())
   const log = createLogger("Main")
@@ -171,7 +172,7 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   // If node is defined and not empty, subnodes can connect to this.
   if (config.child?.length && config.publicKey && config.privateKey) {
-    await setupAsParent(node, config as any as AsParentConfig, app)
+    await setupAsParent(node, config as any as AsParentConfig, server)
   }
 
   // If central is defined and not empty, it will try connecting to every central.
@@ -179,14 +180,17 @@ export async function startServer(config: AppConfig): Promise<void> {
     await setupAsChild(node, config as any as AsChildConfig)
   }
 
-  const onRunning = (): void => {
-    log.info(`Server running at http://localhost:${config.port}/`)
-    console.timeEnd("Start Server")
-  }
-  if (config.hostname) {
-    app.listen(config.port, config.hostname, onRunning)
+  const hostname = config.hostname
+  if (hostname) {
+    server.listen(config.port, config.hostname, (): void => {
+      log.info(`Server running at http://${hostname}:${config.port}/`)
+      console.timeEnd("Start Server")
+    })
   } else {
-    app.listen(config.port, onRunning)
+    server.listen(config.port, (): void => {
+      log.info(`Server running at http://localhost:${config.port}/`)
+      console.timeEnd("Start Server")
+    })
   }
 }
 
