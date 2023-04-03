@@ -164,3 +164,20 @@ export function filterFileTreeJson(tree: FileTree, filter: (file: File | FileTre
   }
   return filteredTree
 }
+
+export function cloneFileTreeJson(tree: FileTree): FileTree {
+  const filteredTree: FileTree = {}
+  for (const [name, fileOrSubtree] of Object.entries(tree)) {
+    // it's a file
+    if (fileOrSubtree["*type"]) {
+      filteredTree[name] = fileOrSubtree
+    } else {
+      // it's a folder
+      const filteredSubtree = cloneFileTreeJson(fileOrSubtree as FileTree)
+      if (Object.keys(filteredSubtree).length > 0) {
+        filteredTree[name] = filteredSubtree
+      }
+    }
+  }
+  return filteredTree
+}

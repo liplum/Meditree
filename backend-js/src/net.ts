@@ -86,7 +86,6 @@ export class Net {
         // handled by the sender
         const uuid = reader.string()
         const stream = this.id2ReadingStream.get(uuid)
-        console.log(stream !== undefined)
         if (stream) {
           stream.emit("end")
         }

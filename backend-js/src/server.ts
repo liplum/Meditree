@@ -2,7 +2,7 @@
 import { HostTree } from "./host.js"
 import { type AppConfig, type AsParentConfig, type AsChildConfig } from "./config.js"
 import express, { type Request, type Response } from "express"
-import { type ResolvedFile } from "./file.js"
+import { cloneFileTreeJson, type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { createLogger } from "./logger.js"
@@ -59,6 +59,12 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   node.on("file-tree-update", (entireTree) => {
+    if (plugins) {
+      entireTree = cloneFileTreeJson(entireTree)
+      for (const plugin of plugins) {
+        entireTree = plugin.onEntireTreeForClient(entireTree)
+      }
+    }
     const info: FileTreeInfo = {
       name: config.name,
       files: entireTree,

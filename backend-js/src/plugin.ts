@@ -17,11 +17,18 @@ export abstract class MeditreePlugin<TConfig = PlguinConfig> implements FileTree
   onMeditreeNodeCreated(node: MeditreeNode): void { }
 
   onPostGenerated(tree: FileTree): void { }
+
   /**
-   * @param tree the entire file tree will be sent to the client soon.
+   * @param tree the entire file tree will be sent to both clients and parent nodes.
    * @returns a new file tree or the same instance.
    */
   onEntireTreeUpdated(tree: FileTree): FileTree { return tree }
+  
+  /**
+   * @param tree the entire file tree will be sent to clients soon.
+   * @returns a new file tree or the same instance.
+   */
+  onEntireTreeForClient(tree: FileTree): FileTree { return tree }
 }
 
 export function resolvePlguinFromConfig(config: Record<string, Record<string, any>>): MeditreePlugin[] {

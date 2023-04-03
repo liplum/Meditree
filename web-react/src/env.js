@@ -16,7 +16,7 @@ export const backend = {
   suffixWithPasscode(url, passcode) {
     const passcodeSuffix = `?passcode=${encodeURI(passcode)}`
     if (passcode && !url.endsWith(passcodeSuffix)) {
-      return `${url}?${passcodeSuffix}`
+      return `${url}${passcodeSuffix}`
     } else {
       return url
     }

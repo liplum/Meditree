@@ -8,7 +8,6 @@ import { type FileTreeLike, type FileTree, type File, filterFileTreeJson, Resolv
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
-import { type Express } from "express"
 import { type AsParentConfig, type AsChildConfig, } from "./config.js"
 import { encrypt, decrypt, generateNonce } from "./crypt.js"
 import type http from "http"
@@ -196,7 +195,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       this.name2Child.delete(name)
       this.emit("child-node-change", node, false)
       // when a child is removed, rebuild the entire tree
-      this.emit("file-tree-update", this.toJSON())
+      this.emitNewEntireTreeUpdateEvent()
     }
   }
 
