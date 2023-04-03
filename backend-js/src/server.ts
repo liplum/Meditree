@@ -38,7 +38,7 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   const fileTypes = Array.from(Object.values(config.fileType))
   node.subNodeFilter = (file) => {
-    return fileTypes.includes(file["*type"])
+    return !file["*type"] || fileTypes.includes(file["*type"])
   }
 
   if (localTree) {

@@ -118,7 +118,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       const node = this.name2Child.get(remoteNode)
       if (!node) throw new Error(`Node[${remoteNode}] not found.`)
       const uuid = uuidv4()
-      node.net.send("get-file", { path: file.path, options, uuid })
+      node.net.send("get-file", { path: file.inner.path, options, uuid })
       const stream = await node.net.getMessage("send-file", (header) => header && header.uuid === uuid)
       return stream
     }
@@ -172,7 +172,6 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     const pathParts = path.split("/")
     const file = this.resolveFile(pathParts)
     if (file) {
-      console.log(path, options)
       const stream = await this.createReadStream(file, options)
       receiver.send("send-file", stream, { uuid, path })
     }
@@ -212,9 +211,6 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       return true
     })
     this.emit("parent-node-change", node, true)
-    setInterval(() => {
-      console.log(Array.from(net.id2ReadingStream.keys()))
-    }, 500)
   }
 
   removeParentNode(name: string): void {
