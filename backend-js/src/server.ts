@@ -119,7 +119,9 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.status(400).send({ error: "badURI" })
       return
     }
-    const path = removePrefix(uri, "/file/")
+    let path = removePrefix(uri, "/file/")
+    path = removeSuffix(path, "/")
+    console.log(path)
     const file = node.resolveFile(path.split("/"))
     if (file == null) {
       res.status(404).end()
@@ -196,6 +198,11 @@ export async function startServer(config: AppConfig): Promise<void> {
 
 function removePrefix(origin: string, prefix: string): string {
   if (origin.startsWith(prefix)) return origin.substring(prefix.length,)
+  else return origin
+}
+
+function removeSuffix(origin: string, suffix: string): string {
+  if (origin.endsWith(suffix)) return origin.substring(0, origin.length - suffix.length)
   else return origin
 }
 
