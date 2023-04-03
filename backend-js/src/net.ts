@@ -164,9 +164,10 @@ export class Net {
     const handlers = this.messageHandlers.get(id)
     const handlerLengthBefore = handlers?.length
     if (handlers) {
-      handlers.filter((handler) => {
+      const handlerAfter = handlers.filter((handler) => {
         return !handler(data, header)
       })
+      this.messageHandlers.set(id, handlerAfter)
     }
     if (handlers?.length !== handlerLengthBefore) {
       this.unhandledMessageTasks.push(() => {

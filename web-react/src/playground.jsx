@@ -139,7 +139,6 @@ function VideoRenderer({ file }) {
   />
 }
 function ImageRenderer({ file }) {
-  console.log(file)
   return <img
     src={file.url}
     alt={file.path}
