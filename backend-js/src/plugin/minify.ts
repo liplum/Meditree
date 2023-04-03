@@ -1,4 +1,4 @@
-import { type FileTree, filterFileTreeJson } from "../file.js"
+import { type FileTree, type File } from "../file.js"
 import { MeditreePlugin, pluginTypes } from "../plugin.js"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation
@@ -8,13 +8,32 @@ interface MinifyPluginConfig {
   /**
    * Remove hiden files and folders from entire tree.
    */
-  removeHiden?: boolean
+  removeHidden?: boolean
+  removeSize?: boolean
 }
 
 export class MinifyPlugin extends MeditreePlugin<MinifyPluginConfig> {
   onEntireTreeUpdated(tree: FileTree): FileTree {
-    if (this.config.removeHiden) {
-      return filterFileTreeJson(tree, (file) => !file["*hiden"])
+    const removeHidden = this.config.removeHidden ?? false
+    const removeSize = this.config.removeSize ?? false
+    if (removeHidden || removeSize) {
+      function visit(cur: FileTree): void {
+        for (const [name, fileOrSubtree] of Object.entries(cur)) {
+          if (removeHidden && fileOrSubtree["*hide"]) {
+            delete cur[name]
+          } else {
+            if (fileOrSubtree["*type"]) {
+              if (removeSize) {
+                delete fileOrSubtree.size
+              }
+            } else {
+              visit(fileOrSubtree)
+            }
+          }
+        }
+      }
+      visit(tree)
+      return tree
     }
     return tree
   }

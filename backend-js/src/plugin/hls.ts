@@ -14,7 +14,7 @@ export class HLSPlugin extends MeditreePlugin {
       const pureName = path.basename(file.localPath, path.extname(file.localPath))
       const tsDir = file.parent.name2File.get(pureName)
       if (tsDir instanceof LocalFileTree) {
-        tsDir.hiden = true
+        tsDir.hidden = true
       }
     }
   }

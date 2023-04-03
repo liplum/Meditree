@@ -3,12 +3,12 @@ import path from "path"
 export type FileType = string
 export interface File {
   "*type": FileType
-  size?: number
-  "*hiden"?: boolean
+  size: number
+  "*hide"?: boolean
   path: string
 }
 export interface FileTree {
-  ["*hiden"]?: boolean
+  ["*hide"]?: boolean
   [name: string]: File | FileTree | any
 }
 
@@ -19,7 +19,7 @@ export class LocalFile implements File {
   readonly size: number
   readonly path: string
   readonly localPath: string
-  "*hiden"?: boolean
+  "*hide"?: boolean
   constructor(parent: LocalFileTree, name: string, type: FileType, size: number, localPath: string, path: string) {
     this.parent = parent
     this.name = name
@@ -33,7 +33,7 @@ export class LocalFile implements File {
     return {
       "*type": this["*type"],
       size: this.size,
-      "*hiden": this["*hiden"],
+      "*hide": this["*hide"],
       path: this.path,
     }
   }
@@ -54,7 +54,7 @@ export interface FileTreeLike {
 
 export class LocalFileTree implements FileTreeLike {
   parent: LocalFileTree | null = null
-  hiden?: boolean
+  hidden?: boolean
   name2File = new Map<string, LocalFile | LocalFileTree>()
   rootPath: string
   readonly name: string
@@ -118,8 +118,8 @@ export class LocalFileTree implements FileTreeLike {
 
   toJSON(): FileTree {
     const obj: FileTree = {}
-    if (this.hiden) {
-      obj["*hiden"] = this.hiden
+    if (this.hidden) {
+      obj["*hide"] = this.hidden
     }
     for (const [name, file] of this.name2File.entries()) {
       if (file instanceof LocalFileTree) {

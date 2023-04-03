@@ -117,41 +117,29 @@ export async function startServer(config: AppConfig): Promise<void> {
    * Ranged is for videos and audios. On Safari mobile, range headers is used.
    */
   async function pipeFile(req: Request, res: Response, file: ResolvedFile): Promise<void> {
-    if (file.inner.size !== undefined) {
-      let { start, end } = resolveRange(req.headers.range)
-      start ??= 0
-      end ??= file.inner.size - 1
-      const retrievedLength = (end + 1) - start
+    let { start, end } = resolveRange(req.headers.range)
+    start ??= 0
+    end ??= file.inner.size - 1
+    const retrievedLength = (end + 1) - start
 
-      res.statusCode = start !== undefined || end !== undefined ? 206 : 200
+    res.statusCode = start !== undefined || end !== undefined ? 206 : 200
 
-      res.setHeader("content-length", retrievedLength)
-      if (req.headers.range) {
-        res.setHeader("content-range", `bytes ${start}-${end}/${file.inner.size}`)
-        res.setHeader("accept-ranges", "bytes")
-      }
-      const stream = await node.createReadStream(file, {
-        start, end,
-      })
-      if (!stream) {
-        res.status(404).end()
-        return
-      }
-      stream.on("error", (_) => {
-        res.sendStatus(500)
-      })
-      stream.pipe(res)
-    } else {
-      const stream = await node.createReadStream(file)
-      if (!stream) {
-        res.status(404).end()
-        return
-      }
-      stream.on("error", (_) => {
-        res.sendStatus(500)
-      })
-      stream.pipe(res)
+    res.setHeader("content-length", retrievedLength)
+    if (req.headers.range) {
+      res.setHeader("content-range", `bytes ${start}-${end}/${file.inner.size}`)
+      res.setHeader("accept-ranges", "bytes")
     }
+    const stream = await node.createReadStream(file, {
+      start, end,
+    })
+    if (!stream) {
+      res.status(404).end()
+      return
+    }
+    stream.on("error", (_) => {
+      res.sendStatus(500)
+    })
+    stream.pipe(res)
   }
 
   if (localTree) {

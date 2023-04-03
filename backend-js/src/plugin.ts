@@ -17,7 +17,10 @@ export abstract class MeditreePlugin<TConfig = PlguinConfig> implements FileTree
   onMeditreeNodeCreated(node: MeditreeNode): void { }
 
   onPostGenerated(tree: FileTree): void { }
-
+  /**
+   * @param tree the entire file tree will be sent to the client soon.
+   * @returns a new file tree or the same instance.
+   */
   onEntireTreeUpdated(tree: FileTree): FileTree { return tree }
 }
 

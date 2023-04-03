@@ -12,7 +12,7 @@ export function createDelegate(rootFileTree, rootName = "") {
     reorder(entries)
     for (const [name, file] of entries) {
       if (!(file instanceof Object)) continue
-      if (file["*hiden"]) continue
+      if (file["*hide"]) continue
       let curKey = key++
       // if file has a type, it presents a file
       if (file["*type"]) {
