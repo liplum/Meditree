@@ -11,9 +11,10 @@ export class HLSPlugin extends MeditreePlugin {
       return file instanceof LocalFile && file["*type"] === HLSMediaType
     })) {
       file = file as LocalFile
-      const tsDir = file.parent.name2File.get(path.basename(file.localPath, path.extname(file["*type"])))
+      const pureName = path.basename(file.localPath, path.extname(file.localPath))
+      const tsDir = file.parent.name2File.get(pureName)
       if (tsDir instanceof LocalFileTree) {
-        tsDir.hide = true
+        tsDir.hiden = true
       }
     }
   }

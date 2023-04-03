@@ -8,7 +8,7 @@ export interface File {
   path: string
 }
 export interface FileTree {
-  ["*hide"]?: boolean
+  ["*hiden"]?: boolean
   [name: string]: File | FileTree | any
 }
 
@@ -54,7 +54,7 @@ export interface FileTreeLike {
 
 export class LocalFileTree implements FileTreeLike {
   parent: LocalFileTree | null = null
-  hide?: boolean
+  hiden?: boolean
   name2File = new Map<string, LocalFile | LocalFileTree>()
   rootPath: string
   readonly name: string
@@ -117,7 +117,10 @@ export class LocalFileTree implements FileTreeLike {
   }
 
   toJSON(): FileTree {
-    const obj = {}
+    const obj: FileTree = {}
+    if (this.hiden) {
+      obj["*hiden"] = this.hiden
+    }
     for (const [name, file] of this.name2File.entries()) {
       if (file instanceof LocalFileTree) {
         obj[name] = file.toJSON()
