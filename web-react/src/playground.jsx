@@ -16,6 +16,8 @@ import { filesize } from "filesize";
 import { VideoJS } from "./video-player"
 import videojs from "video.js";
 
+const VideoRenderer = React.memo(VideoRendererImpl)
+
 const type2Render = {
   "video/mp4": VideoRenderer,
   "image/png": ImageRenderer,
@@ -110,7 +112,7 @@ export function FileDisplayBoard(props) {
   </>
 }
 
-function VideoRenderer({ file }) {
+function VideoRendererImpl({ file }) {
   const { passcode } = useContext(BackendContext)
   useEffect(() => {
     videojs.Vhs.xhr.beforeRequest = function (options) {
@@ -149,6 +151,7 @@ function VideoRenderer({ file }) {
     }}
   />
 }
+
 function ImageRenderer({ file }) {
   return <img
     src={file.url}

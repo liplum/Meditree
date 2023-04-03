@@ -167,7 +167,7 @@ function Body(props) {
     style={{
       display: 'flex',
       flexDirection: 'column',
-      height: '100%'
+      height: '100%',
     }}>
     <div style={{
       display: "flex",
