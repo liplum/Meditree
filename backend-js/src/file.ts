@@ -28,7 +28,7 @@ export class LocalFile implements File {
     this.localPath = localPath
     this.path = path
   }
-  
+
   toJSON(): File {
     return {
       "*type": this["*type"],
@@ -83,10 +83,10 @@ export class LocalFileTree implements FileTreeLike {
       if (currentPart === undefined) break
       cur = cur.name2File.get(currentPart)
     }
-    if (cur instanceof LocalFileTree) {
-      return null
+    if (cur instanceof LocalFile) {
+      return new ResolvedFile(cur)
     } else {
-      return new ResolvedFile(cur as LocalFile)
+      return null
     }
   }
 

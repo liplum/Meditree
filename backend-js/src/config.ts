@@ -80,6 +80,7 @@ const defaultConfig: Partial<AppConfig> = {
     "**/*.gif": "image/gif",
     "**/*.webp": "image/webp",
     "**/*.m3u8": HLSMediaType,
+    "**/*.ts": "video/ts", // TODO: conflict with typescript file
   },
   parent: [],
   child: [],

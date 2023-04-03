@@ -2,8 +2,10 @@ import https from "https"
 import fs from "fs"
 import commandLineArgs from "command-line-args"
 import path from "path"
+import Ffmpeg from "fluent-ffmpeg"
+import ProgressBar from "progress"
 
-let mainDef = [
+const mainDef = [
   { name: "cmd", defaultOption: true }
 ]
 const mainCmd = commandLineArgs(mainDef, { stopAtFirstUnknown: true })
@@ -16,12 +18,12 @@ if (mainCmd.cmd === "get") {
     { name: "output", defaultValue: randomFileName, alias: "o" },
     { name: "abs", defaultValue: true, type: Boolean }
   ]
-  const getOptions = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
-  const url = getOptions.url
-  const converted = getOptions.abs
+  const opt = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
+  const url = opt.url
+  const converted = opt.abs
     ? await convertRelativeUrlsToAbsolute(url)
     : await fetchTextFile(url)
-  let outputPath = getOptions.output
+  let outputPath = opt.output
   if (fs.statSync(outputPath).isDirectory()) {
     outputPath = path.join(outputPath, randomFileName)
   }
@@ -29,6 +31,45 @@ if (mainCmd.cmd === "get") {
     outputPath = `${outputPath}.m3u8`
   }
   fs.writeFileSync(outputPath, converted)
+} else if (mainCmd.cmd === "gen") {
+  const genDef = [
+    { name: "path", defaultOption: true },
+  ]
+  const opt = commandLineArgs(genDef, { argv, stopAtFirstUnknown: true })
+  if (!fs.statSync(opt.path).isFile()) {
+    console.log(`${opt.path} file not found.`)
+    process.exit(1)
+  }
+  const pureName = path.basename(opt.path, path.extname(opt.path))
+  const parentDir = path.dirname(opt.path)
+  const outputDir = path.join(parentDir, pureName)
+  if (fs.existsSync(outputDir) && !fs.statSync(outputDir).isDirectory()) {
+    console.log(`${outputDir} exists but it's not a directory.`)
+    process.exit(1)
+  }
+  fs.mkdirSync(outputDir, { recursive: true })
+  const bar = new ProgressBar("converting [:bar] :percent", {
+    complete: "=",
+    head: ">",
+    incomplete: " ",
+    width: 20,
+    total: 100
+  });
+  new Ffmpeg(opt.path)
+    .outputOptions([
+      '-c:v libx264', // video codec
+      '-c:a aac', // audio codec
+      '-hls_time 12', // segment duration (in seconds)
+      '-hls_list_size 0', // maximum number of playlist entries (0 means unlimited)
+    ])
+    .outputOptions("-segment_list_entry", `${pureName}/%d.ts`)
+    // segment filename format
+    .outputOptions("-hls_segment_filename", path.join(outputDir, "%d.ts"))
+    .output(path.join(parentDir, `${pureName}.m3u8`))
+    .on("progress", (progress) => {
+      bar.update(progress.percent / 100)
+    })
+    .run()
 }
 
 async function fetchTextFile(url) {
