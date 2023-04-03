@@ -121,6 +121,7 @@ function VideoRendererImpl({ file }) {
     }
   }, [passcode])
   // for HLS support on mobile safari
+  // ref: http://jsfiddle.net/fxfktztx/1, https://stackoverflow.com/a/47632587/13691173
   const overrideNative = false
   const videoJsOptions = {
     autoplay: false,
