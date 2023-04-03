@@ -20,6 +20,8 @@ export class MinifyPlugin extends MeditreePlugin<MinifyPluginConfig> {
       function visit(cur: FileTree): void {
         for (const [name, fileOrSubtree] of Object.entries(cur)) {
           if (removeHidden && fileOrSubtree["*hide"]) {
+            // I have to delete a dynamic property, because it's in json.
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete cur[name]
           } else {
             if (fileOrSubtree["*type"]) {

@@ -8,11 +8,18 @@ export const backend = {
   },
   reolsveFileUrl(baseUrl, path, passcode) {
     if (passcode) {
-      return encodeURI(`${baseUrl}/file/${path}?passcode=${passcode}`);
+      return encodeURI(`${baseUrl}/file/${path}?passcode=${passcode}`)
     } else {
-      return encodeURI(`${baseUrl}/file/${path}`);
+      return encodeURI(`${baseUrl}/file/${path}`)
     }
   },
+  suffixWithPasscode(url, passcode) {
+    if (passcode && !url.endsWith(passcode)) {
+      return `${url}?passcode=${encodeURI(passcode)}`
+    } else {
+      return url
+    }
+  }
 }
 
 export const storage = {

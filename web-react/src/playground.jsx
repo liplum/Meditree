@@ -14,19 +14,20 @@ import remarkGfm from 'remark-gfm'
 import { Failed } from './loading';
 import { filesize } from "filesize";
 import { VideoJS } from "./video-player"
+import videojs from "video.js";
 
 const type2Render = {
-  "video/mp4": renderVideo,
-  "image/png": renderImage,
-  "image/jpeg": renderImage,
-  "image/svg+xml": renderImage,
-  "image/gif": renderImage,
-  "image/webp": renderImage,
-  "audio/mpeg": renderAudio,
-  "audio/ogg": renderAudio,
-  "text/markdown": renderMarkdown,
-  "text/plain": renderPlainText,
-  "application/x-mpegURL": renderVideo,
+  "video/mp4": VideoRenderer,
+  "image/png": ImageRenderer,
+  "image/jpeg": ImageRenderer,
+  "image/svg+xml": ImageRenderer,
+  "image/gif": ImageRenderer,
+  "image/webp": ImageRenderer,
+  "audio/mpeg": AudioRenderer,
+  "audio/ogg": AudioRenderer,
+  "text/markdown": MarkdownRenderer,
+  "text/plain": PlainTextRenderer,
+  "application/x-mpegURL": VideoRenderer,
 }
 
 export function FileDisplayBoard(props) {
@@ -40,7 +41,7 @@ export function FileDisplayBoard(props) {
     if (!file.url) {
       file.url = backend.reolsveFileUrl(baseUrl, file.path, passcode)
     }
-    const renderer = type2Render[file.type]
+    const Renderer = type2Render[file.type]
     // wheel control works so bad when using trackpad.
     content = <div
       ref={boardRef}
@@ -69,9 +70,9 @@ export function FileDisplayBoard(props) {
       tabIndex="0"
       className="board">
       {
-        renderer ?
-          renderer(file) :
-          <h1>Cannot display this file.</h1>
+        Renderer
+          ? <Renderer file={file} />
+          : <h1>Cannot display this file.</h1>
       }
     </div>
   }
@@ -109,7 +110,12 @@ export function FileDisplayBoard(props) {
   </>
 }
 
-function renderVideo(file) {
+function VideoRenderer({ file }) {
+  const { passcode } = useContext(BackendContext)
+  videojs.Vhs.xhr.beforeRequest = function (options) {
+    options.uri = backend.suffixWithPasscode(options.uri, passcode)
+    return options;
+  }
   const videoJsOptions = {
     autoplay: false,
     controls: true,
@@ -119,31 +125,25 @@ function renderVideo(file) {
     sources: [{
       src: file.url,
       type: file.type,
-    }]
+    }],
   };
+
   return <VideoJS
     options={videoJsOptions}
     onMouseDown={(event) => {
       event.stopPropagation();
     }}
   />
-  // built-in video player
-  // return <video controls
-  //   src={file.url}
-  //   onMouseDown={(event) => {
-  //     event.stopPropagation();
-  //   }}
-  //   className={"video-view"} />
 }
-
-function renderImage(file) {
+function ImageRenderer({ file }) {
+  console.log(file)
   return <img
     src={file.url}
     alt={file.path}
     className={"img-view"} />
 }
 
-function renderAudio(file) {
+function AudioRenderer({ file }) {
   return <audio
     controls
     src={file.url}
@@ -154,7 +154,16 @@ function renderAudio(file) {
     className={"video-view"} />
 }
 
-function MarkdownFromURL({ src, alt, parentDir }) {
+function MarkdownRenderer({ file }) {
+  const pathParts = file.path.split("/")
+  pathParts.pop()
+  return <Markdown
+    src={file.url}
+    alt={file.path}
+    parentDir={pathParts.join("/")}
+  />
+}
+function Markdown({ src, alt, parentDir }) {
   const [markdown, setMarkdown] = useState()
   const { baseUrl, passcode } = useContext(BackendContext)
 
@@ -185,24 +194,16 @@ function MarkdownFromURL({ src, alt, parentDir }) {
   }
 }
 
-function renderMarkdown(file) {
-  const pathParts = file.path.split("/")
-  pathParts.pop()
-  return <MarkdownFromURL
-    src={file.url}
-    alt={file.path}
-    parentDir={pathParts.join("/")}
-  />
-}
-function PlainText({ src, alt }) {
+
+function PlainTextRenderer(file) {
   const [text, setText] = useState()
 
   useEffect(() => {
-    fetch(src)
+    fetch(file.url)
       .then(response => response.text())
       .then(text => setText(text))
-      .catch(() => setText(alt))
-  }, [src])
+      .catch(() => setText(null))
+  }, [file.url])
 
   if (!text) {
     return <CircularProgress />
@@ -213,16 +214,11 @@ function PlainText({ src, alt }) {
         overflowWrap: 'break-word',
         height: "90%", overflow: "auto"
       }}>
-      {text}
+      {text ?? file.path}
     </Typography>
   }
 }
 
-function renderPlainText(file) {
-  return <PlainText
-    src={file.url}
-    alt={file.path} />
-}
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);

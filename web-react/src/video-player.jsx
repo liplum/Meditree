@@ -1,6 +1,7 @@
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import React, { useEffect, useRef } from 'react'
+import "@videojs/http-streaming"
 
 export function VideoJS(props) {
   const videoRef = useRef(null);
@@ -20,7 +21,6 @@ export function VideoJS(props) {
         videojs.log('player is ready');
         onReady && onReady(player);
       });
-
       // You could update an existing player in the `else` block here
       // on prop change, for example:
     } else {
