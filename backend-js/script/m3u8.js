@@ -1,12 +1,35 @@
 import https from "https"
 import fs from "fs"
 import commandLineArgs from "command-line-args"
+import path from "path"
 
-const optionDefinitions = [
-  { name: "root", type: String, defaultOption: true },
-  { name: "name", type: String },
-  { name: "config", type: String },
+let mainDef = [
+  { name: "cmd", defaultOption: true }
 ]
+const mainCmd = commandLineArgs(mainDef, { stopAtFirstUnknown: true })
+let argv = mainCmd._unknown || []
+
+if (mainCmd.cmd === "get") {
+  const randomFileName = `${Math.random()}.m3u8`
+  const getDef = [
+    { name: "url", defaultOption: true },
+    { name: "output", defaultValue: randomFileName, alias: "o" },
+    { name: "abs", defaultValue: true, type: Boolean }
+  ]
+  const getOptions = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
+  const url = getOptions.url
+  const converted = getOptions.abs
+    ? await convertRelativeUrlsToAbsolute(url)
+    : await fetchTextFile(url)
+  let outputPath = getOptions.output
+  if (fs.statSync(outputPath).isDirectory()) {
+    outputPath = path.join(outputPath, randomFileName)
+  }
+  if (path.extname(outputPath) !== ".m3u8") {
+    outputPath = `${outputPath}.m3u8`
+  }
+  fs.writeFileSync(outputPath, converted)
+}
 
 async function fetchTextFile(url) {
   return new Promise((resolve, reject) => {
@@ -20,26 +43,17 @@ async function fetchTextFile(url) {
 
 async function convertRelativeUrlsToAbsolute(playlistUrl) {
   const text = await fetchTextFile(playlistUrl)
-  const baseUrl = new URL(playlistUrl);
-  const lines = text.trim().split("\n");
-  const result = [];
+  const baseUrl = new URL(playlistUrl)
+  const lines = text.trim().split("\n")
+  const result = []
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
+    const line = lines[i]
     if (line.startsWith("#")) {
-      result.push(line);
+      result.push(line)
     } else {
-      const url = new URL(line, baseUrl);
-      result.push(url.toString());
+      const url = new URL(line, baseUrl)
+      result.push(url.toString())
     }
   }
-  return result.join("\n");
-}
-
-if (process.argv[3]) {
-  commandLineArgs(optionDefinitions, {
-    camelCase: true,
-  })
-  const converted = await convertRelativeUrlsToAbsolute(process.argv[3])
-  const outputPath = process.argv[4] ? process.argv[4] : `${Math.random()}.m3u8`
-  fs.writeFileSync(outputPath, converted)
+  return result.join("\n")
 }

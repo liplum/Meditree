@@ -6,6 +6,9 @@ module.exports = {
     es2021: true
   },
   plugins: ["@typescript-eslint"],
+  include: [
+    "script"
+  ],
   extends: "standard-with-typescript",
   overrides: [
   ],
