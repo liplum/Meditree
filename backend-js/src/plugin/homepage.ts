@@ -12,32 +12,24 @@ interface HomepagePluginConfig {
    */
   useDefault?: boolean
   /**
-   * Serve the homepage with request redirection.
+   * Serve the root path "/index.html" with a homepage by default.
    */
-  url?: string
-  /**
-   * Serve the root path "/" with a homepage by default.
-   */
-  path?: string
+  index?: string
 }
 
 export class HomepagePlugin extends MeditreePlugin {
   html?: string
   readonly enableDefaultHomepage: boolean
-  readonly url?: string
-  readonly path: string
+  readonly index: string
   constructor(config: HomepagePluginConfig) {
     super(config)
-    this.enableDefaultHomepage = config.url === undefined && (config.useDefault === true || config.useDefault === undefined)
-    this.path = config.path ?? "/"
-    if (!this.enableDefaultHomepage) {
-      this.url = config.url
-    }
+    this.enableDefaultHomepage = config.useDefault === true || config.useDefault === undefined
+    this.index = config.index ?? "/index.html"
   }
 
   onRequestHandlerRegistering(app: Express): void {
     if (this.enableDefaultHomepage) {
-      app.get(this.path, (req, res) => {
+      app.get(this.index, (req, res) => {
         res.status(200)
         if (this.html) {
           res.contentType("html")
@@ -45,10 +37,6 @@ export class HomepagePlugin extends MeditreePlugin {
         } else {
           res.end()
         }
-      })
-    } else if (this.url) {
-      app.get(this.path, (req, res) => {
-        res.redirect(this.url as string)
       })
     }
   }
