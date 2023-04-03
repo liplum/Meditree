@@ -93,6 +93,10 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
         parent.net.send("file-tree-rebuild", entireTree)
       }
     })
+    this.on("parent-node-change", (parent, isAdded) => {
+      if (!isAdded) return
+      parent.net.send("file-tree-rebuild", this.toJSON())
+    })
   }
 
   resolveFile(pathParts: string[]): ResolvedFile | null {

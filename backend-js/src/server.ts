@@ -76,11 +76,6 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
   })
 
-  node.on("parent-node-change", (parent, isAdded) => {
-    if (!isAdded) return
-    parent.net.send("file-tree-rebuild", fullTreeCache.obj.files)
-  })
-
   app.use(function (req, res, next) {
     try {
       decodeURIComponent(req.path)
