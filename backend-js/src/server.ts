@@ -10,6 +10,7 @@ import expressWs from "express-ws"
 import { resolvePlguinFromConfig } from "./plugin.js"
 // import for side effects
 import "./plugin/homepage.js"
+import "./plugin/minify.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
@@ -49,6 +50,9 @@ export async function startServer(config: AppConfig): Promise<void> {
   updateTreeJsonCache({})
 
   node.on("file-tree-update", (entireFree) => {
+    for (const plugin of plugins) {
+      entireFree = plugin.onEntireTreeUpdated(entireFree)
+    }
     updateTreeJsonCache(entireFree)
   })
 

@@ -6,9 +6,9 @@ export type PlguinConfig = Record<string, any>
 
 export const pluginTypes: Record<string, (config: PlguinConfig) => MeditreePlugin> = {}
 
-export class MeditreePlugin implements FileTreePlugin {
-  readonly config: PlguinConfig
-  constructor(config: PlguinConfig) {
+export abstract class MeditreePlugin<TConfig = PlguinConfig> implements FileTreePlugin {
+  readonly config: TConfig
+  constructor(config: TConfig) {
     this.config = config
   }
 
@@ -17,6 +17,8 @@ export class MeditreePlugin implements FileTreePlugin {
   onMeditreeNodeCreated(node: MeditreeNode): void { }
 
   onPostGenerated(tree: FileTree): void { }
+
+  onEntireTreeUpdated(tree: FileTree): FileTree { return tree }
 }
 
 export function resolvePlguinFromConfig(config: Record<string, Record<string, any>>): MeditreePlugin[] {

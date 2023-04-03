@@ -4,7 +4,7 @@ export type FileType = string
 export interface File {
   "*type": FileType
   size?: number
-  "*hide"?: boolean
+  "*hiden"?: boolean
   path: string
 }
 export interface FileTree {
@@ -19,7 +19,7 @@ export class LocalFile implements File {
   readonly size: number
   readonly path: string
   readonly localPath: string
-  "*hide"?: boolean
+  "*hiden"?: boolean
   constructor(parent: LocalFileTree, name: string, type: FileType, size: number, localPath: string, path: string) {
     this.parent = parent
     this.name = name
@@ -33,7 +33,7 @@ export class LocalFile implements File {
     return {
       "*type": this["*type"],
       size: this.size,
-      "*hide": this["*hide"],
+      "*hiden": this["*hiden"],
       path: this.path,
     }
   }
@@ -144,17 +144,21 @@ export class LocalFileTree implements FileTreeLike {
   }
 }
 
-export function filterFileTreeJson(tree: FileTree, filter: (file: File) => boolean): FileTree {
+export function filterFileTreeJson(tree: FileTree, filter: (file: File | FileTree) => boolean): FileTree {
   const filteredTree: FileTree = {}
   for (const [name, fileOrSubtree] of Object.entries(tree)) {
+    // it's a file
     if (fileOrSubtree["*type"]) {
       if (filter(fileOrSubtree as File)) {
         filteredTree[name] = fileOrSubtree
       }
     } else {
-      const filteredSubtree = filterFileTreeJson(fileOrSubtree as FileTree, filter)
-      if (Object.keys(filteredSubtree).length > 0) {
-        filteredTree[name] = filteredSubtree
+      // it's a folder
+      if (filter(fileOrSubtree as FileTree)) {
+        const filteredSubtree = filterFileTreeJson(fileOrSubtree as FileTree, filter)
+        if (Object.keys(filteredSubtree).length > 0) {
+          filteredTree[name] = filteredSubtree
+        }
       }
     }
   }
