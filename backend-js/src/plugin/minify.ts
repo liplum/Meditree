@@ -13,7 +13,7 @@ interface MinifyPluginConfig {
 }
 
 export class MinifyPlugin extends MeditreePlugin<MinifyPluginConfig> {
-  onEntireTreeUpdated(tree: FileTree): FileTree {
+  onEntireTreeForClient(tree: FileTree): FileTree {
     const removeHidden = this.config.removeHidden ?? false
     const removeSize = this.config.removeSize ?? false
     if (removeHidden || removeSize) {
