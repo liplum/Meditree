@@ -2,7 +2,7 @@
 import { HostTree } from "./host.js"
 import { type AppConfig, type AsParentConfig, type AsChildConfig } from "./config.js"
 import express, { type Request, type Response } from "express"
-import { type ResolvedFile, type FileTree } from "./file.js"
+import { type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { createLogger } from "./logger.js"

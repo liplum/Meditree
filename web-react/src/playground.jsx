@@ -114,7 +114,6 @@ function VideoRenderer({ file }) {
   const { passcode } = useContext(BackendContext)
   useEffect(() => {
     videojs.Vhs.xhr.beforeRequest = function (options) {
-      console.log(options.uri)
       options.uri = backend.suffixWithPasscode(options.uri, passcode)
       return options;
     }
