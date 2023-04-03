@@ -1,6 +1,6 @@
 import path from "path"
-import { LocalFile, LocalFileTree } from "./file.js"
-import { pluginTypes, MeditreePlugin } from "./plugin.js"
+import { LocalFile, LocalFileTree } from "../file.js"
+import { pluginTypes, MeditreePlugin } from "../plugin.js"
 
 export const HLSMediaType = "application/x-mpegURL"
 // eslint-disable-next-line @typescript-eslint/dot-notation

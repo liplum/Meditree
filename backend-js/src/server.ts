@@ -9,7 +9,7 @@ import { createLogger } from "./logger.js"
 import expressWs from "express-ws"
 import { resolvePlguinFromConfig } from "./plugin.js"
 // import for side effects
-import "./homepage.js"
+import "./plugin/homepage.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")

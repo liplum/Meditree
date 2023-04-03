@@ -1,6 +1,6 @@
-import { type FileTree, type File } from "./file.js"
-import { type MeditreeNode } from "./meditree.js"
-import { MeditreePlugin, pluginTypes } from "./plugin.js"
+import { type FileTree, type File } from "../file.js"
+import { type MeditreeNode } from "../meditree.js"
+import { MeditreePlugin, pluginTypes } from "../plugin.js"
 import { type Express } from "express"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation

@@ -2,7 +2,7 @@ import fs from "fs"
 import path from "path"
 import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
-import { HLSMediaType } from "./hls.js"
+import { HLSMediaType } from "./plugin/hls.js"
 
 export interface AsParentConfig {
   name: string
