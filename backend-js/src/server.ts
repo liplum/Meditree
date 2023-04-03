@@ -30,6 +30,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       plugins,
     })
   const node = new MeditreeNode()
+  node.plugins = plugins
 
   for (const plugin of plugins) {
     plugin.onMeditreeNodeCreated(node)
@@ -46,27 +47,27 @@ export async function startServer(config: AppConfig): Promise<void> {
       log.info("Local file tree is rebuilt.")
     })
   }
-  let fullTreeCache: { obj: FileTreeInfo, json: string }
-  updateTreeJsonCache({})
 
-  node.on("file-tree-update", (entireFree) => {
-    for (const plugin of plugins) {
-      entireFree = plugin.onEntireTreeUpdated(entireFree)
-    }
-    updateTreeJsonCache(entireFree)
-  })
+  const initialFileTree = {
+    name: config.name,
+    files: {},
+  }
+  let fullTreeCache: { obj: FileTreeInfo, json: string } = {
+    obj: initialFileTree,
+    json: JSON.stringify(initialFileTree, null, 1),
+  }
 
-  function updateTreeJsonCache(entireFree: FileTree): void {
+  node.on("file-tree-update", (entireTree) => {
     const info: FileTreeInfo = {
       name: config.name,
-      files: entireFree,
+      files: entireTree,
     }
     const infoString = JSON.stringify(info, null, 1)
     fullTreeCache = {
       obj: info,
       json: infoString,
     }
-  }
+  })
 
   node.on("parent-node-change", (parent, isAdded) => {
     if (!isAdded) return

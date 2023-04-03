@@ -77,17 +77,21 @@ export declare interface MeditreeNode {
   emit(event: "child-node-change", child: SubNode, isAdded: boolean): boolean
   emit(event: "parent-node-change", parent: ParentNode, isAdded: boolean): this
 }
+export interface MeditreeNodePlugin {
+  onEntireTreeUpdated(tree: FileTree): FileTree
+}
 export class MeditreeNode extends EventEmitter implements FileTreeLike {
   private readonly name2Parent = new Map<string, ParentNode>()
   private readonly name2Child = new Map<string, SubNode>()
   localTree?: { name: string, tree: FileTreeLike, json: FileTree }
   subNodeFilter?: (file: File) => boolean
+  plugins?: MeditreeNodePlugin[]
 
   constructor() {
     super()
-    this.on("file-tree-update", (fullTree) => {
+    this.on("file-tree-update", (entireTree) => {
       for (const parent of this.name2Parent.values()) {
-        parent.net.send("file-tree-rebuild", fullTree)
+        parent.net.send("file-tree-rebuild", entireTree)
       }
     })
   }
@@ -130,13 +134,23 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     } else {
       node.tree = tree
     }
-    this.emit("file-tree-update", this.toJSON())
+    this.emitNewEntireTreeUpdateEvent()
   }
 
   updateFileTreeFromLocal(name: string, tree: FileTreeLike): void {
     const json = tree.toJSON()
     this.localTree = { name, tree, json }
-    this.emit("file-tree-update", this.toJSON())
+    this.emitNewEntireTreeUpdateEvent()
+  }
+
+  private emitNewEntireTreeUpdateEvent(): void {
+    let entireTree: FileTree = this.toJSON()
+    if (this.plugins) {
+      for (const plugin of this.plugins) {
+        entireTree = plugin.onEntireTreeUpdated(entireTree)
+      }
+    }
+    this.emit("file-tree-update", entireTree)
   }
 
   toJSON(): FileTree {

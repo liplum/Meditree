@@ -1,4 +1,4 @@
-import { type FileTree, type File } from "../file.js"
+import { type FileTree } from "../file.js"
 import { MeditreePlugin, pluginTypes } from "../plugin.js"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation

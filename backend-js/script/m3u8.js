@@ -34,35 +34,68 @@ if (mainCmd.cmd === "get") {
 } else if (mainCmd.cmd === "gen") {
   const genDef = [
     { name: "path", defaultOption: true },
+    { name: "time", type: Number, defaultValue: 12, alias: "t" },
+    { name: "ext", multiple: true, defaultValue: ["mp4"], alias: "x" },
+    { name: "overwrite", type: Boolean, defaultValue: false, alias: "w" }
   ]
   const opt = commandLineArgs(genDef, { argv, stopAtFirstUnknown: true })
-  if (!fs.statSync(opt.path).isFile()) {
-    console.log(`${opt.path} file not found.`)
-    process.exit(1)
+  const fileStat = fs.statSync(opt.path)
+  if (fileStat.isFile()) {
+    console.log(`processing on a file ${opt.path}`)
+    convertVideo({
+      filepath: opt.path,
+      time: opt.time,
+      overwrite: opt.overwrite,
+    })
+  } else if (fileStat.isDirectory()) {
+    console.log(`processing on a folder ${opt.path}`)
+    for (const filepath of visitFiles(opt.path, (f) => opt.ext.includes(removePrefix(path.extname(f), ".")))) {
+      console.log(`processing on a file ${filepath}`)
+      convertVideo({
+        filepath,
+        time: opt.time,
+        overwrite: opt.overwrite,
+      })
+    }
   }
-  const pureName = path.basename(opt.path, path.extname(opt.path))
-  const parentDir = path.dirname(opt.path)
+}
+
+function removePrefix(str, prefix) {
+  if (str.startsWith(prefix)) {
+    return str.slice(prefix.length)
+  }
+  return str
+}
+function convertVideo({ filepath, time, overwrite }) {
+  const pureName = path.basename(filepath, path.extname(filepath))
+  const parentDir = path.dirname(filepath)
   const outputDir = path.join(parentDir, pureName)
   if (fs.existsSync(outputDir) && !fs.statSync(outputDir).isDirectory()) {
     console.log(`${outputDir} exists but it's not a directory.`)
     process.exit(1)
   }
+  const m3u8File = path.join(parentDir, `${pureName}.m3u8`)
+  if (fs.existsSync(m3u8File) && fs.existsSync(outputDir) && !overwrite) {
+    console.log(`${m3u8File} already exists.`)
+    return
+  }
   fs.mkdirSync(outputDir, { recursive: true })
-  const bar = new ProgressBar("converting [:bar] :percent", {
+  const bar = new ProgressBar(`:percent [:bar] ${filepath}`, {
     complete: "=",
     head: ">",
     incomplete: " ",
-    width: 20,
+    width: 25,
     total: 100
-  });
-  new Ffmpeg(opt.path)
+  })
+  new Ffmpeg(filepath)
     .outputOptions([
       '-c:v libx264', // video codec
       '-c:a aac', // audio codec
-      '-hls_time 12', // segment duration (in seconds)
       '-hls_list_size 0', // maximum number of playlist entries (0 means unlimited)
     ])
-    .outputOptions("-segment_list_entry", `${pureName}/%d.ts`)
+    // segment duration (in seconds)
+    .outputOptions("-hls_time", time)
+    .outputOptions("-segment_list", encodeURI(`${pureName}/%d.ts`))
     // segment filename format
     .outputOptions("-hls_segment_filename", path.join(outputDir, "%d.ts"))
     .output(path.join(parentDir, `${pureName}.m3u8`))
@@ -70,6 +103,18 @@ if (mainCmd.cmd === "get") {
       bar.update(progress.percent / 100)
     })
     .run()
+}
+
+function* visitFiles(parentDir, predicate) {
+  for (const file of fs.readdirSync(parentDir, { withFileTypes: true })) {
+    if (file.isFile()) {
+      if (predicate(file.name)) {
+        yield path.join(parentDir, file.name)
+      }
+    } else if (file.isDirectory()) {
+      yield* visitFiles(path.join(parentDir, file.name), predicate)
+    }
+  }
 }
 
 async function fetchTextFile(url) {

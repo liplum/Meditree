@@ -138,6 +138,7 @@ function buildFromFileTree(
   function buildSubtree(curTree: FileTree, indent: number): void {
     maxIndent = Math.max(indent, maxIndent)
     for (const [name, file] of Object.entries(curTree)) {
+      if (file["*hide"]) continue
       if (file["*type"]) {
         // it's file
         const fi = file as File
