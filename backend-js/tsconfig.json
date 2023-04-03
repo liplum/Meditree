@@ -3,7 +3,6 @@
     "noImplicitAny": false,
     "noEmitOnError": true,
     "declaration": true,
-    "removeComments": true,
     "sourceMap": true,
     "target": "ES2022",
     "module": "ES2022",

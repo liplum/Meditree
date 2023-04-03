@@ -2,3 +2,4 @@
 .eslintrc.cjs
 /build
 /types
+/script
