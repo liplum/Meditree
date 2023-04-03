@@ -15,6 +15,7 @@ import "./plugin/minify.js"
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
   const app = express()
+  expressWs(app)
   app.use(cors())
   app.use(express.json())
   const log = createLogger("Main")
@@ -171,7 +172,6 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   // If node is defined and not empty, subnodes can connect to this.
   if (config.child?.length && config.publicKey && config.privateKey) {
-    expressWs(app)
     await setupAsParent(node, config as any as AsParentConfig,
       app as any as expressWs.Application)
   }
