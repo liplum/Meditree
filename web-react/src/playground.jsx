@@ -112,10 +112,14 @@ export function FileDisplayBoard(props) {
 
 function VideoRenderer({ file }) {
   const { passcode } = useContext(BackendContext)
-  videojs.Vhs.xhr.beforeRequest = function (options) {
-    options.uri = backend.suffixWithPasscode(options.uri, passcode)
-    return options;
-  }
+  useEffect(() => {
+    videojs.Vhs.xhr.beforeRequest = function (options) {
+      console.log(options.uri)
+      options.uri = backend.suffixWithPasscode(options.uri, passcode)
+      return options;
+    }
+  }, [passcode])
+
   const videoJsOptions = {
     autoplay: false,
     controls: true,

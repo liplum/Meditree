@@ -1,7 +1,7 @@
 import https from "https"
 import fs from "fs"
 import commandLineArgs from "command-line-args"
-import path from "path"
+import { extname, dirname, basename, join } from "path"
 import Ffmpeg from "fluent-ffmpeg"
 import ProgressBar from "progress"
 
@@ -25,9 +25,9 @@ if (mainCmd.cmd === "get") {
     : await fetchTextFile(url)
   let outputPath = opt.output
   if (fs.statSync(outputPath).isDirectory()) {
-    outputPath = path.join(outputPath, randomFileName)
+    outputPath = join(outputPath, randomFileName)
   }
-  if (path.extname(outputPath) !== ".m3u8") {
+  if (extname(outputPath) !== ".m3u8") {
     outputPath = `${outputPath}.m3u8`
   }
   fs.writeFileSync(outputPath, converted)
@@ -39,23 +39,50 @@ if (mainCmd.cmd === "get") {
     { name: "overwrite", type: Boolean, defaultValue: false, alias: "w" }
   ]
   const opt = commandLineArgs(genDef, { argv, stopAtFirstUnknown: true })
-  const fileStat = fs.statSync(opt.path)
-  if (fileStat.isFile()) {
-    console.log(`processing on a file ${opt.path}`)
+  processOnFileTree(opt.path, (filepath) => opt.ext.includes(removePrefix(extname(filepath), ".")), (filepath) => {
     convertVideo({
-      filepath: opt.path,
+      filepath,
       time: opt.time,
       overwrite: opt.overwrite,
     })
+  })
+} else if (mainCmd.cmd === "fix") {
+  const fixDef = [
+    { name: "path", defaultOption: true },
+    { name: "fix-url", type: Boolean, defaultValue: false },
+  ]
+  const opt = commandLineArgs(fixDef, { argv, stopAtFirstUnknown: true })
+  processOnFileTree(opt.path, (filepath) => extname(filepath) === ".m3u8", (filepath) => {
+    const pureName = basename(filepath, extname(filepath))
+    const tsDir = join(dirname(filepath), pureName)
+    if (!fs.existsSync(tsDir)) return
+
+    fs.readFile(filepath, (err, data) => {
+      const lines = data.toString().trim().split("\n")
+      const result = []
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        if (line.startsWith("#")) {
+          result.push(line)
+        } else {
+          const url = encodeURI(`${pureName}/${line}`)
+          result.push(url)
+        }
+      }
+      const newText = result.join("\n")
+      fs.writeFile(filepath, newText, () => { })
+    })
+  })
+}
+
+function processOnFileTree(fileOrDirPath, filter, task) {
+  filter ??= () => true
+  const fileStat = fs.statSync(fileOrDirPath)
+  if (fileStat.isFile()) {
+    task(fileOrDirPath)
   } else if (fileStat.isDirectory()) {
-    console.log(`processing on a folder ${opt.path}`)
-    for (const filepath of visitFiles(opt.path, (f) => opt.ext.includes(removePrefix(path.extname(f), ".")))) {
-      console.log(`processing on a file ${filepath}`)
-      convertVideo({
-        filepath,
-        time: opt.time,
-        overwrite: opt.overwrite,
-      })
+    for (const filepath of visitFiles(fileOrDirPath, filter)) {
+      task(filepath)
     }
   }
 }
@@ -66,15 +93,16 @@ function removePrefix(str, prefix) {
   }
   return str
 }
+
 function convertVideo({ filepath, time, overwrite }) {
-  const pureName = path.basename(filepath, path.extname(filepath))
-  const parentDir = path.dirname(filepath)
-  const outputDir = path.join(parentDir, pureName)
+  const pureName = basename(filepath, extname(filepath))
+  const parentDir = dirname(filepath)
+  const outputDir = join(parentDir, pureName)
   if (fs.existsSync(outputDir) && !fs.statSync(outputDir).isDirectory()) {
     console.log(`${outputDir} exists but it's not a directory.`)
     process.exit(1)
   }
-  const m3u8File = path.join(parentDir, `${pureName}.m3u8`)
+  const m3u8File = join(parentDir, `${pureName}.m3u8`)
   if (fs.existsSync(m3u8File) && fs.existsSync(outputDir) && !overwrite) {
     console.log(`${m3u8File} already exists.`)
     return
@@ -95,10 +123,10 @@ function convertVideo({ filepath, time, overwrite }) {
     ])
     // segment duration (in seconds)
     .outputOptions("-hls_time", time)
-    .outputOptions("-segment_list", encodeURI(`${pureName}/%d.ts`))
+    .outputOptions("-segment_list_entry", encodeURI(`${pureName}/%d.ts`))
     // segment filename format
-    .outputOptions("-hls_segment_filename", path.join(outputDir, "%d.ts"))
-    .output(path.join(parentDir, `${pureName}.m3u8`))
+    .outputOptions("-hls_segment_filename", join(outputDir, "%d.ts"))
+    .output(join(parentDir, `${pureName}.m3u8`))
     .on("progress", (progress) => {
       bar.update(progress.percent / 100)
     })
@@ -109,10 +137,10 @@ function* visitFiles(parentDir, predicate) {
   for (const file of fs.readdirSync(parentDir, { withFileTypes: true })) {
     if (file.isFile()) {
       if (predicate(file.name)) {
-        yield path.join(parentDir, file.name)
+        yield join(parentDir, file.name)
       }
     } else if (file.isDirectory()) {
-      yield* visitFiles(path.join(parentDir, file.name), predicate)
+      yield* visitFiles(join(parentDir, file.name), predicate)
     }
   }
 }

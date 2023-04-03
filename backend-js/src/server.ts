@@ -74,14 +74,28 @@ export async function startServer(config: AppConfig): Promise<void> {
     parent.net.send("file-tree-rebuild", fullTreeCache.obj.files)
   })
 
+  app.use(function (req, res, next) {
+    try {
+      decodeURIComponent(req.path)
+    } catch (error) {
+      res.status(400).send({ error: "badURI" })
+      return
+    }
+    next()
+  })
   // If posscode is enabled.
   if (config.passcode) {
     app.use((req, res, next) => {
-      const passcode = decodeURI(req.query.passcode as string) ?? req.body.passcode
-      if (passcode !== config.passcode) {
-        res.status(401).json({ error: "incorrectPasscode" })
-      } else {
-        next()
+      try {
+        const passcode = decodeURI(req.query.passcode as string) ?? req.body.passcode
+        if (passcode !== config.passcode) {
+          res.status(401).json({ error: "incorrectPasscode" })
+        } else {
+          next()
+        }
+      } catch (e) {
+        res.status(400).send({ error: "badURI" })
+        return
       }
     })
   }
@@ -97,7 +111,14 @@ export async function startServer(config: AppConfig): Promise<void> {
   })
 
   app.get("/file(/*)", async (req, res) => {
-    const path = removePrefix(decodeURI(req.baseUrl + req.path), "/file/")
+    let uri: string
+    try {
+      uri = decodeURI(req.baseUrl + req.path)
+    } catch (e) {
+      res.status(400).send({ error: "badURI" })
+      return
+    }
+    const path = removePrefix(uri, "/file/")
     const file = node.resolveFile(path.split("/"))
     if (file == null) {
       res.status(404).end()
