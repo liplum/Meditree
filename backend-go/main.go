@@ -126,10 +126,10 @@ func CreateFileTree(root string, classifier func(path string) FileType) *FileTre
 const configFileName = "meditree.json"
 
 type AppConfig struct {
-	Name            string
-	Root            string
-	Port            int
-	FileTypePattern map[string]string
+	Name     string
+	Root     string
+	Port     int
+	FileType map[string]string
 }
 
 func loadConfig() (*AppConfig, error) {
@@ -151,19 +151,19 @@ func loadConfig() (*AppConfig, error) {
 		if !ok {
 			return nil, fmt.Errorf("\"port\" not given")
 		}
-		fileTypePatternRaw, ok := config["fileTypePattern"].(map[string]any)
+		fileTypePatternRaw, ok := config["fileType"].(map[string]any)
 		if !ok {
-			return nil, fmt.Errorf("\"fileTypePattern\" not given")
+			return nil, fmt.Errorf("\"fileType\" not given")
 		}
-		fileTypePattern := make(map[string]string)
+		fileType := make(map[string]string)
 		for k, v := range fileTypePatternRaw {
-			fileTypePattern[k] = v.(string)
+			fileType[k] = v.(string)
 		}
 		return &AppConfig{
-			Name:            name,
-			Root:            root,
-			Port:            int(port),
-			FileTypePattern: fileTypePattern,
+			Name:     name,
+			Root:     root,
+			Port:     int(port),
+			FileType: fileType,
 		}, nil
 	} else if os.IsNotExist(err) {
 		_, _ = os.Create(configFileName)
@@ -179,7 +179,7 @@ func enableCors(w *http.ResponseWriter) {
 
 func buildFileTree(config *AppConfig) *FileTree {
 	fileClassifier := func(path string) FileType {
-		for pattern, filetype := range config.FileTypePattern {
+		for pattern, filetype := range config.FileType {
 			if matched, _ := filepath.Match(pattern, path); matched {
 				return filetype
 			}
