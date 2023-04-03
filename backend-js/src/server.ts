@@ -122,7 +122,6 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
     let path = removePrefix(uri, "/file/")
     path = removeSuffix(path, "/")
-    console.log(path)
     const file = node.resolveFile(path.split("/"))
     if (file == null) {
       res.status(404).end()
@@ -148,7 +147,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     end ??= file.inner.size - 1
     const retrievedLength = (end + 1) - start
 
-    res.statusCode = start !== undefined || end !== undefined ? 206 : 200
+    res.statusCode = req.headers.range ? 206 : 200
 
     res.setHeader("content-length", retrievedLength)
     if (req.headers.range) {
