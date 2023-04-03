@@ -6,6 +6,7 @@ import { type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { createLogger } from "./logger.js"
+import CreateExpressWs from "express-ws"
 import { resolvePlguinFromConfig } from "./plugin.js"
 // import for side effects
 import "./plugin/homepage.js"
@@ -13,7 +14,7 @@ import "./plugin/minify.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
-  const app = express()
+  const app = CreateExpressWs(express()).app
   app.use(cors())
   app.use(express.json())
   const log = createLogger("Main")

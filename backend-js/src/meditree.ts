@@ -8,9 +8,8 @@ import { type FileTreeLike, type FileTree, type File, filterFileTreeJson, Resolv
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
-import { type Express } from "express"
+import type expressWs from "express-ws"
 import { type AsParentConfig, type AsChildConfig, } from "./config.js"
-import CreateExpressWs from "express-ws"
 import { encrypt, decrypt, generateNonce } from "./crypt.js"
 
 interface NodeMeta {
@@ -234,13 +233,12 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
 export async function setupAsParent(
   node: MeditreeNode,
   config: AsParentConfig,
-  app?: Express,
+  app?: expressWs.Application,
 ): Promise<void> {
   const log = createLogger("Central")
   // as central
   if (app) {
-    const expressWs = CreateExpressWs(app)
-    expressWs.app.ws("/ws", (ws, req) => {
+    app.ws("/ws", (ws, req) => {
       setupWs(ws)
     })
   } else {
