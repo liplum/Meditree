@@ -1,5 +1,66 @@
 import { type FileTree, type File } from "./file.js"
-export function buildIndexHtml(
+import { type MeditreeNode } from "./meditree.js"
+import { MeditreePlugin, pluginTypes } from "./plugin.js"
+import { type Express } from "express"
+
+// eslint-disable-next-line @typescript-eslint/dot-notation
+pluginTypes["homepage"] = (config) => new HomepagePlugin(config)
+
+interface HomepagePluginConfig {
+  /**
+   * If not specified or set to true, a simple built-in homepage will be served.
+   */
+  useDefault?: boolean
+  /**
+   * Serve the homepage with request redirection.
+   */
+  url?: string
+  /**
+   * Serve the root path "/" with a homepage by default.
+   */
+  path?: string
+}
+
+export class HomepagePlugin extends MeditreePlugin {
+  html?: string
+  readonly enableDefaultHomepage: boolean
+  readonly url?: string
+  readonly path: string
+  constructor(config: HomepagePluginConfig) {
+    super(config)
+    this.enableDefaultHomepage = config.url === undefined && (config.useDefault === true || config.useDefault === undefined)
+    this.path = config.path ?? "/"
+    if (!this.enableDefaultHomepage) {
+      this.url = config.url
+    }
+  }
+
+  onRequestHandlerRegistering(app: Express): void {
+    if (this.enableDefaultHomepage) {
+      app.get(this.path, (req, res) => {
+        res.status(200)
+        if (this.html) {
+          res.contentType("html")
+          res.send(this.html)
+        } else {
+          res.end()
+        }
+      })
+    } else if (this.url) {
+      app.get(this.path, (req, res) => {
+        res.redirect(this.url as string)
+      })
+    }
+  }
+
+  onMeditreeNodeCreated(node: MeditreeNode): void {
+    node.on("file-tree-update", (entireTree) => {
+      this.html = buildIndexHtml(entireTree)
+    })
+  }
+}
+
+function buildIndexHtml(
   fileTree: FileTree,
 ): string {
   let maxIndent = 0

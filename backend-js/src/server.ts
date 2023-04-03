@@ -6,17 +6,18 @@ import { type ResolvedFile, type FileTree } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { createLogger } from "./logger.js"
-import { buildIndexHtml } from "./page.js"
 import expressWs from "express-ws"
 import { resolvePlguinFromConfig } from "./plugin.js"
+// import for side effects
+import "./homepage.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
-  const homepage = config.homepage
   const app = express()
   app.use(cors())
   app.use(express.json())
   const log = createLogger("Main")
+  const plugins = config.plugin ? resolvePlguinFromConfig(config.plugin) : []
   const localTree = !config.root
     ? undefined
     : new HostTree({
@@ -25,9 +26,14 @@ export async function startServer(config: AppConfig): Promise<void> {
       fileTypePattern: config.fileType,
       rebuildInterval: config.rebuildInterval,
       ignorePattern: config.ignore ?? [],
-      plugins: config.plugin ? resolvePlguinFromConfig(config.plugin) : undefined,
+      plugins,
     })
   const node = new MeditreeNode()
+
+  for (const plugin of plugins) {
+    plugin.onMeditreeNodeCreated(node)
+  }
+
   const fileTypes = Array.from(Object.values(config.fileType))
   node.subNodeFilter = (file) => {
     return fileTypes.includes(file["*type"])
@@ -39,7 +45,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       log.info("Local file tree is rebuilt.")
     })
   }
-  let fullTreeCache: { obj: FileTreeInfo, json: string, html?: string }
+  let fullTreeCache: { obj: FileTreeInfo, json: string }
   updateTreeJsonCache({})
 
   node.on("file-tree-update", (entireFree) => {
@@ -47,10 +53,6 @@ export async function startServer(config: AppConfig): Promise<void> {
   })
 
   function updateTreeJsonCache(entireFree: FileTree): void {
-    let html: string | undefined
-    if (typeof homepage !== "string" && (homepage === undefined || homepage === null || homepage)) {
-      html = buildIndexHtml(entireFree)
-    }
     const info: FileTreeInfo = {
       name: config.name,
       files: entireFree,
@@ -59,7 +61,6 @@ export async function startServer(config: AppConfig): Promise<void> {
     fullTreeCache = {
       obj: info,
       json: infoString,
-      html,
     }
   }
 
@@ -67,23 +68,6 @@ export async function startServer(config: AppConfig): Promise<void> {
     if (!isAdded) return
     parent.net.send("file-tree-rebuild", fullTreeCache.obj.files)
   })
-
-  if (localTree) {
-    localTree.startWatching()
-    await localTree.rebuildFileTree()
-  }
-
-  // If node is defined and not empty, subnodes can connect to this.
-  if (config.child?.length && config.publicKey && config.privateKey) {
-    expressWs(app)
-    await setupAsParent(node, config as any as AsParentConfig,
-      app as any as expressWs.Application)
-  }
-
-  // If central is defined and not empty, it will try connecting to every central.
-  if (config.parent?.length && config.publicKey && config.privateKey) {
-    await setupAsChild(node, config as any as AsChildConfig)
-  }
 
   // If posscode is enabled.
   if (config.passcode) {
@@ -97,16 +81,8 @@ export async function startServer(config: AppConfig): Promise<void> {
     })
   }
 
-  if (typeof homepage === "string") {
-    app.get("/", (req, res) => {
-      res.redirect(homepage)
-    })
-  } else if (homepage === undefined || homepage === null || homepage) {
-    app.get("/", (req, res) => {
-      res.status(200)
-      res.contentType("html")
-      res.send(fullTreeCache.html)
-    })
+  for (const plugin of plugins) {
+    plugin.onRequestHandlerRegistering(app)
   }
 
   app.get("/list", (req, res) => {
@@ -140,7 +116,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     if (file.inner.size !== undefined) {
       let { start, end } = resolveRange(req.headers.range)
       start ??= 0
-      end ??= file.size - 1
+      end ??= file.inner.size - 1
       const retrievedLength = (end + 1) - start
 
       res.statusCode = start !== undefined || end !== undefined ? 206 : 200
@@ -172,6 +148,23 @@ export async function startServer(config: AppConfig): Promise<void> {
       })
       stream.pipe(res)
     }
+  }
+
+  if (localTree) {
+    localTree.startWatching()
+    await localTree.rebuildFileTree()
+  }
+
+  // If node is defined and not empty, subnodes can connect to this.
+  if (config.child?.length && config.publicKey && config.privateKey) {
+    expressWs(app)
+    await setupAsParent(node, config as any as AsParentConfig,
+      app as any as expressWs.Application)
+  }
+
+  // If central is defined and not empty, it will try connecting to every central.
+  if (config.parent?.length && config.publicKey && config.privateKey) {
+    await setupAsChild(node, config as any as AsChildConfig)
   }
 
   const onRunning = (): void => {

@@ -54,12 +54,6 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
    * If set, requests need passcode in authentication headers, body or cookies.
    */
   passcode?: string
-  /**
-   * Serve "/" with a homepage.
-   * If not specified or set to true, a built-in homepage will be served.
-   * If a string is given, it will be considered as the URL of homepage.
-   */
-  homepage?: boolean | string
   rebuildInterval: number
   fileType: Record<string, string>
   plugin?: Record<string, Record<string, any>>

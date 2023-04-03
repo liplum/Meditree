@@ -65,7 +65,7 @@ export interface FileTreeInfo {
 }
 export type RouteMsgCallback<Header = any> = (id: string, data: any, header: Header) => void
 export declare interface MeditreeNode {
-  on(event: "file-tree-update", listener: (entireFree: FileTree) => void): this
+  on(event: "file-tree-update", listener: (entireTree: FileTree) => void): this
   on(event: "child-node-change", listener: (child: SubNode, isAdded: boolean) => void): this
   on(event: "parent-node-change", listener: (parent: ParentNode, isAdded: boolean) => void): this
 
