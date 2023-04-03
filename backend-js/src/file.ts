@@ -143,9 +143,16 @@ export class LocalFileTree implements FileTreeLike {
     }
   }
 }
-
+/**
+ * Filter the file tree. 
+ * Don't mutate the file tree during filtering.
+ * @returns a new tree that contains filtered but still the same instances.
+ */
 export function filterFileTreeJson(tree: FileTree, filter: (file: File | FileTree) => boolean): FileTree {
   const filteredTree: FileTree = {}
+  if (tree["*hide"]) {
+    filteredTree["*hide"] = true
+  }
   for (const [name, fileOrSubtree] of Object.entries(tree)) {
     // it's a file
     if (fileOrSubtree["*type"]) {
@@ -155,9 +162,6 @@ export function filterFileTreeJson(tree: FileTree, filter: (file: File | FileTre
     } else {
       // it's a folder
       if (filter(fileOrSubtree as FileTree)) {
-        if (fileOrSubtree["*hide"]) {
-          filteredTree["*hide"] = true
-        }
         const filteredSubtree = filterFileTreeJson(fileOrSubtree as FileTree, filter)
         if (Object.keys(filteredSubtree).length > 0) {
           filteredTree[name] = filteredSubtree
@@ -168,7 +172,26 @@ export function filterFileTreeJson(tree: FileTree, filter: (file: File | FileTre
   return filteredTree
 }
 
-const allowTrue = (): boolean => true
+/**
+ * Clone a file tree.
+ * All instances are newly-created.
+ */
 export function cloneFileTreeJson(tree: FileTree): FileTree {
-  return filterFileTreeJson(tree, allowTrue)
+  const newTree: FileTree = {}
+  if (tree["*hide"]) {
+    newTree["*hide"] = true
+  }
+  for (const [name, fileOrSubtree] of Object.entries(tree)) {
+    // it's a file
+    if (fileOrSubtree["*type"]) {
+      newTree[name] = { ...fileOrSubtree }
+    } else {
+      // it's a folder
+      const filteredSubtree = cloneFileTreeJson(fileOrSubtree as FileTree)
+      if (Object.keys(filteredSubtree).length > 0) {
+        newTree[name] = filteredSubtree
+      }
+    }
+  }
+  return newTree
 }
