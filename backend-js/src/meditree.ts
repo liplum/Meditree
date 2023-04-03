@@ -8,8 +8,9 @@ import { type FileTreeLike, type FileTree, type File, filterFileTreeJson, Resolv
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
+import { type Express } from "express"
 import { type AsParentConfig, type AsChildConfig, } from "./config.js"
-import type expressWs from "express-ws"
+import CreateExpressWs from "express-ws"
 import { encrypt, decrypt, generateNonce } from "./crypt.js"
 
 interface NodeMeta {
@@ -233,21 +234,22 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
 export async function setupAsParent(
   node: MeditreeNode,
   config: AsParentConfig,
-  app?: expressWs.Application,
+  app?: Express,
 ): Promise<void> {
   const log = createLogger("Central")
   // as central
   if (app) {
-    app.ws("/ws", async (ws, _req) => {
-      await setupWs(ws)
+    const expressWs = CreateExpressWs(app)
+    expressWs.app.ws("/ws", (ws, req) => {
+      setupWs(ws)
     })
   } else {
     const wss = new WebSocketServer({
       port: config.port,
       path: "/ws",
     })
-    wss.on("connection", async (ws: WebSocket) => {
-      await setupWs(ws)
+    wss.on("connection", (ws: WebSocket) => {
+      setupWs(ws)
     })
   }
   log.info(`Central websocket is running on ws://localhost:${config.port}/ws.`)

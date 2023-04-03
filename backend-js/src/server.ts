@@ -6,7 +6,6 @@ import { type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { createLogger } from "./logger.js"
-import expressWs from "express-ws"
 import { resolvePlguinFromConfig } from "./plugin.js"
 // import for side effects
 import "./plugin/homepage.js"
@@ -15,7 +14,6 @@ import "./plugin/minify.js"
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
   const app = express()
-  expressWs(app)
   app.use(cors())
   app.use(express.json())
   const log = createLogger("Main")
@@ -172,8 +170,7 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   // If node is defined and not empty, subnodes can connect to this.
   if (config.child?.length && config.publicKey && config.privateKey) {
-    await setupAsParent(node, config as any as AsParentConfig,
-      app as any as expressWs.Application)
+    await setupAsParent(node, config as any as AsParentConfig, app)
   }
 
   // If central is defined and not empty, it will try connecting to every central.
