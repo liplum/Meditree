@@ -3,18 +3,17 @@ import { type MeditreePlugin, pluginTypes } from "../plugin.js"
 import { type MeditreeNode, type ReadStreamOptions } from "../meditree.js"
 import cloneable from "cloneable-readable"
 import { type Readable } from "stream"
-import { createHash } from "crypto"
 import fs from "fs"
-import { join } from "path"
+import { join, dirname } from "path"
 import { promisify } from "util"
+import { base64Encode, hash32Bit } from "../crypt.js"
 // eslint-disable-next-line @typescript-eslint/dot-notation
 pluginTypes["cache"] = (config) => new CachePlugin(config)
-const md5 = createHash("md5")
 
 interface CachePluginConfig {
   /**
    * The max file size for being cached.
-   * 5MB by default.
+   * 10MB by default.
    */
   maxSize?: number
   /**
@@ -30,14 +29,14 @@ interface CachePluginConfig {
 }
 
 const fsstate = promisify(fs.stat)
-
+const mkdir = promisify(fs.mkdir)
 export class CachePlugin implements MeditreePlugin {
   readonly maxSize: number
   readonly maxAge: number
   readonly path: string
   node: MeditreeNode
   constructor(config: CachePluginConfig) {
-    this.maxSize = config.maxSize ?? 5 * 1024 * 1024
+    this.maxSize = config.maxSize ?? 10 * 1024 * 1024
     this.maxAge = config.maxAge ?? 24 * 60 * 60 * 1000
     this.path = config.path ?? "meditree-cache"
   }
@@ -62,18 +61,21 @@ export class CachePlugin implements MeditreePlugin {
         return fs.createReadStream(cachePath, options)
       }
       // if not cached, ignore partial file
-      if (options && (options.start !== undefined || options.end !== undefined)) {
-        return
+      if (options) {
+        if (options.start !== undefined && options.start !== 0) return
+        if (options.end !== undefined && options.end !== file.inner.size - 1) return
       }
       const stream = await this.node.createReadStream(file)
       if (stream === null) return null
       // clone the incoming stream
-      const fileStream = cloneable(stream)
-      const cacheStream = fs.createWriteStream(cachePath)
+      const streamCloneable = cloneable(stream)
+      // ensure parent directory exists.
+      await mkdir(dirname(cachePath), { recursive: true })
+      const cache = fs.createWriteStream(cachePath)
       // write into cache
-      stream.pipe(cacheStream)
+      streamCloneable.pipe(cache)
       // return a clone
-      return fileStream.clone()
+      return streamCloneable
     }
   }
 
@@ -83,8 +85,8 @@ export class CachePlugin implements MeditreePlugin {
 }
 
 function hash(input: string): string {
-  const hash = md5.update(input, "utf8").digest("base64")
-  return hash.slice(0, 12)
+  const hashcode = hash32Bit(input)
+  return base64Encode(hashcode)
 }
 
 function timestampToBuffer(timestamp: number): Buffer {

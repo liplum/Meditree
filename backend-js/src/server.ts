@@ -165,16 +165,16 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.setHeader("content-range", `bytes ${start}-${end}/${file.inner.size}`)
       res.setHeader("accept-ranges", "bytes")
     }
-    let stream: Readable | null = null
+    let stream: Readable | null | undefined
     const options = { start, end, }
     for (const plugin of plugins) {
+      if (stream !== undefined) break
       if (plugin.onCreateReadStream) {
-        const maybeStream = await plugin.onCreateReadStream(file, options)
-        if (maybeStream !== undefined) {
-          stream = maybeStream
-          break
-        }
+        stream = await plugin.onCreateReadStream(file, options)
       }
+    }
+    if (stream === undefined) {
+      stream = await node.createReadStream(file, options)
     }
     if (!stream) {
       res.status(404).end()

@@ -37,3 +37,25 @@ export function decrypt(
 export function generateNonce(): Uint8Array {
   return nacl.randomBytes(24)
 }
+
+export function hash32Bit(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash |= 0 // Convert to 32bit integer
+  }
+  return hash
+}
+
+const BASE64_CHARS =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+export function base64Encode(num: number): string {
+  let base64 = ""
+  do {
+    base64 = BASE64_CHARS[num & 0x3f] + base64
+    num >>= 6
+  } while (num > 0)
+  return base64
+}
