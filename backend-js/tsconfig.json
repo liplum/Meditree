@@ -4,6 +4,7 @@
     "noEmitOnError": true,
     "declaration": true,
     "sourceMap": true,
+    "skipLibCheck": false,
     "target": "ES2022",
     "module": "ES2022",
     "outDir": "dist",
