@@ -26,6 +26,7 @@
     "express": "^4.18.2",
     "log4js": "^6.9.1",
     "minimatch": "^6.2.0",
+    "pouchdb": "^8.0.1",
     "source-map-support": "^0.5.21",
     "tweetnacl": "^1.0.3",
     "uuid": "^9.0.0",

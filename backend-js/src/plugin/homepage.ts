@@ -24,7 +24,7 @@ export class HomepagePlugin extends MeditreePlugin {
   constructor(config: HomepagePluginConfig) {
     super(config)
     this.enableDefaultHomepage = config.useDefault === true || config.useDefault === undefined
-    this.index = config.index ?? "/index.html"
+    this.index = config.index ?? "/"
   }
 
   onRequestHandlerRegistering(app: Express): void {
