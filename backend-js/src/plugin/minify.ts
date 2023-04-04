@@ -1,5 +1,5 @@
 import { type FileTree } from "../file.js"
-import { MeditreePlugin, pluginTypes } from "../plugin.js"
+import { type MeditreePlugin, pluginTypes } from "../plugin.js"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation
 pluginTypes["minify"] = (config) => new MinifyPlugin(config)
@@ -19,11 +19,10 @@ interface MinifyPluginConfig {
  * Minify plugin affects only file tree json for client side.
  * The file tree json for parent node won't be modified.
  */
-export class MinifyPlugin extends MeditreePlugin {
+export class MinifyPlugin implements MeditreePlugin {
   readonly removeHidden: boolean
   readonly removeSize: boolean
   constructor(config: MinifyPluginConfig) {
-    super()
     this.removeHidden = config.removeHidden ?? false
     this.removeSize = config.removeSize ?? false
   }

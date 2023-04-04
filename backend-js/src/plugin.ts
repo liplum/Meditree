@@ -5,28 +5,28 @@ import { type MeditreeNode } from "./meditree.js"
 
 export const pluginTypes: Record<string, (config: Record<string, any>) => MeditreePlugin> = {}
 
-export abstract class MeditreePlugin implements FileTreePlugin {
-  init(): void { }
+export interface MeditreePlugin extends FileTreePlugin {
+  init?(): void
 
-  setupServer(app: Express.Application, server: Server): void { }
+  setupServer?(app: Express.Application, server: Server): void 
 
-  onRequestHandlerRegistering(app: Express.Application): void { }
+  onRequestHandlerRegistering?(app: Express.Application): void 
 
-  onMeditreeNodeCreated(node: MeditreeNode): void { }
+  onMeditreeNodeCreated?(node: MeditreeNode): void 
 
-  onPostGenerated(tree: FileTree): void { }
+  onPostGenerated?(tree: FileTree): void 
 
   /**
    * @param tree the entire file tree will be sent to both clients and parent nodes.
    * @returns a new file tree or the same instance.
    */
-  onEntireTreeUpdated(tree: FileTree): FileTree { return tree }
+  onEntireTreeUpdated?(tree: FileTree): FileTree
 
   /**
    * @param tree the entire file tree will be sent to clients soon.
    * @returns a new file tree or the same instance.
    */
-  onEntireTreeForClient(tree: FileTree): FileTree { return tree }
+  onEntireTreeForClient?(tree: FileTree): FileTree
 }
 
 export function resolvePlguinFromConfig(config: Record<string, Record<string, any>>): MeditreePlugin[] {

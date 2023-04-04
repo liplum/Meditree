@@ -1,6 +1,6 @@
 import { type FileTree, type File } from "../file.js"
 import { type MeditreeNode } from "../meditree.js"
-import { MeditreePlugin, pluginTypes } from "../plugin.js"
+import { type MeditreePlugin, pluginTypes } from "../plugin.js"
 import { type Express } from "express"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation
@@ -17,12 +17,11 @@ interface HomepagePluginConfig {
   index?: string
 }
 
-export class HomepagePlugin extends MeditreePlugin {
+export class HomepagePlugin implements MeditreePlugin {
   html?: string
   readonly enableDefaultHomepage: boolean
   readonly index: string
   constructor(config: HomepagePluginConfig) {
-    super()
     this.enableDefaultHomepage = config.useDefault === true || config.useDefault === undefined
     this.index = config.index ?? "/"
   }

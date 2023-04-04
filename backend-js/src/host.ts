@@ -158,7 +158,7 @@ export const readdirAsync = promisify(fs.readdir)
 export type FileClassifier = (path: string) => FileType | null
 
 export interface FileTreePlugin {
-  onPostGenerated(tree: FileTree): void
+  onPostGenerated?(tree: FileTree): void
 }
 
 export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, pruned, classifier, includes, plugins }: {
@@ -222,7 +222,7 @@ export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, 
   await walk(tree, root, initPath ?? [])
   if (plugins?.length) {
     for (const plugin of plugins) {
-      plugin.onPostGenerated(tree)
+      plugin.onPostGenerated?.(tree)
     }
   }
   return tree

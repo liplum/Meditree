@@ -62,7 +62,10 @@ export interface FileTreeInfo {
   name: string
   files: FileTree
 }
-export type RouteMsgCallback<Header = any> = (id: string, data: any, header: Header) => void
+export interface ReadStreamOptions {
+  start?: number
+  end?: number
+}
 export declare interface MeditreeNode {
   on(event: "file-tree-update", listener: (entireTree: FileTree) => void): this
   on(event: "child-node-change", listener: (child: SubNode, isAdded: boolean) => void): this
@@ -77,7 +80,7 @@ export declare interface MeditreeNode {
   emit(event: "parent-node-change", parent: ParentNode, isAdded: boolean): this
 }
 export interface MeditreeNodePlugin {
-  onEntireTreeUpdated(tree: FileTree): FileTree
+  onEntireTreeUpdated?(tree: FileTree): FileTree
 }
 export class MeditreeNode extends EventEmitter implements FileTreeLike {
   private readonly name2Parent = new Map<string, ParentNode>()
@@ -112,7 +115,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     }
   }
 
-  async createReadStream(file: ResolvedFile, options?: BufferEncoding | any): Promise<Readable | null> {
+  async createReadStream(file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null> {
     // if the file has a path, it's a local file
     if (file.inner instanceof LocalFile) {
       return fs.createReadStream(file.inner.localPath, options)
@@ -150,7 +153,9 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     let entireTree: FileTree = this.toJSON()
     if (this.plugins) {
       for (const plugin of this.plugins) {
-        entireTree = plugin.onEntireTreeUpdated(entireTree)
+        if (plugin.onEntireTreeUpdated) {
+          entireTree = plugin.onEntireTreeUpdated(entireTree)
+        }
       }
     }
     this.emit("file-tree-update", entireTree)
@@ -171,7 +176,10 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     return obj
   }
 
-  private async handleGetFile(path: string, uuid: string, receiver: Net, options?: BufferEncoding | any): Promise<void> {
+  private async handleGetFile(
+    path: string, uuid: string,
+    receiver: Net, options?: ReadStreamOptions
+  ): Promise<void> {
     const pathParts = path.split("/")
     const file = this.resolveFile(pathParts)
     if (file) {

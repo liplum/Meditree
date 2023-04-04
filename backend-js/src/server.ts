@@ -16,14 +16,14 @@ export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
   const plugins = config.plugin ? resolvePlguinFromConfig(config.plugin) : []
   for (const plugin of plugins) {
-    plugin.init()
+    plugin.init?.()
   }
   const app = express()
   const server = http.createServer(app)
   app.use(cors())
   app.use(express.json())
   for (const plugin of plugins) {
-    plugin.setupServer(app, server)
+    plugin.setupServer?.(app, server)
   }
   const log = createLogger("Main")
   const localTree = !config.root
@@ -40,7 +40,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   node.plugins = plugins
 
   for (const plugin of plugins) {
-    plugin.onMeditreeNodeCreated(node)
+    plugin.onMeditreeNodeCreated?.(node)
   }
 
   const fileTypes = Array.from(Object.values(config.fileType))
@@ -68,7 +68,9 @@ export async function startServer(config: AppConfig): Promise<void> {
     if (plugins) {
       entireTree = cloneFileTreeJson(entireTree)
       for (const plugin of plugins) {
-        entireTree = plugin.onEntireTreeForClient(entireTree)
+        if (plugin.onEntireTreeForClient) {
+          entireTree = plugin.onEntireTreeForClient(entireTree)
+        }
       }
     }
     const info: FileTreeInfo = {
@@ -109,7 +111,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   for (const plugin of plugins) {
-    plugin.onRequestHandlerRegistering(app)
+    plugin.onRequestHandlerRegistering?.(app)
   }
 
   app.get("/list", (req, res) => {

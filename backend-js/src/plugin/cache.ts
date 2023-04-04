@@ -1,6 +1,8 @@
-import { type FileTree } from "../file.js"
-import { MeditreePlugin, pluginTypes } from "../plugin.js"
+import { type ResolvedFile, type FileTree } from "../file.js"
+import { type MeditreePlugin, pluginTypes } from "../plugin.js"
 import PouchDB from "pouchdb"
+import { type ReadStreamOptions } from "../meditree.js"
+import { type Readable } from "stream"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation
 pluginTypes["cache"] = (config) => new CachePlugin(config)
@@ -24,13 +26,12 @@ interface CachePluginConfig {
   path?: string
 }
 
-export class CachePlugin extends MeditreePlugin {
+export class CachePlugin implements MeditreePlugin {
   readonly maxSize: number
   readonly maxAge: number
   readonly path: string
   db: PouchDB.Database
   constructor(config: CachePluginConfig) {
-    super()
     this.maxSize = config.maxSize ?? 5 * 1024 * 1024
     this.maxAge = config.maxAge ?? 24 * 60 * 60 * 1000
     this.path = config.path ?? "meditree-cache"
@@ -38,5 +39,9 @@ export class CachePlugin extends MeditreePlugin {
 
   init(): void {
     this.db = new PouchDB(this.path)
+  }
+
+  async onCreateReadStream(file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null> {
+    return null
   }
 }
