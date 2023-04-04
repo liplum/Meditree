@@ -119,10 +119,10 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     // if the file has a path, it's a local file
     if (file.inner instanceof LocalFile) {
       return fs.createReadStream(file.inner.localPath, options)
-    } else if (file.remoteNode) {
-      const remoteNode: string = file.remoteNode
-      const node = this.name2Child.get(remoteNode)
-      if (!node) throw new Error(`Node[${remoteNode}] not found.`)
+    }
+    if (typeof file.remoteNode === "string") {
+      const node = this.name2Child.get(file.remoteNode)
+      if (!node) throw new Error(`Node[${file.remoteNode}] not found.`)
       const uuid = uuidv4()
       node.net.send("get-file", { path: file.inner.path, options, uuid })
       const stream = await node.net.getMessage("send-file", (header) => header && header.uuid === uuid)

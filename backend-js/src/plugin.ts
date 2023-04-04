@@ -1,7 +1,8 @@
 import { type Server } from "http"
-import { type FileTree } from "./file.js"
+import { type Readable } from "stream"
+import { type ResolvedFile, type FileTree } from "./file.js"
 import { type FileTreePlugin } from "./host.js"
-import { type MeditreeNode } from "./meditree.js"
+import { type ReadStreamOptions, type MeditreeNode } from "./meditree.js"
 
 export const pluginTypes: Record<string, (config: Record<string, any>) => MeditreePlugin> = {}
 
@@ -27,6 +28,10 @@ export interface MeditreePlugin extends FileTreePlugin {
    * @returns a new file tree or the same instance.
    */
   onEntireTreeForClient?(tree: FileTree): FileTree
+  /**
+   * Only the first hook will be called.
+   */
+  onCreateReadStream?(file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null> 
 }
 
 export function resolvePlguinFromConfig(config: Record<string, Record<string, any>>): MeditreePlugin[] {
