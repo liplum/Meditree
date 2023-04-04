@@ -7,10 +7,13 @@ import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { createLogger } from "./logger.js"
 import { resolvePlguinFromConfig } from "./plugin.js"
+import { type Readable } from "stream"
 import http from "http"
 // import for side effects
 import "./plugin/homepage.js"
 import "./plugin/minify.js"
+import "./plugin/hls.js"
+import "./plugin/cache.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   console.time("Start Server")
@@ -162,9 +165,17 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.setHeader("content-range", `bytes ${start}-${end}/${file.inner.size}`)
       res.setHeader("accept-ranges", "bytes")
     }
-    const stream = await node.createReadStream(file, {
-      start, end,
-    })
+    let stream: Readable | null = null
+    const options = { start, end, }
+    for (const plugin of plugins) {
+      if (plugin.onCreateReadStream) {
+        const maybeStream = await plugin.onCreateReadStream(file, options)
+        if (maybeStream !== undefined) {
+          stream = maybeStream
+          break
+        }
+      }
+    }
     if (!stream) {
       res.status(404).end()
       return
