@@ -22,7 +22,7 @@ export class HomepagePlugin extends MeditreePlugin {
   readonly enableDefaultHomepage: boolean
   readonly index: string
   constructor(config: HomepagePluginConfig) {
-    super(config)
+    super()
     this.enableDefaultHomepage = config.useDefault === true || config.useDefault === undefined
     this.index = config.index ?? "/"
   }

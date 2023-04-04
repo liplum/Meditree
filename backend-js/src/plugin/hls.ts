@@ -6,6 +6,10 @@ export const HLSMediaType = "application/x-mpegURL"
 // eslint-disable-next-line @typescript-eslint/dot-notation
 pluginTypes["hls"] = (config) => new HLSPlugin(config)
 export class HLSPlugin extends MeditreePlugin {
+  constructor(config: Record<string, any>) {
+    super()
+  }
+
   onPostGenerated(tree: LocalFileTree): void {
     for (let file of tree.visit((name, file) => {
       return file instanceof LocalFile && file["*type"] === HLSMediaType

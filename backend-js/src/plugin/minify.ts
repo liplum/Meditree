@@ -7,15 +7,30 @@ pluginTypes["minify"] = (config) => new MinifyPlugin(config)
 interface MinifyPluginConfig {
   /**
    * Remove hiden files and folders from entire tree.
+   * False by default.
    */
   removeHidden?: boolean
+  /**
+   * False by default.
+   */
   removeSize?: boolean
 }
+/**
+ * Minify plugin affects only file tree json for client side.
+ * The file tree json for parent node won't be modified.
+ */
+export class MinifyPlugin extends MeditreePlugin {
+  readonly removeHidden: boolean
+  readonly removeSize: boolean
+  constructor(config: MinifyPluginConfig) {
+    super()
+    this.removeHidden = config.removeHidden ?? false
+    this.removeSize = config.removeSize ?? false
+  }
 
-export class MinifyPlugin extends MeditreePlugin<MinifyPluginConfig> {
   onEntireTreeForClient(tree: FileTree): FileTree {
-    const removeHidden = this.config.removeHidden ?? false
-    const removeSize = this.config.removeSize ?? false
+    const removeHidden = this.removeHidden
+    const removeSize = this.removeSize
     if (removeHidden || removeSize) {
       function visit(cur: FileTree): void {
         for (const [name, fileOrSubtree] of Object.entries(cur)) {
