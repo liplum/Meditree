@@ -1,8 +1,7 @@
 import { type ResolvedFile, LocalFile } from "../file.js"
 import { type MeditreePlugin, pluginTypes } from "../plugin.js"
 import { type MeditreeNode, type ReadStreamOptions } from "../meditree.js"
-import cloneable from "cloneable-readable"
-import { type Readable } from "stream"
+import { Readable } from "stream"
 import fs from "fs"
 import { join, dirname } from "path"
 import { promisify } from "util"
@@ -67,15 +66,15 @@ export class CachePlugin implements MeditreePlugin {
       }
       const stream = await this.node.createReadStream(file)
       if (stream === null) return null
-      // clone the incoming stream
-      const streamCloneable = cloneable(stream)
-      // ensure parent directory exists.
       await mkdir(dirname(cachePath), { recursive: true })
+      // clone the incoming stream
+      const [forCache, forResponse] = duplicateStream(stream)
+      // ensure parent directory exists.
       const cache = fs.createWriteStream(cachePath)
       // write into cache
-      streamCloneable.pipe(cache)
+      forCache.pipe(cache)
       // return a clone
-      return streamCloneable
+      return forResponse
     }
   }
 
@@ -91,8 +90,24 @@ function hash(input: string): string {
   return buffer.toString("base64url")
 }
 
-function timestampToBuffer(timestamp: number): Buffer {
-  const buffer = Buffer.alloc(4) // create a new buffer with 4 bytes
-  buffer.writeUInt32BE(timestamp, 0) // write the timestamp integer in big-endian byte order
-  return buffer
+function duplicateStream(input: Readable): [Readable, Readable] {
+  const stream1 = new Readable({ read() { } })
+  const stream2 = new Readable({ read() { } })
+  input.on("data", (data) => {
+    stream1.push(data)
+    stream2.push(data)
+  })
+  input.on("end", () => {
+    stream1.emit("end")
+    stream2.emit("end")
+  })
+  input.on("close", () => {
+    stream1.emit("close")
+    stream2.emit("close")
+  })
+  input.on("error", (err) => {
+    stream1.push(err)
+    stream2.push(err)
+  })
+  return [stream1, stream2]
 }

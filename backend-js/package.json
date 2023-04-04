@@ -18,7 +18,6 @@
   "license": "ISC",
   "dependencies": {
     "chokidar": "^3.5.3",
-    "cloneable-readable": "^3.0.0",
     "command-line-args": "^5.2.1",
     "command-line-usage": "^7.0.1",
     "cors": "^2.8.5",
