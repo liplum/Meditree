@@ -6,7 +6,7 @@ import { type Readable } from "stream"
 import fs from "fs"
 import { join, dirname } from "path"
 import { promisify } from "util"
-import { base64Encode, hash32Bit } from "../crypt.js"
+import { hash32Bit } from "../crypt.js"
 // eslint-disable-next-line @typescript-eslint/dot-notation
 pluginTypes["cache"] = (config) => new CachePlugin(config)
 
@@ -86,7 +86,9 @@ export class CachePlugin implements MeditreePlugin {
 
 function hash(input: string): string {
   const hashcode = hash32Bit(input)
-  return base64Encode(hashcode)
+  const buffer = Buffer.alloc(4)
+  buffer.writeUInt32BE(hashcode)
+  return buffer.toString("base64url")
 }
 
 function timestampToBuffer(timestamp: number): Buffer {

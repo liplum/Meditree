@@ -39,23 +39,10 @@ export function generateNonce(): Uint8Array {
 }
 
 export function hash32Bit(str: string): number {
-  let hash = 0
+  let hash = 5381
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash |= 0 // Convert to 32bit integer
+    hash = ((hash << 5) + hash) + char
   }
-  return hash
-}
-
-const BASE64_CHARS =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-
-export function base64Encode(num: number): string {
-  let base64 = ""
-  do {
-    base64 = BASE64_CHARS[num & 0x3f] + base64
-    num >>= 6
-  } while (num > 0)
-  return base64
+  return hash >>> 0 // Ensure non-negative 32-bit integer
 }
