@@ -1,3 +1,4 @@
+import { type Server } from "http"
 import { type FileTree } from "./file.js"
 import { type FileTreePlugin } from "./host.js"
 import { type MeditreeNode } from "./meditree.js"
@@ -5,6 +6,10 @@ import { type MeditreeNode } from "./meditree.js"
 export const pluginTypes: Record<string, (config: Record<string, any>) => MeditreePlugin> = {}
 
 export abstract class MeditreePlugin implements FileTreePlugin {
+  init(): void { }
+
+  setupServer(app: Express.Application, server: Server): void { }
+
   onRequestHandlerRegistering(app: Express.Application): void { }
 
   onMeditreeNodeCreated(node: MeditreeNode): void { }
