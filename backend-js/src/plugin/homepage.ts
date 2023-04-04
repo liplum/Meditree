@@ -40,7 +40,7 @@ export class HomepagePlugin implements MeditreePlugin {
     }
   }
 
-  onMeditreeNodeCreated(node: MeditreeNode): void {
+  setupMeditreeNode(node: MeditreeNode): void {
     node.on("file-tree-update", (entireTree) => {
       this.html = buildIndexHtml(entireTree)
     })

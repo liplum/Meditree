@@ -9,13 +9,13 @@ export const pluginTypes: Record<string, (config: Record<string, any>) => Meditr
 export interface MeditreePlugin extends FileTreePlugin {
   init?(): void
 
-  setupServer?(app: Express.Application, server: Server): void 
+  setupServer?(app: Express.Application, server: Server): void
 
-  onRequestHandlerRegistering?(app: Express.Application): void 
+  setupMeditreeNode?(node: MeditreeNode): void
 
-  onMeditreeNodeCreated?(node: MeditreeNode): void 
+  onRequestHandlerRegistering?(app: Express.Application): void
 
-  onPostGenerated?(tree: FileTree): void 
+  onPostGenerated?(tree: FileTree): void
 
   /**
    * @param tree the entire file tree will be sent to both clients and parent nodes.
@@ -29,9 +29,10 @@ export interface MeditreePlugin extends FileTreePlugin {
    */
   onEntireTreeForClient?(tree: FileTree): FileTree
   /**
-   * Only the first hook will be called.
+   * The first plugin which returns a non-undefined value will be taken.
+   * @returns undefined if not handled by this plugin.
    */
-  onCreateReadStream?(file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null> 
+  onCreateReadStream?(file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
 }
 
 export function resolvePlguinFromConfig(config: Record<string, Record<string, any>>): MeditreePlugin[] {

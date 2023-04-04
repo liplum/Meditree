@@ -1,9 +1,12 @@
-import { type ResolvedFile, type FileTree, LocalFile } from "../file.js"
+import { type ResolvedFile, LocalFile } from "../file.js"
 import { type MeditreePlugin, pluginTypes } from "../plugin.js"
-import { type ReadStreamOptions } from "../meditree.js"
+import { type MeditreeNode, type ReadStreamOptions } from "../meditree.js"
+import cloneable from "cloneable-readable"
 import { type Readable } from "stream"
 import { createHash } from "crypto"
 import fs from "fs"
+import { join } from "path"
+import { promisify } from "util"
 // eslint-disable-next-line @typescript-eslint/dot-notation
 pluginTypes["cache"] = (config) => new CachePlugin(config)
 const md5 = createHash("md5")
@@ -26,10 +29,13 @@ interface CachePluginConfig {
   path?: string
 }
 
+const fsstate = promisify(fs.stat)
+
 export class CachePlugin implements MeditreePlugin {
   readonly maxSize: number
   readonly maxAge: number
   readonly path: string
+  node: MeditreeNode
   constructor(config: CachePluginConfig) {
     this.maxSize = config.maxSize ?? 5 * 1024 * 1024
     this.maxAge = config.maxAge ?? 24 * 60 * 60 * 1000
@@ -39,21 +45,48 @@ export class CachePlugin implements MeditreePlugin {
   init(): void {
   }
 
-  async onCreateReadStream(file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null> {
-    if (file.inner instanceof LocalFile) {
-      return fs.createReadStream(file.inner.localPath, options)
-    }
+  setupMeditreeNode(node: MeditreeNode): void {
+    this.node = node
+  }
+
+  async onCreateReadStream(file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null | undefined> {
+    // ignore local file requests
+    if (file.inner instanceof LocalFile) return
+    // ignore large files
+    if (file.inner.size > this.maxSize) return
     // for remote file
     if (typeof file.remoteNode === "string") {
+      const cachePath = this.getCachePath(file.remoteNode, file.inner.path)
+      // if cached, capable to read partial file
+      if (fs.existsSync(cachePath) && (await fsstate(cachePath)).isFile()) {
+        return fs.createReadStream(cachePath, options)
+      }
+      // if not cached, ignore partial file
+      if (options && (options.start !== undefined || options.end !== undefined)) {
+        return
+      }
+      const stream = await this.node.createReadStream(file)
+      if (stream === null) return null
+      // clone the incoming stream
+      const fileStream = cloneable(stream)
+      const cacheStream = fs.createWriteStream(cachePath)
+      // write into cache
+      stream.pipe(cacheStream)
+      // return a clone
+      return fileStream.clone()
     }
-    return null
+  }
+
+  getCachePath(nodeName: string, path: string): string {
+    return join(this.path, hash(nodeName), hash(path))
   }
 }
 
 function hash(input: string): string {
-  const hash = md5.update(input, "utf8").digest("hex")
+  const hash = md5.update(input, "utf8").digest("base64")
   return hash.slice(0, 12)
 }
+
 function timestampToBuffer(timestamp: number): Buffer {
   const buffer = Buffer.alloc(4) // create a new buffer with 4 bytes
   buffer.writeUInt32BE(timestamp, 0) // write the timestamp integer in big-endian byte order

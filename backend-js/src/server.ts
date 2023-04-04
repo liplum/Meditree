@@ -40,7 +40,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   node.plugins = plugins
 
   for (const plugin of plugins) {
-    plugin.onMeditreeNodeCreated?.(node)
+    plugin.setupMeditreeNode?.(node)
   }
 
   const fileTypes = Array.from(Object.values(config.fileType))
