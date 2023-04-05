@@ -1,0 +1,12 @@
+#connect-dialog {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  min-width: min(560px, 80%);
+  text-align: center;
+}
+
+#connect-form>* {
+  margin: 0.5rem;
+}
