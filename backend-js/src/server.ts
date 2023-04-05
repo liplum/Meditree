@@ -6,18 +6,23 @@ import { cloneFileTreeJson, type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { createLogger } from "./logger.js"
-import { resolvePlguinFromConfig } from "./plugin.js"
+import { type PluginRegistry, resolvePlguinFromConfig } from "./plugin.js"
 import { type Readable } from "stream"
 import http from "http"
-// import for side effects
-import "./plugin/homepage.js"
-import "./plugin/minify.js"
-import "./plugin/hls.js"
-import "./plugin/cache.js"
+import { CachePlugin } from "./plugin/cache.js"
+import { HomepagePlugin } from "./plugin/homepage.js"
+import { HLSPlugin } from "./plugin/hls.js"
+import { MinifyPlugin } from "./plugin/minify.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
+  const pluginTypes: PluginRegistry = {}
+  pluginTypes.cache = (config) => CachePlugin(config)
+  pluginTypes.homepage = (config) => HomepagePlugin(config)
+  pluginTypes.hls = (config) => HLSPlugin(config)
+  pluginTypes.minify = (config) => MinifyPlugin(config)
+
   console.time("Start Server")
-  const plugins = config.plugin ? resolvePlguinFromConfig(config.plugin) : []
+  const plugins = config.plugin ? resolvePlguinFromConfig(pluginTypes, config.plugin) : []
   for (const plugin of plugins) {
     plugin.init?.()
   }
@@ -165,8 +170,8 @@ export async function startServer(config: AppConfig): Promise<void> {
     const options = { start, end, }
     for (const plugin of plugins) {
       if (stream !== undefined) break
-      if (plugin.onCreateReadStream) {
-        stream = await plugin.onCreateReadStream(file, options)
+      if (plugin.onNodeCreateReadStream) {
+        stream = await plugin.onNodeCreateReadStream(node, file, options)
       }
     }
     if (stream === undefined) {

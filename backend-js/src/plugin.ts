@@ -1,10 +1,10 @@
 import { type Server } from "http"
 import { type Readable } from "stream"
-import { type ResolvedFile, type FileTree } from "./file.js"
+import { type ResolvedFile, type FileTree, type LocalFileTree } from "./file.js"
 import { type FileTreePlugin } from "./host.js"
 import { type ReadStreamOptions, type MeditreeNode } from "./meditree.js"
-
-export const pluginTypes: Record<string, (config: Record<string, any>) => MeditreePlugin> = {}
+import { type Express } from "express"
+export type PluginRegistry = Record<string, (config: Record<string, any>) => MeditreePlugin>
 
 export interface MeditreePlugin extends FileTreePlugin {
   init?(): void
@@ -13,9 +13,9 @@ export interface MeditreePlugin extends FileTreePlugin {
 
   setupMeditreeNode?(node: MeditreeNode): void
 
-  onRequestHandlerRegistering?(app: Express.Application): void
+  onRequestHandlerRegistering?(app: Express): void
 
-  onPostGenerated?(tree: FileTree): void
+  onPostGenerated?(tree: LocalFileTree): void
 
   /**
    * @param tree the entire file tree will be sent to both clients and parent nodes.
@@ -32,13 +32,13 @@ export interface MeditreePlugin extends FileTreePlugin {
    * The first plugin which returns a non-undefined value will be taken.
    * @returns undefined if not handled by this plugin.
    */
-  onCreateReadStream?(file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
+  onNodeCreateReadStream?(node: MeditreeNode, file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
 }
 
-export function resolvePlguinFromConfig(config: Record<string, Record<string, any>>): MeditreePlugin[] {
+export function resolvePlguinFromConfig(all: PluginRegistry, config: Record<string, Record<string, any>>): MeditreePlugin[] {
   const plugins: MeditreePlugin[] = []
   for (const [name, pluginConfig] of Object.entries(config)) {
-    const ctor = pluginTypes[name]
+    const ctor = all[name]
     if (ctor) {
       const plugin = ctor(typeof pluginConfig === "object" ? pluginConfig : {})
       plugins.push(plugin)

@@ -1,10 +1,6 @@
 import { type FileTree, type File } from "../file.js"
-import { type MeditreeNode } from "../meditree.js"
-import { type MeditreePlugin, pluginTypes } from "../plugin.js"
-import express, { type Express } from "express"
-
-// eslint-disable-next-line @typescript-eslint/dot-notation
-pluginTypes["homepage"] = (config) => new HomepagePlugin(config)
+import { type MeditreePlugin } from "../plugin.js"
+import express from "express"
 
 interface HomepagePluginConfig {
   /**
@@ -14,33 +10,32 @@ interface HomepagePluginConfig {
   root?: string
 }
 
-export class HomepagePlugin implements MeditreePlugin {
-  html?: string
-  readonly root?: string
-  constructor(config: HomepagePluginConfig) {
-    this.root = config.root
-  }
-
-  onRequestHandlerRegistering(app: Express): void {
-    if (this.root) {
-      app.use(express.static(this.root))
-    } else {
-      app.get("index.html", (req, res) => {
-        res.status(200)
-        if (this.html) {
-          res.contentType("html")
-          res.send(this.html)
-        } else {
-          res.end()
-        }
-      })
+export function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
+  let html: string | undefined
+  const root = config.root
+  return {
+    setupMeditreeNode(node) {
+      if (!root) {
+        node.on("file-tree-update", (entireTree) => {
+          html = buildIndexHtml(entireTree)
+        })
+      }
+    },
+    onRequestHandlerRegistering(app) {
+      if (root) {
+        app.use(express.static(root))
+      } else {
+        app.get("index.html", (req, res) => {
+          res.status(200)
+          if (html) {
+            res.contentType("html")
+            res.send(html)
+          } else {
+            res.end()
+          }
+        })
+      }
     }
-  }
-
-  setupMeditreeNode(node: MeditreeNode): void {
-    node.on("file-tree-update", (entireTree) => {
-      this.html = buildIndexHtml(entireTree)
-    })
   }
 }
 

@@ -1,14 +1,10 @@
-import { type ResolvedFile, LocalFile } from "../file.js"
-import { type MeditreePlugin, pluginTypes } from "../plugin.js"
-import { type MeditreeNode, type ReadStreamOptions } from "../meditree.js"
+import { LocalFile } from "../file.js"
+import { type MeditreePlugin } from "../plugin.js"
 import { Readable } from "stream"
 import fs from "fs"
 import { join, dirname } from "path"
 import { promisify } from "util"
 import { hash32Bit } from "../crypt.js"
-// eslint-disable-next-line @typescript-eslint/dot-notation
-pluginTypes["cache"] = (config) => new CachePlugin(config)
-
 interface CachePluginConfig {
   /**
    * The max file size for being cached.
@@ -29,57 +25,46 @@ interface CachePluginConfig {
 
 const fsstate = promisify(fs.stat)
 const mkdir = promisify(fs.mkdir)
-export class CachePlugin implements MeditreePlugin {
-  readonly maxSize: number
-  readonly maxAge: number
-  readonly path: string
-  node: MeditreeNode
-  constructor(config: CachePluginConfig) {
-    this.maxSize = config.maxSize ?? 10 * 1024 * 1024
-    this.maxAge = config.maxAge ?? 24 * 60 * 60 * 1000
-    this.path = config.path ?? "meditree-cache"
+export function CachePlugin(config: CachePluginConfig): MeditreePlugin {
+  const maxSize = config.maxSize ?? 10 * 1024 * 1024
+  const maxAge = config.maxAge ?? 24 * 60 * 60 * 1000
+  const path = config.path ?? "meditree-cache"
+
+  function getCachePath(nodeName: string, path: string): string {
+    return join(path, hash(nodeName), hash(path))
   }
 
-  init(): void {
-  }
-
-  setupMeditreeNode(node: MeditreeNode): void {
-    this.node = node
-  }
-
-  async onCreateReadStream(file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null | undefined> {
-    // ignore local file requests
-    if (file.inner instanceof LocalFile) return
-    // ignore large files
-    if (file.inner.size > this.maxSize) return
-    // for remote file
-    if (typeof file.remoteNode === "string") {
-      const cachePath = this.getCachePath(file.remoteNode, file.inner.path)
-      // if cached, capable to read partial file
-      if (fs.existsSync(cachePath) && (await fsstate(cachePath)).isFile()) {
-        return fs.createReadStream(cachePath, options)
+  return {
+    async onNodeCreateReadStream(node, file, options?) {
+      // ignore local file requests
+      if (file.inner instanceof LocalFile) return
+      // ignore large files
+      if (file.inner.size > maxSize) return
+      // for remote file
+      if (typeof file.remoteNode === "string") {
+        const cachePath = getCachePath(file.remoteNode, file.inner.path)
+        // if cached, capable to read partial file
+        if (fs.existsSync(cachePath) && (await fsstate(cachePath)).isFile()) {
+          return fs.createReadStream(cachePath, options)
+        }
+        // if not cached, ignore partial file
+        if (options) {
+          if (options.start !== undefined && options.start !== 0) return
+          if (options.end !== undefined && options.end !== file.inner.size - 1) return
+        }
+        const stream = await node.createReadStream(file)
+        if (stream === null) return null
+        await mkdir(dirname(cachePath), { recursive: true })
+        // clone the incoming stream
+        const [forCache, forResponse] = duplicateStream(stream)
+        // ensure parent directory exists.
+        const cache = fs.createWriteStream(cachePath)
+        // write into cache
+        forCache.pipe(cache)
+        // return a clone
+        return forResponse
       }
-      // if not cached, ignore partial file
-      if (options) {
-        if (options.start !== undefined && options.start !== 0) return
-        if (options.end !== undefined && options.end !== file.inner.size - 1) return
-      }
-      const stream = await this.node.createReadStream(file)
-      if (stream === null) return null
-      await mkdir(dirname(cachePath), { recursive: true })
-      // clone the incoming stream
-      const [forCache, forResponse] = duplicateStream(stream)
-      // ensure parent directory exists.
-      const cache = fs.createWriteStream(cachePath)
-      // write into cache
-      forCache.pipe(cache)
-      // return a clone
-      return forResponse
     }
-  }
-
-  getCachePath(nodeName: string, path: string): string {
-    return join(this.path, hash(nodeName), hash(path))
   }
 }
 
