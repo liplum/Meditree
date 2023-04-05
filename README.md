@@ -4,32 +4,52 @@
 
 ### Backend
 
-Install the dependencies of `backend` subprojects.
-Then run `npm start` to start the server.
+#### Node.js /backend-js
+
+Run `npm start` to compile and start the server.
 
 ```shell
-cd backend
 npm install
 npm start
 ```
 
-At the first time you start the server,
-it will throw an error and require you to configure it,
-then a file called `meditree.json` will be created in the root.
+When you first start the server, an error will be thrown,
+which will prompt you to configure it.
 
-### Frontend Website
+A file named `meditree.json` will then be generated in the current working directory.
+From there, you can move this file up the file tree until you reach the root "/" directory.
 
-Install the dependencies of `meditree` subprojects.
-Create a `.env.local` file in the root, and config it based on `.env` file.
-Then run `npm run dev` to start the website.
+#### Go /backend-go
+
+Run `go build main.go` to compile and start the server.
+
+### Frontend
+
+### React Website /web-react
+
+Run `npm run dev` to start the website.
+Run `npm run build` to build for production.
 
 ```shell
-cd web
 npm install
 npm run dev
+npm run build
 ```
 
-You can configure the host and port in the [Vite config file](/web/vite.config.js).
+You can configure the host and port in the [Vite config file](/web-react/vite.config.js).
+
+### Vue Website /web-vue
+
+Run `npm run dev` to start the website.
+Run `npm run build` to build for production.
+
+```shell
+npm install
+npm run dev
+npm run build
+```
+
+You can configure the host and port in the [Vite config file](/web-vue/vite.config.js).
 
 ### Deployment
 
