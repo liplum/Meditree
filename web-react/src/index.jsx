@@ -1,6 +1,6 @@
 import React from 'react'
 import {
-  createBrowserRouter,
+  createHashRouter,
   RouterProvider,
 } from "react-router-dom"
 import { ConfigProvider, theme } from 'antd'
@@ -15,7 +15,7 @@ import {
 } from './connect'
 import { CssBaseline } from '@mui/material'
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     index: true,
     element: <ConnectDialog />,
