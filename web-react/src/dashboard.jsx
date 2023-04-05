@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { FileTreeNavigation } from "./FileTreeNavigation";
-import { emitter } from "./Event"
+import { emitter } from "./Env"
 import MenuIcon from '@mui/icons-material/Menu';
 
 import * as ft from "./FileTree"

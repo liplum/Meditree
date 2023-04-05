@@ -1,6 +1,6 @@
 import './playground.css'
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import { goNextFile, goPreviousFile } from "./Event";
+import { goNextFile, goPreviousFile } from "./Env";
 
 import { isMobile } from "react-device-detect"
 import { AstrologyContext, BackendContext, ResponsiveAppBar, SelectedFileContext } from './Dashboard';
