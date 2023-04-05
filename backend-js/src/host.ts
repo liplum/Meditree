@@ -115,7 +115,7 @@ export class HostTree extends EventEmitter implements FileTreeLike {
       initPath: [this.options.name],
       classifier: this.classifyByFilePath,
       includes: this.isFileOrDirectoryIncluded,
-      pruned: true,
+      ignoreEmptyDir: true,
       plugins: this.options.plugins,
     })
     this.fileTree = tree
@@ -162,7 +162,7 @@ export interface FileTreePlugin {
   onPostGenerated?(tree: FileTree): void
 }
 
-export async function createFileTreeFrom({ root, initPath, pruned, classifier, includes, plugins }: {
+export async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, classifier, includes, plugins }: {
   root: string
   initPath?: string[]
   classifier: FileClassifier
@@ -170,14 +170,14 @@ export async function createFileTreeFrom({ root, initPath, pruned, classifier, i
   /**
    * whether to ignore the empty file tree
    */
-  pruned: boolean
+  ignoreEmptyDir: boolean
   plugins?: FileTreePlugin[]
 }): Promise<LocalFileTree> {
   const stats = await statAsync(root)
   if (!stats.isDirectory()) {
     throw Error(`${root} isn't a directory`)
   }
-  const tree = new LocalFileTree(root)
+  const tree = new LocalFileTree(path.basename(root), root)
   async function walk(
     tree: LocalFileTree,
     curDir: string,
@@ -203,25 +203,20 @@ export async function createFileTreeFrom({ root, initPath, pruned, classifier, i
             if (plugins) {
               for (const plugin of plugins) {
                 if (builtPath !== undefined) break
-                if (plugin.buildPath) {
-                  builtPath = plugin.buildPath(curPathParts)
-                }
+                if (plugin.buildPath) builtPath = plugin.buildPath(curPathParts)
               }
             }
-            if (builtPath === undefined) {
-              builtPath = curPathParts.join("/")
-            }
+            if (builtPath === undefined) builtPath = curPathParts.join("/")
             tree.addFile(fileName, new LocalFile(
               tree, fileName, fileType, stat.size, filePath,
               builtPath,
             ))
           }
         } else if (stat.isDirectory()) {
-          const subtree = tree.createSubtree(filePath)
-          tree.addFile(fileName, subtree)
+          const subtree = tree.createSubtree(fileName, filePath)
           await walk(subtree, filePath, curPathParts)
-          if (pruned && subtree.subtreeChildrenCount === 0) {
-            tree.removeFile(fileName)
+          if (!ignoreEmptyDir || subtree.subtreeChildrenCount > 0) {
+            tree.addFile(fileName, subtree)
           }
         } else {
           console.log("Unknown file type", filePath)

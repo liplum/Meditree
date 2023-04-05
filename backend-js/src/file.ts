@@ -1,5 +1,3 @@
-import path from "path"
-
 export type FileType = string
 export interface File {
   "*type": FileType
@@ -53,14 +51,15 @@ export interface FileTreeLike {
 }
 
 export class LocalFileTree implements FileTreeLike {
-  parent: LocalFileTree | null = null
+  readonly parent?: LocalFileTree
   hidden?: boolean
-  name2File = new Map<string, LocalFile | LocalFileTree>()
-  rootPath: string
+  readonly name2File = new Map<string, LocalFile | LocalFileTree>()
+  readonly rootPath: string
   readonly name: string
-  constructor(rootPath: string) {
+  constructor(name: string, rootPath: string, parent?: LocalFileTree) {
     this.rootPath = rootPath
-    this.name = path.basename(rootPath)
+    this.name = name
+    this.parent = parent
   }
 
   /**
@@ -110,10 +109,8 @@ export class LocalFileTree implements FileTreeLike {
     this.name2File.delete(name)
   }
 
-  createSubtree(rootPath: string): LocalFileTree {
-    const subtree = new LocalFileTree(rootPath)
-    subtree.parent = this
-    return subtree
+  createSubtree(name: string, rootPath: string): LocalFileTree {
+    return new LocalFileTree(name, rootPath, this)
   }
 
   toJSON(): FileTree {
