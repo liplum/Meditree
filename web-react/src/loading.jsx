@@ -1,6 +1,6 @@
 import React from 'react';
 import './loading.css';
-import { i18n } from './i18n';
+import { i18n } from './I18n';
 
 export function Loading(props) {
   const circleSize = props.size || 100; // default size is 100px

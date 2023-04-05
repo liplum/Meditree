@@ -5,14 +5,14 @@ import {
 } from "react-router-dom"
 import { ConfigProvider, theme } from 'antd'
 import ReactDOM from 'react-dom/client'
-import { App, loader as appLoader } from './dashboard'
+import { App, loader as appLoader } from './Dashboard'
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './index.css'
 import {
   ConnectDialog,
   load as connectDialogLoader,
   action as connectDialogAction,
-} from './connect'
+} from './Connect'
 import { CssBaseline } from '@mui/material'
 
 const router = createHashRouter([

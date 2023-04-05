@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
-import { FileTreeNavigation } from "./fileTreeNavi";
-import { emitter } from "./event"
+import { FileTreeNavigation } from "./FileTreeNavigation";
+import { emitter } from "./Event"
 import MenuIcon from '@mui/icons-material/Menu';
 
-import * as ft from "./fileTree"
+import * as ft from "./FileTree"
 import {
   useLoaderData,
   defer,
@@ -11,12 +11,12 @@ import {
 } from "react-router-dom";
 import { Box, Divider, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip, Typography } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
-import { backend, storage } from "./env";
-import { FileDisplayBoard } from "./playground";
-import { i18n } from "./i18n";
-import { SearchBar } from "./searchbar";
+import { backend, storage } from "./Env";
+import { FileDisplayBoard } from "./Playground";
+import { i18n } from "./I18n";
+import { SearchBar } from "./Searchbar";
 import "./dashboard.css"
-import { Failed, Loading } from "./loading";
+import { Failed, Loading } from "./Loading";
 import useForceUpdate from "use-force-update";
 import { useNavigate, useAsyncError } from 'react-router-dom';
 

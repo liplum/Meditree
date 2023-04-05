@@ -1,19 +1,19 @@
 import './playground.css'
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import { goNextFile, goPreviousFile } from "./event";
+import { goNextFile, goPreviousFile } from "./Event";
 
 import { isMobile } from "react-device-detect"
-import { AstrologyContext, BackendContext, ResponsiveAppBar, SelectedFileContext } from './dashboard';
+import { AstrologyContext, BackendContext, ResponsiveAppBar, SelectedFileContext } from './Dashboard';
 import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
-import { backend } from './env';
+import { backend } from './Env';
 import useForceUpdate from 'use-force-update';
-import { i18n } from './i18n';
+import { i18n } from './I18n';
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Failed } from './loading';
+import { Failed } from './Loading';
 import { filesize } from "filesize";
-import { VideoJS } from "./video-player"
+import { VideoJS } from "./VideoPlayer"
 import videojs from "video.js";
 
 const VideoRenderer = React.memo(VideoRendererImpl)

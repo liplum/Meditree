@@ -9,10 +9,10 @@ import {
 import {
   backend,
   storage
-} from "./env.js"
+} from "./Env.js"
 import "./connect.css"
-import { i18n } from './i18n.js';
-import { removePrefix } from './utils.jsx';
+import { i18n } from './I18n.js';
+import { removePrefix } from './Utils.jsx';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 export async function load() {
