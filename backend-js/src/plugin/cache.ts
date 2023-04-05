@@ -20,7 +20,7 @@ interface CachePluginConfig {
    * The cache root direcotry.
    * "meditree-cache" by default.
    */
-  path?: string
+  root?: string
 }
 
 const fsstate = promisify(fs.stat)
@@ -28,10 +28,10 @@ const mkdir = promisify(fs.mkdir)
 export function CachePlugin(config: CachePluginConfig): MeditreePlugin {
   const maxSize = config.maxSize ?? 10 * 1024 * 1024
   const maxAge = config.maxAge ?? 24 * 60 * 60 * 1000
-  const path = config.path ?? "meditree-cache"
+  const root = config.root ?? "meditree-cache"
 
   function getCachePath(nodeName: string, path: string): string {
-    return join(path, hash(nodeName), hash(path))
+    return join(root, hash(nodeName), hash(path))
   }
 
   return {
