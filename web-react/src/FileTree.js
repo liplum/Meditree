@@ -1,9 +1,9 @@
-export function createDelegate(rootFileTree, rootName = "") {
+export function createDelegate(name, fileTree) {
   const rootChildren = []
   let key = 0
   const rootRenderTree = {
     key: key++,
-    title: rootName,
+    title: name,
     children: rootChildren
   }
   const key2File = new Map()
@@ -42,11 +42,12 @@ export function createDelegate(rootFileTree, rootName = "") {
       }
     }
   }
-  createNode([], rootChildren, rootFileTree)
+  createNode([], rootChildren, fileTree)
   return {
     renderTree: rootRenderTree,
     key2File,
     maxKey: key,
+    name,
   }
 }
 

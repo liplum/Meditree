@@ -2,6 +2,7 @@ import LocalizedStrings from 'react-localization';
 
 export const i18n = new LocalizedStrings({
   en: {
+    noFile: "No File",
     search: {
       starFilter: "Only Show Starred",
       placeholder: "Search files or folders"
@@ -31,6 +32,7 @@ export const i18n = new LocalizedStrings({
     },
   },
   zh: {
+    noFile: "无文件",
     search: {
       starFilter: "仅显示已收藏",
       placeholder: "搜索文件或文件夹"
@@ -41,7 +43,7 @@ export const i18n = new LocalizedStrings({
     playground: {
       starBtn: "收藏",
       unstarBtn: "取消收藏",
-      unsupportedFileType:"文件类型不支持。",
+      unsupportedFileType: "文件类型不支持。",
       nofileSelected: "没有文件被选中。",
     },
     loading: {

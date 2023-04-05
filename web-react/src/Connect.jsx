@@ -1,13 +1,13 @@
 // Import required modules
 import { Button, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, DialogActions, DialogTitle, Card, CardActions, InputAdornment, IconButton, OutlinedInput, InputLabel } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   redirect,
   Form,
 } from 'react-router-dom';
 
 import {
-  storage
+  storage, updatePageTitle
 } from "./Env.js"
 import "./Connect.css"
 import { i18n } from './I18n.js';
@@ -54,6 +54,9 @@ export async function action({ request }) {
 
 const serverPattern = /^((http|https):\/\/)?[^\s/$.?#].[^\s]*$/;
 export function ConnectDialog(props) {
+  useEffect(() => {
+    updatePageTitle(i18n.connect.title)
+  }, [])
   const lastConnected = storage.lastConnected
   const [server, setServer] = useState(lastConnected?.server)
   // true means "http", while false means "https"

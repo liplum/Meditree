@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { FileTreeNavigation } from "./FileTreeNavigation";
-import { emitter } from "./Env"
+import { emitter, updatePageTitle } from "./Env"
 import MenuIcon from '@mui/icons-material/Menu';
 
 import * as ft from "./FileTree"
@@ -43,8 +43,7 @@ export async function loader({ request }) {
     })
     if (response.ok) {
       const payload = await response.json()
-      const fileTreeDelegate = ft.createDelegate(payload.files, payload.name)
-      document.title = payload.name
+      const fileTreeDelegate = ft.createDelegate(payload.name, payload.files)
       return fileTreeDelegate
     } else {
       const { error } = await response.json()
@@ -119,11 +118,14 @@ function Body(props) {
 
   useEffect(() => {
     if (selectedFile) {
+      updatePageTitle(selectedFile.path)
       navigate(makeUrl("/connect?", {
         server: server,
         passcode: passcode,
         file: selectedFile.path
       }))
+    } else {
+      updatePageTitle(i18n.noFile)
     }
     storage.setLastSelectedFileOf(server, selectedFile)
   }, [selectedFile])

@@ -71,3 +71,7 @@ export function offGoNextFile(...args) {
 export function offPreviousFile(...args) {
   emitter.off("go-previous", ...args)
 }
+
+export function updatePageTitle(title) {
+  document.title = `${title} - Meditree`
+}
