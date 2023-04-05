@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { FileTreeNavigation } from "./FileTreeNavigation";
-import { emitter, updatePageTitle } from "./Env"
+import { updatePageTitle } from "./Env"
 import MenuIcon from '@mui/icons-material/Menu';
 
 import * as ft from "./FileTree"
@@ -27,6 +27,7 @@ export const IsDrawerOpenContext = createContext()
 export const AstrologyContext = createContext()
 export const SelectedFileContext = createContext()
 export const BackendContext = createContext()
+export const FileNavigationContext = createContext()
 
 /// TODO: Drawer looks bad on tablet portrait mode.
 const drawerWidth = "min(max(30%,20rem),30rem)";
@@ -130,30 +131,21 @@ function Body(props) {
     storage.setLastSelectedFileOf(server, selectedFile)
   }, [selectedFile])
 
-  useEffect(() => {
-    function goFile(curFile, delta) {
-      if (!(curFile && "key" in curFile)) return
-      let nextKey = curFile.key + delta
-      while (0 <= nextKey && nextKey < fileTreeDelegate.maxKey) {
-        const next = fileTreeDelegate.key2File.get(nextKey)
-        if (!next) {
-          nextKey += delta
-        } else {
-          setSelectedFile(next)
-          return
-        }
+  function goFile(curFile, delta) {
+    if (!(curFile && "key" in curFile)) return
+    let nextKey = curFile.key + delta
+    while (0 <= nextKey && nextKey < fileTreeDelegate.maxKey) {
+      const next = fileTreeDelegate.key2File.get(nextKey)
+      if (!next) {
+        nextKey += delta
+      } else {
+        setSelectedFile(next)
+        return
       }
     }
-    const goNext = (curFile) => goFile(curFile, +1)
-    const goPrevious = (curFile) => goFile(curFile, -1)
-
-    emitter.on("go-next", goNext)
-    emitter.on("go-previous", goPrevious)
-    return function cleanup() {
-      emitter.on("go-next", goNext)
-      emitter.on("go-previous", goPrevious)
-    }
-  })
+  }
+  const goNextFile = (curFile) => goFile(curFile, +1)
+  const goPreviousFile = (curFile) => goFile(curFile, -1)
   const forceUpdate = useForceUpdate()
   const astrology = storage.getAstrologyOf(server)
   const astrologyCtx = {
@@ -270,7 +262,9 @@ function Body(props) {
       <AstrologyContext.Provider value={astrologyCtx}>
         <SelectedFileContext.Provider value={[selectedFile, setSelectedFile]}>
           <BackendContext.Provider value={params}>
-            {body}
+            <FileNavigationContext.Provider value={{ goFile, goNextFile, goPreviousFile }}>
+              {body}
+            </FileNavigationContext.Provider>
           </BackendContext.Provider>
         </SelectedFileContext.Provider>
       </AstrologyContext.Provider>

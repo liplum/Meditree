@@ -1,9 +1,7 @@
 import './Playground.css'
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import { goNextFile, goPreviousFile } from "./Env";
-
 import { isMobile } from "react-device-detect"
-import { AstrologyContext, BackendContext, ResponsiveAppBar, SelectedFileContext } from './Dashboard';
+import { AstrologyContext, BackendContext, FileNavigationContext, ResponsiveAppBar, SelectedFileContext } from './Dashboard';
 import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from './Env';
@@ -43,6 +41,7 @@ export function FileDisplayBoard(props) {
   const { isStarred, star, unstar } = useContext(AstrologyContext)
   const { server, passcode } = useContext(BackendContext)
   const [file] = useContext(SelectedFileContext)
+  const { goNextFile, goPreviousFile } = useContext(FileNavigationContext)
   const boardRef = useRef()
   const forceUpdate = useForceUpdate()
   let content = null
