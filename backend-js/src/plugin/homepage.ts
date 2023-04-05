@@ -1,7 +1,7 @@
 import { type FileTree, type File } from "../file.js"
 import { type MeditreeNode } from "../meditree.js"
 import { type MeditreePlugin } from "../plugin.js"
-import express from "express"
+import express, { type RequestHandler } from "express"
 
 interface HomepagePluginConfig {
   /**
@@ -28,14 +28,16 @@ export function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
       if (root) {
         app.use(express.static(root))
       } else {
-        app.get("/index.html", (req, res) => {
+        const handler: RequestHandler = (req, res) => {
           res.status(200)
           res.contentType("html")
           if (html === undefined) {
             html = buildIndexHtml(node.toJSON())
           }
           res.send(html)
-        })
+        }
+        app.get("/index.html", handler)
+        app.get("/", handler)
       }
     }
   }
