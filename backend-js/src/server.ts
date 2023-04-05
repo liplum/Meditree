@@ -119,7 +119,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   for (const plugin of plugins) {
-    plugin.onRequestHandlerRegistering?.(app)
+    plugin.onExpressRegistering?.(app)
   }
 
   app.get("/list", (req, res) => {

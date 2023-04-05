@@ -1,4 +1,5 @@
 import { type FileTree, type File } from "../file.js"
+import { type MeditreeNode } from "../meditree.js"
 import { type MeditreePlugin } from "../plugin.js"
 import express from "express"
 
@@ -13,26 +14,27 @@ interface HomepagePluginConfig {
 export function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
   let html: string | undefined
   const root = config.root
+  let node: MeditreeNode
   return {
-    setupMeditreeNode(node) {
+    setupMeditreeNode(meditreeNode) {
+      node = meditreeNode
       if (!root) {
-        node.on("file-tree-update", (entireTree) => {
-          html = buildIndexHtml(entireTree)
+        meditreeNode.on("file-tree-update", (entireTree) => {
+          html = undefined
         })
       }
     },
-    onRequestHandlerRegistering(app) {
+    onExpressRegistering(app) {
       if (root) {
         app.use(express.static(root))
       } else {
-        app.get("index.html", (req, res) => {
+        app.get("/index.html", (req, res) => {
           res.status(200)
-          if (html) {
-            res.contentType("html")
-            res.send(html)
-          } else {
-            res.end()
+          res.contentType("html")
+          if (html === undefined) {
+            html = buildIndexHtml(node.toJSON())
           }
+          res.send(html)
         })
       }
     }

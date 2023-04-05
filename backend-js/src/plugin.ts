@@ -13,7 +13,7 @@ export interface MeditreePlugin extends FileTreePlugin {
 
   setupMeditreeNode?(node: MeditreeNode): void
 
-  onRequestHandlerRegistering?(app: Express): void
+  onExpressRegistering?(app: Express): void
 
   onPostGenerated?(tree: LocalFileTree): void
 
