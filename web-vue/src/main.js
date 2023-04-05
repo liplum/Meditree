@@ -9,6 +9,11 @@ import { aliases, mdi } from 'vuetify/iconsets/mdi'
 import '@mdi/font/css/materialdesignicons.css'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import Connect from './Connect.vue'
+import Dashboard from './Dashboard.vue'
+import { createRouter, createWebHashHistory } from "vue-router"
+
+const app = createApp(App)
 
 const vuetify = createVuetify({
   components,
@@ -25,4 +30,19 @@ const vuetify = createVuetify({
   },
 })
 
-createApp(App).use(vuetify).mount('#app')
+app.use(vuetify)
+
+const routes = [
+  { path: '/', component: Connect },
+  { path: '/connect', component: Dashboard },
+]
+
+const router = createRouter({
+  // 4. Provide the history implementation to use. We are using the hash history for simplicity here.
+  history: createWebHashHistory(),
+  routes, // short for `routes: routes`
+})
+
+app.use(router)
+
+app.mount('#app')
