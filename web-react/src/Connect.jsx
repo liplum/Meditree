@@ -58,7 +58,7 @@ export function ConnectDialog(props) {
     updatePageTitle(i18n.connect.title)
   }, [])
   const lastConnected = storage.lastConnected
-  const [server, setServer] = useState(lastConnected?.server)
+  const [server, setServer] = useState(lastConnected?.server ?? window.location.href)
   // true means "http", while false means "https"
   const [protocol, setProtocol] = useState(lastConnected?.protocol ?? "http")
   const [showPasscode, setShowPasscode] = useState(false)
