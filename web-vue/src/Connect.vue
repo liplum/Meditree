@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import { listUrl } from "./Backend";
 const emit = defineEmits(["list"]);
 
 const server = ref("");
@@ -15,7 +16,7 @@ async function connect(event) {
   }
   isConnecting.value = true;
   try {
-    const res = await fetch(server.value, {
+    const res = await fetch(listUrl(server.value, passcode.value), {
       method: "GET",
     });
     if (res.ok) {
@@ -74,9 +75,7 @@ async function checkServer(server) {
 
   <v-dialog v-model="showErrorDialog" width="auto">
     <v-card>
-      <v-card-text>
-        Failed to load.
-      </v-card-text>
+      <v-card-text> Failed to load. </v-card-text>
       <v-card-actions>
         <v-btn color="primary" @click="showErrorDialog = false">Close</v-btn>
       </v-card-actions>

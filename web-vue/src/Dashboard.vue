@@ -1,5 +1,5 @@
 <script setup>
+const fileTree = defineProps(["fileTree"]);
 </script>
 
-<template>
-</template>
+<template></template>

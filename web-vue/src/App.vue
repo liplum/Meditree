@@ -4,14 +4,18 @@ import Connect from "./Connect.vue";
 import { ref } from "vue";
 
 const fileTree = ref(null);
+
+function onFetchList(list) {
+  fileTree.value = list
+}
 </script>
 
 <template>
   <template v-if="fileTree">
-    <Dashboard></Dashboard>
+    <Dashboard :fileTree="fileTree"></Dashboard>
   </template>
   <template v-else>
-    <Connect></Connect>
+    <Connect @list="onFetchList"></Connect>
   </template>
 </template>
 <style scoped>
