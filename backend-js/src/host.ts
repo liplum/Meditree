@@ -13,7 +13,7 @@ export interface HostTreeOptions {
   /**
   * The absolute path of root directory.
   */
-  rootPath: string
+  root: string
   name: string
   fileTypePattern: Record<string, string>
   rebuildInterval: number
@@ -70,7 +70,7 @@ export class HostTree extends EventEmitter implements FileTreeLike {
     const oldOptions = this.options
     if (shallowEqual(oldOptions, options)) return
     this.options = options
-    if (oldOptions.rootPath !== options.rootPath) {
+    if (oldOptions.root !== options.root) {
       this.stopWatching()
       this.startWatching()
     }
@@ -92,7 +92,7 @@ export class HostTree extends EventEmitter implements FileTreeLike {
         this.rebuildFileTree()
       }
     }, this.options.rebuildInterval)
-    this.fileWatcher = chokidar.watch(this.options.rootPath, {
+    this.fileWatcher = chokidar.watch(this.options.root, {
       ignoreInitial: true,
     }).on("all", (event, filePath) => {
       this.onWatch(event, filePath)
@@ -111,7 +111,7 @@ export class HostTree extends EventEmitter implements FileTreeLike {
   async rebuildFileTree(): Promise<void> {
     this.shouldRebuild = false
     const tree = await createFileTreeFrom({
-      rootPath: this.options.rootPath,
+      root: this.options.root,
       initPath: [this.options.name],
       classifier: this.classifyByFilePath,
       includes: this.isFileOrDirectoryIncluded,
@@ -158,13 +158,13 @@ export const readdirAsync = promisify(fs.readdir)
 export type FileClassifier = (path: string) => FileType | null
 
 export interface FileTreePlugin {
+  buildPath?(pathParts: string[]): string | undefined
   onPostGenerated?(tree: FileTree): void
 }
 
-export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, pruned, classifier, includes, plugins }: {
-  rootPath: string
+export async function createFileTreeFrom({ root, initPath, pruned, classifier, includes, plugins }: {
+  root: string
   initPath?: string[]
-  buildPath?: (pathParts: string[]) => string
   classifier: FileClassifier
   includes: (path: string) => boolean
   /**
@@ -180,34 +180,46 @@ export async function createFileTreeFrom({ rootPath: root, initPath, buildPath, 
   const tree = new LocalFileTree(root)
   async function walk(
     tree: LocalFileTree,
-    currentDirectory: string,
-    pathInTreeParts: string[],
+    curDir: string,
+    pathParts: string[],
   ): Promise<void> {
     let files: string[]
     try {
-      files = await readdirAsync(currentDirectory)
+      files = await readdirAsync(curDir)
     } catch (e) {
       console.error(e)
       return
     }
     for (const fileName of files) {
-      const filePath = path.join(currentDirectory, fileName)
+      const filePath = path.join(curDir, fileName)
       if (!includes(filePath)) continue
       try {
-        const stat = fs.statSync(filePath)
-        const curPathInTreeParts = [...pathInTreeParts, fileName]
+        const stat = await statAsync(filePath)
+        const curPathParts = [...pathParts, fileName]
         if (stat.isFile()) {
           const fileType = classifier(filePath)
           if (fileType != null) {
+            let builtPath: string | undefined
+            if (plugins) {
+              for (const plugin of plugins) {
+                if (builtPath !== undefined) break
+                if (plugin.buildPath) {
+                  builtPath = plugin.buildPath(curPathParts)
+                }
+              }
+            }
+            if (builtPath === undefined) {
+              builtPath = curPathParts.join("/")
+            }
             tree.addFile(fileName, new LocalFile(
               tree, fileName, fileType, stat.size, filePath,
-              buildPath ? buildPath(curPathInTreeParts) : curPathInTreeParts.join("/"),
+              builtPath,
             ))
           }
         } else if (stat.isDirectory()) {
           const subtree = tree.createSubtree(filePath)
           tree.addFile(fileName, subtree)
-          await walk(subtree, filePath, curPathInTreeParts)
+          await walk(subtree, filePath, curPathParts)
           if (pruned && subtree.subtreeChildrenCount === 0) {
             tree.removeFile(fileName)
           }

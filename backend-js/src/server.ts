@@ -32,7 +32,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   const localTree = !config.root
     ? undefined
     : new HostTree({
-      rootPath: config.root,
+      root: config.root as string,
       name: config.name,
       fileTypePattern: config.fileType,
       rebuildInterval: config.rebuildInterval,

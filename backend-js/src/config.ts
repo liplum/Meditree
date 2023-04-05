@@ -37,9 +37,14 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
   port: number
   /**
    * The root directory to host.
-   * If not specified, no local file tree will be created.
+   *
+   * By default, no local file tree will be created.
+   * 
+   * If an array of paths is given,a virtual file tree will be created with the given paths.
+   * 
+   * If a map of name to path is given, a virtual file tree will be created with the specified names and paths.
    */
-  root?: string
+  root?: string | string[] | Record<string, string>
   /**
    * The unique name of hosted file tree.
    * If not specified, a uuid v4 will be generated.
