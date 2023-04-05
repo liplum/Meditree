@@ -44,7 +44,10 @@ export function VideoJS(props) {
   }, [playerRef]);
 
   return (
-    <div data-vjs-player>
+    <div data-vjs-player
+      onMouseDown={(event) => {
+        event.stopPropagation()
+      }}>
       <div ref={videoRef} />
     </div>
   )
