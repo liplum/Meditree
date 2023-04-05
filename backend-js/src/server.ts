@@ -133,21 +133,17 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
     let path = removePrefix(uri, "/file/")
     path = removeSuffix(path, "/")
-    const file = node.resolveFile(path.split("/"))
-    if (file == null) {
+    const resolved = node.resolveFile(path.split("/"))
+    if (resolved?.["*type"] == null) {
       res.status(404).end()
       return
     }
-    const fileType = file.inner["*type"]
-    if (fileType == null) {
-      res.status(404).end()
-      return
-    }
-    res.header({
-      "Content-Type": file.type,
-    })
+    const fileType = resolved.inner["*type"]
+    res.contentType(fileType)
+    const expireTime = new Date(Date.now() + config.cacheMaxAge)
+    res.setHeader("Expires", expireTime.toUTCString())
     res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)
-    await pipeFile(req, res, file)
+    await pipeFile(req, res, resolved)
   })
   /**
    * Ranged is for videos and audios. On Safari mobile, range headers is used.
