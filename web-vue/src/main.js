@@ -15,6 +15,16 @@ import { createRouter, createWebHashHistory } from "vue-router"
 
 const app = createApp(App)
 
+const router = createRouter({
+  history: createWebHashHistory(),
+  routes: [
+    { path: '/', component: Connect },
+    { path: '/connect', component: Dashboard },
+  ],
+})
+
+app.use(router)
+
 const vuetify = createVuetify({
   components,
   directives,
@@ -31,18 +41,5 @@ const vuetify = createVuetify({
 })
 
 app.use(vuetify)
-
-const routes = [
-  { path: '/', component: Connect },
-  { path: '/connect', component: Dashboard },
-]
-
-const router = createRouter({
-  // 4. Provide the history implementation to use. We are using the hash history for simplicity here.
-  history: createWebHashHistory(),
-  routes, // short for `routes: routes`
-})
-
-app.use(router)
 
 app.mount('#app')
