@@ -14,8 +14,8 @@ import { StarBorder, Star } from '@mui/icons-material';
 import { backend, storage } from "./Env";
 import { FileDisplayBoard } from "./Playground";
 import { i18n } from "./I18n";
-import { SearchBar } from "./Searchbar";
-import "./dashboard.css"
+import { SearchBar } from "./SearchBar";
+import "./Dashboard.css"
 import { Failed, Loading } from "./Loading";
 import useForceUpdate from "use-force-update";
 import { useNavigate, useAsyncError } from 'react-router-dom';
