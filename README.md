@@ -64,7 +64,7 @@ server {
     
     # For example, serving the backend on 8081 port internally and "/media" externally.
     location /media {
-        # Remove "media" path.
+        # Remove "media" prefix.
         rewrite ^/media(/.*)?$ $1/ break;
         proxy_pass http://localhost:8081;
         proxy_set_header Host $host;

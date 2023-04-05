@@ -25,6 +25,7 @@ const count = ref(0)
       >create-vue</a
     >, the official Vue + Vite starter
   </p>
+  
   <p>
     Install
     <a href="https://github.com/vuejs/language-tools" target="_blank">Volar</a>
