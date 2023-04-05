@@ -1,4 +1,4 @@
-import './playground.css'
+import './Playground.css'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { goNextFile, goPreviousFile } from "./Env";
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import './loading.css';
+import './Loading.css';
 import { i18n } from './I18n';
 
 export function Loading(props) {

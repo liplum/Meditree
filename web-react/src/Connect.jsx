@@ -10,7 +10,7 @@ import {
   backend,
   storage
 } from "./Env.js"
-import "./connect.css"
+import "./Connect.css"
 import { i18n } from './I18n.js';
 import { removePrefix } from './Utils.jsx';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
