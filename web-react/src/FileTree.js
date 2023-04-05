@@ -51,7 +51,7 @@ export function createDelegate(rootFileTree, rootName = "") {
 }
 
 export function getFirstFile(fileTreeDelegate) {
-  for (const [key, file] of fileTreeDelegate.key2File.entries()) {
+  for (const file of fileTreeDelegate.key2File.values()) {
     return file
   }
   return null

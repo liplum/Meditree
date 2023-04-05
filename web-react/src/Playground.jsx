@@ -34,14 +34,14 @@ const type2Render = {
 
 export function FileDisplayBoard(props) {
   const { isStarred, star, unstar } = useContext(AstrologyContext)
-  const { baseUrl, passcode } = useContext(BackendContext)
+  const { server, passcode } = useContext(BackendContext)
   const [file] = useContext(SelectedFileContext)
   const boardRef = useRef()
   const forceUpdate = useForceUpdate()
   let content = null
   if (file) {
     if (!file.url) {
-      file.url = backend.reolsveFileUrl(baseUrl, file.path, passcode)
+      file.url = backend.reolsveFileUrl(server, file.path, passcode)
     }
     const Renderer = type2Render[file.type]
     // wheel control works so bad when using trackpad.
@@ -178,7 +178,7 @@ function MarkdownRenderer({ file }) {
 }
 function Markdown({ src, alt, parentDir }) {
   const [markdown, setMarkdown] = useState()
-  const { baseUrl, passcode } = useContext(BackendContext)
+  const { server, passcode } = useContext(BackendContext)
 
   useEffect(() => {
     fetch(src)
@@ -197,7 +197,7 @@ function Markdown({ src, alt, parentDir }) {
           if (uri.startsWith("http://") || uri.startsWith("https://")) {
             return uri
           } else {
-            return backend.reolsveFileUrl(baseUrl, `${parentDir}/${uri}`, passcode)
+            return backend.reolsveFileUrl(server, `${parentDir}/${uri}`, passcode)
           }
         }}
       >

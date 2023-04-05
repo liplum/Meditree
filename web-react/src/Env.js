@@ -1,18 +1,18 @@
 import mitt from 'mitt'
 
 export const backend = {
-  listUrl(baseUrl, passcode) {
+  listUrl(server, passcode) {
     if (passcode) {
-      return `${baseUrl}/list?passcode=${passcode}`
+      return `${server}/list?passcode=${passcode}`
     } else {
-      return `${baseUrl}/list`
+      return `${server}/list`
     }
   },
-  reolsveFileUrl(baseUrl, path, passcode) {
+  reolsveFileUrl(server, path, passcode) {
     if (passcode) {
-      return encodeURI(`${baseUrl}/file/${path}?passcode=${passcode}`)
+      return encodeURI(`${server}/file/${path}?passcode=${passcode}`)
     } else {
-      return encodeURI(`${baseUrl}/file/${path}`)
+      return encodeURI(`${server}/file/${path}`)
     }
   },
   suffixWithPasscode(url, passcode) {
@@ -26,17 +26,17 @@ export const backend = {
 }
 
 export const storage = {
-  getAstrologyOf(baseUrl) {
-    return JSON.parse(window.localStorage.getItem(`astrology-${baseUrl}`)) ?? {}
+  getAstrologyOf(server) {
+    return JSON.parse(window.localStorage.getItem(`astrology-${server}`)) ?? {}
   },
-  setAstrologyOf(baseUrl, value) {
-    window.localStorage.setItem(`astrology-${baseUrl}`, JSON.stringify(value))
+  setAstrologyOf(server, value) {
+    window.localStorage.setItem(`astrology-${server}`, JSON.stringify(value))
   },
-  getLastSelectedFileOf(baseUrl) {
-    return JSON.parse(window.localStorage.getItem(`lastSelectedFile-${baseUrl}`))
+  getLastSelectedFileOf(server) {
+    return JSON.parse(window.localStorage.getItem(`lastSelectedFile-${server}`))
   },
-  setLastSelectedFileOf(baseUrl, value) {
-    window.localStorage.setItem(`lastSelectedFile-${baseUrl}`, JSON.stringify(value))
+  setLastSelectedFileOf(server, value) {
+    window.localStorage.setItem(`lastSelectedFile-${server}`, JSON.stringify(value))
   },
   get lastConnected() {
     return JSON.parse(window.localStorage.getItem("lastConnected")) ?? null

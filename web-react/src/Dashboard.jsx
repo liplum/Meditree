@@ -20,6 +20,7 @@ import "./Dashboard.css"
 import { Failed, Loading } from "./Loading";
 import useForceUpdate from "use-force-update";
 import { useNavigate, useAsyncError } from 'react-router-dom';
+import { makeUrl } from "./Utils";
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
@@ -34,8 +35,7 @@ export async function loader({ request }) {
   const url = new URL(request.url);
   const urlParams = new URLSearchParams(url.search);
   const params = Object.fromEntries(urlParams.entries());
-  params.baseUrl = params.server
-  const listUrl = backend.listUrl(params.baseUrl, params.passcode)
+  const listUrl = backend.listUrl(params.server, params.passcode)
   const task = async () => {
     console.log(`fetching ${listUrl}`)
     const response = await fetch(listUrl, {
@@ -105,22 +105,27 @@ function Body(props) {
     return null
   }
 
-  const { baseUrl } = params
+  const { server, passcode } = params
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const location = useLocation()
   const defaultSelectedFile =
     resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file")))
-    ?? storage.getLastSelectedFileOf(baseUrl)
+    ?? storage.getLastSelectedFileOf(server)
     ?? ft.getFirstFile(fileTreeDelegate)
   const [selectedFile, setSelectedFile] = useState(defaultSelectedFile)
   const [searchPrompt, setSearchPrompt] = useState()
   const [onlyShowStarred, setOnlyShowStarred] = useState()
   const navigate = useNavigate()
+
   useEffect(() => {
     if (selectedFile) {
-      navigate(`/connect?server=${baseUrl}&file=${encodeURIComponent(selectedFile.path)}`)
+      navigate(makeUrl("/connect?", {
+        server: server,
+        passcode: passcode,
+        file: selectedFile.path
+      }))
     }
-    storage.setLastSelectedFileOf(baseUrl, selectedFile)
+    storage.setLastSelectedFileOf(server, selectedFile)
   }, [selectedFile])
 
   useEffect(() => {
@@ -148,7 +153,7 @@ function Body(props) {
     }
   })
   const forceUpdate = useForceUpdate()
-  const astrology = storage.getAstrologyOf(baseUrl)
+  const astrology = storage.getAstrologyOf(server)
   const astrologyCtx = {
     astrology,
     isStarred(file) {
@@ -159,7 +164,7 @@ function Body(props) {
       if (path && !astrology[path]) {
         // `1` instead of `true` to shrink the json size
         astrology[path] = 1
-        storage.setAstrologyOf(baseUrl, astrology)
+        storage.setAstrologyOf(server, astrology)
         // rebuild for prompt filter
         forceUpdate()
       }
@@ -168,7 +173,7 @@ function Body(props) {
       const path = file?.path
       if (path && path in astrology) {
         delete astrology[path]
-        storage.setAstrologyOf(baseUrl, astrology)
+        storage.setAstrologyOf(server, astrology)
         // rebuild for prompt filter
         forceUpdate()
       }

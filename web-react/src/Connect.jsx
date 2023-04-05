@@ -7,12 +7,11 @@ import {
 } from 'react-router-dom';
 
 import {
-  backend,
   storage
 } from "./Env.js"
 import "./Connect.css"
 import { i18n } from './I18n.js';
-import { removePrefix } from './Utils.jsx';
+import { makeUrl, removePrefix } from './Utils.js';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 export async function load() {
@@ -35,19 +34,22 @@ export async function load() {
  */
 export async function action({ request }) {
   const formData = await request.formData()
-  const info = Object.fromEntries(formData)
-  if (info.server.startsWith("http://")) {
-    info.server = removePrefix(info.server, "http://")
-  } else if (info.server.startsWith("https://")) {
-    info.server = removePrefix(info.server, "https://")
+  let { server, protocol, passcode } = Object.fromEntries(formData)
+  if (server.startsWith("https")) {
+    server = removePrefix(server, "https://")
+  } else if (server.startsWith("http://")) {
+    server = removePrefix(server, "http://")
   }
-  storage.lastConnected = info
-  const server = `${info.protocol}://${info.server}`
-  if (info.passcode) {
-    return redirect(`/connect?server=${server}&passcode=${info.passcode}`)
-  } else {
-    return redirect(`/connect?server=${server}`)
+  server = `${protocol}://${server}`
+  storage.lastConnected = {
+    server,
+    passcode,
+    protocol,
   }
+  return redirect(makeUrl("/connect?", {
+    server: server,
+    passcode: passcode ? passcode : undefined,
+  }))
 }
 
 const serverPattern = /^((http|https):\/\/)?[^\s/$.?#].[^\s]*$/;
