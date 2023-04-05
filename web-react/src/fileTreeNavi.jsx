@@ -42,7 +42,7 @@ export function FileTreeNavigation(props) {
             if (isNaN(key)) return
           }
           const file = delegate.key2File.get(key)
-          if (file) {
+          if (file && file.path !== selectedFile.path) {
             setSelectedFile(file)
           }
         }
