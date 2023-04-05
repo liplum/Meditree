@@ -33,7 +33,7 @@ export async function loader({ request }) {
   const url = new URL(request.url);
   const urlParams = new URLSearchParams(url.search);
   const params = Object.fromEntries(urlParams.entries());
-  params.baseUrl = `${params.protocol}://${params.server}`
+  params.baseUrl = params.server
   const listUrl = backend.listUrl(params.baseUrl, params.passcode)
   const task = async () => {
     console.log(`fetching ${listUrl}`)
