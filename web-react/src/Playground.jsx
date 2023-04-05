@@ -5,7 +5,7 @@ import { goNextFile, goPreviousFile } from "./Env";
 import { isMobile } from "react-device-detect"
 import { AstrologyContext, BackendContext, ResponsiveAppBar, SelectedFileContext } from './Dashboard';
 import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
-import { StarBorder, Star, GitHub } from '@mui/icons-material';
+import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from './Env';
 import useForceUpdate from 'use-force-update';
 import { i18n } from './I18n';
@@ -82,9 +82,6 @@ export function FileDisplayBoard(props) {
   return <>
     <ResponsiveAppBar>
       <Tooltip title={file?.path}>
-        <IconButton>
-          <GitHub />
-        </IconButton>
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
           {file ? file.name : i18n.playground.nofileSelected}
         </Typography>
