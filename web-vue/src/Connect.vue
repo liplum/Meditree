@@ -1,13 +1,32 @@
 <script setup>
 import { ref } from "vue";
+const emit = defineEmits(["list"]);
 
 const server = ref("");
 const serverRules = [(value) => checkServer(value)];
 const passcode = ref("");
 const showPasscode = ref(false);
+const isConnecting = ref(false);
 async function connect(event) {
-  const results = await event;
-  alert(JSON.stringify(results, null, 2));
+  const result = await event;
+  if (!result.valid) {
+    return;
+  }
+  isConnecting.value = true;
+  try {
+    const res = await fetch(server.value, {
+      method: "GET",
+    });
+    if (res.ok) {
+      const payload = await res.json();
+      emit("list", payload);
+    } else {
+      const payload = await res.json();
+      return;
+    }
+  } finally {
+    isConnecting.value = false;
+  }
 }
 async function checkServer(server) {
   if (!server) return "Please enter a server.";
@@ -16,9 +35,13 @@ async function checkServer(server) {
 </script>
 <template>
   <div class="dialog">
-    <v-sheet rounded width="300" class="mx-auto sheet">
+    <v-sheet rounded width="450" class="mx-auto sheet">
       <h2 class="title">Connect to server</h2>
-      <v-form validate-on="submit" @submit.prevent="connect">
+      <v-form
+        validate-on="submit"
+        @submit.prevent="connect"
+        :disabled="isConnecting"
+      >
         <v-text-field
           v-model="server"
           :rules="serverRules"
@@ -34,9 +57,9 @@ async function checkServer(server) {
           @click:append="showPasscode = !showPasscode"
         ></v-text-field>
 
-        <div>
-          <v-btn rounded type="submit" block>Connect</v-btn>
-        </div>
+        <v-btn :disabled="isConnecting" rounded type="submit" block>
+          Connect
+        </v-btn>
       </v-form>
     </v-sheet>
   </div>
