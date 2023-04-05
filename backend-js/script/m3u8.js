@@ -68,7 +68,7 @@ if (mainCmd.cmd === "get") {
       if (line.startsWith("#")) {
         result.push(line)
       } else {
-        const url = encodeURI(`${pureName}/${line}`)
+        const url = encodeURIComponent(`${pureName}/${line}`)
         result.push(url)
       }
     }

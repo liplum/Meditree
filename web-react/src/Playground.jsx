@@ -18,18 +18,25 @@ import videojs from "video.js";
 
 const VideoRenderer = React.memo(VideoRendererImpl)
 
-const type2Render = {
-  "video/mp4": VideoRenderer,
-  "image/png": ImageRenderer,
-  "image/jpeg": ImageRenderer,
-  "image/svg+xml": ImageRenderer,
-  "image/gif": ImageRenderer,
-  "image/webp": ImageRenderer,
-  "audio/mpeg": AudioRenderer,
-  "audio/ogg": AudioRenderer,
-  "text/markdown": MarkdownRenderer,
-  "text/plain": PlainTextRenderer,
-  "application/x-mpegURL": VideoRenderer,
+function resolveRenderer(type) {
+  if (type.startsWith("image")) {
+    return ImageRenderer
+  }
+  if (type.startsWith("video")) {
+    return VideoRenderer
+  }
+  if (type.startsWith("audio")) {
+    return AudioRenderer
+  }
+  if (type.startsWith("text")) {
+    if (type.includes("markdown")) {
+      return MarkdownRenderer
+    }
+    return PlainTextRenderer
+  }
+  if (type === "application/x-mpegURL") {
+    return VideoRenderer
+  }
 }
 
 export function FileDisplayBoard(props) {
@@ -43,7 +50,7 @@ export function FileDisplayBoard(props) {
     if (!file.url) {
       file.url = backend.reolsveFileUrl(server, file.path, passcode)
     }
-    const Renderer = type2Render[file.type]
+    const Renderer = resolveRenderer(file.type)
     // wheel control works so bad when using trackpad.
     content = <div
       ref={boardRef}
@@ -143,6 +150,7 @@ function VideoRendererImpl({ file }) {
       type: file.type,
     }],
   }
+  console.log(file.url)
 
   return <VideoJS
     options={videoJsOptions}
