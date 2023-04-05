@@ -239,6 +239,14 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   get children(): Iterable<[string, SubNode]> {
     return this.name2Child.entries()
   }
+
+  hasParent(name: string): boolean {
+    return this.name2Parent.has(name)
+  }
+
+  hasChild(name: string): boolean {
+    return this.name2Child.has(name)
+  }
 }
 
 export async function setupAsParent(
@@ -275,7 +283,7 @@ export async function setupAsParent(
         net.close(3400)
       }
     })
-    const nodeMeta = await authenticateChild(net, log, config)
+    const nodeMeta = await authenticateChild(node, net, log, config)
     if (!nodeMeta) return
     node.addChildNode(nodeMeta, net)
     ws.on("close", () => {
@@ -342,9 +350,11 @@ enum ChallengeResult {
 
 enum NodeMetaResult {
   success = "success",
+  nameConflict = "nameConflict",
 }
 
 async function authenticateChild(
+  node: MeditreeNode,
   net: Net,
   log: Logger,
   config: AsParentConfig,
@@ -376,6 +386,13 @@ async function authenticateChild(
   })
   const nodeMeta: NodeMeta = await net.getMessage("node-meta")
   log.info(`Receieved node meta "${JSON.stringify(nodeMeta)}".`)
+  if (node.hasChild(nodeMeta.name)) {
+    net.send("node-meta-result", {
+      result: NodeMetaResult.nameConflict,
+    })
+    net.close(3401)
+    return
+  }
   net.send("node-meta-result", {
     result: NodeMetaResult.success,
   })
@@ -402,7 +419,7 @@ async function authenticateForParent(
     net.close(3401)
     return
   }
-  log.info(`Resolved challenge "${resolved}" from ${parent}.`)
+  log.info(`Resolved challenge, raw: "${resolved}".`)
   net.send("auth-challenge-solution", {
     resolved
   })
@@ -423,8 +440,13 @@ async function authenticateForParent(
   const nodeMetaResultPayload: {
     result: NodeMetaResult
   } = await net.getMessage("node-meta-result")
+  if (nodeMetaResultPayload.result === NodeMetaResult.nameConflict) {
+    log.error("There is a name conflict, please try another name.")
+    net.close(3403)
+    return
+  }
   if (nodeMetaResultPayload.result !== NodeMetaResult.success) {
-    log.error(`Central["${parent}"] rejects this node.`)
+    log.error("This node was rejected.")
     net.close(3403)
     return
   }
