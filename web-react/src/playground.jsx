@@ -111,7 +111,7 @@ export function FileDisplayBoard(props) {
     </ErrorBoundary>
   </>
 }
-
+const isMobileSafari = /iP(ad|hone|od).+Version\/[\d\.]+.*Safari/i.test(navigator.userAgent);
 function VideoRendererImpl({ file }) {
   const { passcode } = useContext(BackendContext)
   useEffect(() => {
@@ -122,14 +122,13 @@ function VideoRendererImpl({ file }) {
   }, [passcode])
   // for HLS support on mobile safari
   // ref: http://jsfiddle.net/fxfktztx/1, https://stackoverflow.com/a/47632587/13691173
-  const overrideNative = false
+  const overrideNative = !isMobileSafari
   const videoJsOptions = {
     autoplay: false,
     controls: true,
     responsive: true,
     fluid: true,
     liveui: true,
-    usingNativeControls: false,
     html5: {
       vhs: {
         overrideNative: overrideNative
@@ -143,13 +142,10 @@ function VideoRendererImpl({ file }) {
       src: file.url,
       type: file.type,
     }],
-  };
+  }
 
   return <VideoJS
     options={videoJsOptions}
-    onMouseDown={(event) => {
-      event.stopPropagation();
-    }}
   />
 }
 
