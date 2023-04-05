@@ -109,7 +109,7 @@ export function ConnectDialog(props) {
                   onMouseDown={() => { setShowPasscode(!showPasscode) }}
                   aria-label="toggle password visibility"
                 >
-                  {showPasscode ? <VisibilityOff /> : <Visibility />}
+                  {showPasscode ? <Visibility /> : <VisibilityOff />}
                 </IconButton>
               </InputAdornment>
             }
