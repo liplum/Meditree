@@ -1,34 +1,31 @@
 import { type FileTree, type File } from "../file.js"
 import { type MeditreeNode } from "../meditree.js"
 import { type MeditreePlugin, pluginTypes } from "../plugin.js"
-import { type Express } from "express"
+import express, { type Express } from "express"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation
 pluginTypes["homepage"] = (config) => new HomepagePlugin(config)
 
 interface HomepagePluginConfig {
   /**
-   * If not specified or set to true, a simple built-in homepage will be served.
+   * The root path for static resources.
+   * By default, a simple built-in homepage will be served.
    */
-  useDefault?: boolean
-  /**
-   * Serve the root path "/index.html" with a homepage by default.
-   */
-  index?: string
+  root?: string
 }
 
 export class HomepagePlugin implements MeditreePlugin {
   html?: string
-  readonly enableDefaultHomepage: boolean
-  readonly index: string
+  readonly root?: string
   constructor(config: HomepagePluginConfig) {
-    this.enableDefaultHomepage = config.useDefault === true || config.useDefault === undefined
-    this.index = config.index ?? "/"
+    this.root = config.root
   }
 
   onRequestHandlerRegistering(app: Express): void {
-    if (this.enableDefaultHomepage) {
-      app.get(this.index, (req, res) => {
+    if (this.root) {
+      app.use(express.static(this.root))
+    } else {
+      app.get("index.html", (req, res) => {
         res.status(200)
         if (this.html) {
           res.contentType("html")
@@ -115,6 +112,7 @@ function buildIndentStyleClass(
   }
   return { tags, }
 }
+
 function buildFromFileTree(
   tree: FileTree,
   getIndentClz: IndentClassNameBuilder,

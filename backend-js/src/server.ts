@@ -134,7 +134,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     let path = removePrefix(uri, "/file/")
     path = removeSuffix(path, "/")
     const resolved = node.resolveFile(path.split("/"))
-    if (resolved?.["*type"] == null) {
+    if (resolved?.inner?.["*type"] == null) {
       res.status(404).end()
       return
     }
