@@ -8,6 +8,7 @@ import {
   useLoaderData,
   defer,
   Await,
+  useLocation,
 } from "react-router-dom";
 import { Box, Divider, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip, Typography } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
@@ -92,15 +93,33 @@ export function App(props) {
 
 function Body(props) {
   const { fileTreeDelegate, params } = props
-  const hasAnyFile = fileTreeDelegate.key2File.size !== 0
+
+  function resolveFileFromPath(path, selectedFile) {
+    if (path && selectedFile?.path !== path) {
+      for (const file of fileTreeDelegate.key2File.values()) {
+        if (file.path === path) {
+          return file
+        }
+      }
+    }
+    return null
+  }
+
   const { baseUrl } = params
   const [isDrawerOpen, setIsDrawerOpen] = useState()
-  const lastSelectedFile = storage.getLastSelectedFileOf(baseUrl) ?? ft.getFirstFile(fileTreeDelegate)
-  const [selectedFile, setSelectedFile] = useState(hasAnyFile ? lastSelectedFile : null)
+  const location = useLocation()
+  const defaultSelectedFile =
+    resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file")))
+    ?? storage.getLastSelectedFileOf(baseUrl)
+    ?? ft.getFirstFile(fileTreeDelegate)
+  const [selectedFile, setSelectedFile] = useState(defaultSelectedFile)
   const [searchPrompt, setSearchPrompt] = useState()
   const [onlyShowStarred, setOnlyShowStarred] = useState()
-
+  const navigate = useNavigate()
   useEffect(() => {
+    if (selectedFile) {
+      navigate(`/connect?server=${baseUrl}&file=${encodeURIComponent(selectedFile.path)}`)
+    }
     storage.setLastSelectedFileOf(baseUrl, selectedFile)
   }, [selectedFile])
 
@@ -187,7 +206,7 @@ function Body(props) {
     </div>
     <div style={{ flex: 1, overflow: 'auto' }}>
       {
-        !hasAnyFile
+        fileTreeDelegate.key2File.size === 0
           ? <EmptyFileTreeNavigation />
           : <FileTreeNavigation
             searchDelegate={filterByPrompt}

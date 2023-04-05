@@ -74,7 +74,7 @@ export function FileDisplayBoard(props) {
       {
         Renderer
           ? <Renderer file={file} />
-          : <h1>Cannot display this file.</h1>
+          : <h1>{i18n.playground.unsupportedFileType}</h1>
       }
     </div>
   }
@@ -83,7 +83,7 @@ export function FileDisplayBoard(props) {
     <ResponsiveAppBar>
       <Tooltip title={file?.path}>
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          {file ? file.name : "No file selected"}
+          {file ? file.name : i18n.playground.nofileSelected}
         </Typography>
       </Tooltip>
       {file && // only display if any file is selected
@@ -106,7 +106,7 @@ export function FileDisplayBoard(props) {
         </>
       }
     </ResponsiveAppBar>
-    <ErrorBoundary fallback={<Failed text={i18n.playground.failedToDisplay} />}>
+    <ErrorBoundary fallback={<Failed text={i18n.playground.unsupportedFileType} />}>
       {content}
     </ErrorBoundary>
   </>
