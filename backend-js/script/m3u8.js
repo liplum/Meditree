@@ -57,7 +57,7 @@ if (mainCmd.cmd === "get") {
   ]
   const opt = commandLineArgs(fixDef, { argv, stopAtFirstUnknown: true })
   await processOnFileTree(opt.path, (filepath) => extname(filepath) === ".m3u8", async (filepath) => {
-    const pureName = basename(filepath, extname(filepath))
+    const pureName = basename(filepath, extname(filepath)).trim()
     const tsDir = join(dirname(filepath), pureName)
     if (!fs.existsSync(tsDir)) return
     const data = await readFile(filepath)
@@ -98,7 +98,7 @@ function removePrefix(str, prefix) {
 
 async function convertVideo({ filepath, time, overwrite }) {
   return new Promise((resolve, reject) => {
-    const pureName = basename(filepath, extname(filepath))
+    const pureName = basename(filepath, extname(filepath)).trim()
     const parentDir = dirname(filepath)
     const outputDir = join(parentDir, pureName)
     if (fs.existsSync(outputDir) && !fs.statSync(outputDir).isDirectory()) {
