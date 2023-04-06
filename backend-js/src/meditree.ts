@@ -26,6 +26,7 @@ class SubNode implements FileTreeLike {
   }
 
   resolveFile(pathParts: string[]): ResolvedFile | null {
+    if (!this.tree) return null
     let cur: File | FileTree = this.tree
     let curPart: string | undefined
     while ((curPart = pathParts.shift()) !== undefined) {
