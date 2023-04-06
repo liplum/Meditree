@@ -53,47 +53,51 @@ You can configure the host and port in the [Vite config file](/web-vue/vite.conf
 
 ### Deployment
 
-You can deploy both frontend and backend on the same server if you'd like.
-Here's an example of how to configure the Nginx.
+You can deploy ANY frontend implmenetation and ANY backend implmenetation
+on the same server or multiple servers for free.
+
+Here's an example to deploy the `backend-js` + `web-react` + `nginx`.
+
+First, run `npm run build` to build the bundled production of `web-react`.
+
+Then you can configure the `meditree.json` like below.
+Note when you runs the `backend-js`, some essential settings will be generated on the fly.
+
+```json
+{
+  "name": "My-Meditree-Node", # better to be unique.
+  "port": 8080, # 8080 doesn't require sudo on linux.
+  "root": "/path/to/root", # [optional] the root direcotry of a local file tree.
+  "rebuildInterval": 3000, # [optional] how often to rebuild the local file tree when watching changes.
+  "plugin": {
+    "homepage": { # Use homepage plugin to serve a static webiste.
+      "root": "/path/to/web-react/dist"
+    }
+  },
+}
+```
+
+After configuring, run `npm start` in `backend-js`.
+You can access the "http://localhost:8080" to check if the homepage is available,
+and acess "http://localhost:8080//list" to ensure the backend is working.
+
+Finally, configure the nginx.
 
 ```nginx
 server {
     listen 80;
     server_name your_site.com;
-    proxy_intercept_errors off;
 
     # For example, serving the frontend on 8080 port internally and "/" externally.
     location / {
         proxy_pass http://localhost:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-        # Catch-all route for client-side routing
-        try_files $uri $uri/ /index.html;
     }
     
-    location /assets {
-        proxy_pass http://localhost:8080/assets;
-        expires 1h;
-        add_header Cache-Control "public";
-    }
-
-    # Serve favicon.ico
-    location = /favicon.ico {
-        proxy_pass http://localhost:8080/assets;
-    }
-    
-    # For example, serving the backend on 8081 port internally and "/media" externally.
-    location /media {
-        # Remove "media" prefix.
-        rewrite ^/media(/.*)?$ $1/ break;
-        proxy_pass http://localhost:8081;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
     # For Meditree node communication via websocket.
-    location /media/ws {
-        proxy_pass http://localhost:8081/ws;
+    location /ws {
+        proxy_pass http://localhost:8080/ws;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";

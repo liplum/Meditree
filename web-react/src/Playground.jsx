@@ -149,8 +149,6 @@ function VideoRendererImpl({ file }) {
       type: file.type,
     }],
   }
-  console.log(file.url)
-
   return <VideoJS
     options={videoJsOptions}
   />
