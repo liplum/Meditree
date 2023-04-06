@@ -1,10 +1,8 @@
 # Meditree
 
-## Get Started
+## Backend
 
-### Backend
-
-#### Node.js /backend-js
+### Node.js /backend-js
 
 Run `npm start` to compile and start the server.
 
@@ -19,11 +17,11 @@ which will prompt you to configure it.
 A file named `meditree.json` will then be generated in the current working directory.
 From there, you can move this file up the file tree until you reach the root "/" directory.
 
-#### Go /backend-go
+### Go /backend-go
 
 Run `go build main.go` to compile and start the server.
 
-### Frontend
+## Frontend
 
 ### React Website /web-react
 
@@ -51,7 +49,7 @@ npm run build
 
 You can configure the host and port in the [Vite config file](/web-vue/vite.config.js).
 
-### Deployment
+## Deployment
 
 You can deploy ANY frontend implmenetation and ANY backend implmenetation
 on the same server or multiple servers for free.
@@ -79,9 +77,9 @@ Note when you runs the `backend-js`, some essential settings will be generated o
 
 After configuring, run `npm start` in `backend-js`.
 You can access the "http://localhost:8080" to check if the homepage is available,
-and acess "http://localhost:8080//list" to ensure the backend is working.
+and access "http://localhost:8080/list" to ensure the backend is working.
 
-Finally, configure the nginx.
+Finally, configure the nginx for port forwarding.
 
 ```nginx
 server {
