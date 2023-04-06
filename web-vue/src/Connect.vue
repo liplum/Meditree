@@ -2,6 +2,7 @@
 import { useRouter, useRoute } from "vue-router";
 import { ref } from "vue";
 import { listUrl } from "./Backend";
+import File from "./Explorer/File.vue"
 const emit = defineEmits(["list"]);
 const router = useRouter();
 const server = ref("");
