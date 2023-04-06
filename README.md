@@ -51,7 +51,7 @@ You can configure the host and port in the [Vite config file](/web-vue/vite.conf
 
 ## Deployment
 
-You can deploy ANY frontend implmenetation and ANY backend implmenetation
+You can combine ANY frontend implmenetation with ANY backend implmenetation
 on the same server or multiple servers for free.
 
 Here's an example to deploy the `backend-js` + `web-react` + `nginx`.

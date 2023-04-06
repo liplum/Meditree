@@ -4,9 +4,9 @@ export function updatePageTitle(title) {
 export const backend = {
   listUrl(server, passcode) {
     if (passcode) {
-      return `${server}/list?passcode=${passcode}`
+      return encodeURI(`${server}/list?passcode=${passcode}`)
     } else {
-      return `${server}/list`
+      return encodeURI(`${server}/list`)
     }
   },
   reolsveFileUrl(server, path, passcode) {
@@ -17,7 +17,7 @@ export const backend = {
     }
   },
   suffixWithPasscode(url, passcode) {
-    const passcodeSuffix = `?passcode=${encodeURI(passcode)}`
+    const passcodeSuffix = `?passcode=${encodeURIComponent(passcode)}`
     if (passcode && !url.endsWith(passcodeSuffix)) {
       return `${url}${passcodeSuffix}`
     } else {
