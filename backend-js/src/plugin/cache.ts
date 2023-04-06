@@ -2,7 +2,7 @@ import { LocalFile } from "../file.js"
 import { type MeditreePlugin } from "../plugin.js"
 import { Readable } from "stream"
 import fs from "fs"
-import { join, dirname } from "path"
+import path, { join, dirname } from "path"
 import { promisify } from "util"
 import { hash32Bit } from "../crypt.js"
 interface CachePluginConfig {
@@ -29,6 +29,7 @@ export function CachePlugin(config: CachePluginConfig): MeditreePlugin {
   const maxSize = config.maxSize ?? 10 * 1024 * 1024
   const maxAge = config.maxAge ?? 24 * 60 * 60 * 1000
   const root = config.root ?? "meditree-cache"
+  console.log(`The cache directory is located at ${path.resolve(root)}.`)
 
   function getCachePath(nodeName: string, path: string): string {
     return join(root, hash(nodeName), hash(path))

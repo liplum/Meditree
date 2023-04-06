@@ -2,7 +2,7 @@ import { type FileTree, type File } from "../file.js"
 import { type MeditreeNode } from "../meditree.js"
 import { type MeditreePlugin } from "../plugin.js"
 import express, { type RequestHandler } from "express"
-
+import fs from "fs"
 interface HomepagePluginConfig {
   /**
    * The root path for static resources.
@@ -21,6 +21,14 @@ interface HomepagePluginConfig {
 export function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
   const root = config.root
   const requirePasscode = config.requirePasscode ?? true
+  if (root) {
+    if (fs.existsSync(root)) {
+      console.log(`The ${root} is being served.`)
+    } else {
+      console.log(`The ${root} doesn't exists, please check if it's wrong.`)
+    }
+  }
+
   let html: string | undefined
   let node: MeditreeNode
   return {
