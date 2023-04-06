@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { HostTree } from "./host.js"
 import { type AppConfig, type AsParentConfig, type AsChildConfig } from "./config.js"
-import express, { type Request, type Response } from "express"
+import express, { type RequestHandler, type Request, type Response } from "express"
 import { cloneFileTreeJson, type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
@@ -101,34 +101,37 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
     next()
   })
-  // If posscode is enabled.
-  if (config.passcode) {
-    app.use((req, res, next) => {
-      try {
-        const passcode = decodeURI(req.query.passcode as string) ?? req.body.passcode
-        if (passcode !== config.passcode) {
-          res.status(401).json({ error: "incorrectPasscode" })
-        } else {
-          next()
-        }
-      } catch (e) {
-        res.status(400).send({ error: "badURI" })
-        return
+  const passcodeHandler: RequestHandler = (req, res, next) => {
+    if (!config.passcode) next()
+    // If posscode is enabled.
+    try {
+      const passcode = decodeURI(req.query.passcode as string) ?? req.body.passcode
+      if (passcode !== config.passcode) {
+        res.status(401).json({ error: "incorrectPasscode" })
+      } else {
+        next()
       }
-    })
+    } catch (e) {
+      res.status(400).send({ error: "badURI" })
+      return
+    }
+  }
+
+  const registryCtx = {
+    passcodeHandler,
   }
 
   for (const plugin of plugins) {
-    plugin.onExpressRegistering?.(app)
+    plugin.onExpressRegistering?.(app, registryCtx)
   }
 
-  app.get("/list", (req, res) => {
+  app.get("/list", passcodeHandler, (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
     res.send(fullTreeCache.json)
   })
 
-  app.get("/file(/*)", async (req, res) => {
+  app.get("/file(/*)", passcodeHandler, async (req, res) => {
     let uri: string
     try {
       uri = decodeURI(req.baseUrl + req.path)

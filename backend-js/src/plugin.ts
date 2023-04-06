@@ -3,7 +3,7 @@ import { type Readable } from "stream"
 import { type ResolvedFile, type FileTree, type LocalFileTree } from "./file.js"
 import { type FileTreePlugin } from "./host.js"
 import { type ReadStreamOptions, type MeditreeNode } from "./meditree.js"
-import { type Express } from "express"
+import { type RequestHandler, type Express } from "express"
 export type PluginRegistry = Record<string, (config: Record<string, any>) => MeditreePlugin>
 
 export interface MeditreePlugin extends FileTreePlugin {
@@ -13,7 +13,7 @@ export interface MeditreePlugin extends FileTreePlugin {
 
   setupMeditreeNode?(node: MeditreeNode): void
 
-  onExpressRegistering?(app: Express): void
+  onExpressRegistering?(app: Express, ctx: ExpressRegisteringContext): void
 
   onPostGenerated?(tree: LocalFileTree): void
 
@@ -33,6 +33,9 @@ export interface MeditreePlugin extends FileTreePlugin {
    * @returns undefined if not handled by this plugin.
    */
   onNodeCreateReadStream?(node: MeditreeNode, file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
+}
+export interface ExpressRegisteringContext {
+  passcodeHandler: RequestHandler
 }
 
 export function resolvePlguinFromConfig(all: PluginRegistry, config: Record<string, Record<string, any>>): MeditreePlugin[] {

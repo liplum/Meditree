@@ -9,11 +9,19 @@ interface HomepagePluginConfig {
    * By default, a simple built-in homepage will be served.
    */
   root?: string
+  /**
+   * Whether the built-in homepage reqiures passcode.
+   * True by default.
+   * 
+   * Note that the homepage serving {@link root} will be affected by this.
+   */
+  requirePasscode?: boolean
 }
 
 export function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
-  let html: string | undefined
   const root = config.root
+  const requirePasscode = config.requirePasscode ?? true
+  let html: string | undefined
   let node: MeditreeNode
   return {
     setupMeditreeNode(meditreeNode) {
@@ -24,20 +32,23 @@ export function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
         })
       }
     },
-    onExpressRegistering(app) {
+    onExpressRegistering(app, ctx) {
       if (root) {
         app.use(express.static(root))
       } else {
-        const handler: RequestHandler = (req, res) => {
+        const handlers: RequestHandler[] = [(req, res) => {
           res.status(200)
           res.contentType("html")
           if (html === undefined) {
             html = buildIndexHtml(node.toJSON())
           }
           res.send(html)
+        }]
+        if (requirePasscode) {
+          handlers.unshift(ctx.passcodeHandler)
         }
-        app.get("/index.html", handler)
-        app.get("/", handler)
+        app.get("/index.html", ...handlers)
+        app.get("/", ...handlers)
       }
     }
   }
