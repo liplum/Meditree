@@ -11,20 +11,21 @@ import {
 } from "./Env.js"
 import "./Connect.css"
 import { i18n } from './I18n.js';
-import { makeUrl, removePrefix } from './Utils.js';
+import { makeUrl, removePrefix, removeSuffix } from './Utils.js';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 export async function load() {
-  const backendUrl = import.meta.env.VITE_BACKEND
+  let server = import.meta.env.VITE_BACKEND
   const passcode = import.meta.env.VITE_PASSCODE
-  if (backendUrl) {
-    const protocol = backendUrl.startsWith("https://") ? "https" : "http"
-    const server = protocol === "https" ? removePrefix(backendUrl, "https://") : removePrefix(backendUrl, "http://")
-    if (passcode) {
-      return redirect(`/connect?protocol=${protocol}&server=${server}&passcode=${passcode}`)
-    } else {
-      return redirect(`/connect?protocol=${protocol}&server=${server}`)
+  if (server) {
+    server = removeSuffix(server, "/")
+    if (!server.startsWith("http") && !server.startsWith("https")) {
+      server = `https://${server}`
     }
+    return redirect(makeUrl("/connect?", {
+      server: server,
+      passcode: passcode,
+    }))
   }
   return null
 }
@@ -40,6 +41,7 @@ export async function action({ request }) {
   } else if (server.startsWith("http://")) {
     server = removePrefix(server, "http://")
   }
+  server = removeSuffix(server, "/")
   server = `${protocol}://${server}`
   storage.lastConnected = {
     server,
