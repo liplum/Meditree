@@ -23,7 +23,18 @@ Run `go build main.go` to compile and start the server.
 
 ## Frontend
 
-### React Website /web-react
+### React /web-react
+
+A SPA(single-page application) in JavaScript and React.
+
+#### Features
+
+1. The ability to connect to a server on one page. Therefore, users can connect to multiple servers by opening a new page.
+2. Direcotry-Tree-like view makes it easy to browse files in a place.
+3. Finding files in the root directory case-insensitively.
+4. Client-side routing is for better loading UX and dissolve the server-side overhead. Note you can share others any URL, and they will open the same file.
+
+#### Get Started
 
 Run `npm run dev` to start the website.
 Run `npm run build` to build for production.
@@ -36,7 +47,7 @@ npm run build
 
 You can configure the host and port in the [Vite config file](/web-react/vite.config.js).
 
-### Vue Website /web-vue
+### Vue /web-vue
 
 Run `npm run dev` to start the website.
 Run `npm run build` to build for production.
@@ -48,6 +59,13 @@ npm run build
 ```
 
 You can configure the host and port in the [Vite config file](/web-vue/vite.config.js).
+
+## Application
+
+### Flutter /app-flutter
+
+Run `flutter pub get` to in stall dependencies.
+Run `flutter build <target>` to build for production.
 
 ## Deployment
 
