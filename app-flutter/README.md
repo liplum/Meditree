@@ -4,7 +4,8 @@ The cross-platform client of Meditree.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Run `flutter pub get` to in stall dependencies.
+Run `flutter build <target>` to build for production.
 
 A few resources to get you started if this is your first Flutter project:
 

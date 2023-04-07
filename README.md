@@ -4,22 +4,18 @@
 
 ### Node.js /backend-js
 
-Run `npm start` to compile and start the server.
+A express.js server.
 
-```shell
-npm install
-npm start
-```
+Features:
 
-When you first start the server, an error will be thrown,
-which will prompt you to configure it.
+1. To serve a local file tree and watch changes.
+2. A plugin system to turn on additional features.
 
-A file named `meditree.json` will then be generated in the current working directory.
-From there, you can move this file up the file tree until you reach the root "/" directory.
+To learn more about `backend-js` please see its [README](/backend-js/README.md).
 
 ### Go /backend-go
 
-Run `go build main.go` to compile and start the server.
+To learn more about `backend-go` please see its [README](/backend-go/README.md).
 
 ## Frontend
 
@@ -27,45 +23,24 @@ Run `go build main.go` to compile and start the server.
 
 A SPA(single-page application) in JavaScript and React.
 
-#### Features
+Features:
 
 1. The ability to connect to a server on one page. Therefore, users can connect to multiple servers by opening a new page.
 2. Direcotry-Tree-like view makes it easy to browse files in a place.
 3. Finding files in the root directory case-insensitively.
 4. Client-side routing is for better loading UX and dissolve the server-side overhead. Note you can share others any URL, and they will open the same file.
 
-#### Get Started
-
-Run `npm run dev` to start the website.
-Run `npm run build` to build for production.
-
-```shell
-npm install
-npm run dev
-npm run build
-```
-
-You can configure the host and port in the [Vite config file](/web-react/vite.config.js).
+To learn more about `web-react` please see its [README](/web-react/README.md).
 
 ### Vue /web-vue
 
-Run `npm run dev` to start the website.
-Run `npm run build` to build for production.
-
-```shell
-npm install
-npm run dev
-npm run build
-```
-
-You can configure the host and port in the [Vite config file](/web-vue/vite.config.js).
+To learn more about `web-vue` please see its [README](/web-vue/README.md).
 
 ## Application
 
 ### Flutter /app-flutter
 
-Run `flutter pub get` to in stall dependencies.
-Run `flutter build <target>` to build for production.
+To learn more about `app-flutter` please see its [README](/app-flutter/README.md).
 
 ## Deployment
 
@@ -81,12 +56,12 @@ Note when you runs the `backend-js`, some essential settings will be generated o
 
 ```json5
 {
-  "name": "My-Meditree-Node", # better to be unique.
-  "port": 8080, # 8080 doesn't require sudo on linux.
-  "root": "/path/to/root", # [optional] the root direcotry of a local file tree.
-  "rebuildInterval": 3000, # [optional] how often to rebuild the local file tree when watching changes.
+  "name": "My-Meditree-Node", // better to be unique.
+  "port": 8080, // 8080 doesn't require sudo on linux.
+  "root": "/path/to/root", // [optional] the root direcotry of a local file tree.
+  "rebuildInterval": 3000, // [optional] how often to rebuild the local file tree when watching changes.
   "plugin": {
-    "homepage": { # Use homepage plugin to serve a static webiste.
+    "homepage": { // Use homepage plugin to serve a static webiste.
       "root": "/path/to/web-react/dist"
     }
   },
@@ -99,7 +74,7 @@ and access "http://localhost:8080/list" to ensure the backend is working.
 
 Finally, configure the nginx for port forwarding.
 
-```nginx
+```ruby
 server {
     listen 80;
     server_name your_site.com;
