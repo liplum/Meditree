@@ -1,13 +1,11 @@
 <script setup>
-import { useRouter, useRoute } from "vue-router";
 import { ref } from "vue";
 import { listUrl } from "./Backend";
-import File from "./Explorer/File.vue"
+const props = defineProps(["server,passcode"]);
 const emit = defineEmits(["list"]);
-const router = useRouter();
-const server = ref("");
+const server = ref(props.server ?? "");
+const passcode = ref(props.passcode ?? "");
 const serverRules = [(value) => checkServer(value)];
-const passcode = ref("");
 const showPasscode = ref(false);
 const isConnecting = ref(false);
 const showErrorDialog = ref(false);
@@ -23,20 +21,7 @@ async function connect(event) {
     });
     if (res.ok) {
       const payload = await res.json();
-      const query = {
-        server: server.value,
-      };
-      if (passcode.value) {
-        query.passcode = passcode.value;
-      }
       console.log(payload);
-      router.push({
-        path: "/connect",
-        query,
-        params: {
-          fileTree: payload,
-        },
-      });
       emit("list", payload);
     } else {
       const payload = await res.json();
