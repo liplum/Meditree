@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { File } from "./Explorer.vue";
+import { File } from "../FileTree";
 defineProps<{
   file: File;
   name: string;

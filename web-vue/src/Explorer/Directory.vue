@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { Directory } from "./Explorer.vue";
+import { Directory } from "../FileTree";
 defineProps<{
-  file: File;
+  dir: Directory;
   name: string;
 }>();
 </script>
