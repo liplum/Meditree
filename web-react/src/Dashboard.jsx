@@ -108,10 +108,15 @@ function Body(props) {
   const { server, passcode } = params
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const location = useLocation()
+  const hasAnyFile = fileTreeDelegate.key2File.size > 0
   const defaultSelectedFile =
     resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file")))
-    ?? storage.getLastSelectedFileOf(server)
-    ?? ft.getFirstFile(fileTreeDelegate)
+    ?? (
+      hasAnyFile ? (
+        storage.getLastSelectedFileOf(server)
+        ?? ft.getFirstFile(fileTreeDelegate)
+      ) : null
+    )
   const [selectedFile, setSelectedFile] = useState(defaultSelectedFile)
   const [searchPrompt, setSearchPrompt] = useState()
   const [onlyShowStarred, setOnlyShowStarred] = useState()
@@ -205,11 +210,11 @@ function Body(props) {
     </div>
     <div style={{ flex: 1, overflow: 'auto' }}>
       {
-        fileTreeDelegate.key2File.size === 0
-          ? <EmptyFileTreeNavigation />
-          : <FileTreeNavigation
+        hasAnyFile
+          ? <FileTreeNavigation
             searchDelegate={filterByPrompt}
           />
+          : <EmptyFileTreeNavigation />
       }
     </div>
   </div>
