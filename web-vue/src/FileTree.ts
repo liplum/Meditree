@@ -1,10 +1,10 @@
-export interface File {
+export interface FileInfo {
   "*type": string;
   "*hide"?: boolean;
   path: string;
   size: string;
 }
-export interface Directory {
+export interface DirectoryInfo {
   "*hide"?: boolean;
-  [name: string]: File | Directory | any;
+  [name: string]: FileInfo | DirectoryInfo | any;
 }

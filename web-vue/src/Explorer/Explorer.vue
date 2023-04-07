@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { Directory } from "../FileTree";
-
+import { DirectoryInfo } from "../FileTree";
+import Directory from "./Directory.vue";
 defineProps<{
-  trees?: Directory[];
+  trees?: DirectoryInfo[];
 }>();
 </script>
 
@@ -21,5 +21,8 @@ defineProps<{
 
       <v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
     </v-app-bar>
+    <template v-for="tree in trees">
+      <Directory name="aaa" :dir="tree"></Directory>
+    </template>
   </v-layout>
 </template>

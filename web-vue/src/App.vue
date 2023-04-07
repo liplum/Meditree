@@ -4,12 +4,17 @@ import ConnectDialog from "./ConnectDialog.vue";
 import Explorer from "./Explorer/Explorer.vue";
 import { ref } from "vue";
 
-const fileTree = ref(null);
-
+const tree = ref([]);
+// for testing
+fetch("http://localhost:81/list", { method: "GET" })
+  .then((res) => res.json())
+  .then((data) => {
+    tree.value = [data.files];
+  });
 </script>
 
 <template>
-  <Explorer></Explorer>
+  <Explorer :trees="tree"></Explorer>
 </template>
 <style scoped>
 </style>

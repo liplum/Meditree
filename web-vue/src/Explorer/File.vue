@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { File } from "../FileTree";
+import { FileInfo } from "../FileTree";
 defineProps<{
-  file: File;
+  file: FileInfo;
   name: string;
 }>();
 </script>

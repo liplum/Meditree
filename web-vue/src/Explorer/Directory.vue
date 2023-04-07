@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { Directory } from "../FileTree";
+import { DirectoryInfo } from "../FileTree";
 defineProps<{
-  dir: Directory;
+  dir: DirectoryInfo;
   name: string;
 }>();
 </script>
