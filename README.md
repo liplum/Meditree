@@ -79,7 +79,7 @@ First, run `npm run build` to build the bundled production of `web-react`.
 Then you can configure the `meditree.json` like below.
 Note when you runs the `backend-js`, some essential settings will be generated on the fly.
 
-```json
+```json5
 {
   "name": "My-Meditree-Node", # better to be unique.
   "port": 8080, # 8080 doesn't require sudo on linux.
