@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { FileInfo } from "../FileTree";
-defineProps<{
+const props = defineProps<{
   file: FileInfo;
   name: string;
 }>();

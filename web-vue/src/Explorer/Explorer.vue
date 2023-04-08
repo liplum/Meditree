@@ -1,11 +1,14 @@
 <script lang="ts" setup>
-import { DirectoryInfo } from "../FileTree";
+import { ref } from "vue";
+import { DirectoryInfo, FileInfo } from "../FileTree";
 import Directory from "./Directory.vue";
-defineProps<{
-  trees?: DirectoryInfo[];
+import File from "./File.vue";
+const props = defineProps<{
+  curDir: DirectoryInfo;
 }>();
+const isHidden = props.curDir["*hide"] === true
+const files: Record<string, FileInfo | DirectoryInfo> = props.curDir
 </script>
-
 <template>
   <v-layout>
     <v-app-bar color="primary" prominent>
@@ -21,8 +24,15 @@ defineProps<{
 
       <v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
     </v-app-bar>
-    <template v-for="tree in trees">
-      <Directory name="aaa" :dir="tree"></Directory>
-    </template>
+    <ul>
+      <li v-for="(file, name, index) in files">
+        <template v-if="file['*type'] !== undefined">
+          <File :name="name" :file="file as FileInfo" />
+        </template>
+        <template v-else>
+          <Directory :name="name" :dir="file" />
+        </template>
+      </li>
+    </ul>
   </v-layout>
 </template>

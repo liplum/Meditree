@@ -8,3 +8,7 @@ export interface DirectoryInfo {
   "*hide"?: boolean;
   [name: string]: FileInfo | DirectoryInfo | any;
 }
+export interface FileTreeInfo {
+  name: string
+  files: DirectoryInfo
+}
