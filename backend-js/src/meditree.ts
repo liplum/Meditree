@@ -89,7 +89,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   localTree?: { name: string, tree: FileTreeLike, json: FileTree }
   subNodeFilter?: (file: File) => boolean
   plugins?: MeditreeNodePlugin[]
-
+  log: Logger = createLogger("Meditree")
   constructor() {
     super()
     this.on("file-tree-update", (entireTree) => {
@@ -135,7 +135,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   updateFileTreeFromSubNode(name: string, tree: FileTree): void {
     const node = this.name2Child.get(name)
     if (!node) throw new Error(`Node[${name}] not found.`)
-    console.log(`File Tree from node[${name}] is updated.`)
+    this.log.info(`File Tree from node[${name}] is updated.`)
     if (this.subNodeFilter) {
       node.tree = filterFileTreeJson(tree, this.subNodeFilter)
     } else {

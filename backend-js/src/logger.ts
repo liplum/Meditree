@@ -60,33 +60,33 @@ class LoggerImpl implements Logger {
     this.channel = channel
   }
 
-  error(message: string | object): void {
+  error = (message: string | object): void => {
     this.log(LogLevels.ERROR, message)
   }
 
-  warn(message: string | object): void {
+  warn = (message: string | object): void => {
     this.log(LogLevels.WARN, message)
   }
 
-  info(message: string | object): void {
+  info = (message: string | object): void => {
     this.log(LogLevels.INFO, message)
   }
 
-  debug(message: string | object): void {
+  debug = (message: string | object): void => {
     this.log(LogLevels.DEBUG, message)
   }
 
-  verbose(message: string | object): void {
+  verbose = (message: string | object): void => {
     this.log(LogLevels.VERBOSE, message)
   }
 
-  log(level: LogLevel, message: string | object | Error): void {
+  log = (level: LogLevel, message: string | object | Error): void => {
     const timestamp = new Date().toISOString().slice(11, -1)
     const channel = this.channel ? ` [${this.channel}]` : ""
-    let logLine = `[${timestamp}]${channel} [${level.signal}] `
+    let logLine = `[${timestamp}][${level.signal}]${channel} `
 
     if (message instanceof Error) {
-      logLine += `[${message.name}] ${message.message} ${message?.stack ?? ""}`
+      logLine += `${message.message} ${message?.stack ?? ""}`
     } else {
       logLine += format(message)
     }
@@ -106,4 +106,37 @@ class LoggerImpl implements Logger {
 
 function tint(text: string, color?: ChalkInstance): string {
   return color ? color(text) : text
+}
+
+export class Timer {
+  private startTime?: number
+  private name2StartTime?: Record<string, number>
+  start(name?: string): void {
+    if (name) {
+      this.name2StartTime = { [name]: Date.now() }
+    } else {
+      this.startTime = Date.now()
+    }
+  }
+
+  stop(name?: string, log?: (time: string) => void): number {
+    let startTime: number | undefined
+    if (name) {
+      startTime = this.name2StartTime?.[name]
+    } else {
+      startTime = this.startTime
+    }
+    let time: number
+    if (startTime) {
+      time = Date.now() - startTime
+    } else {
+      time = 0
+    }
+    if (name) {
+      log?.(`${name}: ${time}ms`)
+    } else {
+      log?.(`${time}ms`)
+    }
+    return time
+  }
 }

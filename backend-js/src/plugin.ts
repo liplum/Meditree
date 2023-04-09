@@ -38,7 +38,11 @@ export interface ExpressRegisteringContext {
   passcodeHandler: RequestHandler
 }
 
-export function resolvePlguinFromConfig(all: PluginRegistry, config: Record<string, Record<string, any>>): MeditreePlugin[] {
+export function resolvePlguinFromConfig(
+  all: PluginRegistry,
+  config: Record<string, Record<string, any>>,
+  onNotFound?: (name: string) => void,
+): MeditreePlugin[] {
   const plugins: MeditreePlugin[] = []
   for (const [name, pluginConfig] of Object.entries(config)) {
     const ctor = all[name]
@@ -46,7 +50,7 @@ export function resolvePlguinFromConfig(all: PluginRegistry, config: Record<stri
       const plugin = ctor(typeof pluginConfig === "object" ? pluginConfig : {})
       plugins.push(plugin)
     } else {
-      console.log(`Plugin[${name}] doesn't exist.`)
+      onNotFound?.(name)
     }
   }
   return plugins

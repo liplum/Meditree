@@ -8,6 +8,7 @@ import { LocalFileTree } from "./file.js"
 import EventEmitter from "events"
 import { promisify } from "util"
 import { type MeditreePlugin } from "./plugin.js"
+import { type Logger, createLogger } from "./logger.js"
 
 export interface HostTreeOptions {
   /**
@@ -37,9 +38,11 @@ export class HostTree extends EventEmitter implements FileTreeLike {
   private options: HostTreeOptions
   private fileTree: LocalFileTree
   private fileWatcher: fs.FSWatcher | null = null
+  log: Logger
   constructor(options: HostTreeOptions) {
     super()
     this.options = options
+    this.log = createLogger(`Tree-${options.name}`)
   }
 
   toJSON(): FileTree {
@@ -100,7 +103,7 @@ export class HostTree extends EventEmitter implements FileTreeLike {
   }
 
   onWatch(event: string, filePath: string): void {
-    console.log(`[${event}]${filePath}`)
+    this.log.verbose(`[${event}]${filePath}`)
     // const relative = path.relative(this.root, filePath)
     if (event === "add" || event === "unlink") {
       if (this.classifyByFilePath(filePath) == null) return
@@ -162,7 +165,7 @@ export interface FileTreePlugin {
   onPostGenerated?(tree: FileTree): void
 }
 
-export async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, classifier, includes, plugins }: {
+async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, classifier, includes, log, plugins }: {
   root: string
   initPath?: string[]
   classifier: FileClassifier
@@ -171,6 +174,7 @@ export async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, class
    * whether to ignore the empty file tree
    */
   ignoreEmptyDir: boolean
+  log?: Logger
   plugins?: FileTreePlugin[]
 }): Promise<LocalFileTree> {
   const stats = await statAsync(root)
@@ -187,7 +191,7 @@ export async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, class
     try {
       files = await readdirAsync(curDir)
     } catch (e) {
-      console.error(e)
+      log?.error(e)
       return
     }
     for (const fileName of files) {
@@ -219,7 +223,7 @@ export async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, class
             tree.addFile(fileName, subtree)
           }
         } else {
-          console.log("Unknown file type", filePath)
+          log?.error(`Unknown file type of ${filePath}`)
         }
       } catch (e) {
         continue

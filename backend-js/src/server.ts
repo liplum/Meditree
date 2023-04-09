@@ -5,7 +5,7 @@ import express, { type RequestHandler, type Request, type Response } from "expre
 import { cloneFileTreeJson, type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
-import { LogLevels, createLogger, globalOptions } from "./logger.js"
+import { LogLevels, Timer, createLogger, globalOptions } from "./logger.js"
 import { type PluginRegistry, resolvePlguinFromConfig } from "./plugin.js"
 import { type Readable } from "stream"
 import http from "http"
@@ -17,14 +17,20 @@ import { MinifyPlugin } from "./plugin/minify.js"
 globalOptions.consoleLevel = LogLevels.VERBOSE
 
 export async function startServer(config: AppConfig): Promise<void> {
+  const log = createLogger("Main")
   const pluginTypes: PluginRegistry = {}
   pluginTypes.cache = (config) => CachePlugin(config)
   pluginTypes.homepage = (config) => HomepagePlugin(config)
   pluginTypes.hls = (config) => HLSPlugin(config)
   pluginTypes.minify = (config) => MinifyPlugin(config)
 
-  console.time("Start Server")
-  const plugins = config.plugin ? resolvePlguinFromConfig(pluginTypes, config.plugin) : []
+  const timer = new Timer()
+  timer.start("Start Server")
+  const plugins = config.plugin
+    ? resolvePlguinFromConfig(pluginTypes, config.plugin, (name) => {
+      log.error(`Plugin[${name}] doesn't exist.`)
+    })
+    : []
   for (const plugin of plugins) {
     plugin.init?.()
   }
@@ -35,7 +41,6 @@ export async function startServer(config: AppConfig): Promise<void> {
   for (const plugin of plugins) {
     plugin.setupServer?.(app, server)
   }
-  const log = createLogger("Main")
   const localTree = !config.root
     ? undefined
     : new HostTree({
@@ -211,12 +216,12 @@ export async function startServer(config: AppConfig): Promise<void> {
   if (hostname) {
     server.listen(config.port, config.hostname, (): void => {
       log.info(`Server running at http://${hostname}:${config.port}/`)
-      console.timeEnd("Start Server")
+      timer.stop("Start Server", log.info)
     })
   } else {
     server.listen(config.port, (): void => {
       log.info(`Server running at http://localhost:${config.port}/`)
-      console.timeEnd("Start Server")
+      timer.stop("Start Server", log.info)
     })
   }
 }
