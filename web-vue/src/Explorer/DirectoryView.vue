@@ -5,7 +5,10 @@ import Directory from "./Directory.vue"
 const props = defineProps<{
   dir: DirectoryInfo;
 }>();
-defineEmits(["onFileClick","onDirClick"])
+defineEmits<{
+  (e: "onFileClick", file: FileInfo): void
+  (e: "onDirClick", file: DirectoryInfo): void
+}>()
 </script>
 
 <template>

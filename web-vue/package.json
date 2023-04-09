@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "vue": "^3.2.47",
-    "vue-router": "^4.1.6",
     "vuejs-tree": "^3.0.2",
     "vuetify": "^3.1.13"
   },

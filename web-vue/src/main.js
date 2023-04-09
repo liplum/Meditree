@@ -9,21 +9,8 @@ import { aliases, mdi } from 'vuetify/iconsets/mdi'
 import '@mdi/font/css/materialdesignicons.css'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import ConnectDialog from './ConnectDialog.vue'
-import Dashboard from './Dashboard.vue'
-import { createRouter, createWebHashHistory } from "vue-router"
 
 const app = createApp(App)
-
-const router = createRouter({
-  history: createWebHashHistory(),
-  routes: [
-    { path: '/', component: ConnectDialog },
-    { path: '/connect', component: Dashboard },
-  ],
-})
-
-// app.use(router)
 
 const vuetify = createVuetify({
   components,
