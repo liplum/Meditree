@@ -38,17 +38,20 @@ function parseDirectory(name: string, directory: Directory): DirectoryInfo {
   const directoryInfo = new DirectoryInfo();
   directoryInfo.name = name;
   directoryInfo.hidden = directory["*hide"] || false;
-  directoryInfo.files = Object.keys(directory)
-    .filter((key) => key !== "*hide")
-    .map((key) => {
-      const entry = directory[key];
-      if (entry.hasOwnProperty("*type")) {
-        // Parse as file
-        return parseFile(key, entry as File);
-      } else {
-        // Parse as directory
-        return parseDirectory(key, entry as Directory);
-      }
-    });
+  const files: (FileInfo | DirectoryInfo)[] = []
+  for (const [name, file] of Object.entries(directory)) {
+    if (name === "*hide") continue
+    if (file.hasOwnProperty("*type")) {
+      // Parse as file
+      files.push(parseFile(name, file as File));
+    } else {
+      // Parse as directory
+      files.push(parseDirectory(name, file as Directory))
+    }
+  }
   return directoryInfo;
+}
+
+export function parseFileTree(tree: { name: string, files: Directory }): DirectoryInfo {
+  return parseDirectory(tree.name, tree.files)
 }
