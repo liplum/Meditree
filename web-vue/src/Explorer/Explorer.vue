@@ -4,10 +4,9 @@ import { DirectoryInfo, FileInfo } from "../FileTree";
 import Directory from "./Directory.vue";
 import File from "./File.vue";
 const props = defineProps<{
-  curDir: DirectoryInfo;
+  root: DirectoryInfo;
 }>();
-const isHidden = props.curDir["*hide"] === true
-const files: Record<string, FileInfo | DirectoryInfo> = props.curDir
+const curDir = ref<DirectoryInfo>(props.root)
 </script>
 <template>
   <v-layout>
@@ -24,15 +23,5 @@ const files: Record<string, FileInfo | DirectoryInfo> = props.curDir
 
       <v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
     </v-app-bar>
-    <ul>
-      <li v-for="(file, name, index) in files">
-        <template v-if="file['*type'] !== undefined">
-          <File :name="name" :file="file as FileInfo" />
-        </template>
-        <template v-else>
-          <Directory :name="name" :dir="file" />
-        </template>
-      </li>
-    </ul>
   </v-layout>
 </template>

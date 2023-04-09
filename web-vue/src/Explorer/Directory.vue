@@ -2,7 +2,6 @@
 import { DirectoryInfo } from "../FileTree";
 defineProps<{
   dir: DirectoryInfo;
-  name: string;
 }>();
 </script>
 

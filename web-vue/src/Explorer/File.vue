@@ -2,7 +2,6 @@
 import { FileInfo } from "../FileTree";
 const props = defineProps<{
   file: FileInfo;
-  name: string;
 }>();
 </script>
 
