@@ -109,7 +109,10 @@ export async function startServer(config: AppConfig): Promise<void> {
     next()
   })
   const passcodeHandler: RequestHandler = (req, res, next) => {
-    if (!config.passcode) next()
+    if (!config.passcode) {
+      next()
+      return
+    }
     // If posscode is enabled.
     try {
       const passcode = decodeURI(req.query.passcode as string) ?? req.body.passcode
@@ -117,6 +120,7 @@ export async function startServer(config: AppConfig): Promise<void> {
         res.status(401).json({ error: "incorrectPasscode" })
       } else {
         next()
+        return
       }
     } catch (e) {
       res.status(400).send({ error: "badURI" })
