@@ -268,18 +268,18 @@ export async function setupAsParent(
   async function setupWs(ws: WebSocket): Promise<void> {
     const net = new Net(ws)
     net.startDaemonWatch()
-    log.trace("A websocket is established.")
+    log.verbose("A websocket is established.")
     ws.on("error", (error) => {
       log.error(error)
     })
     ws.on("close", () => {
-      log.trace("A websocket is closed.")
+      log.verbose("A websocket is closed.")
     })
     ws.on("message", (data) => {
       try {
         net.handleDatapack(data as Buffer)
       } catch (error) {
-        log.trace("A websocket is aborted due to an error.")
+        log.verbose("A websocket is aborted due to an error.")
         log.error(error)
         net.close(3400)
       }

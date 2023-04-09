@@ -5,7 +5,7 @@ import express, { type RequestHandler, type Request, type Response } from "expre
 import { cloneFileTreeJson, type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
-import { createLogger } from "./logger.js"
+import { LogLevels, createLogger, globalOptions } from "./logger.js"
 import { type PluginRegistry, resolvePlguinFromConfig } from "./plugin.js"
 import { type Readable } from "stream"
 import http from "http"
@@ -13,6 +13,8 @@ import { CachePlugin } from "./plugin/cache.js"
 import { HomepagePlugin } from "./plugin/homepage.js"
 import { HLSPlugin } from "./plugin/hls.js"
 import { MinifyPlugin } from "./plugin/minify.js"
+
+globalOptions.consoleLevel = LogLevels.VERBOSE
 
 export async function startServer(config: AppConfig): Promise<void> {
   const pluginTypes: PluginRegistry = {}

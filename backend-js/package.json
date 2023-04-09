@@ -17,12 +17,12 @@
   "author": "Liplum",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^5.2.0",
     "chokidar": "^3.5.3",
     "command-line-args": "^5.2.1",
     "command-line-usage": "^7.0.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "log4js": "^6.9.1",
     "minimatch": "^6.2.0",
     "source-map-support": "^0.5.21",
     "tweetnacl": "^1.0.3",
