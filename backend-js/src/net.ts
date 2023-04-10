@@ -41,7 +41,6 @@ export type ReadHook<Data> = ({ type, id, data, header }: {
   data: Data
   chunk?: Buffer | null
 }) => boolean | undefined
-export type DebugCall = (id: string, data: any, header?: any) => void
 export interface SocketLike {
   close: (...args: any[]) => void
   send: (buffer: Buffer) => void
@@ -54,7 +53,6 @@ export class Net {
   private readonly readHooks: ReadHook<any>[] = []
   private readonly id2SendingStream = new Map<string, Readable>()
   readonly id2ReadingStream = new Map<string, Readable>()
-  debug?: DebugCall
   constructor(socket: SocketLike) {
     this.socket = socket
   }
@@ -101,7 +99,6 @@ export class Net {
     }
     if (type === MessageType.object) {
       const data = readObject(reader)
-      this.debug?.(id, data, header)
       const readHookArgs = { type, id, data, header }
       for (const hook of this.readHooks) {
         if (hook(readHookArgs)) return

@@ -320,7 +320,8 @@ export async function setupAsChild(
     let centralInfo: CentralInfo | undefined
     ws.on("error", (error) => {
       // ignore connection errors
-      if (error.message === "Unexpected server response: 502") return
+      if (error.message.includes("502")) return
+      if (error.message.includes("504")) return
       log.error(error)
     })
     ws.on("open", async () => {
