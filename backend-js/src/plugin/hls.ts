@@ -6,6 +6,7 @@ export const HLSMediaType = "application/x-mpegURL"
 // eslint-disable-next-line @typescript-eslint/dot-notation
 interface HLSPluginConfig {
   /**
+   * Whether to hide the directory of .ts files for m3u8 index.
    * True by default.
    */
   hideTsDir?: boolean
