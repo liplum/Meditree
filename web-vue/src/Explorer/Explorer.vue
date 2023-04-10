@@ -12,9 +12,9 @@ const curDir = ref<DirectoryInfo>(props.root)
 watch(() => props.root, (value, old) => {
   curDir.value = value
 })
-onUpdated(() => {
-  console.log(curDir.value)
-})
+function onDirClick(dir: DirectoryInfo) {
+  curDir.value = dir
+}
 </script>
 <template>
   <v-layout>
@@ -33,7 +33,7 @@ onUpdated(() => {
     </v-app-bar>
     <v-main style="height:100vh;">
       <template v-if="curDir">
-        <DirectoryView :dir="curDir" />
+        <DirectoryView @click-dir="onDirClick" :dir="curDir" />
       </template>
     </v-main>
   </v-layout>
