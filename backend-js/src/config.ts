@@ -51,6 +51,7 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
    */
   name: string
   /**
+   * //TODO: Unused
    * The display name of the server.
    * If not specified, {@link name} will be used.
    */
@@ -67,6 +68,10 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
    * Default is 7 days.
    */
   cacheMaxAge: number
+  /**
+   * The directory where the log files are located.
+   */
+  logDir?: string
   [key: string]: any
 }
 

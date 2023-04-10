@@ -37,6 +37,7 @@ export const globalOptions: {
 }
 
 export function initGlobalLogFile(direcotry: string): void {
+  fs.mkdirSync(direcotry, { recursive: true })
   globalOptions.logFile = path.join(
     direcotry,
     `${new Date().toISOString().slice(0, 10)}.log`
@@ -82,8 +83,8 @@ class LoggerImpl implements Logger {
 
   log = (level: LogLevel, message: string | object | Error): void => {
     const timestamp = new Date().toISOString().slice(11, -1)
-    const channel = this.channel ? ` [${this.channel}]` : ""
-    let logLine = `|${timestamp}|${level.signal}|${channel} `
+    const channel = this.channel ? `[${this.channel}] ` : " "
+    let logLine = `|${timestamp}|${level.signal}|${channel}`
 
     if (message instanceof Error) {
       logLine += `${message.message} ${message?.stack ?? ""}`
