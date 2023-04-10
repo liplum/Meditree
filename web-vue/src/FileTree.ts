@@ -1,4 +1,5 @@
 export class FileInfo {
+  parent?: DirectoryInfo
   name: string
   type: string
   hidden: boolean = false
@@ -7,6 +8,7 @@ export class FileInfo {
 }
 
 export class DirectoryInfo {
+  parent?: DirectoryInfo
   name: string
   hidden: boolean = false
   files: (FileInfo | DirectoryInfo)[] = []
@@ -24,32 +26,34 @@ interface Directory {
   [name: string]: File | Directory | any;
 }
 
-function parseFile(name: string, file: File): FileInfo {
-  const fileInfo = new FileInfo();
-  fileInfo.name = name;
-  fileInfo.type = file["*type"];
-  fileInfo.hidden = file["*hide"] || false;
-  fileInfo.path = file.path;
-  fileInfo.size = file.size;
-  return fileInfo;
+function parseFile(name: string, file: File, parent?: DirectoryInfo): FileInfo {
+  const fi = new FileInfo();
+  fi.parent = parent;
+  fi.name = name;
+  fi.type = file["*type"];
+  fi.hidden = file["*hide"] || false;
+  fi.path = file.path;
+  fi.size = file.size;
+  return fi;
 }
 
-function parseDirectory(name: string, directory: Directory): DirectoryInfo {
-  const directoryInfo = new DirectoryInfo();
-  directoryInfo.name = name;
-  directoryInfo.hidden = directory["*hide"] || false;
+function parseDirectory(name: string, directory: Directory, parent?: DirectoryInfo): DirectoryInfo {
+  const dir = new DirectoryInfo();
+  dir.name = name;
+  dir.parent = parent;
+  dir.hidden = directory["*hide"] || false;
   const files: (FileInfo | DirectoryInfo)[] = []
   for (const [name, file] of Object.entries(directory)) {
     if (name === "*hide") continue
     if (file.hasOwnProperty("*type")) {
       // Parse as file
-      files.push(parseFile(name, file as File));
+      files.push(parseFile(name, file as File, dir));
     } else {
       // Parse as directory
-      files.push(parseDirectory(name, file as Directory))
+      files.push(parseDirectory(name, file as Directory, dir))
     }
   }
-  return directoryInfo;
+  return dir;
 }
 
 export function parseFileTree(tree: { name: string, files: Directory }): DirectoryInfo {

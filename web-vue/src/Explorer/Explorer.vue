@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { DirectoryInfo, FileInfo } from "../FileTree";
 import Directory from "./Directory.vue";
 import File from "./File.vue";
+import DirectoryView from "./DirectoryView.vue";
 const props = defineProps<{
   root: DirectoryInfo;
 }>();
@@ -23,5 +24,6 @@ const curDir = ref<DirectoryInfo>(props.root)
 
       <v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
     </v-app-bar>
+    <DirectoryView :dir="curDir" />
   </v-layout>
 </template>

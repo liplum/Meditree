@@ -5,20 +5,21 @@ import Directory from "./Directory.vue"
 const props = defineProps<{
   dir: DirectoryInfo;
 }>();
-defineEmits<{
+const emit = defineEmits<{
   (e: "onFileClick", file: FileInfo): void
   (e: "onDirClick", file: DirectoryInfo): void
 }>()
+
 </script>
 
 <template>
   <ul>
     <li v-for="(file, name, index) in props.dir.files">
       <template v-if="file instanceof FileInfo">
-        <File :file="file" />
+        <File @click="emit('onFileClick', file)" :file="file" />
       </template>
       <template v-else>
-        <Directory :dir="file" />
+        <Directory @click="emit('onDirClick', file)" :dir="file" />
       </template>
     </li>
   </ul>
