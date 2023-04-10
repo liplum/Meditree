@@ -16,14 +16,16 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <ul>
-    <li v-for="(file, name, index) in props.dir.files">
-      <template v-if="file instanceof FileInfo">
-        <File @click="emit('onFileClick', file)" :file="file" />
-      </template>
-      <template v-else>
-        <Directory @click="emit('onDirClick', file)" :dir="file" />
-      </template>
-    </li>
-  </ul>
+  <v-container fluid>
+    <v-row>
+      <v-col v-for="(file, name, index) in props.dir.files" :key="name" cols="4">
+        <template v-if="(file instanceof FileInfo)">
+          <File @click="emit('onFileClick', file)" :file="file" />
+        </template>
+        <template v-else>
+          <Directory @click="emit('onDirClick', file)" :dir="file" />
+        </template>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>

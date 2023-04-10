@@ -9,7 +9,7 @@ const props = defineProps<{
   <v-card class="mx-auto" width="100" height="100">
     <v-row class="row-center">
       <v-icon size="64" icon="mdi-folder" />
-      <span>My Text</span>
+      <span>{{ props.dir.name }}</span>
     </v-row>
   </v-card>
 </template>
