@@ -83,7 +83,7 @@ class LoggerImpl implements Logger {
   log = (level: LogLevel, message: string | object | Error): void => {
     const timestamp = new Date().toISOString().slice(11, -1)
     const channel = this.channel ? ` [${this.channel}]` : ""
-    let logLine = `[${timestamp}][${level.signal}]${channel} `
+    let logLine = `|${timestamp}|${level.signal}|${channel} `
 
     if (message instanceof Error) {
       logLine += `${message.message} ${message?.stack ?? ""}`

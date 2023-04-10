@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, onUpdated, watch } from "vue";
 import { DirectoryInfo, FileInfo } from "../FileTree";
 import Directory from "./Directory.vue";
 import File from "./File.vue";
@@ -7,7 +7,14 @@ import DirectoryView from "./DirectoryView.vue";
 const props = defineProps<{
   root: DirectoryInfo;
 }>();
+
 const curDir = ref<DirectoryInfo>(props.root)
+watch(() => props.root, (value, old) => {
+  curDir.value = value
+})
+onUpdated(() => {
+  console.log(curDir.value)
+})
 </script>
 <template>
   <v-layout>
@@ -24,6 +31,10 @@ const curDir = ref<DirectoryInfo>(props.root)
 
       <v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
     </v-app-bar>
-    <DirectoryView :dir="curDir" />
+    <v-main style="height:100vh;">
+      <template v-if="curDir">
+        <DirectoryView :dir="curDir" />
+      </template>
+    </v-main>
   </v-layout>
 </template>

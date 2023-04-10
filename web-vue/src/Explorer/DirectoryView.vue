@@ -1,15 +1,18 @@
 <script setup lang="ts">
+import { onUpdated } from "vue"
 import { DirectoryInfo, FileInfo } from "../FileTree";
 import File from "./File.vue"
 import Directory from "./Directory.vue"
 const props = defineProps<{
   dir: DirectoryInfo;
 }>();
+onUpdated(() => {
+  console.log("DirectoryView", props.dir)
+})
 const emit = defineEmits<{
   (e: "onFileClick", file: FileInfo): void
   (e: "onDirClick", file: DirectoryInfo): void
 }>()
-
 </script>
 
 <template>

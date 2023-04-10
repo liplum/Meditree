@@ -5,6 +5,10 @@ export class FileInfo {
   hidden: boolean = false
   path: string;
   size?: string;
+
+  toString(): string {
+    return this.name
+  }
 }
 
 export class DirectoryInfo {
@@ -12,6 +16,10 @@ export class DirectoryInfo {
   name: string
   hidden: boolean = false
   files: (FileInfo | DirectoryInfo)[] = []
+  
+  toString(): string {
+    return this.name
+  }
 }
 
 interface File {
@@ -42,15 +50,14 @@ function parseDirectory(name: string, directory: Directory, parent?: DirectoryIn
   dir.name = name;
   dir.parent = parent;
   dir.hidden = directory["*hide"] || false;
-  const files: (FileInfo | DirectoryInfo)[] = []
   for (const [name, file] of Object.entries(directory)) {
     if (name === "*hide") continue
     if (file.hasOwnProperty("*type")) {
       // Parse as file
-      files.push(parseFile(name, file as File, dir));
+      dir.files.push(parseFile(name, file as File, dir));
     } else {
       // Parse as directory
-      files.push(parseDirectory(name, file as Directory, dir))
+      dir.files.push(parseDirectory(name, file as Directory, dir))
     }
   }
   return dir;
