@@ -12,19 +12,42 @@ export interface FileTree {
 
 export class LocalFile implements File {
   readonly parent: LocalFileTree
-  readonly name: string
   readonly "*type": FileType
   readonly size: number
   readonly path: string
   readonly localPath: string
   "*hide"?: boolean
-  constructor(parent: LocalFileTree, name: string, type: FileType, size: number, localPath: string, path: string) {
+  constructor(parent: LocalFileTree, type: FileType, size: number, localPath: string, path: string) {
     this.parent = parent
-    this.name = name
     this["*type"] = type
     this.size = size
     this.localPath = localPath
     this.path = path
+  }
+
+  toJSON(): File {
+    return {
+      "*type": this["*type"],
+      size: this.size,
+      "*hide": this["*hide"],
+      path: this.path,
+    }
+  }
+}
+
+export class VirtualFile implements File {
+  readonly "*type": string
+  readonly buffer: Buffer
+  "*hide"?: boolean | undefined
+  readonly path: string
+  constructor(type: FileType, buffer: Buffer, path: string) {
+    this["*type"] = type
+    this.path = path
+    this.buffer = buffer
+  }
+
+  get size(): number {
+    return this.buffer.byteLength
   }
 
   toJSON(): File {

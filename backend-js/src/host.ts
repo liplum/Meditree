@@ -212,7 +212,7 @@ async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, classifier, 
             }
             if (builtPath === undefined) builtPath = curPathParts.join("/")
             tree.addFile(fileName, new LocalFile(
-              tree, fileName, fileType, stat.size, filePath,
+              tree, fileType, stat.size, filePath,
               builtPath,
             ))
           }
