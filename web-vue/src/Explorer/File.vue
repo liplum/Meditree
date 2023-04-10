@@ -6,7 +6,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <v-card class="mx-auto" width="100" height="100">
+  <v-card class="mx-auto" width="6rem" height="6rem">
     <v-row class="row-center">
       <v-icon size="64" icon="mdi-file" />
       <span>{{ props.file.name }}</span>

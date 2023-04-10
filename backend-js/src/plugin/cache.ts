@@ -1,6 +1,6 @@
 import { LocalFile } from "../file.js"
 import { type MeditreePlugin } from "../plugin.js"
-import { Readable } from "stream"
+import { type Readable, PassThrough } from "stream"
 import fs from "fs"
 import path, { join, dirname } from "path"
 import { promisify } from "util"
@@ -78,24 +78,24 @@ function hash(input: string): string {
   return buffer.toString("base64url")
 }
 
+/**
+ * Modified by chatGPT.
+ */
 function duplicateStream(input: Readable): [Readable, Readable] {
-  const stream1 = new Readable({ read() { } })
-  const stream2 = new Readable({ read() { } })
-  input.on("data", (data) => {
-    stream1.push(data)
-    stream2.push(data)
-  })
-  input.on("end", () => {
-    stream1.emit("end")
-    stream2.emit("end")
-  })
-  input.on("close", () => {
-    stream1.emit("close")
-    stream2.emit("close")
-  })
-  input.on("error", (err) => {
-    stream1.push(err)
-    stream2.push(err)
-  })
+  const stream1 = new PassThrough({ highWaterMark: input.readableHighWaterMark })
+  const stream2 = new PassThrough({ highWaterMark: input.readableHighWaterMark })
+
+  input.pipe(stream1)
+  input.pipe(stream2)
+
+  function errorHandler(err: any): void {
+    stream1.destroy(err)
+    stream2.destroy(err)
+  }
+
+  input.on("error", errorHandler)
+  stream1.on("error", errorHandler)
+  stream2.on("error", errorHandler)
+
   return [stream1, stream2]
 }
