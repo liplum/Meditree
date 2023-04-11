@@ -6,15 +6,22 @@ const props = defineProps<{
 </script>
 
 <template>
-  <v-card class="mx-auto" width="6rem" height="6rem">
+  <v-card class="mx-auto file-card">
     <v-row class="row-center">
       <v-icon size="64" icon="mdi-file" />
-      <span>{{ props.file.name }}</span>
+      <v-card-text>
+        {{ props.file.name }}
+      </v-card-text>
     </v-row>
   </v-card>
 </template>
 
 <style scoped>
+.file-card {
+  width: 8rem;
+  padding: 1rem;
+}
+
 .row-center {
   display: flex;
   flex-direction: column;
