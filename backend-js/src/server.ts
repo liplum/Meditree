@@ -14,11 +14,15 @@ import { HomepagePlugin } from "./plugin/homepage.js"
 import { HLSPlugin } from "./plugin/hls.js"
 import { MinifyPlugin } from "./plugin/minify.js"
 
-globalOptions.consoleLevel = LogLevels.VERBOSE
-
 export async function startServer(config: AppConfig): Promise<void> {
   if (config.logDir) {
     initGlobalLogFile(config.logDir)
+    if (config.logLevel) {
+      const lv = LogLevels[config.logLevel.toUpperCase()]
+      if (lv) {
+        globalOptions.consoleLevel = lv
+      }
+    }
   }
   const log = createLogger("Main")
   const pluginTypes: PluginRegistry = {}

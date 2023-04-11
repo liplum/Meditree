@@ -65,13 +65,19 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
   plugin?: Record<string, Record<string, any>>
   ignore?: string[]
   /**
-   * Default is 7 days.
+   * 7 days by default.
    */
   cacheMaxAge: number
   /**
    * The directory where the log files are located.
    */
   logDir?: string
+  /**
+   * The minimum log level for console logging.
+   * Auto-capitalized.
+   * "INFO" by default.
+   */
+  logLevel?: string
   [key: string]: any
 }
 
