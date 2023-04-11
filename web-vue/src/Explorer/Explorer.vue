@@ -15,20 +15,26 @@ watch(() => props.root, (value, old) => {
 function onDirClick(dir: DirectoryInfo) {
   curDir.value = dir
 }
+function onNaviBack() {
+  const parent = curDir.value.parent
+  if (parent) {
+    curDir.value = parent
+  }
+}
 </script>
 <template>
   <v-layout>
     <v-app-bar color="primary" prominent>
-      <v-app-bar-nav-icon variant="text"></v-app-bar-nav-icon>
-
+      <template v-if="curDir.parent">
+        <v-app-bar-nav-icon @click="onNaviBack" icon="mdi-arrow-left" />
+      </template>
+      <template v-else>
+        <v-app-bar-nav-icon />
+      </template>
       <v-toolbar-title>My files</v-toolbar-title>
-
       <v-spacer></v-spacer>
-
       <v-btn variant="text" icon="mdi-magnify"></v-btn>
-
       <v-btn variant="text" icon="mdi-filter"></v-btn>
-
       <v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
     </v-app-bar>
     <v-main style="height:100vh;">
