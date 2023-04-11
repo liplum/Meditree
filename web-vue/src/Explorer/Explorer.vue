@@ -4,6 +4,7 @@ import { DirectoryInfo, FileInfo } from "../FileTree";
 import Directory from "./Directory.vue";
 import File from "./File.vue";
 import DirectoryView from "./DirectoryView.vue";
+import { computed } from "@vue/reactivity";
 const props = defineProps<{
   root: DirectoryInfo;
 }>();
@@ -16,11 +17,26 @@ function onDirClick(dir: DirectoryInfo) {
   curDir.value = dir
 }
 function onNaviBack() {
+  if (!curDir.value) return
   const parent = curDir.value.parent
   if (parent) {
     curDir.value = parent
   }
 }
+const addressBarItems = computed(() => {
+  const res: any[] = []
+  if (!curDir.value) return res
+  let cur: DirectoryInfo | undefined = curDir.value
+  while (cur) {
+    res.push({
+      title: cur.name,
+      disabled: false,
+    })
+    cur = cur.parent
+  }
+  return res
+})
+
 </script>
 <template>
   <v-layout>
@@ -31,7 +47,11 @@ function onNaviBack() {
       <template v-else>
         <v-app-bar-nav-icon />
       </template>
-      <v-toolbar-title>My files</v-toolbar-title>
+      <v-breadcrumbs :items="addressBarItems">
+        <template v-slot:title="{ item }">
+          {{ item.title.toUpperCase() }}
+        </template>
+      </v-breadcrumbs>
       <v-spacer></v-spacer>
       <v-btn variant="text" icon="mdi-magnify"></v-btn>
       <v-btn variant="text" icon="mdi-filter"></v-btn>
