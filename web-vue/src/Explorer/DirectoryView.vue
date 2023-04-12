@@ -3,11 +3,21 @@ import { onUpdated } from "vue"
 import { DirectoryInfo, FileInfo } from "../FileTree";
 import File from "./File.vue"
 import Directory from "./Directory.vue"
+import { computed } from "@vue/reactivity";
+export type SearchDelegate = (file: FileInfo | DirectoryInfo) => boolean
 const props = defineProps<{
   dir: DirectoryInfo;
+  searchDelegate?: SearchDelegate;
 }>();
 onUpdated(() => {
   console.log("DirectoryView", props.dir)
+})
+const files = computed(() => {
+  if (props.searchDelegate) {
+    return props.dir.files.filter(props.searchDelegate)
+  } else {
+    return props.dir.files
+  }
 })
 const emit = defineEmits<{
   (e: "clickFile", file: FileInfo): void
@@ -19,7 +29,7 @@ const emit = defineEmits<{
 <template>
   <v-container fluid>
     <v-row no-gutters align-self="stretch">
-      <v-col v-for="(file, name, index) in props.dir.files" :key="name" cols="auto" >
+      <v-col v-for="(file, name, index) in files" :key="name" cols="auto">
         <template v-if="(file instanceof FileInfo)">
           <File @click="emit('clickFile', file)" :file="file" />
         </template>

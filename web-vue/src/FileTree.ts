@@ -1,4 +1,9 @@
-export class FileInfo {
+export interface FileSystemEntry {
+  parent?: DirectoryInfo
+  name: string;
+  hidden: boolean
+}
+export class FileInfo implements FileSystemEntry {
   parent?: DirectoryInfo
   name: string
   type: string
@@ -11,7 +16,7 @@ export class FileInfo {
   }
 }
 
-export class DirectoryInfo {
+export class DirectoryInfo implements FileSystemEntry {
   parent?: DirectoryInfo
   name: string
   hidden: boolean = false

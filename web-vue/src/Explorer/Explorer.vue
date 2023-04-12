@@ -3,13 +3,14 @@ import { ref, onUpdated, watch } from "vue";
 import { DirectoryInfo, FileInfo } from "../FileTree";
 import Directory from "./Directory.vue";
 import File from "./File.vue";
-import DirectoryView from "./DirectoryView.vue";
+import DirectoryView, { SearchDelegate } from "./DirectoryView.vue";
 import { computed } from "@vue/reactivity";
 const props = defineProps<{
   root: DirectoryInfo;
 }>();
 
 const curDir = ref<DirectoryInfo>(props.root)
+const search = ref()
 watch(() => props.root, (value, old) => {
   curDir.value = value
 })
@@ -43,6 +44,14 @@ const addressBarItems = computed(() => {
   }
   return res
 })
+const searchDelegate = computed<SearchDelegate | undefined>(() => {
+  if (search.value) {
+    return (file) => {
+      return file.name.toLocaleLowerCase().includes(search.value.toLocaleLowerCase())
+    }
+  }
+  return
+})
 
 </script>
 <template>
@@ -60,13 +69,14 @@ const addressBarItems = computed(() => {
         </template>
       </v-breadcrumbs>
       <v-spacer></v-spacer>
-      <v-btn variant="text" icon="mdi-magnify"></v-btn>
+      <v-text-field v-model="search" label="Search" append-inner-icon="mdi-magnify" single-line
+        hide-details></v-text-field>
       <v-btn variant="text" icon="mdi-filter"></v-btn>
       <v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
     </v-app-bar>
     <v-main style="height:100vh;">
       <template v-if="curDir">
-        <DirectoryView @click-dir="onDirClick" :dir="curDir" />
+        <DirectoryView @click-dir="onDirClick" :dir="curDir" :search-delegate="searchDelegate" />
       </template>
     </v-main>
   </v-layout>
