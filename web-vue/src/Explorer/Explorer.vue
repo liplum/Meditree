@@ -69,10 +69,18 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
         </template>
       </v-breadcrumbs>
       <v-spacer></v-spacer>
-      <v-text-field v-model="search" label="Search" append-inner-icon="mdi-magnify" single-line
-        hide-details></v-text-field>
-      <v-btn variant="text" icon="mdi-filter"></v-btn>
-      <v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
+      <v-text-field v-model="search" label="Search" append-inner-icon="mdi-magnify" single-line hide-details />
+      <v-menu open-on-hover>
+        <template v-slot:activator="{ props }">
+          <v-btn variant="text" icon="mdi-filter" v-bind="props" />
+        </template>
+        <v-list>
+          <v-list-item key="a">
+            aa
+          </v-list-item>
+        </v-list>
+      </v-menu>
+      <v-btn variant="text" icon="mdi-dots-vertical" />
     </v-app-bar>
     <v-main style="height:100vh;">
       <template v-if="curDir">
