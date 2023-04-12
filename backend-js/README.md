@@ -57,12 +57,14 @@ Properties:
 
 - **`removeHidden`** (boolean?): Whether to remove hidden files and folders from the entire tree. False by default.
 - **`removeSize`** (boolean?): Whether to remove size information from the minified output. False by default.
+- **`removePath`** (boolean?): Whether to remove path from the minified output. If so, client will take the responsibility to compose it. False by default.
 
 Example:
 
 ```json5
 {
   "removeHidden": true, // Remove hidden files and folders from the entire tree.
-  "removeSize": true // Remove size information from the minified output.
+  "removeSize": true, // Remove size information from the minified output.
+  "removePath": true // Remove path from the minified output.
 }
 ```

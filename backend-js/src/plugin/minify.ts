@@ -11,6 +11,11 @@ interface MinifyPluginConfig {
    * False by default.
    */
   removeSize?: boolean
+  /**
+   * If so, client will take the responsibility to compose it.
+   * False by default.
+   */
+  removePath?: boolean
 }
 /**
  * Minify plugin affects only file tree json for client side.
@@ -19,9 +24,10 @@ interface MinifyPluginConfig {
 export function MinifyPlugin(config: MinifyPluginConfig): MeditreePlugin {
   const removeHidden = config.removeHidden ?? false
   const removeSize = config.removeSize ?? false
+  const removePath = config.removePath ?? false
   return {
     onEntireTreeForClient(tree): FileTree {
-      if (removeHidden || removeSize) {
+      if (removeHidden || removeSize || removePath) {
         function visit(cur: FileTree): void {
           for (const [name, fileOrSubtree] of Object.entries(cur)) {
             if (removeHidden && fileOrSubtree["*hide"]) {
@@ -32,6 +38,9 @@ export function MinifyPlugin(config: MinifyPluginConfig): MeditreePlugin {
               if (fileOrSubtree["*type"]) {
                 if (removeSize) {
                   delete fileOrSubtree.size
+                }
+                if (removePath) {
+                  delete fileOrSubtree.path
                 }
               } else {
                 visit(fileOrSubtree)

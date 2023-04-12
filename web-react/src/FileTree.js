@@ -23,7 +23,7 @@ export function createDelegate(name, fileTree) {
           isLeaf: true,
           title: name,
           key: curKey,
-          path: `${curDir.path}/${name}`,
+          path: file.path ?? `${curDir.path}/${name}`,
           type: file["*type"],
           size: file.size,
           tracking: [...curDir.tracking, curKey],
