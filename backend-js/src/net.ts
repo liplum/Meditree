@@ -4,8 +4,11 @@ import { v4 as uuidv4 } from "uuid"
 /**
  * returns whether the message is handled
  */
-export type Handler<Data> = (data: Data, header?: any) => boolean | Promise<boolean>
-export type ErrorHandler<Error> = (error: Error, header?: any) => boolean | Promise<boolean>
+export type Handler<TData> = (data: TData, header?: any) => boolean | Promise<boolean>
+/**
+ * returns whether the error is handled
+ */
+export type ErrorHandler = (error: ErrorMessage, header?: any) => boolean | Promise<boolean>
 export enum DataType {
   string = 1,
   object = 2,
@@ -15,7 +18,8 @@ export enum DataType {
 export enum MessageType {
   object = 1,
   stream = 2,
-  innerEvent = 3,
+  error = 3,
+  innerEvent = 4,
 }
 
 export enum StreamState {
@@ -45,9 +49,14 @@ export interface SocketLike {
   close: (...args: any[]) => void
   send: (buffer: Buffer) => void
 }
+type HandlerEntry<TData> = [Handler<TData>, ErrorHandler | undefined]
+export interface ErrorMessage {
+  name: string
+  message: string
+}
 export class Net {
   readonly socket: SocketLike
-  private readonly messageHandlers = new Map<string, Handler<any>[]>()
+  private readonly messageHandlers = new Map<string, HandlerEntry<any>[]>()
   private unhandledMessageTasks: (() => void)[] = []
   private readonly prereadHooks: PrereadHook[] = []
   private readonly readHooks: ReadHook<any>[] = []
@@ -104,6 +113,9 @@ export class Net {
         if (hook(readHookArgs)) return
       }
       this.handleMessage(id, data, header)
+    } else if (type === MessageType.error) {
+      const error = readObject(reader)
+      this.handleMessage(id, error, header)
     } else if (type === MessageType.stream) {
       const uuid = reader.string()
       const state: StreamState = reader.uint8()
@@ -160,7 +172,7 @@ export class Net {
     const handlers = this.messageHandlers.get(id)
     const handlerLengthBefore = handlers?.length
     if (handlers) {
-      const handlerAfter = handlers.filter((handler) => {
+      const handlerAfter = handlers.filter(([handler, errorHandler]) => {
         return !handler(data, header)
       })
       this.messageHandlers.set(id, handlerAfter)
@@ -172,9 +184,31 @@ export class Net {
     }
   }
 
-  send(id: string, data: any, header?: any): void {
+  private handleError(id: string, error: ErrorMessage, header?: any): void {
+    const handlers = this.messageHandlers.get(id)
+    const handlerLengthBefore = handlers?.length
+    if (handlers) {
+      const handlerAfter = handlers.filter(([handler, errorHandler]) => {
+        if (errorHandler) {
+          return !errorHandler(error, header)
+        } else {
+          return false
+        }
+      })
+      this.messageHandlers.set(id, handlerAfter)
+    }
+    if (handlers?.length !== handlerLengthBefore) {
+      this.unhandledMessageTasks.push(() => {
+        this.handleError(id, error, header)
+      })
+    }
+  }
+
+  send(id: string, data: any | Error, header?: any): void {
     if (data instanceof Readable) {
       this.sendStream(id, data, header)
+    } else if (data instanceof Error) {
+      this.sendError(id, data, header)
     } else {
       this.sendObject(id, data, header)
     }
@@ -186,6 +220,22 @@ export class Net {
     writer.string(id)
     writeHeader(writer, JSON.stringify(header))
     writeObject(writer, data)
+    this.socket.send(writer.buildBuffer())
+  }
+
+  sendError(id: string, error: ErrorMessage | Error, header?: any): void {
+    // convert Error object to ErrorMessage interface
+    if (error instanceof Error) {
+      error = {
+        name: error.name,
+        message: error.message,
+      }
+    }
+    const writer = new BufferWriter()
+    writer.uint8(MessageType.error)
+    writer.string(id)
+    writeHeader(writer, JSON.stringify(header))
+    writeObject(writer, error)
     this.socket.send(writer.buildBuffer())
   }
 
@@ -230,28 +280,38 @@ export class Net {
     })
   }
 
-  private addHandler<Data, Error>(
-    handlers: Map<string, [Handler<Data>, ErrorHandler<Error>][]>,
+  private addHandler<Data>(
+    handlers: Map<string, HandlerEntry<Data>[]>,
     id: string,
     handler: Handler<Data>,
-    errorHandler: ErrorHandler<Error>,
+    errorHandler?: ErrorHandler,
   ): void {
     if (handlers.has(id)) {
-      handlers.get(id)?.push(handler)
+      handlers.get(id)?.push([handler, errorHandler])
     } else {
-      handlers.set(id, [handler])
+      handlers.set(id, [[handler, errorHandler]])
     }
   }
 
-  onMessage<T = any>(id: string, handler: Handler<T>, onError?: ErrorHandler<Error>): void {
-    this.addHandler(this.messageHandlers, id, handler)
+  onMessage<TData = any>(
+    id: string,
+    handler: Handler<TData>,
+    onError?: ErrorHandler
+  ): void {
+    this.addHandler(this.messageHandlers, id, handler, onError)
   }
 
-  async getMessage<T = any>(id: string, headerMatcher?: (header?: any) => boolean): Promise<T> {
+  async getMessage<TData = any>(id: string, headerMatcher?: (header?: any) => boolean): Promise<TData> {
     return new Promise((resolve, reject) => {
-      this.onMessage<T>(id, (data, header) => {
+      this.onMessage<TData>(id, (data, header) => {
         if (!headerMatcher || headerMatcher(header)) {
           resolve(data)
+          return true
+        }
+        return false
+      }, (error, header) => {
+        if (!headerMatcher || headerMatcher(header)) {
+          reject(error)
           return true
         }
         return false

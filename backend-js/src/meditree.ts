@@ -122,15 +122,23 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       const path = file.inner.localPath
       // if file not exists, return null
       if (!fs.statSync(path).isFile()) return null
-      return fs.createReadStream(file.inner.localPath, options)
+      try {
+        return fs.createReadStream(file.inner.localPath, options)
+      } catch (error) {
+        return null
+      }
     }
     if (typeof file.remoteNode === "string") {
       const node = this.name2Child.get(file.remoteNode)
       if (!node) throw new Error(`Node[${file.remoteNode}] not found.`)
       const uuid = uuidv4()
       node.net.send("get-file", { path: file.inner.path, options, uuid })
-      const stream = await node.net.getMessage("send-file", (header) => header && header.uuid === uuid)
-      return stream
+      try {
+        const stream = await node.net.getMessage("send-file", (header) => header && header.uuid === uuid)
+        return stream
+      } catch (error) {
+        return null
+      }
     }
     return null
   }
@@ -189,9 +197,14 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     if (file) {
       const stream = await this.createReadStream(file, options)
       if (stream) {
-        receiver.send("send-file", stream, { uuid, path })
+        receiver.send("send-file", stream,
+          { uuid, path }
+        )
       } else {
         // TODO: send error
+        receiver.sendError("send-file", new Error("FileReadStream cannot be created."),
+          { uuid, path }
+        )
       }
     }
   }
