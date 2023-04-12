@@ -18,7 +18,9 @@ const renderer = computed(() => {
   <v-layout>
     <v-app-bar prominent></v-app-bar>
     <v-main>
-      <component :is="renderer"></component>
+      <template v-if="props.file">
+        <component :is="renderer" :file="props.file"></component>
+      </template>
     </v-main>
   </v-layout>
 </template>

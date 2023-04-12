@@ -9,7 +9,7 @@ const tree = ref();
 fetch("http://localhost:81/list", { method: "GET" })
   .then((res) => res.json())
   .then((data) => {
-    const fileTree = parseFileTree(data)
+    const fileTree = parseFileTree("http://localhost:81/file",data)
     tree.value = fileTree;
   });
 const drawer = ref(true)
@@ -25,7 +25,7 @@ function onSelecteFile(file: FileInfo) {
     <v-navigation-drawer v-model="drawer" permanent style="width: 50%;">
       <Explorer :root="tree" @select-file="onSelecteFile"></Explorer>
     </v-navigation-drawer>
-    <v-main>
+    <v-main style="width: 50%;">
       <DisplayBoard :file="selectedFile" />
     </v-main>
   </v-layout>
