@@ -28,13 +28,18 @@ export interface AsChildConfig {
 export interface AppConfig extends AsParentConfig, AsChildConfig {
   /** 
    * The network interface on which the application will listen for incoming connections.
-   * Default is for all interfaces.
+   * 0.0.0.0(all interfaces) by default.
    */
   hostname?: string
   /** 
-   * Default is 80.
+   * Port 80 is used by default.
    */
   port: number
+  /**
+   * Whether to watch the changes of local file tree and rebuild it.
+   * True by default.
+   */
+  watch?: boolean
   /**
    * The root directory to host.
    *

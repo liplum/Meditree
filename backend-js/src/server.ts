@@ -209,7 +209,9 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   if (localTree) {
-    localTree.startWatching()
+    if (config.watch ?? true) {
+      localTree.startWatching()
+    }
     await localTree.rebuildFileTree()
   }
 
