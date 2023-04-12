@@ -95,3 +95,37 @@ server {
     }
 }
 ```
+
+## Interface
+
+The payload for client rendering:
+
+```ts
+interface File {
+  "*type": string;
+  "*hide"?: boolean;
+  path?: string;
+  size?: string;
+}
+
+interface Directory {
+  "*hide"?: boolean;
+  [name: string]: File | Directory | any;
+}
+```
+
+The payload for server communication:
+
+```ts
+interface File {
+  "*type": string;
+  "*hide"?: boolean;
+  path: string;
+  size: string;
+}
+
+interface Directory {
+  "*hide"?: boolean;
+  [name: string]: File | Directory | any;
+}
+```
