@@ -16,7 +16,7 @@ export class DirectoryInfo {
   name: string
   hidden: boolean = false
   files: (FileInfo | DirectoryInfo)[] = []
-  
+
   toString(): string {
     return this.name
   }

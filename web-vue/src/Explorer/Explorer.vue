@@ -28,10 +28,17 @@ const addressBarItems = computed(() => {
   if (!curDir.value) return res
   let cur: DirectoryInfo | undefined = curDir.value
   while (cur) {
-    res.push({
-      title: cur.name,
-      disabled: false,
-    })
+    if (cur.parent === undefined) {
+      res.unshift({
+        title: "Root",
+        disabled: false,
+      })
+    } else {
+      res.unshift({
+        title: cur.name,
+        disabled: false,
+      })
+    }
     cur = cur.parent
   }
   return res
