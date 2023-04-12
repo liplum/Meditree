@@ -9,7 +9,7 @@ export type ViewMode = "list" | "grid"
 export interface Props {
   dir: DirectoryInfo;
   searchDelegate?: SearchDelegate;
-  view: ViewMode;
+  view?: ViewMode;
 }
 const props = withDefaults(defineProps<Props>(), {
   view: "grid",
@@ -47,6 +47,6 @@ const emit = defineEmits<{
     </v-container>
   </template>
   <template v-else>
-    
+
   </template>
 </template>

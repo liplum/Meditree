@@ -8,7 +8,9 @@ import { computed } from "@vue/reactivity";
 const props = defineProps<{
   root: DirectoryInfo;
 }>();
-
+const emit = defineEmits<{
+  (e: "selectFile", file: FileInfo): void
+}>()
 const curDir = ref<DirectoryInfo>(props.root)
 const search = ref()
 watch(() => props.root, (value, old) => {
@@ -24,25 +26,19 @@ function onNaviBack() {
     curDir.value = parent
   }
 }
-const addressBarItems = computed(() => {
-  const res: any[] = []
-  if (!curDir.value) return res
+const address = computed(() => {
+  let addres = ""
+  if (!curDir.value) return addres
   let cur: DirectoryInfo | undefined = curDir.value
   while (cur) {
     if (cur.parent === undefined) {
-      res.unshift({
-        title: "Root",
-        disabled: false,
-      })
+      addres += "/"
     } else {
-      res.unshift({
-        title: cur.name,
-        disabled: false,
-      })
+      addres += cur.name
     }
     cur = cur.parent
   }
-  return res
+  return addres
 })
 const searchDelegate = computed<SearchDelegate | undefined>(() => {
   if (search.value) {
@@ -56,18 +52,15 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
 </script>
 <template>
   <v-layout>
-    <v-app-bar color="primary" prominent>
-      <template v-if="curDir.parent">
+    <v-app-bar prominent>
+      <template v-if="curDir?.parent">
         <v-app-bar-nav-icon @click="onNaviBack" icon="mdi-arrow-left" />
       </template>
       <template v-else>
-        <v-app-bar-nav-icon />
       </template>
-      <v-breadcrumbs :items="addressBarItems">
-        <template v-slot:title="{ item }">
-          {{ item.title.toUpperCase() }}
-        </template>
-      </v-breadcrumbs>
+      <v-app-bar-title>
+        {{ curDir?.name }}
+      </v-app-bar-title>
       <v-spacer></v-spacer>
       <v-text-field v-model="search" label="Search" append-inner-icon="mdi-magnify" single-line hide-details />
       <v-menu open-on-hover>
@@ -82,9 +75,10 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
       </v-menu>
       <v-btn variant="text" icon="mdi-dots-vertical" />
     </v-app-bar>
-    <v-main style="height:100vh;">
+    <v-main style="height:100vh;overflow-y:auto;">
       <template v-if="curDir">
-        <DirectoryView @click-dir="onDirClick" :dir="curDir" :search-delegate="searchDelegate" />
+        <DirectoryView @click-dir="onDirClick" :dir="curDir" @click-file="emit('selectFile', $event)"
+          :search-delegate="searchDelegate" />
       </template>
     </v-main>
   </v-layout>
