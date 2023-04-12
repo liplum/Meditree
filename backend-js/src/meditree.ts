@@ -61,7 +61,7 @@ class ParentNode {
 }
 export interface FileTreeInfo {
   name: string
-  files: FileTree
+  root: FileTree
 }
 export interface ReadStreamOptions {
   start?: number

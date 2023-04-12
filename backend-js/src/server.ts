@@ -79,7 +79,7 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   const initialFileTree = {
     name: config.name,
-    files: {},
+    root: {},
   }
   let fullTreeCache: { obj: FileTreeInfo, json: string } = {
     obj: initialFileTree,
@@ -97,7 +97,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
     const info: FileTreeInfo = {
       name: config.name,
-      files: entireTree,
+      root: entireTree,
     }
     const infoString = JSON.stringify(info, null, 1)
     fullTreeCache = {

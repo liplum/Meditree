@@ -48,7 +48,7 @@ export function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
       } else {
         const handlers: RequestHandler[] = [(req, res) => {
           res.status(200)
-          res.contentType("html")
+          res.contentType("text/html")
           if (html === undefined) {
             html = buildIndexHtml(node.toJSON())
           }

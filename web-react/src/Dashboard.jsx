@@ -44,7 +44,7 @@ export async function loader({ request }) {
     })
     if (response.ok) {
       const payload = await response.json()
-      const fileTreeDelegate = ft.createDelegate(payload.name, payload.files)
+      const fileTreeDelegate = ft.createDelegate(payload.name, payload.root)
       return fileTreeDelegate
     } else {
       const { error } = await response.json()

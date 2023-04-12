@@ -198,7 +198,7 @@ func main() {
 	tree := buildFileTree(config)
 	jsonData, err := json.MarshalIndent(map[string]any{
 		"name":  config.Name,
-		"files": tree.ToJson(),
+		"root": tree.ToJson(),
 	}, "", " ")
 	if err != nil {
 		fmt.Println(err)

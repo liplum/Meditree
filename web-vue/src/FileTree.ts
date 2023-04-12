@@ -63,6 +63,6 @@ function parseDirectory(name: string, directory: Directory, parent?: DirectoryIn
   return dir;
 }
 
-export function parseFileTree(tree: { name: string, files: Directory }): DirectoryInfo {
-  return parseDirectory(tree.name, tree.files)
+export function parseFileTree(tree: { name: string, root: Directory }): DirectoryInfo {
+  return parseDirectory(tree.name, tree.root)
 }
