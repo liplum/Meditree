@@ -119,6 +119,9 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   async createReadStream(file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null> {
     // if the file has a path, it's a local file
     if (file.inner instanceof LocalFile) {
+      const path = file.inner.localPath
+      // if file not exists, return null
+      if (!fs.statSync(path).isFile()) return null
       return fs.createReadStream(file.inner.localPath, options)
     }
     if (typeof file.remoteNode === "string") {
@@ -185,7 +188,11 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     const file = this.resolveFile(pathParts)
     if (file) {
       const stream = await this.createReadStream(file, options)
-      receiver.send("send-file", stream, { uuid, path })
+      if (stream) {
+        receiver.send("send-file", stream, { uuid, path })
+      } else {
+        // TODO: send error
+      }
     }
   }
 

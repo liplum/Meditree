@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid"
  * returns whether the message is handled
  */
 export type Handler<Data> = (data: Data, header?: any) => boolean | Promise<boolean>
-
+export type ErrorHandler<Error> = (error: Error, header?: any) => boolean | Promise<boolean>
 export enum DataType {
   string = 1,
   object = 2,
@@ -230,9 +230,11 @@ export class Net {
     })
   }
 
-  private addHandler<Data>(
-    handlers: Map<string, Handler<Data>[]>,
-    id: string, handler: Handler<Data>
+  private addHandler<Data, Error>(
+    handlers: Map<string, [Handler<Data>, ErrorHandler<Error>][]>,
+    id: string,
+    handler: Handler<Data>,
+    errorHandler: ErrorHandler<Error>,
   ): void {
     if (handlers.has(id)) {
       handlers.get(id)?.push(handler)
@@ -241,7 +243,7 @@ export class Net {
     }
   }
 
-  onMessage<T = any>(id: string, handler: Handler<T>): void {
+  onMessage<T = any>(id: string, handler: Handler<T>, onError?: ErrorHandler<Error>): void {
     this.addHandler(this.messageHandlers, id, handler)
   }
 
