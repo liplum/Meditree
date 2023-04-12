@@ -1,14 +1,15 @@
 export function createDelegate(name, fileTree) {
-  const rootChildren = []
   let key = 0
   const rootRenderTree = {
     key: key++,
     title: name,
-    children: rootChildren
+    children: [],
+    path: "",
+    tracking: [key]
   }
   const key2File = new Map()
-  function createNode(parentKeys, children, fileTree) {
-    const entries = Object.entries(fileTree)
+  function createNode(curDir, curFileTree) {
+    const entries = Object.entries(curFileTree)
     reorder(entries)
     for (const [name, file] of entries) {
       if (!(file instanceof Object)) continue
@@ -16,33 +17,34 @@ export function createDelegate(name, fileTree) {
       let curKey = key++
       // if file has a type, it presents a file
       if (file["*type"]) {
-        key2File.set(curKey, {
+        // fileObj is for both TreeVie component and actual FileTree.
+        const fileObj = {
           name,
-          key: curKey,
-          path: file.path,
-          type: file["*type"],
-          size: file.size,
-          tracking: [...parentKeys, curKey],
-        })
-        children.push({
-          key: curKey,
           isLeaf: true,
           title: name,
-        })
+          key: curKey,
+          path: `${curDir.path}/${name}`,
+          type: file["*type"],
+          size: file.size,
+          tracking: [...curDir.tracking, curKey],
+        }
+        key2File.set(curKey, fileObj)
+        curDir.children.push(fileObj)
       } else {
         // otherwise, it presents a directory
-        const myChildren = []
-        const obj = {
+        const dirObj = {
           key: curKey,
           title: name,
-          children: myChildren,
+          path: `${curDir.path}/${name}`,
+          children: [],
+          tracking: [...curDir.tracking, curKey],
         }
-        children.push(obj)
-        createNode([...parentKeys, curKey], myChildren, file)
+        curDir.children.push(dirObj)
+        createNode(dirObj, file)
       }
     }
   }
-  createNode([], rootChildren, fileTree)
+  createNode(rootRenderTree, fileTree)
   return {
     renderTree: rootRenderTree,
     key2File,
