@@ -27,6 +27,10 @@ export class DirectoryInfo implements FileSystemEntry {
   toString(): string {
     return this.name
   }
+
+  get isRoot(): boolean {
+    return this.parent === undefined
+  }
 }
 
 interface File {
@@ -51,7 +55,7 @@ export function parseFileTree(baseUrl: string, tree: { name: string, root: Direc
     fi.hidden = file["*hide"] || false;
     fi.path = file.path ??
       (parent ? `${parent.path}/${name}` : name)
-    fi.url = `${baseUrl}/${file.path}`
+    fi.url = `${baseUrl}/${fi.path}`
     fi.size = file.size;
     return fi;
   }
@@ -60,7 +64,7 @@ export function parseFileTree(baseUrl: string, tree: { name: string, root: Direc
     const dir = new DirectoryInfo();
     dir.name = name;
     dir.parent = parent;
-    dir.path = parent ? `${parent.path}/${name}` : name
+    dir.path = parent && !parent.isRoot ? `${parent.path}/${name}` : name
     dir.hidden = directory["*hide"] || false;
     for (const [name, file] of Object.entries(directory)) {
       if (name === "*hide") continue

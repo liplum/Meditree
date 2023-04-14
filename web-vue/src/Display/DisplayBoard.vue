@@ -2,6 +2,7 @@
 import { computed } from "@vue/reactivity";
 import { FileInfo } from "../FileTree";
 import ImageRenderer from "./Image.vue"
+import { filesize } from "filesize"
 
 function resolveRenderer(type: string) {
   if (!type) return null
@@ -21,6 +22,11 @@ const renderer = computed(() => {
     return null
   }
 })
+const size = computed(() => {
+  if (props.file) {
+    return filesize(props.file.size, { base: 2, standard: "jedec" }) as string
+  }
+})
 </script>
 
 <template>
@@ -30,6 +36,11 @@ const renderer = computed(() => {
       <v-app-bar-title>
         {{ props.file?.name }}
       </v-app-bar-title>
+      <template #append>
+        <v-chip v-if="size">
+          {{ size }}
+        </v-chip>
+      </template>
     </v-app-bar>
     <v-main>
       <div v-if="props.file" class="board">

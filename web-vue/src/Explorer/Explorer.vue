@@ -30,7 +30,7 @@ const address = computed(() => {
   if (!curDir.value) return addres
   let cur: DirectoryInfo | undefined = curDir.value
   while (cur) {
-    if (cur.parent === undefined) {
+    if (cur.isRoot) {
       addres += "/"
     } else {
       addres += cur.name

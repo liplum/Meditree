@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "filesize": "^10.0.7",
     "vue": "^3.2.47",
     "vuejs-tree": "^3.0.2",
     "vuetify": "^3.1.13"
