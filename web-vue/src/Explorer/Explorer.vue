@@ -64,9 +64,10 @@ const mdAndDown = display.mdAndDown
         {{ curDir?.name }}
       </v-app-bar-title>
       <v-spacer></v-spacer>
-      <v-text-field v-model="search" append-inner-icon="mdi-magnify" single-line hide-details clearable
-        class="search-bar" />
-      <v-btn variant="text" icon="mdi-dots-vertical" />
+      <template #append>
+        <v-text-field v-model="search" append-inner-icon="mdi-magnify" single-line hide-details class="search-bar" />
+        <v-btn variant="text" icon="mdi-dots-vertical" />
+      </template>
     </v-app-bar>
     <v-main style="height:100vh;overflow-y:auto;">
       <template v-if="curDir">
@@ -79,11 +80,11 @@ const mdAndDown = display.mdAndDown
 
 <style scoped>
 .search-bar {
-  width: 0;
-  transition: width 0.15s ease-in-out;
+  width: 3rem;
+  transition: width 0.3s cubic-bezier(0, 0, 0.2, 1);
 }
 
 .search-bar:focus-within {
-  width: 5rem;
+  width: 10rem;
 }
 </style>
