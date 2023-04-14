@@ -10,7 +10,7 @@ const tree = ref();
 fetch("http://localhost:81/list", { method: "GET" })
   .then((res) => res.json())
   .then((data) => {
-    const fileTree = parseFileTree("http://localhost:81/file",data)
+    const fileTree = parseFileTree("http://localhost:81/file", data)
     tree.value = fileTree;
   });
 const drawer = ref(true)
@@ -26,8 +26,7 @@ const mdAndDown = display.mdAndDown
 
 <template>
   <v-layout>
-    <v-navigation-drawer v-model="drawer"
-    :clipped="mdAndDown" style="width: 50%;">
+    <v-navigation-drawer v-model="drawer" :clipped="mdAndDown" :width="mdAndDown ? 400 : 600">
       <Explorer :root="tree" @select-file="onSelecteFile"></Explorer>
     </v-navigation-drawer>
     <v-main>
