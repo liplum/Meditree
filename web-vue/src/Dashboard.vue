@@ -6,11 +6,12 @@ import Explorer from "./Explorer/Explorer.vue";
 import { ref } from "vue";
 import { FileInfo, parseFileTree } from "./FileTree";
 const tree = ref();
+const backend = "http://localhost:81"
 // for testing
-fetch("http://localhost:81/list", { method: "GET" })
+fetch(`${backend}/list`, { method: "GET" })
   .then((res) => res.json())
   .then((data) => {
-    const fileTree = parseFileTree("http://localhost:81/file", data)
+    const fileTree = parseFileTree(`${backend}/file`, data)
     tree.value = fileTree;
   });
 const drawer = ref(true)
@@ -26,7 +27,7 @@ const mdAndDown = display.mdAndDown
 
 <template>
   <v-layout>
-    <v-navigation-drawer v-model="drawer" :clipped="mdAndDown" :width="mdAndDown ? 500 : 600">
+    <v-navigation-drawer v-model="drawer" :clipped="mdAndDown" :width="mdAndDown ? 300 : 600">
       <Explorer :root="tree" @select-file="onSelecteFile"></Explorer>
     </v-navigation-drawer>
     <v-main>

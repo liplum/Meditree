@@ -1,8 +1,7 @@
 <script lang="ts" setup>
-import { ref, onUpdated, watch } from "vue";
+import { ref, watch } from "vue";
 import { DirectoryInfo, FileInfo } from "../FileTree";
-import Directory from "./Directory.vue";
-import File from "./File.vue";
+import { useDisplay } from 'vuetify'
 import DirectoryView, { SearchDelegate } from "./DirectoryView.vue";
 import { computed } from "@vue/reactivity";
 const props = defineProps<{
@@ -48,7 +47,9 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
   }
   return
 })
-
+const display = useDisplay()
+// for responsive drawer
+const mdAndDown = display.mdAndDown
 </script>
 <template>
   <v-layout>
@@ -63,17 +64,8 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
         {{ curDir?.name }}
       </v-app-bar-title>
       <v-spacer></v-spacer>
-      <v-text-field v-model="search" label="Search" append-inner-icon="mdi-magnify" single-line hide-details />
-      <v-menu open-on-hover>
-        <template v-slot:activator="{ props }">
-          <v-btn variant="text" icon="mdi-filter" v-bind="props" />
-        </template>
-        <v-list>
-          <v-list-item key="a">
-            aa
-          </v-list-item>
-        </v-list>
-      </v-menu>
+      <v-text-field v-model="search" append-inner-icon="mdi-magnify" single-line hide-details clearable
+        class="search-bar"></v-text-field>
       <v-btn variant="text" icon="mdi-dots-vertical" />
     </v-app-bar>
     <v-main style="height:100vh;overflow-y:auto;">
@@ -84,3 +76,14 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
     </v-main>
   </v-layout>
 </template>
+
+<style scoped>
+.search-bar {
+  width: 0;
+  transition: width 0.15s ease-in-out;
+}
+
+.search-bar:focus-within {
+  width: 5rem;
+}
+</style>
