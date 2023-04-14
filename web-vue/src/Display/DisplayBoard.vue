@@ -2,12 +2,16 @@
 import { computed } from "@vue/reactivity";
 import { FileInfo } from "../FileTree";
 import ImageRenderer from "./Image.vue"
+import VideoRenderer from "./Video.vue"
 import { filesize } from "filesize"
 
 function resolveRenderer(type: string) {
   if (!type) return null
   if (type.startsWith("image")) {
     return ImageRenderer
+  }
+  if (type.startsWith("video")) {
+    return VideoRenderer
   }
   return null
 }
