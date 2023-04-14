@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import DisplayBoard from "./Display/DisplayBoard.vue";
 import ConnectDialog from "./ConnectDialog.vue";
+import { useDisplay } from 'vuetify'
 import Explorer from "./Explorer/Explorer.vue";
 import { ref } from "vue";
 import { FileInfo, parseFileTree } from "./FileTree";
@@ -18,14 +19,18 @@ function onSelecteFile(file: FileInfo) {
   console.log(file)
   selectedFile.value = file
 }
+const display = useDisplay()
+// for responsive drawer
+const mdAndDown = display.mdAndDown
 </script>
 
 <template>
   <v-layout>
-    <v-navigation-drawer v-model="drawer" permanent style="width: 50%;">
+    <v-navigation-drawer v-model="drawer"
+    :clipped="mdAndDown" style="width: 50%;">
       <Explorer :root="tree" @select-file="onSelecteFile"></Explorer>
     </v-navigation-drawer>
-    <v-main style="width: 50%;">
+    <v-main>
       <DisplayBoard :file="selectedFile" />
     </v-main>
   </v-layout>
