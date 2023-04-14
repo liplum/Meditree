@@ -144,7 +144,7 @@ export function findConfig({ rootDir, filename }: { rootDir: string, filename: s
   const curDir = rootDir
   let configFile = findFsEntryInTree(curDir, filename)
   if (configFile) {
-    const config = setupConfig(JSON.parse(fs.readFileSync(configFile).toString()) ?? {})
+    const config = setupConfig(JSON.parse(fs.readFileSync(configFile, "utf8")) ?? {})
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     return config
   } else {

@@ -13,6 +13,7 @@ import { CachePlugin } from "./plugin/cache.js"
 import { HomepagePlugin } from "./plugin/homepage.js"
 import { HLSPlugin } from "./plugin/hls.js"
 import { MinifyPlugin } from "./plugin/minify.js"
+import { StatisticsPlugin } from "./plugin/statistics.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   if (config.logDir) {
@@ -30,6 +31,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   pluginTypes.homepage = (config) => HomepagePlugin(config)
   pluginTypes.hls = (config) => HLSPlugin(config)
   pluginTypes.minify = (config) => MinifyPlugin(config)
+  pluginTypes.statistics = (config) => StatisticsPlugin(config)
 
   const timer = new Timer()
   timer.start("Start Server")
@@ -41,6 +43,22 @@ export async function startServer(config: AppConfig): Promise<void> {
   for (const plugin of plugins) {
     plugin.init?.()
   }
+
+  function onExitPlugin(): void {
+    for (const plugin of plugins) {
+      plugin.onExit?.()
+    }
+  }
+
+  process.on("SIGINT", () => {
+    onExitPlugin()
+    process.exit(0)
+  })
+  process.on("uncaughtException", (err) => {
+    console.error("Uncaught Exception:", err)
+    onExitPlugin()
+    process.exit(1)
+  })
   const app = express()
   const server = http.createServer(app)
   app.use(cors())
@@ -160,9 +178,12 @@ export async function startServer(config: AppConfig): Promise<void> {
     let path = removePrefix(uri, "/file/")
     path = removeSuffix(path, "/")
     const resolved = node.resolveFile(path.split("/"))
-    if (resolved?.inner?.["*type"] == null) {
+    if (!resolved?.inner?.["*type"]) {
       res.status(404).end()
       return
+    }
+    for (const plugin of plugins) {
+      plugin.onFileRequested?.(req, resolved)
     }
     const fileType = resolved.inner["*type"]
     res.contentType(fileType)
@@ -224,7 +245,6 @@ export async function startServer(config: AppConfig): Promise<void> {
   if (config.parent?.length && config.publicKey && config.privateKey) {
     await setupAsChild(node, config as any as AsChildConfig)
   }
-
   const hostname = config.hostname
   if (hostname) {
     server.listen(config.port, config.hostname, (): void => {
