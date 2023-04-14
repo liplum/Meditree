@@ -65,7 +65,7 @@ const mdAndDown = display.mdAndDown
       </v-app-bar-title>
       <v-spacer></v-spacer>
       <v-text-field v-model="search" append-inner-icon="mdi-magnify" single-line hide-details clearable
-        class="search-bar"></v-text-field>
+        class="search-bar" />
       <v-btn variant="text" icon="mdi-dots-vertical" />
     </v-app-bar>
     <v-main style="height:100vh;overflow-y:auto;">

@@ -1,7 +1,16 @@
 <script lang="ts" setup>
 import { computed } from "@vue/reactivity";
 import { FileInfo } from "../FileTree";
-import { resolveRenderer } from "./DisplayBoard";
+import ImageRenderer from "./Image.vue"
+
+function resolveRenderer(type: string) {
+  if (!type) return null
+  if (type.startsWith("image")) {
+    return ImageRenderer
+  }
+  return null
+}
+
 const props = defineProps<{
   file?: FileInfo;
 }>();
