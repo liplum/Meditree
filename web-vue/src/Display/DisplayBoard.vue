@@ -18,6 +18,9 @@ const renderer = computed(() => {
   <v-layout>
     <v-app-bar prominent>
       <slot name="app-bar-pre"></slot>
+      <v-app-bar-title>
+        {{ props.file?.name }}
+      </v-app-bar-title>
     </v-app-bar>
     <v-main>
       <div v-if="props.file" class="board">
