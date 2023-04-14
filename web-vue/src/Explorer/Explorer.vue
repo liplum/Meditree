@@ -57,6 +57,7 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
         <v-app-bar-nav-icon @click="onNaviBack" icon="mdi-arrow-left" />
       </template>
       <template v-else>
+        <v-app-bar-nav-icon disabled icon="mdi-home" />
       </template>
       <v-app-bar-title>
         {{ curDir?.name }}
