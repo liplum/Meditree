@@ -16,7 +16,9 @@ const renderer = computed(() => {
 
 <template>
   <v-layout>
-    <v-app-bar prominent></v-app-bar>
+    <v-app-bar prominent>
+      <slot name="app-bar-pre"></slot>
+    </v-app-bar>
     <v-main>
       <template v-if="props.file">
         <v-responsive aspect-ratio="1" class="border pa-4">

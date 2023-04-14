@@ -26,11 +26,15 @@ const mdAndDown = display.mdAndDown
 
 <template>
   <v-layout>
-    <v-navigation-drawer v-model="drawer" :clipped="mdAndDown" :width="mdAndDown ? 400 : 600">
+    <v-navigation-drawer v-model="drawer" :clipped="mdAndDown" :width="mdAndDown ? 500 : 600">
       <Explorer :root="tree" @select-file="onSelecteFile"></Explorer>
     </v-navigation-drawer>
     <v-main>
-      <DisplayBoard :file="selectedFile" />
+      <DisplayBoard :file="selectedFile">
+        <template #app-bar-pre v-if="mdAndDown">
+          <v-app-bar-nav-icon @click="drawer = !drawer" />
+        </template>
+      </DisplayBoard>
     </v-main>
   </v-layout>
 </template>
