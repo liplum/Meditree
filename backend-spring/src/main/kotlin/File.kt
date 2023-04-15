@@ -1,43 +1,74 @@
 package net.liplum.meditree
 
-import java.nio.file.Files
-import java.nio.file.Paths
+import java.io.File
 
 interface IFile {
     val name: String
     val path: String
-    val size: Int
+    val size: Long
 }
 
 class LocalFile(
     val parent: LocalFileTree,
     override val name: String,
+    val local: File,
     override val path: String,
-    override val size: Int,
+    override val size: Long,
 ) : IFile {
+
 }
 
 class LocalFileTree(
     val parent: LocalFileTree?,
+    val local: File,
     val path: String,
 ) {
-
+    val name2File: MutableMap<String, LocalFile> = mutableMapOf()
+    val isRoot: Boolean = parent == null
 }
 
-fun buildLocalFileTree(){
+fun buildFileTreeFromLocal(root: File): LocalFileTree {
+    fun walk(curDir: File, tree: LocalFileTree) {
+        val files = curDir.listFiles() ?: return
+        for (file in files) {
+            if (file.isFile) {
+                tree.name2File[file.name] = LocalFile(
+                    parent = tree,
+                    name = file.name,
+                    local = file,
+                    path = "${tree.path}/${file.name}",
+                    size = file.length()
+                )
+            } else if (file.isDirectory) {
+                val fileTree = LocalFileTree(
+                    parent = tree,
+                    local = file,
+                    path = "${tree.path}/${file.name}",
+                )
+                walk(file, fileTree)
+            }
+        }
+    }
 
+    val rootTree = LocalFileTree(
+        parent = null,
+        local = root,
+        path = ""
+    )
+    walk(root, rootTree)
+    return rootTree
 }
 
-fun findFsEntryInTree(root: String, fileName: String): String? {
+fun findFsEntryInTree(root: File, fileName: String): File? {
     var dir = root
-    var lastDir: String? = null
+    var lastDir: File? = null
     while (dir != lastDir) {
-        val configFile = Paths.get(dir, fileName).toString()
-        if (Files.exists(Paths.get(configFile))) {
+        val configFile = dir.resolve(fileName)
+        if (configFile.exists()) {
             return configFile
         } else {
             lastDir = dir
-            dir = Paths.get(dir).parent.toString()
+            dir = configFile.parentFile
         }
     }
     return null
