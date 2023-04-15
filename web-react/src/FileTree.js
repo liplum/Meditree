@@ -1,4 +1,6 @@
-export function createDelegate(name, fileTree) {
+import { backend } from "./Env"
+
+export function createDelegate({ name, root, server, passcode }) {
   let key = 0
   const rootRenderTree = {
     key: key++,
@@ -28,6 +30,8 @@ export function createDelegate(name, fileTree) {
           size: file.size,
           tracking: [...curDir.tracking, curKey],
         }
+        fileObj.url = backend.reolsveFileUrl(server, fileObj.path, passcode)
+
         key2File.set(curKey, fileObj)
         curDir.children.push(fileObj)
       } else {
@@ -44,7 +48,7 @@ export function createDelegate(name, fileTree) {
       }
     }
   }
-  createNode(rootRenderTree, fileTree)
+  createNode(rootRenderTree, root)
   return {
     renderTree: rootRenderTree,
     key2File,

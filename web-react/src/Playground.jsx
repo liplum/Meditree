@@ -46,9 +46,6 @@ export function FileDisplayBoard(props) {
   const forceUpdate = useForceUpdate()
   let content = null
   if (file) {
-    if (!file.url) {
-      file.url = backend.reolsveFileUrl(server, file.path, passcode)
-    }
     const Renderer = resolveRenderer(file.type)
     // wheel control works so bad when using trackpad.
     content = <div

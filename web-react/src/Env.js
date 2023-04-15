@@ -1,3 +1,5 @@
+import { removePrefix } from "./Utils"
+
 export function updatePageTitle(title) {
   document.title = `${title} - Meditree`
 }
@@ -10,6 +12,9 @@ export const backend = {
     }
   },
   reolsveFileUrl(server, path, passcode) {
+    if (path.startsWith("/")) {
+      path = removePrefix(path, "/")
+    }
     if (passcode) {
       return encodeURI(`${server}/file/${path}?passcode=${passcode}`)
     } else {
