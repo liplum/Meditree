@@ -22,17 +22,17 @@ function onSelecteFile(file: FileInfo) {
 }
 const display = useDisplay()
 // for responsive drawer
-const mdAndDown = display.mdAndDown
+const breakpoint = display.mdAndDown
 </script>
 
 <template>
   <v-layout>
-    <v-navigation-drawer v-model="drawer" :clipped="mdAndDown" :width="mdAndDown ? 300 : 600">
+    <v-navigation-drawer v-model="drawer" :clipped="breakpoint" :width="breakpoint ? 300 : 600">
       <Explorer :root="tree" @select-file="onSelecteFile"></Explorer>
     </v-navigation-drawer>
     <v-main>
       <DisplayBoard :file="selectedFile">
-        <template #app-bar-pre v-if="mdAndDown">
+        <template #app-bar-pre v-if="breakpoint">
           <v-app-bar-nav-icon @click="drawer = !drawer" />
         </template>
       </DisplayBoard>

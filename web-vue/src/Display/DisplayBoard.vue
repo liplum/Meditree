@@ -47,19 +47,9 @@ const size = computed(() => {
       </template>
     </v-app-bar>
     <v-main>
-      <div v-if="props.file" class="board">
-        <v-responsive aspect-ratio="1" class="border pa-4">
-          <component :is="renderer" :file="props.file"></component>
-        </v-responsive>
-      </div>
+      <template v-if="props.file">
+        <component :is="renderer" :file="props.file"></component>
+      </template>
     </v-main>
   </v-layout>
 </template>
-
-<style>
-.board {
-  height: calc(100vh - 128px);
-  /* adjust the height as needed */
-  overflow-y: auto;
-}
-</style>
