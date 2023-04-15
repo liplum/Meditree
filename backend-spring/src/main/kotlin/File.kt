@@ -3,19 +3,21 @@ package net.liplum.meditree
 import java.io.File
 
 interface IFile {
-    val name: String
     val path: String
     val size: Long
+    val type: String
+    val hidden: Boolean
 }
 
 class LocalFile(
     val parent: LocalFileTree,
-    override val name: String,
+    val name: String,
     val local: File,
     override val path: String,
     override val size: Long,
+    override val type: String,
 ) : IFile {
-
+    override var hidden: Boolean = false
 }
 
 class LocalFileTree(
@@ -27,17 +29,19 @@ class LocalFileTree(
     val isRoot: Boolean = parent == null
 }
 
-fun buildFileTreeFromLocal(root: File): LocalFileTree {
+fun buildFileTreeFromLocal(root: File, typing: (file: File) -> String?): LocalFileTree {
     fun walk(curDir: File, tree: LocalFileTree) {
         val files = curDir.listFiles() ?: return
         for (file in files) {
             if (file.isFile) {
+                val type = typing(file) ?: continue
                 tree.name2File[file.name] = LocalFile(
                     parent = tree,
                     name = file.name,
                     local = file,
                     path = "${tree.path}/${file.name}",
-                    size = file.length()
+                    size = file.length(),
+                    type = type,
                 )
             } else if (file.isDirectory) {
                 val fileTree = LocalFileTree(

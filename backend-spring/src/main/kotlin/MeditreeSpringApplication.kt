@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @SpringBootApplication
-class BackendSpringApplication
+class MeditreeSpringApplication
 
 @RestController
 class MessageController {
@@ -16,5 +16,5 @@ class MessageController {
 }
 
 fun main(args: Array<String>) {
-    runApplication<BackendSpringApplication>(*args)
+    runApplication<MeditreeSpringApplication>(*args)
 }
