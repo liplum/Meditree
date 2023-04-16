@@ -17,16 +17,15 @@ function resolveIcon(type: string): string {
 
 <template>
   <v-card class="mx-auto file-card">
-    <v-row class="row-center">
+    <div class="row-center">
       <v-icon size="64" :icon="resolveIcon(props.file.type)" />
-      <span>{{ props.file.name }}</span>
-    </v-row>
+      <span style="text-align: center;">{{ props.file.name }}</span>
+    </div>
   </v-card>
 </template>
 
 <style scoped>
 .file-card {
-  width: 8rem;
   padding: 1rem;
 }
 

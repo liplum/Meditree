@@ -35,7 +35,7 @@ const emit = defineEmits<{
   <template v-if="props.view === 'grid'">
     <v-container fluid>
       <v-row no-gutters align-self="stretch">
-        <v-col v-for="(file, name, index) in files" :key="name" cols="auto">
+        <v-col v-for="(file, name, index) in files" :key="name" cols="auto" style="width: 8rem;">
           <template v-if="(file instanceof FileInfo)">
             <File @click="emit('clickFile', file)" :file="file" />
           </template>

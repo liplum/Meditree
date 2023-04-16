@@ -7,17 +7,16 @@ const props = defineProps<{
 
 <template>
   <v-card class="mx-auto dir-card">
-    <v-row class="row-center">
+    <div class="row-center">
       <v-icon size="64" icon="mdi-folder" />
-      <span>{{ props.dir.name }}</span>
-    </v-row>
+      <span style="text-align: center;">{{ props.dir.name }}</span>
+    </div>
   </v-card>
 </template>
 
 <style scoped>
 .dir-card {
   padding: 1rem;
-  width: 8rem;
 }
 
 .row-center {
