@@ -17,6 +17,35 @@ From there, you can move this file up the file tree until you reach the root "/"
 
 ## Plugins
 
+`backend-js` supports loading built-in plugins and external plugins from file.
+
+The key can be a built-in plugin name or an external plugin path,
+and the value is an object for configuring the plugin.
+
+```json5
+"plugin": {
+  // loading built-in plugins
+  "cache": {},
+  "minify": {
+    "removeHidden": true,
+    "removePath": true
+  },
+  // loading external plugins from file
+  "path/to/plugin.js":{
+    "myConfig": true
+  }
+}
+```
+
+Built-in plugins:
+
+- [cache](#cache): for caching files from subnodes.
+- [homepage](#homepage): for hosting a static website.
+- [minify](#minify): for minifying list json for client rendering.
+- [statistics](#statistics): for counting file access times.
+- [watch](#watch):
+- [hls](#hls):
+
 ### Cache
 
 Properties:
@@ -40,7 +69,7 @@ Example:
 Properties:
 
 - **`root`** (string?): The root path for static resources. By default, a simple built-in homepage will be served.
-- **`requirePasscode`** (boolean?): Whether the built-in homepage requires a passcode. True by default. Note that the homepage serving root will be affected by this.
+- **`requirePasscode`** (boolean?): Whether the built-in homepage requires a passcode to access. True by default.
 
 Example:
 
@@ -68,3 +97,9 @@ Example:
   "removePath": true // Remove path from the minified output.
 }
 ```
+
+### Statistics
+
+### Hls
+
+### Watch

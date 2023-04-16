@@ -13,8 +13,6 @@ interface HomepagePluginConfig {
   /**
    * Whether the built-in homepage reqiures passcode.
    * True by default.
-   * 
-   * Note that the homepage serving {@link root} will be affected by this.
    */
   requirePasscode?: boolean
 }
