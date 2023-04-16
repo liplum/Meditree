@@ -19,7 +19,7 @@ interface HomepagePluginConfig {
   requirePasscode?: boolean
 }
 
-export function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
+export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
   const log = createLogger("Homepage")
   const root = config.root
   const requirePasscode = config.requirePasscode ?? true

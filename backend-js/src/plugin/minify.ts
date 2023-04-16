@@ -21,7 +21,7 @@ interface MinifyPluginConfig {
  * Minify plugin affects only file tree json for client side.
  * The file tree json for parent node won't be modified.
  */
-export function MinifyPlugin(config: MinifyPluginConfig): MeditreePlugin {
+export default function MinifyPlugin(config: MinifyPluginConfig): MeditreePlugin {
   const removeHidden = config.removeHidden ?? false
   const removeSize = config.removeSize ?? false
   const removePath = config.removePath ?? false

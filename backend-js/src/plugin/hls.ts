@@ -11,7 +11,7 @@ interface HLSPluginConfig {
    */
   hideTsDir?: boolean
 }
-export function HLSPlugin(config: HLSPluginConfig): MeditreePlugin {
+export default function HLSPlugin(config: HLSPluginConfig): MeditreePlugin {
   const hideTsDir = config.hideTsDir ?? true
   return {
     onPostGenerated(tree) {

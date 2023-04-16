@@ -13,7 +13,7 @@ interface JsonBackend {
 
 type Statistics = Record<string, number>
 
-export function StatisticsPlugin(config: StatisticsPluginConfig): MeditreePlugin {
+export default function StatisticsPlugin(config: StatisticsPluginConfig): MeditreePlugin {
   if (config.engine === "json") {
     const file = config.path ?? "meditree-statistics.json"
     let statistics: Statistics

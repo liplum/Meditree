@@ -9,11 +9,11 @@ import { LogLevels, Timer, createLogger, globalOptions, initGlobalLogFile } from
 import { type PluginRegistry, resolvePlguinFromConfig } from "./plugin.js"
 import { type Readable } from "stream"
 import http from "http"
-import { CachePlugin } from "./plugin/cache.js"
-import { HomepagePlugin } from "./plugin/homepage.js"
-import { HLSPlugin } from "./plugin/hls.js"
-import { MinifyPlugin } from "./plugin/minify.js"
-import { StatisticsPlugin } from "./plugin/statistics.js"
+import CachePlugin from "./plugin/cache.js"
+import HomepagePlugin from "./plugin/homepage.js"
+import HLSPlugin from "./plugin/hls.js"
+import MinifyPlugin from "./plugin/minify.js"
+import StatisticsPlugin from "./plugin/statistics.js"
 
 export async function startServer(config: AppConfig): Promise<void> {
   if (config.logDir) {
@@ -36,7 +36,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   const timer = new Timer()
   timer.start("Start Server")
   const plugins = config.plugin
-    ? resolvePlguinFromConfig(pluginTypes, config.plugin, (name) => {
+    ? await resolvePlguinFromConfig(pluginTypes, config.plugin, (name) => {
       log.error(`Plugin[${name}] doesn't exist.`)
     })
     : []

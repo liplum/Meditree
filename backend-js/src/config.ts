@@ -63,7 +63,7 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
    */
   displayName?: string
   /**
-   * If set, requests need passcode in authentication headers, body or cookies.
+   * If set, requests need passcode in authentication headers, body or cookies(not yet implemented).
    */
   passcode?: string
   fileType: Record<string, string>

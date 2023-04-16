@@ -26,7 +26,7 @@ interface CachePluginConfig {
 
 const fsstate = promisify(fs.stat)
 const mkdir = promisify(fs.mkdir)
-export function CachePlugin(config: CachePluginConfig): MeditreePlugin {
+export default function CachePlugin(config: CachePluginConfig): MeditreePlugin {
   const maxSize = config.maxSize ?? 10 * 1024 * 1024
   const maxAge = config.maxAge ?? 24 * 60 * 60 * 1000
   const root = config.root ?? "meditree-cache"

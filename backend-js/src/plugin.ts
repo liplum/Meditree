@@ -4,6 +4,9 @@ import { type ResolvedFile, type FileTree, type LocalFileTree } from "./file.js"
 import { type FileTreePlugin } from "./host.js"
 import { type ReadStreamOptions, type MeditreeNode } from "./meditree.js"
 import { type RequestHandler, type Express, type Request, type Response } from "express"
+import fs from "fs"
+import { pathToFileURL } from "url"
+
 export type PluginRegistry = Record<string, (config: any) => MeditreePlugin>
 
 export interface MeditreePlugin extends FileTreePlugin {
@@ -44,20 +47,44 @@ export interface ExpressRegisteringContext {
   passcodeHandler: RequestHandler
 }
 
-export function resolvePlguinFromConfig(
+export async function resolvePlguinFromConfig(
   all: PluginRegistry,
   config: Record<string, Record<string, any>>,
   onNotFound?: (name: string) => void,
-): MeditreePlugin[] {
+): Promise<MeditreePlugin[]> {
   const plugins: MeditreePlugin[] = []
   for (const [name, pluginConfig] of Object.entries(config)) {
     const ctor = all[name]
     if (ctor) {
+      // for built-in plugins
       const plugin = ctor(typeof pluginConfig === "object" ? pluginConfig : {})
+      plugins.push(plugin)
+    } else if (fs.existsSync(name)) {
+      // for external plugins
+      const pluginModule = await importModule(name)
+      // external plugins default export their constructors.
+      const plugin = pluginModule.default(pluginConfig)
       plugins.push(plugin)
     } else {
       onNotFound?.(name)
     }
   }
   return plugins
+}
+
+async function importModule(filePath: string): Promise<any> {
+  if (filePath.startsWith("file://")) {
+    // If the filePath starts with "file://", assume it is a file URI
+    const url = new URL(filePath)
+    if (!fs.existsSync(url.pathname)) {
+      throw new Error(`File not found: ${url.pathname}`)
+    }
+    return import(url.toString())
+  } else {
+    // Otherwise, assume it is a file path
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`File not found: ${filePath}`)
+    }
+    return import(pathToFileURL(filePath).toString())
+  }
 }
