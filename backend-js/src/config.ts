@@ -40,6 +40,7 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
    * True by default.
    */
   watch?: boolean
+  rebuildInterval: number
   /**
    * The root directory to host.
    *
@@ -65,7 +66,6 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
    * If set, requests need passcode in authentication headers, body or cookies.
    */
   passcode?: string
-  rebuildInterval: number
   fileType: Record<string, string>
   plugin?: Record<string, Record<string, any>>
   ignore?: string[]

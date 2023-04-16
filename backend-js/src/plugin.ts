@@ -3,17 +3,17 @@ import { type Readable } from "stream"
 import { type ResolvedFile, type FileTree, type LocalFileTree } from "./file.js"
 import { type FileTreePlugin } from "./host.js"
 import { type ReadStreamOptions, type MeditreeNode } from "./meditree.js"
-import { type RequestHandler, type Express, type Request } from "express"
+import { type RequestHandler, type Express, type Request, type Response } from "express"
 export type PluginRegistry = Record<string, (config: any) => MeditreePlugin>
 
 export interface MeditreePlugin extends FileTreePlugin {
-  init?(): void
+  init?(): Promise<void>
 
-  setupServer?(app: Express.Application, server: Server): void
+  setupServer?(app: Express.Application, server: Server): Promise<void>
 
-  setupMeditreeNode?(node: MeditreeNode): void
+  setupMeditreeNode?(node: MeditreeNode): Promise<void>
 
-  onExpressRegistering?(app: Express, ctx: ExpressRegisteringContext): void
+  onExpressRegistering?(app: Express, ctx: ExpressRegisteringContext): Promise<void>
 
   onPostGenerated?(tree: LocalFileTree): void
 
@@ -34,7 +34,10 @@ export interface MeditreePlugin extends FileTreePlugin {
    */
   onNodeCreateReadStream?(node: MeditreeNode, file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
 
-  onFileRequested?(req: Request, file: ResolvedFile): void
+  /**
+   * @returns whether to prevent streaming {@link file}.
+   */
+  onFileRequested?(req: Request, res: Response, file: ResolvedFile): Promise<void> | Promise<boolean | undefined>
   onExit?(): void
 }
 export interface ExpressRegisteringContext {

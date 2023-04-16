@@ -34,7 +34,7 @@ export function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
   let html: string | undefined
   let node: MeditreeNode
   return {
-    setupMeditreeNode(meditreeNode) {
+    async setupMeditreeNode(meditreeNode) {
       node = meditreeNode
       if (!root) {
         meditreeNode.on("file-tree-update", (entireTree) => {
@@ -42,7 +42,7 @@ export function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
         })
       }
     },
-    onExpressRegistering(app, ctx) {
+    async onExpressRegistering(app, ctx) {
       if (root) {
         app.use(express.static(root))
       } else {

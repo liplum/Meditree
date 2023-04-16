@@ -18,12 +18,12 @@ export function StatisticsPlugin(config: StatisticsPluginConfig): MeditreePlugin
     const file = config.path ?? "meditree-statistics.json"
     let statistics: Statistics
     return {
-      init() {
+      async init() {
         statistics = fs.existsSync(file)
           ? JSON.parse(fs.readFileSync(file, "utf8")) ?? {}
           : {}
       },
-      onFileRequested(req, file) {
+      async onFileRequested(req, res, file) {
         const count = statistics[file.inner.path]
         if (count === undefined) {
           statistics[file.inner.path] = 1

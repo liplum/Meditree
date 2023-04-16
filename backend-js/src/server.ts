@@ -41,7 +41,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     })
     : []
   for (const plugin of plugins) {
-    plugin.init?.()
+    await plugin.init?.()
   }
 
   function onExitPlugin(): void {
@@ -64,7 +64,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   app.use(cors())
   app.use(express.json())
   for (const plugin of plugins) {
-    plugin.setupServer?.(app, server)
+    await plugin.setupServer?.(app, server)
   }
   const localTree = !config.root
     ? undefined
@@ -80,7 +80,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   node.plugins = plugins
 
   for (const plugin of plugins) {
-    plugin.setupMeditreeNode?.(node)
+    await plugin.setupMeditreeNode?.(node)
   }
 
   const fileTypes = Array.from(Object.values(config.fileType))
@@ -158,7 +158,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   for (const plugin of plugins) {
-    plugin.onExpressRegistering?.(app, registryCtx)
+    await plugin.onExpressRegistering?.(app, registryCtx)
   }
 
   app.get("/list", passcodeHandler, (req, res) => {
@@ -183,7 +183,10 @@ export async function startServer(config: AppConfig): Promise<void> {
       return
     }
     for (const plugin of plugins) {
-      plugin.onFileRequested?.(req, resolved)
+      if (await plugin.onFileRequested?.(req, res, resolved)) {
+        res.status(400).end()
+        return
+      }
     }
     const fileType = resolved.inner["*type"]
     res.contentType(fileType)
