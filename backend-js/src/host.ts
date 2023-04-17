@@ -1,14 +1,12 @@
 import fs from "fs"
 import path from "path"
-import chokidar from "chokidar"
 import minimatch, { type MinimatchOptions } from "minimatch"
-import { clearInterval } from "timers"
 import { type FileTreeLike, LocalFile, type FileType, type FileTree, type ResolvedFile } from "./file.js"
 import { LocalFileTree } from "./file.js"
 import EventEmitter from "events"
 import { promisify } from "util"
 import { type MeditreePlugin } from "./plugin.js"
-import { type Logger, createLogger } from "./logger.js"
+import { type Logger } from "./logger.js"
 
 export interface HostTreeOptions {
   /**
@@ -17,56 +15,30 @@ export interface HostTreeOptions {
   root: string
   name: string
   fileTypePattern: Record<string, string>
-  rebuildInterval: number
   ignorePattern: string[]
+  log?: Logger
   plugins?: MeditreePlugin[]
 }
 
-const minimatchOptions: MinimatchOptions = {
-  nocase: true,
-}
-
-export declare interface HostTree {
+export declare interface IHostTree {
   on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this
-
   off(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this
-
   emit(event: "rebuild", fileTree: LocalFileTree): boolean
+  start(): void
+  stop(): void
+  rebuildFileTree(): Promise<void>
 }
 
-export class HostTree extends EventEmitter implements FileTreeLike {
+export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
   private options: HostTreeOptions
   private fileTree: LocalFileTree
-  private fileWatcher: fs.FSWatcher | null = null
-  log: Logger
   constructor(options: HostTreeOptions) {
     super()
     this.options = options
-    this.log = createLogger(`Tree-${options.name}`)
   }
 
   toJSON(): FileTree {
     return this.fileTree.toJSON()
-  }
-
-  isFileOrDirectoryIncluded = (path: string): boolean => {
-    for (const ignore of this.options.ignorePattern) {
-      if (minimatch(path, ignore, minimatchOptions)) {
-        return false
-      }
-    }
-    return true
-  }
-
-  classifyByFilePath = (filePath: string): FileType | null => {
-    const patterns = this.options.fileTypePattern
-    for (const [pattern, type] of Object.entries(patterns)) {
-      if (minimatch(filePath, pattern, minimatchOptions)) {
-        return type
-      }
-    }
-    // if not matching any one
-    return null
   }
 
   updateOptions(options: HostTreeOptions): void {
@@ -74,50 +46,24 @@ export class HostTree extends EventEmitter implements FileTreeLike {
     if (shallowEqual(oldOptions, options)) return
     this.options = options
     if (oldOptions.root !== options.root) {
-      this.stopWatching()
-      this.startWatching()
+      this.stop()
+      this.start()
     }
     this.rebuildFileTree()
   }
 
-  get isWatching(): boolean {
-    return this.fileWatcher != null
+  start(): void {
   }
 
-  protected rebuildTimer: NodeJS.Timer | null = null
-
-  protected shouldRebuild = false
-
-  startWatching(): void {
-    if (this.fileWatcher != null && this.rebuildTimer != null) return
-    this.rebuildTimer = setInterval(() => {
-      if (this.shouldRebuild) {
-        this.rebuildFileTree()
-      }
-    }, this.options.rebuildInterval)
-    this.fileWatcher = chokidar.watch(this.options.root, {
-      ignoreInitial: true,
-    }).on("all", (event, filePath) => {
-      this.onWatch(event, filePath)
-    })
-  }
-
-  onWatch(event: string, filePath: string): void {
-    this.log.verbose(`[${event}]${filePath}`)
-    // const relative = path.relative(this.root, filePath)
-    if (event === "add" || event === "unlink") {
-      if (this.classifyByFilePath(filePath) == null) return
-      this.shouldRebuild = true
-    }
+  stop(): void {
   }
 
   async rebuildFileTree(): Promise<void> {
-    this.shouldRebuild = false
     const tree = await createFileTreeFrom({
       root: this.options.root,
       initPath: [this.options.name],
-      classifier: this.classifyByFilePath,
-      includes: this.isFileOrDirectoryIncluded,
+      classifier: makeFilePathClassifier(this.options.fileTypePattern),
+      includes: makeFSOFilter(this.options.ignorePattern),
       ignoreEmptyDir: true,
       plugins: this.options.plugins,
     })
@@ -125,23 +71,42 @@ export class HostTree extends EventEmitter implements FileTreeLike {
     this.emit("rebuild", tree)
   }
 
-  stopWatching(): void {
-    if (this.fileWatcher) {
-      this.fileWatcher.close()
-    }
-    if (this.rebuildTimer) {
-      clearInterval(this.rebuildTimer)
-    }
-    this.fileWatcher = null
-    this.rebuildTimer = null
-  }
-
   resolveFile(pathParts: string[]): ResolvedFile | null {
     return this.fileTree?.resolveFile(pathParts)
   }
 }
 
-function shallowEqual(obj1: any, obj2: any): boolean {
+const minimatchOptions: MinimatchOptions = {
+  nocase: true,
+}
+
+export type FSOFilter = (path: string) => boolean
+export function makeFSOFilter(ignorePattern: string[]): FSOFilter {
+  return (path) => {
+    for (const ignore of ignorePattern) {
+      if (minimatch(path, ignore, minimatchOptions)) {
+        return false
+      }
+    }
+    return true
+  }
+}
+export type FileClassifier = (path: string) => FileType | null
+
+export function makeFilePathClassifier(fileTypePattern: Record<string, string>): FileClassifier {
+  return (path) => {
+    const patterns = fileTypePattern
+    for (const [pattern, type] of Object.entries(patterns)) {
+      if (minimatch(path, pattern, minimatchOptions)) {
+        return type
+      }
+    }
+    // if not matching any one
+    return null
+  }
+}
+
+export function shallowEqual(obj1: any, obj2: any): boolean {
   // Check if both objects have the same number of properties
   if (Object.keys(obj1).length !== Object.keys(obj2).length) {
     return false
@@ -158,14 +123,13 @@ function shallowEqual(obj1: any, obj2: any): boolean {
 }
 export const statAsync = promisify(fs.stat)
 export const readdirAsync = promisify(fs.readdir)
-export type FileClassifier = (path: string) => FileType | null
 
 export interface FileTreePlugin {
   buildPath?(pathParts: string[]): string | undefined
   onPostGenerated?(tree: FileTree): void
 }
 
-async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, classifier, includes, log, plugins }: {
+export async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, classifier, includes, log, plugins }: {
   root: string
   initPath?: string[]
   classifier: FileClassifier

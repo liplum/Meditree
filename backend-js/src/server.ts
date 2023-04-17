@@ -45,6 +45,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   function onExitPlugin(): void {
+    localTree?.stop()
     for (const plugin of plugins) {
       plugin.onExit?.()
     }
@@ -72,7 +73,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       root: config.root as string,
       name: config.name,
       fileTypePattern: config.fileType,
-      rebuildInterval: config.rebuildInterval,
+      log: createLogger("LocalFileTree"),
       ignorePattern: config.ignore ?? [],
       plugins,
     })
@@ -234,7 +235,7 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   if (localTree) {
     if (config.watch ?? true) {
-      localTree.startWatching()
+      localTree.start()
     }
     await localTree.rebuildFileTree()
   }
