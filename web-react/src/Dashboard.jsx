@@ -113,11 +113,10 @@ function Body(props) {
   const { server, passcode } = params
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const location = useLocation()
-  const hasAnyFile = fileTreeDelegate.key2File.size > 0
   const defaultSelectedFile =
     resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file")))
     ?? (
-      hasAnyFile ? (
+      fileTreeDelegate.key2File.size > 0 ? (
         storage.getLastSelectedFileOf(server)
         ?? ft.getFirstFile(fileTreeDelegate)
       ) : null
@@ -188,7 +187,7 @@ function Body(props) {
       return false;
     }
     if (!searchPrompt) return true
-    return file.path.toLowerCase().includes(searchPrompt.toLocaleLowerCase())
+    return file.path.toLowerCase().includes(searchPrompt.trim().toLocaleLowerCase())
   }
 
   const drawer = <div
@@ -214,13 +213,9 @@ function Body(props) {
       />
     </div>
     <div style={{ flex: 1, overflow: 'auto' }}>
-      {
-        hasAnyFile
-          ? <FileTreeNavigation
-            searchDelegate={filterByPrompt}
-          />
-          : <EmptyFileTreeNavigation />
-      }
+      <FileTreeNavigation
+        searchDelegate={filterByPrompt}
+      />
     </div>
   </div>
   const body = (
@@ -280,12 +275,6 @@ function Body(props) {
       </AstrologyContext.Provider>
     </FileTreeDeleagteContext.Provider>
   </IsDrawerOpenContext.Provider>
-}
-
-function EmptyFileTreeNavigation() {
-  return <Typography variant="h6" noWrap component="div" className="no-file-label">
-    {i18n.fileTreeNavi.noFile}
-  </Typography>
 }
 
 export function ResponsiveAppBar(props) {

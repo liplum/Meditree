@@ -8,7 +8,7 @@ export const i18n = new LocalizedStrings({
       placeholder: "Search files or folders"
     },
     fileTreeNavi: {
-      noFile: "No file available..."
+      noFileAvailable: "No file available..."
     },
     playground: {
       starBtn: "Add To Star",
@@ -38,7 +38,7 @@ export const i18n = new LocalizedStrings({
       placeholder: "搜索文件或文件夹"
     },
     fileTreeNavi: {
-      noFile: "没有文件..."
+      noFileAvailable: "没有文件...",
     },
     playground: {
       starBtn: "收藏",

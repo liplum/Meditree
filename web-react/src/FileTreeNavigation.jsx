@@ -3,6 +3,8 @@ import { Tree } from 'antd'
 import * as ft from "./FileTree"
 import { FileTreeDeleagteContext, SelectedFileContext } from './Dashboard';
 import { useTheme } from '@mui/material/styles';
+import { Typography } from '@mui/material';
+import { i18n } from './I18n';
 const { DirectoryTree } = Tree;
 
 export function FileTreeNavigation(props) {
@@ -22,6 +24,7 @@ export function FileTreeNavigation(props) {
 
   const theme = useTheme()
   if (!renderTree) return
+  if (renderTree.children.length <= 0) return <EmptyFileTreeNavigation />
   return (
     <DirectoryTree
       style={{
@@ -49,4 +52,11 @@ export function FileTreeNavigation(props) {
       }}
     />
   );
+}
+
+
+function EmptyFileTreeNavigation() {
+  return <Typography variant="h6" noWrap component="div" className="no-file-label">
+    {i18n.fileTreeNavi.noFileAvailable}
+  </Typography>
 }
