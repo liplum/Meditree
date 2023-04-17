@@ -43,7 +43,7 @@ Built-in plugins:
 - [homepage](#homepage): for hosting a static website.
 - [minify](#minify): for minifying list json for client rendering.
 - [statistics](#statistics): for counting file access times.
-- [watch](#watch):
+- [watch](#watch): for watching the root directory changing and frequently rebuilding file tree.
 - [hls](#hls):
 
 ### Cache

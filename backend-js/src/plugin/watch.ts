@@ -34,6 +34,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   private readonly rebuildInterval: number
   private filePathClassifier: FileClassifier
   private fileFilter: FSOFilter
+  private rebuildCounter = 0
   constructor(options: HostTreeOptions, rebuildInterval: number) {
     super()
     this.rebuildInterval = rebuildInterval
@@ -69,31 +70,30 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
     return this.fileWatcher != null
   }
 
-  protected rebuildTimer: NodeJS.Timer | null = null
+  protected rebuildLoopTask: LoopTask | null = null
 
   protected shouldRebuild = false
 
   start(): void {
-    if (this.fileWatcher != null && this.rebuildTimer != null) return
-    this.rebuildTimer = setInterval(() => {
-      if (this.shouldRebuild) {
+    if (this.fileWatcher != null && this.rebuildLoopTask != null) return
+    this.rebuildLoopTask = createLoopTask((duration) => {
+      this.rebuildCounter += duration
+      if (this.shouldRebuild && this.rebuildCounter >= this.rebuildInterval) {
         this.rebuildFileTree()
       }
-    }, this.rebuildInterval)
+    })
+    this.rebuildLoopTask.unref()
     this.fileWatcher = chokidar.watch(this.options.root, {
       ignoreInitial: true,
     }).on("all", (event, filePath) => {
-      this.onWatch(event, filePath)
+      this.options.log?.verbose(`[${event}]${filePath}`)
+      // const relative = path.relative(this.root, filePath)
+      if (event === "add" || event === "unlink") {
+        if (this.filePathClassifier(filePath) == null) return
+        this.shouldRebuild = true
+        this.rebuildCounter = 0
+      }
     })
-  }
-
-  onWatch(event: string, filePath: string): void {
-    this.options.log?.verbose(`[${event}]${filePath}`)
-    // const relative = path.relative(this.root, filePath)
-    if (event === "add" || event === "unlink") {
-      if (this.filePathClassifier(filePath) == null) return
-      this.shouldRebuild = true
-    }
   }
 
   async rebuildFileTree(): Promise<void> {
@@ -111,17 +111,44 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   }
 
   stop(): void {
-    if (this.fileWatcher) {
-      this.fileWatcher.close()
-    }
-    if (this.rebuildTimer) {
-      clearInterval(this.rebuildTimer)
-    }
+    this.fileWatcher?.close()
+    this.rebuildLoopTask?.stop()
     this.fileWatcher = null
-    this.rebuildTimer = null
+    this.rebuildLoopTask = null
   }
 
   resolveFile(pathParts: string[]): ResolvedFile | null {
     return this.fileTree?.resolveFile(pathParts)
+  }
+}
+
+interface LoopTask {
+  unref(): void
+  stop(): void
+  isRunning(): boolean
+}
+
+function createLoopTask(callback: (duration: number) => void): LoopTask {
+  let lastTime = new Date()
+
+  let timer: NodeJS.Timer | null = setInterval(() => {
+    const cur = new Date()
+    const duration = cur.getTime() - lastTime.getTime()
+    lastTime = cur
+    callback(duration)
+  })
+  return {
+    unref() {
+      timer?.unref()
+    },
+    stop() {
+      if (timer) {
+        clearInterval(timer)
+        timer = null
+      }
+    },
+    isRunning() {
+      return timer !== null
+    }
   }
 }

@@ -36,11 +36,6 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
    */
   port: number
   /**
-   * Whether to watch the changes of local file tree and rebuild it.
-   * True by default.
-   */
-  watch?: boolean
-  /**
    * The root directory to host.
    *
    * By default, no local file tree will be created.
