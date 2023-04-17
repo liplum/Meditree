@@ -1,18 +1,29 @@
 import chokidar from "chokidar"
-import { EventEmitter } from "ws"
 import { type LocalFileTree, type FileTreeLike, type FileTree, type ResolvedFile } from "../file.js"
 import { type IHostTree, type HostTreeOptions, makeFilePathClassifier, makeFSOFilter, type FSOFilter, type FileClassifier, createFileTreeFrom, shallowEqual } from "../host.js"
 import { type MeditreePlugin } from "../plugin.js"
 import type fs from "fs"
+import { TYPE } from "../server.js"
+import EventEmitter from "events"
 interface WatchPluginConfig {
-  rebuildInterval: number
+  /**
+   * 5000(ms) by default.
+   */
+  rebuildInterval?: number
 }
 /**
  * Watch plugin will watch the root directory changing and frequently rebuild the local file tree.
  */
 export default function WatchPlugin(config: WatchPluginConfig): MeditreePlugin {
+  const rebuildInterval = config.rebuildInterval ?? 5000
   return {
-
+    registerService(container) {
+      container.rebind(TYPE.HostTree)
+        .toFactory(
+          (options) =>
+            new WatchTree(options, rebuildInterval)
+        )
+    }
   }
 }
 

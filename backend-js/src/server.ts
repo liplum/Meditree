@@ -14,14 +14,11 @@ import HomepagePlugin from "./plugin/homepage.js"
 import HLSPlugin from "./plugin/hls.js"
 import MinifyPlugin from "./plugin/minify.js"
 import StatisticsPlugin from "./plugin/statistics.js"
+import WatchPlugin from "./plugin/watch.js"
 import { Container, token } from "@owja/ioc"
 
 export const TYPE = {
-  HostTree: token<IHostTree>("HostTree"),
-}
-
-export interface RegisterServiceContext {
-  hostTreeOptions: HostTreeOptions
+  HostTree: token<IHostTree, [HostTreeOptions]>("HostTree"),
 }
 
 export async function startServer(config: AppConfig): Promise<void> {
@@ -43,20 +40,28 @@ export async function startServer(config: AppConfig): Promise<void> {
   pluginTypes.hls = (config) => HLSPlugin(config)
   pluginTypes.minify = (config) => MinifyPlugin(config)
   pluginTypes.statistics = (config) => StatisticsPlugin(config)
+  pluginTypes.watch = (config) => WatchPlugin(config)
 
   const container = new Container()
 
   const plugins = config.plugin
-    ? await resolvePlguinFromConfig(pluginTypes, config.plugin, (name) => {
-      log.error(`Plugin[${name}] doesn't exist.`)
-    })
+    ? await resolvePlguinFromConfig(pluginTypes, config.plugin,
+      (name) => {
+        log.info(`Plugin[${name}] resgisered.`)
+      },
+      (name) => {
+        log.error(`Plugin[${name}] doesn't exist.`)
+      })
     : []
   for (const plugin of plugins) {
     await plugin.init?.()
   }
 
   function onExitPlugin(): void {
-    hostTree?.stop()
+    // hostTree may not be declared before app exits.
+    if (typeof hostTree !== "undefined") {
+      hostTree.stop()
+    }
     for (const plugin of plugins) {
       plugin.onExit?.()
     }
@@ -72,28 +77,15 @@ export async function startServer(config: AppConfig): Promise<void> {
     process.exit(1)
   })
 
-  const hostTreeOptions = {
-    root: config.root as string,
-    name: config.name,
-    fileTypePattern: config.fileType,
-    log: createLogger("LocalFileTree"),
-    ignorePattern: config.ignore ?? [],
-    plugins,
-  }
-
-  container.bind<IHostTree>(TYPE.HostTree)
-    .toValue(
-      !config.root
+  container.bind(TYPE.HostTree)
+    .toFactory(
+      (options) => !config.root
         ? new EmptyHostTree()
-        : new HostTree(hostTreeOptions)
+        : new HostTree(options)
     )
 
-  const iocCtx: RegisterServiceContext = {
-    hostTreeOptions,
-  }
-
   for (const plugin of plugins) {
-    plugin.registerService?.(container, iocCtx)
+    plugin.registerService?.(container)
   }
 
   const app = express()
@@ -104,7 +96,15 @@ export async function startServer(config: AppConfig): Promise<void> {
     await plugin.setupServer?.(app, server)
   }
 
-  const hostTree = container.get<IHostTree>(TYPE.HostTree)
+  const hostTree = container.get(TYPE.HostTree, undefined, undefined, [{
+    root: config.root as string,
+    name: config.name,
+    fileTypePattern: config.fileType,
+    log: createLogger("LocalFileTree"),
+    ignorePattern: config.ignore ?? [],
+    plugins,
+  }])
+
   const node = new MeditreeNode()
   node.plugins = plugins
 

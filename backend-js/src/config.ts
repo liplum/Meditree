@@ -40,7 +40,6 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
    * True by default.
    */
   watch?: boolean
-  rebuildInterval: number
   /**
    * The root directory to host.
    *

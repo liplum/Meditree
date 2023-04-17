@@ -7,12 +7,11 @@ import { type RequestHandler, type Express, type Request, type Response } from "
 import fs from "fs"
 import { pathToFileURL } from "url"
 import { type Container } from "@owja/ioc"
-import { type RegisterServiceContext } from "./server.js"
 
 export type PluginRegistry = Record<string, (config: any) => MeditreePlugin>
 
 export interface MeditreePlugin extends FileTreePlugin {
-  registerService?(container: Container, ctx: RegisterServiceContext): void
+  registerService?(container: Container): void
 
   init?(): Promise<void>
 
@@ -54,6 +53,7 @@ export interface ExpressRegisteringContext {
 export async function resolvePlguinFromConfig(
   all: PluginRegistry,
   config: Record<string, Record<string, any>>,
+  onFound?: (name: string, plugin: MeditreePlugin) => void,
   onNotFound?: (name: string) => void,
 ): Promise<MeditreePlugin[]> {
   const plugins: MeditreePlugin[] = []
@@ -63,12 +63,14 @@ export async function resolvePlguinFromConfig(
       // for built-in plugins
       const plugin = ctor(typeof pluginConfig === "object" ? pluginConfig : {})
       plugins.push(plugin)
+      onFound?.(name, plugin)
     } else if (fs.existsSync(name)) {
       // for external plugins
       const pluginModule = await importModule(name)
       // external plugins default export their constructors.
       const plugin = pluginModule.default(pluginConfig)
       plugins.push(plugin)
+      onFound?.(name, plugin)
     } else {
       onNotFound?.(name)
     }
