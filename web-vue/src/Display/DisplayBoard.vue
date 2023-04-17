@@ -3,6 +3,7 @@ import { computed } from "@vue/reactivity";
 import { FileInfo } from "../FileTree";
 import ImageRenderer from "./Image.vue"
 import VideoRenderer from "./Video.vue"
+import AudioRenderer from "./Audio.vue"
 import { filesize } from "filesize"
 
 function resolveRenderer(type: string) {
@@ -13,6 +14,10 @@ function resolveRenderer(type: string) {
   if (type.startsWith("video")) {
     return VideoRenderer
   }
+  if (type.startsWith("audio")) {
+    return AudioRenderer
+  }
+  
   return null
 }
 
