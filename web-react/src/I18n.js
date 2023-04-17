@@ -7,9 +7,6 @@ export const i18n = new LocalizedStrings({
       starFilter: "Only Show Starred",
       placeholder: "Search files or folders"
     },
-    fileTreeNavi: {
-      noFileAvailable: "No file available..."
-    },
     playground: {
       starBtn: "Add To Star",
       unstarBtn: "Remove From Star",
@@ -36,9 +33,6 @@ export const i18n = new LocalizedStrings({
     search: {
       starFilter: "仅显示已收藏",
       placeholder: "搜索文件或文件夹"
-    },
-    fileTreeNavi: {
-      noFileAvailable: "没有文件...",
     },
     playground: {
       starBtn: "收藏",

@@ -3,10 +3,8 @@ import { Tree } from 'antd'
 import * as ft from "./FileTree"
 import { FileTreeDeleagteContext, SelectedFileContext } from './Dashboard';
 import { useTheme } from '@mui/material/styles';
-import { Typography } from '@mui/material';
-import { i18n } from './I18n';
 const { DirectoryTree } = Tree;
-
+import { FolderOff } from '@mui/icons-material';
 export function FileTreeNavigation(props) {
   const [delegate] = useContext(FileTreeDeleagteContext)
   const [renderTree, setRenderTree] = useState()
@@ -24,7 +22,10 @@ export function FileTreeNavigation(props) {
 
   const theme = useTheme()
   if (!renderTree) return
-  if (renderTree.children.length <= 0) return <EmptyFileTreeNavigation />
+  if (renderTree.children.length <= 0)
+    return <div className="no-file-label" >
+      <FolderOff style={{ width: "8rem", height: "8rem" }} />
+    </div>
   return (
     <DirectoryTree
       style={{
@@ -52,11 +53,4 @@ export function FileTreeNavigation(props) {
       }}
     />
   );
-}
-
-
-function EmptyFileTreeNavigation() {
-  return <Typography variant="h6" noWrap component="div" className="no-file-label">
-    {i18n.fileTreeNavi.noFileAvailable}
-  </Typography>
 }
