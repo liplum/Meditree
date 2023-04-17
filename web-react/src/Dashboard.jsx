@@ -68,7 +68,7 @@ function LoadErrorBoundary() {
   console.error(error)
   return <Failed text={i18n.loading.error[error.message] ?? i18n.loading.failed}>
     <Button variant="outlined" onClick={() => {
-      navigate(-1);
+      navigate("/");
     }}>
       Back
     </Button>
