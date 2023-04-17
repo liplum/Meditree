@@ -7,7 +7,7 @@ import { TYPE } from "../server.js"
 import EventEmitter from "events"
 interface WatchPluginConfig {
   /**
-   * 5000(ms) by default.
+   * 10000(ms) by default.
    */
   rebuildInterval?: number
 }
@@ -15,7 +15,7 @@ interface WatchPluginConfig {
  * Watch plugin will watch the root directory changing and frequently rebuild the local file tree.
  */
 export default function WatchPlugin(config: WatchPluginConfig): MeditreePlugin {
-  const rebuildInterval = config.rebuildInterval ?? 5000
+  const rebuildInterval = config.rebuildInterval ?? 10 * 1000
   return {
     registerService(container) {
       container.rebind(TYPE.HostTree)
@@ -106,6 +106,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
       ignoreEmptyDir: true,
       plugins: this.options.plugins,
     })
+    this.rebuildCounter = 0
     this.fileTree = tree
     this.emit("rebuild", tree)
   }
