@@ -29,6 +29,31 @@ export declare interface IHostTree {
   rebuildFileTree(): Promise<void>
 }
 
+export class EmptyHostTree implements FileTreeLike, IHostTree {
+  resolveFile: (pathParts: string[]) => ResolvedFile | null
+  toJSON: () => FileTree
+  on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this {
+    return this
+  }
+
+  off(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this {
+    return this
+  }
+
+  emit(event: "rebuild", fileTree: LocalFileTree): boolean {
+    return true
+  }
+
+  start(): void {
+  }
+
+  stop(): void {
+  }
+
+  async rebuildFileTree(): Promise<void> {
+  }
+}
+
 export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
   private options: HostTreeOptions
   private fileTree: LocalFileTree
@@ -41,7 +66,7 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
     return this.fileTree.toJSON()
   }
 
-  updateOptions(options: HostTreeOptions): void {
+  async updateOptions(options: HostTreeOptions): Promise<void> {
     const oldOptions = this.options
     if (shallowEqual(oldOptions, options)) return
     this.options = options
@@ -49,7 +74,7 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
       this.stop()
       this.start()
     }
-    this.rebuildFileTree()
+    await this.rebuildFileTree()
   }
 
   start(): void {

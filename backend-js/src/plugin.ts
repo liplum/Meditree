@@ -6,10 +6,14 @@ import { type ReadStreamOptions, type MeditreeNode } from "./meditree.js"
 import { type RequestHandler, type Express, type Request, type Response } from "express"
 import fs from "fs"
 import { pathToFileURL } from "url"
+import { type Container } from "@owja/ioc"
+import { type RegisterServiceContext } from "./server.js"
 
 export type PluginRegistry = Record<string, (config: any) => MeditreePlugin>
 
 export interface MeditreePlugin extends FileTreePlugin {
+  registerService?(container: Container, ctx: RegisterServiceContext): void
+
   init?(): Promise<void>
 
   setupServer?(app: Express.Application, server: Server): Promise<void>

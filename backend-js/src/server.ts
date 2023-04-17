@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { HostTree } from "./host.js"
+import { EmptyHostTree, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
 import { type AppConfig, type AsParentConfig, type AsChildConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
 import { cloneFileTreeJson, type ResolvedFile } from "./file.js"
@@ -14,8 +14,19 @@ import HomepagePlugin from "./plugin/homepage.js"
 import HLSPlugin from "./plugin/hls.js"
 import MinifyPlugin from "./plugin/minify.js"
 import StatisticsPlugin from "./plugin/statistics.js"
+import { Container, token } from "@owja/ioc"
+
+export const TYPE = {
+  HostTree: token<IHostTree>("HostTree"),
+}
+
+export interface RegisterServiceContext {
+  hostTreeOptions: HostTreeOptions
+}
 
 export async function startServer(config: AppConfig): Promise<void> {
+  const timer = new Timer()
+  timer.start("Start Server")
   if (config.logDir) {
     initGlobalLogFile(config.logDir)
     if (config.logLevel) {
@@ -33,8 +44,8 @@ export async function startServer(config: AppConfig): Promise<void> {
   pluginTypes.minify = (config) => MinifyPlugin(config)
   pluginTypes.statistics = (config) => StatisticsPlugin(config)
 
-  const timer = new Timer()
-  timer.start("Start Server")
+  const container = new Container()
+
   const plugins = config.plugin
     ? await resolvePlguinFromConfig(pluginTypes, config.plugin, (name) => {
       log.error(`Plugin[${name}] doesn't exist.`)
@@ -45,7 +56,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   function onExitPlugin(): void {
-    localTree?.stop()
+    hostTree?.stop()
     for (const plugin of plugins) {
       plugin.onExit?.()
     }
@@ -60,6 +71,31 @@ export async function startServer(config: AppConfig): Promise<void> {
     onExitPlugin()
     process.exit(1)
   })
+
+  const hostTreeOptions = {
+    root: config.root as string,
+    name: config.name,
+    fileTypePattern: config.fileType,
+    log: createLogger("LocalFileTree"),
+    ignorePattern: config.ignore ?? [],
+    plugins,
+  }
+
+  container.bind<IHostTree>(TYPE.HostTree)
+    .toValue(
+      !config.root
+        ? new EmptyHostTree()
+        : new HostTree(hostTreeOptions)
+    )
+
+  const iocCtx: RegisterServiceContext = {
+    hostTreeOptions,
+  }
+
+  for (const plugin of plugins) {
+    plugin.registerService?.(container, iocCtx)
+  }
+
   const app = express()
   const server = http.createServer(app)
   app.use(cors())
@@ -67,16 +103,8 @@ export async function startServer(config: AppConfig): Promise<void> {
   for (const plugin of plugins) {
     await plugin.setupServer?.(app, server)
   }
-  const localTree = !config.root
-    ? undefined
-    : new HostTree({
-      root: config.root as string,
-      name: config.name,
-      fileTypePattern: config.fileType,
-      log: createLogger("LocalFileTree"),
-      ignorePattern: config.ignore ?? [],
-      plugins,
-    })
+
+  const hostTree = container.get<IHostTree>(TYPE.HostTree)
   const node = new MeditreeNode()
   node.plugins = plugins
 
@@ -89,12 +117,10 @@ export async function startServer(config: AppConfig): Promise<void> {
     return !file["*type"] || fileTypes.includes(file["*type"])
   }
 
-  if (localTree) {
-    localTree.on("rebuild", (fileTree) => {
-      node.updateFileTreeFromLocal(config.name, fileTree)
-      log.info("Local file tree is rebuilt.")
-    })
-  }
+  hostTree.on("rebuild", (fileTree) => {
+    node.updateFileTreeFromLocal(config.name, fileTree)
+    log.info("Local file tree is rebuilt.")
+  })
 
   const initialFileTree = {
     name: config.name,
@@ -233,12 +259,8 @@ export async function startServer(config: AppConfig): Promise<void> {
     stream.pipe(res)
   }
 
-  if (localTree) {
-    if (config.watch ?? true) {
-      localTree.start()
-    }
-    await localTree.rebuildFileTree()
-  }
+  hostTree.start()
+  await hostTree.rebuildFileTree()
 
   // If node is defined and not empty, subnodes can connect to this.
   if (config.child?.length && config.publicKey && config.privateKey) {

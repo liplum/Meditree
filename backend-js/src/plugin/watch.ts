@@ -43,7 +43,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.fileFilter = makeFSOFilter(value.ignorePattern)
   }
 
-  updateOptions(options: HostTreeOptions): void {
+  async updateOptions(options: HostTreeOptions): Promise<void> {
     const oldOptions = this.options
     if (shallowEqual(oldOptions, options)) return
     this.options = options
@@ -51,7 +51,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
       this.stop()
       this.start()
     }
-    this.rebuildFileTree()
+    await this.rebuildFileTree()
   }
 
   get isWatching(): boolean {
