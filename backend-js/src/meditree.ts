@@ -121,7 +121,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     if (file.inner instanceof LocalFile) {
       const path = file.inner.localPath
       // if file not exists, return null
-      if (!fs.statSync(path).isFile()) return null
+      if (!fs.existsSync(path)) return null
       try {
         return fs.createReadStream(file.inner.localPath, options)
       } catch (error) {
