@@ -16,7 +16,6 @@ type FileType = string
 type FileTree struct {
 	Name      string
 	LocalPath string
-	Path      string
 	Type      FileType
 	Size      int64
 	Name2File map[string]*FileTree
@@ -59,7 +58,6 @@ func (tree *FileTree) ToJson() map[string]any {
 			res[name] = map[string]any{
 				"*type": file.Type,
 				"size":  file.Size,
-				"path":  file.Path,
 			}
 		} else {
 			res[name] = file.ToJson()
@@ -68,8 +66,8 @@ func (tree *FileTree) ToJson() map[string]any {
 	return res
 }
 func CreateFileTree(root string, classifier func(path string) FileType) *FileTree {
-	var createSubTree func(tree *FileTree, parentPath string, curDir string)
-	createSubTree = func(tree *FileTree, parentPath string, curDir string) {
+	var createSubTree func(tree *FileTree, curDir string)
+	createSubTree = func(tree *FileTree, curDir string) {
 		// Read the directory contents
 		files, err := os.ReadDir(curDir)
 		if err != nil {
@@ -80,12 +78,6 @@ func CreateFileTree(root string, classifier func(path string) FileType) *FileTre
 		for _, f := range files {
 			fileName := f.Name()
 			childPath := filepath.Join(curDir, fileName)
-			var path string
-			if len(parentPath) > 0 {
-				path = fmt.Sprint(parentPath, "/", fileName)
-			} else {
-				path = fileName
-			}
 
 			// If the child is a directory, generate its file tree recursively
 			if f.IsDir() {
@@ -94,7 +86,7 @@ func CreateFileTree(root string, classifier func(path string) FileType) *FileTre
 					LocalPath: childPath,
 					Name2File: make(map[string]*FileTree),
 				}
-				createSubTree(subTree, path, childPath)
+				createSubTree(subTree, childPath)
 				if len(subTree.Name2File) != 0 {
 					tree.Name2File[fileName] = subTree
 				}
@@ -106,7 +98,6 @@ func CreateFileTree(root string, classifier func(path string) FileType) *FileTre
 							Name:      fileName,
 							LocalPath: childPath,
 							Type:      fileType,
-							Path:      path,
 							Size:      info.Size(),
 						}
 					}
@@ -119,7 +110,7 @@ func CreateFileTree(root string, classifier func(path string) FileType) *FileTre
 		LocalPath: root,
 		Name2File: make(map[string]*FileTree),
 	}
-	createSubTree(rootTree, "", root)
+	createSubTree(rootTree, root)
 	return rootTree
 }
 
@@ -197,7 +188,7 @@ func main() {
 	}
 	tree := buildFileTree(config)
 	jsonData, err := json.MarshalIndent(map[string]any{
-		"name":  config.Name,
+		"name": config.Name,
 		"root": tree.ToJson(),
 	}, "", " ")
 	if err != nil {
