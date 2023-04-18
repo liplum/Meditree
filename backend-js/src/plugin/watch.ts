@@ -100,7 +100,6 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.shouldRebuild = false
     const tree = await createFileTreeFrom({
       root: this.options.root,
-      initPath: [this.options.name],
       classifier: this.filePathClassifier,
       includes: this.fileFilter,
       ignoreEmptyDir: true,

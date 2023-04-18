@@ -107,7 +107,6 @@ The payload for client rendering:
 interface File {
   "*type": string;
   "*hide"?: boolean;
-  path?: string;
   size?: string;
 }
 
@@ -123,7 +122,6 @@ The payload for server communication:
 interface File {
   "*type": string;
   "*hide"?: boolean;
-  path: string;
   size: string;
 }
 

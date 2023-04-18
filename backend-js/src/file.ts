@@ -3,7 +3,6 @@ export interface File {
   "*type": FileType
   size: number
   "*hide"?: boolean
-  path: string
 }
 export interface FileTree {
   ["*hide"]?: boolean
@@ -14,15 +13,13 @@ export class LocalFile implements File {
   readonly parent: LocalFileTree
   readonly "*type": FileType
   readonly size: number
-  readonly path: string
   readonly localPath: string
   "*hide"?: boolean
-  constructor(parent: LocalFileTree, type: FileType, size: number, localPath: string, path: string) {
+  constructor(parent: LocalFileTree, type: FileType, size: number, localPath: string) {
     this.parent = parent
     this["*type"] = type
     this.size = size
     this.localPath = localPath
-    this.path = path
   }
 
   toJSON(): File {
@@ -30,7 +27,6 @@ export class LocalFile implements File {
       "*type": this["*type"],
       size: this.size,
       "*hide": this["*hide"],
-      path: this.path,
     }
   }
 }
@@ -55,7 +51,6 @@ export class VirtualFile implements File {
       "*type": this["*type"],
       size: this.size,
       "*hide": this["*hide"],
-      path: this.path,
     }
   }
 }
@@ -64,8 +59,10 @@ export type PathFilter = (path: string) => boolean
 export class ResolvedFile {
   inner: File
   [key: string]: any
-  constructor(file: File) {
+  path: string
+  constructor(file: File, path: string) {
     this.inner = file
+    this.path = path
   }
 }
 export interface FileTreeLike {
@@ -98,15 +95,23 @@ export class LocalFileTree implements FileTreeLike {
     return parts
   }
 
+  /**
+ * Resolves a file given its path parts.
+ * @param pathParts The parts of the file's path.
+ * @returns The resolved file or `null` if it could not be found.
+ */
   resolveFile(pathParts: string[]): ResolvedFile | null {
     let cur: LocalFile | LocalFileTree | undefined = this
-    while (pathParts.length > 0 && cur instanceof LocalFileTree) {
-      const currentPart = pathParts.shift()
-      if (currentPart === undefined) break
+    let index = 0
+
+    while (index < pathParts.length && cur instanceof LocalFileTree) {
+      const currentPart = pathParts[index]
       cur = cur.name2File.get(currentPart)
+      index++
     }
+
     if (cur instanceof LocalFile) {
-      return new ResolvedFile(cur)
+      return new ResolvedFile(cur, pathParts.join("/"))
     } else {
       return null
     }

@@ -138,27 +138,28 @@ function buildFromFileTree(
   const div: string[] = []
   let maxIndent = 0
   div.push("<div>")
-  function buildSubtree(curTree: FileTree, indent: number): void {
+  function buildSubtree(curTree: FileTree, parentPath: string, indent: number): void {
     maxIndent = Math.max(indent, maxIndent)
     for (const [name, file] of Object.entries(curTree)) {
       if (file["*hide"]) continue
+      const curPath = parentPath ? `${parentPath}/${name}` : name
       if (file["*type"]) {
         // it's file
         const fi = file as File
         const clz = fi["*type"].startsWith("image") ? "class='has-preview'" : ""
-        div.push(`<a href="/file/${fi.path}" ${clz}>${name}</a>,`)
+        div.push(`<a href="/file/${curPath}" ${clz}>${name}</a>,`)
       } else {
         // it's directory
         div.push(`<details ${indent === 0 ? "open" : ""}>`)
         div.push(`<summary class="${getIndentClz(indent)}"><a>${name}\\</a></summary>`)
         div.push(`<div class="${getIndentClz(indent)}">`)
-        buildSubtree(file as FileTree, indent + 1)
+        buildSubtree(file as FileTree, curPath, indent + 1)
         div.push("<div>")
         div.push("</details>")
       }
     }
   }
-  buildSubtree(tree, 0)
+  buildSubtree(tree, "", 0)
   div.push("</div>")
   return { tags: div, maxIndent, }
 }

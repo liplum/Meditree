@@ -86,7 +86,6 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
   async rebuildFileTree(): Promise<void> {
     const tree = await createFileTreeFrom({
       root: this.options.root,
-      initPath: [this.options.name],
       classifier: makeFilePathClassifier(this.options.fileTypePattern),
       includes: makeFSOFilter(this.options.ignorePattern),
       ignoreEmptyDir: true,
@@ -150,13 +149,11 @@ export const statAsync = promisify(fs.stat)
 export const readdirAsync = promisify(fs.readdir)
 
 export interface FileTreePlugin {
-  buildPath?(pathParts: string[]): string | undefined
   onPostGenerated?(tree: FileTree): void
 }
 
-export async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, classifier, includes, log, plugins }: {
+export async function createFileTreeFrom({ root, ignoreEmptyDir, classifier, includes, log, plugins }: {
   root: string
-  initPath?: string[]
   classifier: FileClassifier
   includes: (path: string) => boolean
   /**
@@ -174,7 +171,6 @@ export async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, class
   async function walk(
     tree: LocalFileTree,
     curDir: string,
-    pathParts: string[],
   ): Promise<void> {
     let files: string[]
     try {
@@ -188,26 +184,16 @@ export async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, class
       if (!includes(filePath)) continue
       try {
         const stat = await statAsync(filePath)
-        const curPathParts = [...pathParts, fileName]
         if (stat.isFile()) {
           const fileType = classifier(filePath)
           if (fileType != null) {
-            let builtPath: string | undefined
-            if (plugins) {
-              for (const plugin of plugins) {
-                if (builtPath !== undefined) break
-                if (plugin.buildPath) builtPath = plugin.buildPath(curPathParts)
-              }
-            }
-            if (builtPath === undefined) builtPath = curPathParts.join("/")
             tree.addFile(fileName, new LocalFile(
               tree, fileType, stat.size, filePath,
-              builtPath,
             ))
           }
         } else if (stat.isDirectory()) {
           const subtree = tree.createSubtree(fileName, filePath)
-          await walk(subtree, filePath, curPathParts)
+          await walk(subtree, filePath)
           if (!ignoreEmptyDir || subtree.subtreeChildrenCount > 0) {
             tree.addFile(fileName, subtree)
           }
@@ -219,7 +205,7 @@ export async function createFileTreeFrom({ root, initPath, ignoreEmptyDir, class
       }
     }
   }
-  await walk(tree, root, initPath ?? [])
+  await walk(tree, root)
   if (plugins?.length) {
     for (const plugin of plugins) {
       plugin.onPostGenerated?.(tree)

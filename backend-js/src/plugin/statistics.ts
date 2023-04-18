@@ -24,11 +24,11 @@ export default function StatisticsPlugin(config: StatisticsPluginConfig): Meditr
           : {}
       },
       async onFileRequested(req, res, file) {
-        const count = statistics[file.inner.path]
+        const count = statistics[file.path]
         if (count === undefined) {
-          statistics[file.inner.path] = 1
+          statistics[file.path] = 1
         } else {
-          statistics[file.inner.path] = count + 1
+          statistics[file.path] = count + 1
         }
       },
       onExit() {

@@ -45,7 +45,7 @@ export default function CachePlugin(config: CachePluginConfig): MeditreePlugin {
       if (file.inner.size > maxSize) return
       // for remote file
       if (typeof file.remoteNode === "string") {
-        const cachePath = getCachePath(file.remoteNode, file.inner.path)
+        const cachePath = getCachePath(file.remoteNode, file.path)
         // if cached, capable to read partial file
         if (fs.existsSync(cachePath) && (await fsstate(cachePath)).isFile()) {
           return fs.createReadStream(cachePath, options)

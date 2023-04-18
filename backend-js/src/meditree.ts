@@ -25,15 +25,25 @@ class SubNode implements FileTreeLike {
     this.net = net
   }
 
+  /**
+   * Resolves a file given its path parts.
+   * @param pathParts The parts of the file's path.
+   * @returns The resolved file or `null` if it could not be found.
+   */
   resolveFile(pathParts: string[]): ResolvedFile | null {
     if (!this.tree) return null
     let cur: File | FileTree = this.tree
-    let curPart: string | undefined
-    while ((curPart = pathParts.shift()) !== undefined) {
-      if ((cur = cur[curPart]) === undefined) return null
+    let curIndex = 0
+
+    while (curIndex < pathParts.length) {
+      const curPart = pathParts[curIndex]
+      if (cur[curPart] === undefined) return null
+      cur = cur[curPart]
+      curIndex++
     }
+
     if (cur["*type"]) {
-      const resolved = new ResolvedFile(cur as File)
+      const resolved = new ResolvedFile(cur as File, pathParts.join("/"))
       resolved.remoteNode = this.meta.name
       return resolved
     } else {
@@ -133,7 +143,7 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
       const node = this.name2Child.get(file.remoteNode)
       if (!node) throw new Error(`Node[${file.remoteNode}] not found.`)
       const uuid = uuidv4()
-      node.net.send("get-file", { path: file.inner.path, options, uuid })
+      node.net.send("get-file", { path: file.path, options, uuid })
       try {
         const stream = await node.net.getMessage("send-file", (header) => header && header.uuid === uuid)
         return stream
