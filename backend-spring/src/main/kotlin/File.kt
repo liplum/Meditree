@@ -3,7 +3,6 @@ package net.liplum.meditree
 import java.io.File
 
 interface IFile {
-    val path: String
     val size: Long
     val type: String
     val hidden: Boolean
@@ -13,7 +12,6 @@ class LocalFile(
     val parent: LocalFileTree,
     val name: String,
     val local: File,
-    override val path: String,
     override val size: Long,
     override val type: String,
 ) : IFile {
@@ -23,7 +21,6 @@ class LocalFile(
 class LocalFileTree(
     val parent: LocalFileTree?,
     val local: File,
-    val path: String,
 ) {
     val name2File: MutableMap<String, LocalFile> = mutableMapOf()
     val isRoot: Boolean = parent == null
@@ -39,7 +36,6 @@ fun buildFileTreeFromLocal(root: File, typing: (file: File) -> String?): LocalFi
                     parent = tree,
                     name = file.name,
                     local = file,
-                    path = "${tree.path}/${file.name}",
                     size = file.length(),
                     type = type,
                 )
@@ -47,7 +43,6 @@ fun buildFileTreeFromLocal(root: File, typing: (file: File) -> String?): LocalFi
                 val fileTree = LocalFileTree(
                     parent = tree,
                     local = file,
-                    path = "${tree.path}/${file.name}",
                 )
                 walk(file, fileTree)
             }
@@ -57,13 +52,12 @@ fun buildFileTreeFromLocal(root: File, typing: (file: File) -> String?): LocalFi
     val rootTree = LocalFileTree(
         parent = null,
         local = root,
-        path = ""
     )
     walk(root, rootTree)
     return rootTree
 }
 
-fun findFsEntryInTree(root: File, fileName: String): File? {
+fun findFSOInTree(root: File, fileName: String): File? {
     var dir = root
     var lastDir: File? = null
     while (dir != lastDir) {
