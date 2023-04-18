@@ -18,7 +18,7 @@ fetch(`${backend}/list`, { method: "GET" })
   .then((res) => res.json())
   .then((data) => {
     const fileTree = parseFileTree(`${backend}/file`, data)
-    root.value.addChild(fileTree)
+    root.value = fileTree
   });
 const drawer = ref(true)
 const selectedFile = ref<FileInfo>()

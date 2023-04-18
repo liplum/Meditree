@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ref, watch } from "vue";
 import { DirectoryInfo, FileInfo } from "../FileTree";
-import { useDisplay } from 'vuetify'
 import DirectoryView, { SearchDelegate } from "./DirectoryView.vue";
 import { computed } from "@vue/reactivity";
 const props = defineProps<{
@@ -19,7 +18,6 @@ function onDirClick(dir: DirectoryInfo) {
   curDir.value = dir
 }
 function onNaviBack() {
-  if (!curDir.value) return
   const parent = curDir.value.parent
   if (parent) {
     curDir.value = parent
@@ -27,7 +25,6 @@ function onNaviBack() {
 }
 const address = computed(() => {
   let addres = ""
-  if (!curDir.value) return addres
   let cur: DirectoryInfo | undefined = curDir.value
   while (cur) {
     if (cur.isRoot) {
@@ -51,11 +48,11 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
 <template>
   <v-app>
     <v-app-bar prominent>
-      <template v-if="curDir?.parent">
-        <v-app-bar-nav-icon @click="onNaviBack" icon="mdi-arrow-left" />
+      <template v-if="curDir.isRoot">
+        <v-app-bar-nav-icon disabled icon="mdi-home" />
       </template>
       <template v-else>
-        <v-app-bar-nav-icon disabled icon="mdi-home" />
+        <v-app-bar-nav-icon @click="onNaviBack" icon="mdi-arrow-left" />
       </template>
       <v-app-bar-title>
         {{ curDir?.name }}
