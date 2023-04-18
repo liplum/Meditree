@@ -109,7 +109,7 @@ if (process.platform === "darwin") {
   ]
 }
 
-export function topupDefaultConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
+export function injectDefaultConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
   const newConfig: AppConfig = Object.assign({}, defaultConfig, config ?? {}) as AppConfig
   return newConfig
 }
@@ -136,7 +136,7 @@ export function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig 
 
 export function findConfig({ rootDir, filename }: { rootDir: string, filename: string }): AppConfig {
   const curDir = rootDir
-  let configFile = findFsEntryInTree(curDir, filename)
+  let configFile = findFSOInTree(curDir, filename)
   if (configFile) {
     const config = setupConfig(JSON.parse(fs.readFileSync(configFile, "utf8")) ?? {})
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
@@ -149,7 +149,7 @@ export function findConfig({ rootDir, filename }: { rootDir: string, filename: s
   }
 }
 
-function findFsEntryInTree(dir: string, fileName: string): string | null {
+function findFSOInTree(dir: string, fileName: string): string | null {
   let lastDir: string | null = null
   while (dir !== lastDir) {
     const configFile = path.join(dir, fileName)
