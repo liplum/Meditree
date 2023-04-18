@@ -1,4 +1,4 @@
-import { type MeditreePlugin } from "../plugin.js"
+import { type MeditreePlugin } from "../server.js"
 import fs from "fs"
 type StatisticsPluginConfig = JsonBackend
 

@@ -1,5 +1,5 @@
 import { LocalFile } from "../file.js"
-import { type MeditreePlugin } from "../plugin.js"
+import { type MeditreePlugin } from "../server.js"
 import { type Readable, PassThrough } from "stream"
 import fs from "fs"
 import path, { join, dirname } from "path"

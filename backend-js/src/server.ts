@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { EmptyHostTree, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
+import { EmptyHostTree, type FileTreePlugin, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
 import { type AppConfig, type AsParentConfig, type AsChildConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
-import { cloneFileTreeJson, type ResolvedFile } from "./file.js"
+import { cloneFileTreeJson, type FileTree, type LocalFileTree, type ResolvedFile } from "./file.js"
 import cors from "cors"
-import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
+import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo, type ReadStreamOptions } from "./meditree.js"
 import { LogLevels, Timer, createLogger, globalOptions, initGlobalLogFile } from "./logger.js"
 import { type PluginRegistry, resolvePluginList } from "./plugin.js"
 import { type Readable } from "stream"
-import http from "http"
+import http, { type Server } from "http"
 import CachePlugin from "./plugin/cache.js"
 import HomepagePlugin from "./plugin/homepage.js"
 import HLSPlugin from "./plugin/hls.js"
@@ -40,7 +40,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   const log = createLogger("Main")
 
   // Phrase 4: register all plugins.
-  const pluginTypes: PluginRegistry = {}
+  const pluginTypes: PluginRegistry<MeditreePlugin> = {}
   pluginTypes.cache = (config) => CachePlugin(config)
   pluginTypes.homepage = (config) => HomepagePlugin(config)
   pluginTypes.hls = (config) => HLSPlugin(config)
@@ -344,4 +344,44 @@ function resolveRange(range?: string): { start?: number, end?: number } {
     }
   }
   return { start, end }
+}
+
+export interface MeditreePlugin extends FileTreePlugin {
+  registerService?(container: Container): void
+
+  init?(): Promise<void>
+
+  setupServer?(app: Express.Application, server: Server): Promise<void>
+
+  setupMeditreeNode?(node: MeditreeNode): Promise<void>
+
+  onExpressRegistering?(app: express.Express, ctx: ExpressRegisteringContext): Promise<void>
+
+  onPostGenerated?(tree: LocalFileTree): void
+
+  /**
+   * @param tree the entire file tree will be sent to both clients and parent nodes.
+   * @returns a new file tree or the same instance.
+   */
+  onEntireTreeUpdated?(tree: FileTree): FileTree
+
+  /**
+   * @param tree the entire file tree will be sent to clients soon.
+   * @returns a new file tree or the same instance.
+   */
+  onEntireTreeForClient?(tree: FileTree): FileTree
+  /**
+   * The first plugin which returns a non-undefined value will be taken.
+   * @returns undefined if not handled by this plugin.
+   */
+  onNodeCreateReadStream?(node: MeditreeNode, file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
+
+  /**
+   * @returns whether to prevent streaming {@link file}.
+   */
+  onFileRequested?(req: Request, res: Response, file: ResolvedFile): Promise<void> | Promise<boolean | undefined>
+  onExit?(): void
+}
+export interface ExpressRegisteringContext {
+  passcodeHandler: RequestHandler
 }

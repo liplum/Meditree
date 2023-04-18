@@ -1,7 +1,7 @@
 import chokidar from "chokidar"
 import { type LocalFileTree, type FileTreeLike, type FileTree, type ResolvedFile } from "../file.js"
 import { type IHostTree, type HostTreeOptions, makeFilePathClassifier, makeFSOFilter, type FSOFilter, type FileClassifier, createFileTreeFrom, shallowEqual } from "../host.js"
-import { type MeditreePlugin } from "../plugin.js"
+import { type MeditreePlugin } from "../server.js"
 import type fs from "fs"
 import { TYPE } from "../server.js"
 import EventEmitter from "events"

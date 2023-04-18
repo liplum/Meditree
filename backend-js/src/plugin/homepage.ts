@@ -1,7 +1,7 @@
 import { type FileTree, type File } from "../file.js"
 import { createLogger } from "../logger.js"
 import { type MeditreeNode } from "../meditree.js"
-import { type MeditreePlugin } from "../plugin.js"
+import { type MeditreePlugin } from "../server.js"
 import express, { type RequestHandler } from "express"
 import fs from "fs"
 interface HomepagePluginConfig {

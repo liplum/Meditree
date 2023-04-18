@@ -1,5 +1,5 @@
 import { type FileTree } from "../file.js"
-import { type MeditreePlugin } from "../plugin.js"
+import { type MeditreePlugin } from "../server.js"
 
 interface MinifyPluginConfig {
   /**

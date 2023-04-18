@@ -5,7 +5,7 @@ import { type FileTreeLike, LocalFile, type FileType, type FileTree, type Resolv
 import { LocalFileTree } from "./file.js"
 import EventEmitter from "events"
 import { promisify } from "util"
-import { type MeditreePlugin } from "./plugin.js"
+import { type MeditreePlugin } from "./server.js"
 import { type Logger } from "./logger.js"
 
 export interface HostTreeOptions {
