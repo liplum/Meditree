@@ -10,6 +10,17 @@ import { type Container } from "@owja/ioc"
 
 export type PluginRegistry = Record<string, (config: any) => MeditreePlugin>
 
+export interface PluginConfig {
+  /**
+   * An array of the names of plugins that this plugin depends on.
+   */
+  depends?: string[]
+  /**
+ * Any additional configuration options for the plugin.
+ */
+  [key: string]: any
+}
+
 export interface MeditreePlugin extends FileTreePlugin {
   registerService?(container: Container): void
 
@@ -50,32 +61,77 @@ export interface ExpressRegisteringContext {
   passcodeHandler: RequestHandler
 }
 
-export async function resolvePlguinFromConfig(
-  all: PluginRegistry,
-  config: Record<string, Record<string, any>>,
+async function createPlugin(
+  registry: PluginRegistry, name: string, config: PluginConfig
+): Promise<MeditreePlugin | null> {
+  const ctor = registry[name]
+  if (ctor) {
+    // for built-in plugins
+    return ctor(typeof config === "object" ? config : {})
+  } else if (fs.existsSync(name)) {
+    // for external plugins
+    const pluginModule = await importModule(name)
+    // external plugins default export their constructors.
+    return pluginModule.default(config)
+  } else {
+    return null
+  }
+}
+
+/**
+ * @author chatGPT
+ * Resolves a list of plugins and their dependencies.
+ * @param plugins A record of plugin configurations keyed by their names.
+ * @returns An array of resolved plugins.
+ */
+export async function resolvePluginList(
+  registry: PluginRegistry,
+  plugins: Record<string, PluginConfig>,
   onFound?: (name: string, plugin: MeditreePlugin) => void,
   onNotFound?: (name: string) => void,
 ): Promise<MeditreePlugin[]> {
-  const plugins: MeditreePlugin[] = []
-  for (const [name, pluginConfig] of Object.entries(config)) {
-    const ctor = all[name]
-    if (ctor) {
-      // for built-in plugins
-      const plugin = ctor(typeof pluginConfig === "object" ? pluginConfig : {})
-      plugins.push(plugin)
-      onFound?.(name, plugin)
-    } else if (fs.existsSync(name)) {
-      // for external plugins
-      const pluginModule = await importModule(name)
-      // external plugins default export their constructors.
-      const plugin = pluginModule.default(pluginConfig)
-      plugins.push(plugin)
-      onFound?.(name, plugin)
+  const resolvedPlugins: MeditreePlugin[] = []
+
+  /**
+   * Recursive function to resolve the dependencies of a plugin and add it to the list of resolved plugins.
+   * @param pluginName The name of the plugin to resolve.
+   * @param seenPlugins A set of already resolved plugins to avoid infinite recursion.
+   */
+  async function resolvePluginDependencies(pluginName: string, seenPlugins: Set<string>): Promise<void> {
+    // Check if this plugin has already been resolved to avoid infinite recursion.
+    if (seenPlugins.has(pluginName)) {
+      throw new Error(`Circular dependency detected for plugin '${pluginName}'`)
+    }
+
+    // Add this plugin to the set of resolved plugins.
+    seenPlugins.add(pluginName)
+
+    // Get the plugin configuration.
+    const pluginConfig = plugins[pluginName]
+
+    // Resolve the dependencies of this plugin before adding it to the list of resolved plugins.
+    if (pluginConfig.depends) {
+      for (const dependencyName of pluginConfig.depends) {
+        resolvePluginDependencies(dependencyName, seenPlugins)
+      }
+    }
+
+    // Create the plugin and add it to the list of resolved plugins.
+    const plugin = await createPlugin(registry, pluginName, pluginConfig)
+    if (plugin) {
+      resolvedPlugins.push(plugin)
+      onFound?.(pluginName, plugin)
     } else {
-      onNotFound?.(name)
+      onNotFound?.(pluginName)
     }
   }
-  return plugins
+
+  // Iterate over all the plugin configurations and resolve each one.
+  for (const pluginName of Object.keys(plugins)) {
+    await resolvePluginDependencies(pluginName, new Set())
+  }
+
+  return resolvedPlugins
 }
 
 async function importModule(filePath: string): Promise<any> {

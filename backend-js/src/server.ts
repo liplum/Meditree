@@ -6,7 +6,7 @@ import { cloneFileTreeJson, type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo } from "./meditree.js"
 import { LogLevels, Timer, createLogger, globalOptions, initGlobalLogFile } from "./logger.js"
-import { type PluginRegistry, resolvePlguinFromConfig } from "./plugin.js"
+import { type PluginRegistry, resolvePluginList } from "./plugin.js"
 import { type Readable } from "stream"
 import http from "http"
 import CachePlugin from "./plugin/cache.js"
@@ -45,7 +45,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   const container = new Container()
 
   const plugins = config.plugin
-    ? await resolvePlguinFromConfig(pluginTypes, config.plugin,
+    ? await resolvePluginList(pluginTypes, config.plugin,
       (name) => {
         log.info(`Plugin[${name}] resgisered.`)
       },
