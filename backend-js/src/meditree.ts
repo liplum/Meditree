@@ -104,15 +104,16 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   }
 
   resolveFile(pathParts: string[]): ResolvedFile | null {
-    const nodeName = pathParts.shift()
+    const nodeName = pathParts[0]
     if (!nodeName) return null
-    if (this.localTree && nodeName === this.localTree.name) {
+    const node = this.name2Child.get(nodeName)
+    if (node) {
+      pathParts.shift()
+      return node.resolveFile(pathParts)
+    } else if (this.localTree) {
       return this.localTree.tree.resolveFile(pathParts)
     } else {
-      const node = this.name2Child.get(nodeName)
-      if (!node) return null
-      pathParts.unshift(nodeName)
-      return node.resolveFile(pathParts)
+      return null
     }
   }
 
@@ -174,16 +175,14 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
   }
 
   toJSON(): FileTree {
-    const obj: FileTree = {}
+    const obj: FileTree = {
+      ...this.localTree?.json
+    }
+    // TODO: What if node name conflicts with a file or a folder?
     for (const node of this.name2Child.values()) {
       if (node.tree) {
-        for (const [fileName, file] of Object.entries(node.tree)) {
-          obj[fileName] = file
-        }
+        obj[node.name] = node.tree
       }
-    }
-    if (this.localTree) {
-      obj[this.localTree.name] = this.localTree.json
     }
     return obj
   }
