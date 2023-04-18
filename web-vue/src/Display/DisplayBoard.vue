@@ -39,7 +39,7 @@ const size = computed(() => {
 </script>
 
 <template>
-  <v-layout>
+  <v-app>
     <v-app-bar prominent>
       <slot name="app-bar-pre"></slot>
       <v-app-bar-title>
@@ -56,5 +56,5 @@ const size = computed(() => {
         <component :is="renderer" :file="props.file"></component>
       </template>
     </v-main>
-  </v-layout>
+  </v-app>
 </template>

@@ -32,7 +32,7 @@ const breakpoint = display.mdAndDown
 </script>
 
 <template>
-  <v-app>
+  <v-layout>
     <v-navigation-drawer v-model="drawer" :clipped="breakpoint" :width="breakpoint ? 320 : 600">
       <Explorer :root="root" @select-file="onSelecteFile"></Explorer>
     </v-navigation-drawer>
@@ -43,6 +43,6 @@ const breakpoint = display.mdAndDown
         </template>
       </DisplayBoard>
     </v-main>
-  </v-app>
+  </v-layout>
 </template>
 <style scoped></style>
