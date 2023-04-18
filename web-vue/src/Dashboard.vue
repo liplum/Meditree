@@ -36,7 +36,7 @@ const breakpoint = display.mdAndDown
     <v-navigation-drawer v-model="drawer" :clipped="breakpoint" :width="breakpoint ? 300 : 600">
       <Explorer :root="root" @select-file="onSelecteFile"></Explorer>
     </v-navigation-drawer>
-    <v-main>
+    <v-main style="height:100vh;">
       <DisplayBoard :file="selectedFile">
         <template #app-bar-pre v-if="breakpoint">
           <v-app-bar-nav-icon @click="drawer = !drawer" />

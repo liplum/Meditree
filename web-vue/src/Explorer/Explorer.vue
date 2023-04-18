@@ -69,7 +69,7 @@ const mdAndDown = display.mdAndDown
         <v-btn variant="text" icon="mdi-dots-vertical" />
       </template>
     </v-app-bar>
-    <v-main style="height:100vh;overflow-y:auto;">
+    <v-main style="overflow-y:auto;">
       <template v-if="curDir">
         <DirectoryView @click-dir="onDirClick" :dir="curDir" @click-file="emit('selectFile', $event)"
           :search-delegate="searchDelegate" />
