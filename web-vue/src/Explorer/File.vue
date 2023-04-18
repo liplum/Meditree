@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { FileInfo } from "../FileTree";
+import { truncateString } from "../Utils"
 const props = defineProps<{
   file: FileInfo;
 }>();
@@ -13,13 +14,14 @@ function resolveIcon(type: string): string {
   }
   return "mdi-file"
 }
+
 </script>
 
 <template>
   <v-card class="mx-auto file-card">
     <div class="row-center">
-      <v-icon size="64" :icon="resolveIcon(props.file.type)" />
-      <span style="text-align: center;">{{ props.file.name }}</span>
+      <v-icon size="4rem" :icon="resolveIcon(props.file.type)" />
+      <span style="text-align: center;">{{ truncateString(props.file.name, 16) }}</span>
     </div>
   </v-card>
 </template>
@@ -27,6 +29,7 @@ function resolveIcon(type: string): string {
 <style scoped>
 .file-card {
   padding: 1rem;
+  height: 100%;
 }
 
 .row-center {
@@ -34,6 +37,5 @@ function resolveIcon(type: string): string {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100%;
 }
 </style>

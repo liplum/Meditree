@@ -47,9 +47,6 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
   }
   return
 })
-const display = useDisplay()
-// for responsive drawer
-const mdAndDown = display.mdAndDown
 </script>
 <template>
   <v-app>

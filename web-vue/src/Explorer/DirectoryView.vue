@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { onUpdated } from "vue"
 import { DirectoryInfo, FileInfo } from "../FileTree";
 import File from "./File.vue"
 import Directory from "./Directory.vue"
@@ -14,9 +13,6 @@ export interface Props {
 const props = withDefaults(defineProps<Props>(), {
   view: "grid",
 });
-onUpdated(() => {
-  console.log("DirectoryView", props.dir)
-})
 const files = computed(() => {
   if (props.searchDelegate) {
     return props.dir.files.filter(props.searchDelegate)
