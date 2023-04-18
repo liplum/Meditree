@@ -100,7 +100,7 @@ export async function resolvePluginList(
   async function resolvePluginDependencies(pluginName: string, seenPlugins: Set<string>): Promise<void> {
     // Check if this plugin has already been resolved to avoid infinite recursion.
     if (seenPlugins.has(pluginName)) {
-      throw new Error(`Circular dependency detected for plugin '${pluginName}'`)
+      throw new Error(`Circular dependency detected for plugin[${pluginName}]`)
     }
 
     // Add this plugin to the set of resolved plugins.
@@ -112,7 +112,7 @@ export async function resolvePluginList(
     // Resolve the dependencies of this plugin before adding it to the list of resolved plugins.
     if (pluginConfig.depends) {
       for (const dependencyName of pluginConfig.depends) {
-        resolvePluginDependencies(dependencyName, seenPlugins)
+        await resolvePluginDependencies(dependencyName, seenPlugins)
       }
     }
 
@@ -141,12 +141,12 @@ async function importModule(filePath: string): Promise<any> {
     if (!fs.existsSync(url.pathname)) {
       throw new Error(`File not found: ${url.pathname}`)
     }
-    return import(url.toString())
+    return await import(url.toString())
   } else {
     // Otherwise, assume it is a file path
     if (!fs.existsSync(filePath)) {
       throw new Error(`File not found: ${filePath}`)
     }
-    return import(pathToFileURL(filePath).toString())
+    return await import(pathToFileURL(filePath).toString())
   }
 }

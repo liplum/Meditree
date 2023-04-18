@@ -22,8 +22,11 @@ export const TYPE = {
 }
 
 export async function startServer(config: AppConfig): Promise<void> {
+  // Phrase 1: setup starting timer.
   const timer = new Timer()
   timer.start("Start Server")
+
+  // Phrase 2: try to initialize global logging settings.
   if (config.logDir) {
     initGlobalLogFile(config.logDir)
     if (config.logLevel) {
@@ -33,7 +36,10 @@ export async function startServer(config: AppConfig): Promise<void> {
       }
     }
   }
+  // Phrase 3: create "Main" logger.
   const log = createLogger("Main")
+
+  // Phrase 4: register all plugins.
   const pluginTypes: PluginRegistry = {}
   pluginTypes.cache = (config) => CachePlugin(config)
   pluginTypes.homepage = (config) => HomepagePlugin(config)
@@ -42,8 +48,10 @@ export async function startServer(config: AppConfig): Promise<void> {
   pluginTypes.statistics = (config) => StatisticsPlugin(config)
   pluginTypes.watch = (config) => WatchPlugin(config)
 
+  // Phrase 5: create IOC container.
   const container = new Container()
 
+  // Phrase 6: instantiate plugins and respect dependencies.
   const plugins = config.plugin
     ? await resolvePluginList(pluginTypes, config.plugin,
       (name) => {
@@ -53,10 +61,13 @@ export async function startServer(config: AppConfig): Promise<void> {
         log.error(`Plugin[${name}] doesn't exist.`)
       })
     : []
+
+  // Phrase 7: initilize plugins.
   for (const plugin of plugins) {
     await plugin.init?.()
   }
 
+  // Phrase 8: listen to all "exit-like" events, and handle them properly.
   function onExitPlugin(): void {
     // hostTree may not be declared before app exits.
     if (typeof hostTree !== "undefined") {
@@ -71,12 +82,14 @@ export async function startServer(config: AppConfig): Promise<void> {
     onExitPlugin()
     process.exit(0)
   })
+
   process.on("uncaughtException", (err) => {
     console.error("Uncaught Exception:", err)
     onExitPlugin()
     process.exit(1)
   })
 
+  // Phrase 8: register HostTree service.
   container.bind(TYPE.HostTree)
     .toFactory(
       (options) => !config.root
@@ -84,18 +97,32 @@ export async function startServer(config: AppConfig): Promise<void> {
         : new HostTree(options)
     )
 
+  // Phrase 9: plugins register or override services.
   for (const plugin of plugins) {
     plugin.registerService?.(container)
   }
 
+  // Phrase 10: create express app with essential middlewares.
   const app = express()
   const server = http.createServer(app)
   app.use(cors())
   app.use(express.json())
+  app.use(function (req, res, next) {
+    try {
+      decodeURIComponent(req.path)
+    } catch (error) {
+      res.status(400).send({ error: "badURI" })
+      return
+    }
+    next()
+  })
+
+  // Phrase 11: plugins patch the server setup.
   for (const plugin of plugins) {
     await plugin.setupServer?.(app, server)
   }
 
+  // Phrase 12: resolve the HostTree service.
   const hostTree = container.get(TYPE.HostTree, undefined, undefined, [{
     root: config.root as string,
     name: config.name,
@@ -105,23 +132,26 @@ export async function startServer(config: AppConfig): Promise<void> {
     plugins,
   }])
 
+  // Phrase 13: create MeditreeNode and attach plugins to it.
   const node = new MeditreeNode()
   node.plugins = plugins
-
-  for (const plugin of plugins) {
-    await plugin.setupMeditreeNode?.(node)
-  }
-
   const fileTypes = Array.from(Object.values(config.fileType))
   node.subNodeFilter = (file) => {
     return !file["*type"] || fileTypes.includes(file["*type"])
   }
 
+  // Phrase 14: plugins patch the MeditreeNode setup.
+  for (const plugin of plugins) {
+    await plugin.setupMeditreeNode?.(node)
+  }
+
+  // Phrase 15: listen to HostTree "rebuild" event, and update the local file tree.
   hostTree.on("rebuild", (fileTree) => {
     node.updateFileTreeFromLocal(config.name, fileTree)
     log.info("Local file tree is rebuilt.")
   })
 
+  // Phrase 15: create file tree cache and listen to updates from subnode.
   const initialFileTree = {
     name: config.name,
     root: {},
@@ -151,15 +181,6 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
   })
 
-  app.use(function (req, res, next) {
-    try {
-      decodeURIComponent(req.path)
-    } catch (error) {
-      res.status(400).send({ error: "badURI" })
-      return
-    }
-    next()
-  })
   const passcodeHandler: RequestHandler = (req, res, next) => {
     if (!config.passcode) {
       next()
@@ -184,10 +205,12 @@ export async function startServer(config: AppConfig): Promise<void> {
     passcodeHandler,
   }
 
+  // Phrase 16: plugins patch the express app registering.
   for (const plugin of plugins) {
     await plugin.onExpressRegistering?.(app, registryCtx)
   }
 
+  // Phrase 17: express app setup.
   app.get("/list", passcodeHandler, (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
@@ -259,27 +282,34 @@ export async function startServer(config: AppConfig): Promise<void> {
     stream.pipe(res)
   }
 
+  // Phrase 18: start HostTree and rebuild it manullay.
   hostTree.start()
   await hostTree.rebuildFileTree()
 
+  // Phrase 19: setup Meditree as a parent node if needed.
   // If node is defined and not empty, subnodes can connect to this.
   if (config.child?.length && config.publicKey && config.privateKey) {
     await setupAsParent(node, config as any as AsParentConfig, server)
   }
 
+  // Phrase 20: setup Meditree as a child node if needed.
   // If central is defined and not empty, it will try connecting to every central.
   if (config.parent?.length && config.publicKey && config.privateKey) {
     await setupAsChild(node, config as any as AsChildConfig)
   }
+
+  // Phrase 21: listen to dedicated port.
   const hostname = config.hostname
   if (hostname) {
     server.listen(config.port, config.hostname, (): void => {
       log.info(`Server running at http://${hostname}:${config.port}/`)
+      // Phrase 22: stop the starting timer.
       timer.stop("Start Server", log.info)
     })
   } else {
     server.listen(config.port, (): void => {
       log.info(`Server running at http://localhost:${config.port}/`)
+      // Phrase 22: stop the starting timer.
       timer.stop("Start Server", log.info)
     })
   }
