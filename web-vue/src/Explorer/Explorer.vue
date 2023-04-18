@@ -52,7 +52,7 @@ const display = useDisplay()
 const mdAndDown = display.mdAndDown
 </script>
 <template>
-  <v-layout>
+  <v-app>
     <v-app-bar prominent>
       <template v-if="curDir?.parent">
         <v-app-bar-nav-icon @click="onNaviBack" icon="mdi-arrow-left" />
@@ -69,13 +69,13 @@ const mdAndDown = display.mdAndDown
         <v-btn variant="text" icon="mdi-dots-vertical" />
       </template>
     </v-app-bar>
-    <v-main style="overflow-y:auto;">
+    <v-main style="height: 100vh;overflow-y:auto;">
       <template v-if="curDir">
         <DirectoryView @click-dir="onDirClick" :dir="curDir" @click-file="emit('selectFile', $event)"
           :search-delegate="searchDelegate" />
       </template>
     </v-main>
-  </v-layout>
+  </v-app>
 </template>
 
 <style scoped>
