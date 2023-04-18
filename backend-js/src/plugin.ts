@@ -24,7 +24,7 @@ async function createPlugin<TPlugin>(
   } else if (fs.existsSync(name)) {
     // for external plugins
     const pluginModule = await importModule(name)
-    // external plugins default export their constructors.
+    // external plugins should default export their constructors.
     return pluginModule.default(config)
   } else {
     return null

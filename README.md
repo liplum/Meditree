@@ -4,43 +4,40 @@
 
 ### Node.js /backend-js
 
-A express.js server.
+This is an Express.js server that provides the following features:
 
-Features:
+1. It serves a local file tree on the file system and monitors changes made to it.
+2. It supports plugins to add more features.
 
-1. To serve a local file tree and watch changes.
-2. A plugin system to turn on additional features.
-
-To learn more about `backend-js` please see its [README](/backend-js/README.md).
+To learn more about `backend-js`, please refer to its [README](/backend-js/README.md).
 
 ### Go /backend-go
 
-To learn more about `backend-go` please see its [README](/backend-go/README.md).
+To learn more about `backend-go` please refer to its [README](/backend-go/README.md).
 
 ## Frontend
 
 ### React /web-react
 
-A SPA(single-page application) in JavaScript and React.
+This is a single-page application (SPA) created with JavaScript and React.
+It offers the following features:
 
-Features:
+1. The ability to connect to a server on one page, allowing users to connect to multiple servers by opening a new page.
+2. A directory-tree-like view that makes it easy to browse files in one place.
+3. Case-insensitive file search in the root directory.
+4. Client-side routing for a better loading experience and to reduce server-side overhead. You can share any URL with others, and they will open the same file.
 
-1. The ability to connect to a server on one page. Therefore, users can connect to multiple servers by opening a new page.
-2. Direcotry-Tree-like view makes it easy to browse files in a place.
-3. Finding files in the root directory case-insensitively.
-4. Client-side routing is for better loading UX and dissolve the server-side overhead. Note you can share others any URL, and they will open the same file.
-
-To learn more about `web-react` please see its [README](/web-react/README.md).
+To learn more about `web-react` please refer to its [README](/web-react/README.md).
 
 ### Vue /web-vue
 
-To learn more about `web-vue` please see its [README](/web-vue/README.md).
+To learn more about `web-vue` please refer to its [README](/web-vue/README.md).
 
 ## Application
 
 ### Flutter /app-flutter
 
-To learn more about `app-flutter` please see its [README](/app-flutter/README.md).
+To learn more about `app-flutter` please refer to its [README](/app-flutter/README.md).
 
 ## Deployment
 
