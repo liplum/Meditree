@@ -1,9 +1,9 @@
-export interface FileSystemEntry {
+export interface FileSystemObject {
   parent?: DirectoryInfo
   name: string;
   hidden: boolean
 }
-export class FileInfo implements FileSystemEntry {
+export class FileInfo implements FileSystemObject {
   parent?: DirectoryInfo
   name: string
   type: string
@@ -17,7 +17,7 @@ export class FileInfo implements FileSystemEntry {
   }
 }
 
-export class DirectoryInfo implements FileSystemEntry {
+export class DirectoryInfo implements FileSystemObject {
   parent?: DirectoryInfo
   name: string
   path: string
@@ -30,6 +30,11 @@ export class DirectoryInfo implements FileSystemEntry {
 
   get isRoot(): boolean {
     return this.parent === undefined
+  }
+
+  addChild(file: FileInfo | DirectoryInfo): void {
+    this.files.push(file)
+    file.parent = this
   }
 }
 
@@ -70,10 +75,10 @@ export function parseFileTree(baseUrl: string, tree: { name: string, root: Direc
       if (name === "*hide") continue
       if (file.hasOwnProperty("*type")) {
         // Parse as file
-        dir.files.push(parseFile(name, file as File, dir));
+        dir.addChild(parseFile(name, file as File, dir))
       } else {
         // Parse as directory
-        dir.files.push(parseDirectory(name, file as Directory, dir))
+        dir.addChild(parseDirectory(name, file as Directory, dir))
       }
     }
     return dir;

@@ -4,15 +4,21 @@ import ConnectDialog from "./ConnectDialog.vue";
 import { useDisplay } from 'vuetify'
 import Explorer from "./Explorer/Explorer.vue";
 import { ref } from "vue";
-import { FileInfo, parseFileTree } from "./FileTree";
-const tree = ref();
+import { DirectoryInfo, FileInfo, parseFileTree } from "./FileTree";
+function createRoot(): DirectoryInfo {
+  const dir = new DirectoryInfo()
+  dir.path = "/"
+  dir.name = "Root"
+  return dir
+}
+const root = ref(createRoot())
 const backend = "http://localhost:81"
 // for testing
 fetch(`${backend}/list`, { method: "GET" })
   .then((res) => res.json())
   .then((data) => {
     const fileTree = parseFileTree(`${backend}/file`, data)
-    tree.value = fileTree;
+    root.value.addChild(fileTree)
   });
 const drawer = ref(true)
 const selectedFile = ref<FileInfo>()
@@ -28,7 +34,7 @@ const breakpoint = display.mdAndDown
 <template>
   <v-layout>
     <v-navigation-drawer v-model="drawer" :clipped="breakpoint" :width="breakpoint ? 300 : 600">
-      <Explorer :root="tree" @select-file="onSelecteFile"></Explorer>
+      <Explorer :root="root" @select-file="onSelecteFile"></Explorer>
     </v-navigation-drawer>
     <v-main>
       <DisplayBoard :file="selectedFile">
