@@ -19,9 +19,8 @@ export default function WatchPlugin(config: WatchPluginConfig): MeditreePlugin {
   return {
     registerService(container) {
       container.rebind(TYPE.HostTree)
-        .toFactory(
-          (options) =>
-            new WatchTree(options, rebuildInterval)
+        .toValue((options) =>
+          new WatchTree(options, rebuildInterval)
         )
     }
   }

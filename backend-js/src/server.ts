@@ -20,7 +20,7 @@ import { Container, token } from "./ioc.js"
 import { type UserStorageService } from "./user.js"
 
 export const TYPE = {
-  HostTree: token<IHostTree, [HostTreeOptions]>("HostTree"),
+  HostTree: token<(options: HostTreeOptions) => IHostTree>("HostTree"),
   UserStorage: token<UserStorageService>("UserStorage"),
 }
 
@@ -94,8 +94,8 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   // Phrase 9: register HostTree service.
   container.bind(TYPE.HostTree)
-    .toFactory(
-      (options) => !config.root
+    .toValue((options) =>
+      !config.root
         ? new EmptyHostTree()
         : new HostTree(options)
     )
@@ -126,14 +126,14 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   // Phrase 13: resolve the HostTree service.
-  const hostTree = container.get(TYPE.HostTree, undefined, undefined, [{
+  const hostTree = container.get(TYPE.HostTree)({
     root: config.root as string,
     name: config.name,
     fileTypePattern: config.fileType,
     log: createLogger("LocalFileTree"),
     ignorePattern: config.ignore ?? [],
     plugins,
-  }])
+  })
 
   // Phrase 14: create MeditreeNode and attach plugins to it.
   const node = new MeditreeNode()

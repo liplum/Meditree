@@ -16,7 +16,7 @@ export default function MongoDbPlugin(config: MongoDbPluginConfig): MeditreePlug
       client = new MongoClient(config.url, config.options)
     },
     registerService(container) {
-      container.rebind(TYPE.UserStorage).to(MongoDbServiceStorage).inSingletonScope()
+      container.rebind(TYPE.UserStorage).toClass(MongoDbServiceStorage).asSingleton()
     },
     onExit() {
       client?.close(true)
