@@ -1,20 +1,20 @@
 // learnt from https://github.com/owja/ioc
-export type Factory<R, TArgs extends any[] = any[]> = (...factoryArgs: TArgs) => R
-export type Constructor<R, TArgs extends any[] = any[]> = new (...ctorArgs: TArgs) => R
+type Factory<R, TArgs extends any[] = any[]> = (...factoryArgs: TArgs) => R
+type Constructor<R, TArgs extends any[] = any[]> = new (...ctorArgs: TArgs) => R
 // container
-export type Injected<R, TArgs extends any[] = any[]> = R | Factory<R, TArgs> | Constructor<R, TArgs>
+type Injected<R, TArgs extends any[] = any[]> = R | Factory<R, TArgs> | Constructor<R, TArgs>
 
 const enum ItemType {
   value, factory, class
 }
 
-export interface Item<T> {
-  injected?: Injected<T>
-  cache?: T
+interface Item<R> {
+  injected?: Injected<R>
+  cache?: R
   singleton?: boolean
   type?: ItemType
 }
-export function getType(token: Token<any, any> | symbol): symbol {
+function getType(token: Token<any, any> | symbol): symbol {
   return typeof token === "symbol" ? token : token.type
 }
 // tokens
@@ -23,34 +23,34 @@ export interface Token<T, U extends any[]> {
   type: symbol
 }
 
-export function token<T, U extends any[] = any[]>(name: string): Token<T, U> {
-  return { type: Symbol(name) } satisfies Token<T, U>
+export function token<R, TArgs extends any[] = any[]>(name: string): Token<R, TArgs> {
+  return { type: Symbol(name) } satisfies Token<R, TArgs>
 }
 
-export function uniqueToken<T, U extends any[] = any[]>(name: string): Token<T, U> {
-  return { type: Symbol.for(name) } as any as Token<T, U>
+export function uniqueToken<R, TArgs extends any[] = any[]>(name: string): Token<R, TArgs> {
+  return { type: Symbol.for(name) } as any as Token<R, TArgs>
 }
 
 function stringifyToken(token: Token<any, any> | symbol): string {
   return typeof token === "symbol" ? token.toString() : `Token(${token.type.toString()})`
 }
 
-export class Bind<T, U extends any[]> {
-  constructor(private readonly _target: Item<T>) { }
+export class Bind<R, TArgs extends any[] = any[]> {
+  constructor(private readonly _target: Item<R>) { }
 
-  toClass<TClz extends Constructor<T>>(Clz: TClz): this {
+  toClass<TClz extends Constructor<R>>(Clz: TClz): this {
     this._target.injected = Clz
     this._target.type = ItemType.class
     return this
   }
 
-  toFactory(factory: Factory<T, U>): this {
+  toFactory(factory: Factory<R, TArgs>): this {
     this._target.injected = factory
     this._target.type = ItemType.factory
     return this
   }
 
-  toValue(value: T): this {
+  toValue(value: R): this {
     if (typeof value === "undefined") {
       throw new Error("cannot bind a value to undefined")
     }
@@ -69,12 +69,12 @@ export class Container {
   private registry = new Map<symbol, Item<any>>()
   private readonly snapshots: typeof this.registry[] = []
 
-  bind<T = never, U extends any[] = any[]>(token: Token<T, U> | symbol): Bind<T, U> {
-    return new Bind<T, U>(this._createItem<T, U>(token))
+  bind<R, TArgs extends any[] = any[]>(token: Token<R, TArgs> | symbol): Bind<R, TArgs> {
+    return new Bind<R, TArgs>(this.createItem<R, TArgs>(token))
   }
 
-  rebind<T = never, U extends any[] = any[]>(token: Token<T, U> | symbol): Bind<T, U> {
-    return this.remove(token).bind<T, U>(token)
+  rebind<R, TArgs extends any[] = any[]>(token: Token<R, TArgs> | symbol): Bind<R, TArgs> {
+    return this.remove(token).bind<R, TArgs>(token)
   }
 
   remove(token: Token<any, any> | symbol): this {
@@ -85,26 +85,30 @@ export class Container {
     return this
   }
 
-  get<T, U extends any[] = any[]>(
-    token: Token<T, U> | symbol,
-    ...injectedArgs: U
-  ): T {
-    const item = this.registry.get(getType(token)) as Item<T> | undefined
+  has(token: Token<any, any> | symbol): boolean {
+    return this.registry.get(getType(token)) !== undefined
+  }
+
+  get<R, TArgs extends any[] = any[]>(
+    token: Token<R, TArgs> | symbol,
+    ...injectedArgs: TArgs
+  ): R {
+    const item = this.registry.get(getType(token))
 
     if (item === undefined || item.injected === undefined || item.type === undefined) {
-      throw new Error(`nothing bound to ${stringifyToken(token)}`)
+      throw new Error(`Nothing bound to ${stringifyToken(token)}`)
     }
     if (item.type === ItemType.value) {
-      return item.injected as T
+      return item.injected as R
     } else if (item.type === ItemType.factory) {
-      const factory = item.injected as Factory<T, U>
+      const factory = item.injected as Factory<R, TArgs>
       if (item.singleton) {
         return (item.cache = item.cache ?? factory(...injectedArgs))
       } else {
         return factory(...injectedArgs)
       }
     } else {
-      const Ctor = item.injected as Constructor<T, U>
+      const Ctor = item.injected as Constructor<R, TArgs>
       if (item.singleton) {
         return (item.cache = item.cache ?? new Ctor(...injectedArgs))
       } else {
@@ -124,7 +128,7 @@ export class Container {
   }
 
   /* Item related */
-  private _createItem<T, U extends any[] = any[]>(token: Token<T, U> | symbol): Item<T> {
+  private createItem<R, TArgs extends any[] = any[]>(token: Token<R, TArgs> | symbol): Item<R> {
     if (this.registry.get(getType(token)) !== undefined) {
       throw new Error(`object can only bound once: ${stringifyToken(token)}`)
     }
@@ -161,9 +165,9 @@ export function createWire(container: Container) {
 }
 
 export function createResolve(container: Container) {
-  return <T, U extends any[]>(token: Token<T, U> | symbol) => {
-    let value: T
-    return function <R>(this: R, ...injectedArgs: U): T {
+  return <R, TArgs extends any[] = any[]>(token: Token<R, TArgs> | symbol) => {
+    let value: R
+    return function (this: R, ...injectedArgs: TArgs): R {
       if (value === undefined) {
         value = container.get(token, ...injectedArgs)
       }
@@ -172,15 +176,15 @@ export function createResolve(container: Container) {
   }
 }
 
-export function define<T, Target extends { [key in Prop]: T }, Prop extends keyof Target, K extends Array<unknown>>(
+function define<R, Target extends { [key in Prop]: R }, Prop extends keyof Target, TArgs extends any[]>(
   target: Target,
   property: Prop,
   container: Container,
-  token: Token<T, K> | symbol,
-  ...injectedArgs: K
+  token: Token<R, TArgs> | symbol,
+  ...injectedArgs: TArgs
 ): void {
   Object.defineProperty(target, property, {
-    get: function <R>(this: R): T {
+    get: function (this: R): R {
       const value = container.get(token, ...injectedArgs)
       Object.defineProperty(this, property, {
         value,
