@@ -1,5 +1,4 @@
 // learnt from https://github.com/owja/ioc
-
 export type Factory<R, TArgs extends any[] = any[]> = (...factoryArgs: TArgs) => R
 export type Constructor<R, TArgs extends any[] = any[]> = new (...ctorArgs: TArgs) => R
 // container
@@ -19,16 +18,17 @@ export function getType(token: Token<any, any> | symbol): symbol {
   return typeof token === "symbol" ? token : token.type
 }
 // tokens
-declare const typeMarker: unique symbol
-declare const bindedArguments: unique symbol
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
 export interface Token<T, U extends any[]> {
   type: symbol
-  [typeMarker]: T
-  [bindedArguments]: U
 }
 
 export function token<T, U extends any[] = any[]>(name: string): Token<T, U> {
-  return { type: Symbol(name) } as any as Token<T, U>
+  return { type: Symbol(name) } satisfies Token<T, U>
+}
+
+export function uniqueToken<T, U extends any[] = any[]>(name: string): Token<T, U> {
+  return { type: Symbol.for(name) } as any as Token<T, U>
 }
 
 function stringifyToken(token: Token<any, any> | symbol): string {
@@ -66,8 +66,8 @@ export class Bind<T, U extends any[]> {
 }
 
 export class Container {
-  private _registry = new Map<symbol, Item<any>>()
-  private readonly _snapshots: typeof this._registry[] = []
+  private registry = new Map<symbol, Item<any>>()
+  private readonly snapshots: typeof this.registry[] = []
 
   bind<T = never, U extends any[] = any[]>(token: Token<T, U> | symbol): Bind<T, U> {
     return new Bind<T, U>(this._createItem<T, U>(token))
@@ -77,13 +77,11 @@ export class Container {
     return this.remove(token).bind<T, U>(token)
   }
 
-  remove(token: Token<any, any> | symbol): Container {
-    if (this._registry.get(getType(token)) === undefined) {
-      throw new Error(`${stringifyToken(token)} was never bound`)
+  remove(token: Token<any, any> | symbol): this {
+    if (this.registry.get(getType(token)) === undefined) {
+      return this
     }
-
-    this._registry.delete(getType(token))
-
+    this.registry.delete(getType(token))
     return this
   }
 
@@ -91,7 +89,7 @@ export class Container {
     token: Token<T, U> | symbol,
     ...injectedArgs: U
   ): T {
-    const item = this._registry.get(getType(token)) as Item<T> | undefined
+    const item = this.registry.get(getType(token)) as Item<T> | undefined
 
     if (item === undefined || item.injected === undefined || item.type === undefined) {
       throw new Error(`nothing bound to ${stringifyToken(token)}`)
@@ -116,34 +114,33 @@ export class Container {
   }
 
   snapshot(): Container {
-    this._snapshots.push(new Map(this._registry))
+    this.snapshots.push(new Map(this.registry))
     return this
   }
 
   restore(): Container {
-    this._registry = this._snapshots.pop() ?? this._registry
+    this.registry = this.snapshots.pop() ?? this.registry
     return this
   }
 
   /* Item related */
   private _createItem<T, U extends any[] = any[]>(token: Token<T, U> | symbol): Item<T> {
-    if (this._registry.get(getType(token)) !== undefined) {
+    if (this.registry.get(getType(token)) !== undefined) {
       throw new Error(`object can only bound once: ${stringifyToken(token)}`)
     }
 
     const item = {}
-    this._registry.set(getType(token), item)
+    this.registry.set(getType(token), item)
     return item
   }
 }
 
 export function createDecorator(container: Container) {
-  return <T, K extends Array<unknown>>(
-    token: Token<T, K> | symbol,
-    tags: symbol[] | symbol = [],
-    ...injectedArgs: K
+  return <R, TArgs extends any[]>(
+    token: Token<R, TArgs> | symbol,
+    ...injectedArgs: TArgs
   ) => {
-    return function <Target extends { [key in Prop]: T }, Prop extends keyof Target>(
+    return function <Target extends { [key in Prop]: R }, Prop extends keyof Target>(
       target: Target,
       property: Prop,
     ): void {
