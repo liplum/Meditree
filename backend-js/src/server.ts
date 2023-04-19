@@ -17,9 +17,11 @@ import MinifyPlugin from "./plugin/minify.js"
 import StatisticsPlugin from "./plugin/statistics.js"
 import WatchPlugin from "./plugin/watch.js"
 import { Container, token } from "@owja/ioc"
+import { type UserStorageService } from "./user.js"
 
 export const TYPE = {
   HostTree: token<IHostTree, [HostTreeOptions]>("HostTree"),
+  UserStorage: token<UserStorageService>("UserStorage"),
 }
 
 export async function startServer(config: AppConfig): Promise<void> {
@@ -63,12 +65,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       })
     : []
 
-  // Phrase 7: initilize plugins.
-  for (const plugin of plugins) {
-    await plugin.init?.()
-  }
-
-  // Phrase 8: listen to all "exit-like" events, and handle them properly.
+  // Phrase 7: listen to all "exit-like" events, and handle them properly.
   function onExitPlugin(): void {
     // hostTree may not be declared before app exits.
     if (typeof hostTree !== "undefined") {
@@ -90,7 +87,12 @@ export async function startServer(config: AppConfig): Promise<void> {
     process.exit(1)
   })
 
-  // Phrase 8: register HostTree service.
+  // Phrase 8: initilize plugins.
+  for (const plugin of plugins) {
+    await plugin.init?.()
+  }
+
+  // Phrase 9: register HostTree service.
   container.bind(TYPE.HostTree)
     .toFactory(
       (options) => !config.root
@@ -98,12 +100,12 @@ export async function startServer(config: AppConfig): Promise<void> {
         : new HostTree(options)
     )
 
-  // Phrase 9: plugins register or override services.
+  // Phrase 10: plugins register or override services.
   for (const plugin of plugins) {
     plugin.registerService?.(container)
   }
 
-  // Phrase 10: create express app with essential middlewares.
+  // Phrase 11: create express app with essential middlewares.
   const app = express()
   const server = http.createServer(app)
   app.use(cors())
@@ -118,12 +120,12 @@ export async function startServer(config: AppConfig): Promise<void> {
     next()
   })
 
-  // Phrase 11: plugins patch the server setup.
+  // Phrase 12: plugins patch the server setup.
   for (const plugin of plugins) {
     await plugin.setupServer?.(app, server)
   }
 
-  // Phrase 12: resolve the HostTree service.
+  // Phrase 13: resolve the HostTree service.
   const hostTree = container.get(TYPE.HostTree, undefined, undefined, [{
     root: config.root as string,
     name: config.name,
@@ -133,7 +135,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     plugins,
   }])
 
-  // Phrase 13: create MeditreeNode and attach plugins to it.
+  // Phrase 14: create MeditreeNode and attach plugins to it.
   const node = new MeditreeNode()
   node.plugins = plugins
   const fileTypes = Array.from(Object.values(config.fileType))
@@ -141,18 +143,18 @@ export async function startServer(config: AppConfig): Promise<void> {
     return !file["*type"] || fileTypes.includes(file["*type"])
   }
 
-  // Phrase 14: plugins patch the MeditreeNode setup.
+  // Phrase 15: plugins patch the MeditreeNode setup.
   for (const plugin of plugins) {
     await plugin.setupMeditreeNode?.(node)
   }
 
-  // Phrase 15: listen to HostTree "rebuild" event, and update the local file tree.
+  // Phrase 16: listen to HostTree "rebuild" event, and update the local file tree.
   hostTree.on("rebuild", (fileTree) => {
     node.updateFileTreeFromLocal(config.name, fileTree)
     log.info("Local file tree is rebuilt.")
   })
 
-  // Phrase 15: create file tree cache and listen to updates from subnode.
+  // Phrase 17: create file tree cache and listen to updates from subnode.
   const initialFileTree = {
     name: config.name,
     root: {},
@@ -206,12 +208,12 @@ export async function startServer(config: AppConfig): Promise<void> {
     passcodeHandler,
   }
 
-  // Phrase 16: plugins patch the express app registering.
+  // Phrase 18: plugins patch the express app registering.
   for (const plugin of plugins) {
     await plugin.onExpressRegistering?.(app, registryCtx)
   }
 
-  // Phrase 17: express app setup.
+  // Phrase 19: express app setup.
   app.get("/list", passcodeHandler, (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
@@ -283,34 +285,34 @@ export async function startServer(config: AppConfig): Promise<void> {
     stream.pipe(res)
   }
 
-  // Phrase 18: start HostTree and rebuild it manullay.
+  // Phrase 20: start HostTree and rebuild it manullay.
   hostTree.start()
   await hostTree.rebuildFileTree()
 
-  // Phrase 19: setup Meditree as a parent node if needed.
+  // Phrase 21: setup Meditree as a parent node if needed.
   // If node is defined and not empty, subnodes can connect to this.
   if (config.child?.length && config.publicKey && config.privateKey) {
     await setupAsParent(node, config as any as AsParentConfig, server)
   }
 
-  // Phrase 20: setup Meditree as a child node if needed.
+  // Phrase 22: setup Meditree as a child node if needed.
   // If central is defined and not empty, it will try connecting to every central.
   if (config.parent?.length && config.publicKey && config.privateKey) {
     await setupAsChild(node, config as any as AsChildConfig)
   }
 
-  // Phrase 21: listen to dedicated port.
+  // Phrase 23: listen to dedicated port.
   const hostname = config.hostname
   if (hostname) {
     server.listen(config.port, config.hostname, (): void => {
       log.info(`Server running at http://${hostname}:${config.port}/`)
-      // Phrase 22: stop the starting timer.
+      // Phrase 24: stop the starting timer.
       timer.stop("Start Server", log.info)
     })
   } else {
     server.listen(config.port, (): void => {
       log.info(`Server running at http://localhost:${config.port}/`)
-      // Phrase 22: stop the starting timer.
+      // Phrase 24: stop the starting timer.
       timer.stop("Start Server", log.info)
     })
   }
