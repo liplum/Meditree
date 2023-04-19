@@ -1,42 +1,24 @@
-import { type Db, MongoClient, type MongoClientOptions } from "mongodb"
 import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
 import { type User, type UserStorageService } from "../user.js"
-import { uniqueToken } from "../ioc.js"
-
+import { TYPE as MongodbType } from "./mongodb.js"
 export const HLSMediaType = "application/x-mpegURL"
 // eslint-disable-next-line @typescript-eslint/dot-notation
-interface MongoDbPluginConfig {
-  url: string
+interface MongoDbUserPluginConfig {
   /**
-   * "meditree" by default.
+   * "users" by default.
    */
-  database?: string
-  options?: MongoClientOptions
+  collection?: string
 }
 
-export interface MongoDbService {
-  db: Db
-}
-
-export const TYPE = {
-  MongoDB: uniqueToken<MongoDbService>("MongoDB"),
-}
-
-export default function MongoDbPlugin(config: MongoDbPluginConfig): MeditreePlugin {
-  if (!config.url) throw new Error("MongoDb url cannot be empty or null.")
-  const database = config.database ?? "meditree"
-  let client: MongoClient
+/**
+ * Plugin dependency: `mongodb`.
+ */
+export default function MongoDbUserPlugin(config: MongoDbUserPluginConfig): MeditreePlugin {
+  const collection = config.collection ?? "users"
   return {
-    async init() {
-      client = new MongoClient(config.url, config.options)
-    },
-    onExit() {
-      client?.close(true)
-    },
     registerService(container) {
-      if (client === undefined) throw new Error("MongoDb Client is not yet initialized.")
-      const db = client.db(database)
-      const users = db.collection("users")
+      const mongodb = container.get(MongodbType.MongoDB)
+      const users = mongodb.db.collection(collection)
       container.rebind(MeditreeType.UserStorage).toFactory((): UserStorageService => {
         return {
           async addUser(user) {

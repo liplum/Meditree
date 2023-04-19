@@ -16,12 +16,12 @@ import HLSPlugin from "./plugin/hls.js"
 import MinifyPlugin from "./plugin/minify.js"
 import StatisticsPlugin from "./plugin/statistics.js"
 import WatchPlugin from "./plugin/watch.js"
-import { Container, token } from "./ioc.js"
+import { Container, uniqueToken } from "./ioc.js"
 import { type UserStorageService } from "./user.js"
 
 export const TYPE = {
-  HostTree: token<(options: HostTreeOptions) => IHostTree>("HostTree"),
-  UserStorage: token<UserStorageService>("UserStorage"),
+  HostTree: uniqueToken<(options: HostTreeOptions) => IHostTree>("HostTree"),
+  UserStorage: uniqueToken<UserStorageService>("UserStorage"),
 }
 
 export async function startServer(config: AppConfig): Promise<void> {
