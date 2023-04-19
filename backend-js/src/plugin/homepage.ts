@@ -40,7 +40,7 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
         })
       }
     },
-    async onExpressRegistering(app, ctx) {
+    async onRegisterExpressHandler(app, ctx) {
       if (root) {
         app.use(express.static(root))
       } else {

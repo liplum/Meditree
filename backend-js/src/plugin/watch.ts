@@ -17,7 +17,7 @@ interface WatchPluginConfig {
 export default function WatchPlugin(config: WatchPluginConfig): MeditreePlugin {
   const rebuildInterval = config.rebuildInterval ?? 10 * 1000
   return {
-    registerService(container) {
+    onRegisterService(container) {
       container.rebind(TYPE.HostTree)
         .toValue((options) =>
           new WatchTree(options, rebuildInterval)

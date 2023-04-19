@@ -33,36 +33,12 @@ export default function MongoDbPlugin(config: MongoDbPluginConfig): MeditreePlug
     onExit() {
       client?.close(true)
     },
-    registerService(container) {
+    onRegisterService(container) {
       if (client === undefined) throw new Error("MongoDb Client is not yet initialized.")
       const db = client.db(database)
-      const users = db.collection("users")
-      container.rebind(MeditreeType.UserStorage).toFactory((): UserStorageService => {
-        return {
-          async addUser(user) {
-            if (await users.findOne({ account: user.account })) {
-              // already existing
-              return false
-            }
-            await users.insertOne(user)
-            return true
-          },
-          async getUser(account) {
-            return await users.findOne({ account }) as User | null
-          },
-          async updateUser(user) {
-            if (await users.findOne({ account: user.account })) {
-              users.updateOne({ account: user.account }, user)
-              return true
-            }
-            return false
-          },
-          async deleteUser(account) {
-            const result = await users.deleteOne({ account })
-            return result.deletedCount > 0
-          },
-        }
-      }).asSingleton()
+      container.rebind(TYPE.MongoDB).toValue({
+        db
+      })
     },
   }
 }

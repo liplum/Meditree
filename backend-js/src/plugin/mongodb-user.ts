@@ -16,35 +16,33 @@ interface MongoDbUserPluginConfig {
 export default function MongoDbUserPlugin(config: MongoDbUserPluginConfig): MeditreePlugin {
   const collection = config.collection ?? "users"
   return {
-    registerService(container) {
+    onRegisterService(container) {
       const mongodb = container.get(MongodbType.MongoDB)
       const users = mongodb.db.collection(collection)
-      container.rebind(MeditreeType.UserStorage).toFactory((): UserStorageService => {
-        return {
-          async addUser(user) {
-            if (await users.findOne({ account: user.account })) {
-              // already existing
-              return false
-            }
-            await users.insertOne(user)
-            return true
-          },
-          async getUser(account) {
-            return await users.findOne({ account }) as User | null
-          },
-          async updateUser(user) {
-            if (await users.findOne({ account: user.account })) {
-              users.updateOne({ account: user.account }, user)
-              return true
-            }
+      container.rebind(MeditreeType.UserStorage).toValue({
+        async addUser(user) {
+          if (await users.findOne({ account: user.account })) {
+            // already existing
             return false
-          },
-          async deleteUser(account) {
-            const result = await users.deleteOne({ account })
-            return result.deletedCount > 0
-          },
-        }
-      }).asSingleton()
+          }
+          await users.insertOne(user)
+          return true
+        },
+        async getUser(account) {
+          return await users.findOne({ account }) as User | null
+        },
+        async updateUser(user) {
+          if (await users.findOne({ account: user.account })) {
+            users.updateOne({ account: user.account }, user)
+            return true
+          }
+          return false
+        },
+        async deleteUser(account) {
+          const result = await users.deleteOne({ account })
+          return result.deletedCount > 0
+        },
+      })
     },
   }
 }

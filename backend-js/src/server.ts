@@ -17,11 +17,12 @@ import MinifyPlugin from "./plugin/minify.js"
 import StatisticsPlugin from "./plugin/statistics.js"
 import WatchPlugin from "./plugin/watch.js"
 import { Container, uniqueToken } from "./ioc.js"
-import { type UserStorageService } from "./user.js"
+import { type UserService, type UserStorageService } from "./user.js"
 
 export const TYPE = {
   HostTree: uniqueToken<(options: HostTreeOptions) => IHostTree>("HostTree"),
   UserStorage: uniqueToken<UserStorageService>("UserStorage"),
+  User: uniqueToken<UserService>("User")
 }
 
 export async function startServer(config: AppConfig): Promise<void> {
@@ -102,7 +103,7 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   // Phrase 10: plugins register or override services.
   for (const plugin of plugins) {
-    plugin.registerService?.(container)
+    plugin.onRegisterService?.(container)
   }
 
   // Phrase 11: create express app with essential middlewares.
@@ -210,7 +211,7 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   // Phrase 18: plugins patch the express app registering.
   for (const plugin of plugins) {
-    await plugin.onExpressRegistering?.(app, registryCtx)
+    await plugin.onRegisterExpressHandler?.(app, registryCtx)
   }
 
   // Phrase 19: express app setup.
@@ -350,7 +351,7 @@ function resolveRange(range?: string): { start?: number, end?: number } {
 }
 
 export interface MeditreePlugin extends FileTreePlugin {
-  registerService?(container: Container): void
+  onRegisterService?(container: Container): void
 
   init?(): Promise<void>
 
@@ -358,7 +359,7 @@ export interface MeditreePlugin extends FileTreePlugin {
 
   setupMeditreeNode?(node: MeditreeNode): Promise<void>
 
-  onExpressRegistering?(app: express.Express, ctx: ExpressRegisteringContext): Promise<void>
+  onRegisterExpressHandler?(app: express.Express, ctx: ExpressRegisteringContext): Promise<void>
 
   onPostGenerated?(tree: LocalFileTree): void
 

@@ -1,3 +1,5 @@
+import { type Handler } from "express"
+
 /**
  * Represents a user with an account and password.
  */
@@ -37,4 +39,8 @@ export interface UserStorageService {
    * @returns `true` if the user was deleted successfully, `false` otherwise.
    */
   deleteUser(account: string): Promise<boolean>
+}
+
+export interface UserService {
+  authenticationMeddleware: Handler
 }
