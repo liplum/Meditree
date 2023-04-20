@@ -1,26 +1,26 @@
 // Import required modules
-import { Button, FormControl, DialogActions, Card, InputAdornment, IconButton, OutlinedInput, InputLabel } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import { Button, FormControl, DialogActions, Card, InputAdornment, IconButton, OutlinedInput, InputLabel } from "@mui/material"
+import React, { useEffect, useState } from "react"
 import {
   redirect,
   Form,
-} from 'react-router-dom';
+} from "react-router-dom"
 
 import {
   backend,
   storage, updatePageTitle
 } from "./Env.js"
 import "./Connect.css"
-import { i18n } from './I18n.js';
-import { Visibility, VisibilityOff } from '@mui/icons-material'
-import Cookies from 'js-cookie'
+import { i18n } from "./I18n.js"
+import { Visibility, VisibilityOff } from "@mui/icons-material"
+import Cookies from "js-cookie"
 
 /**
  * Handle log in
  */
 export async function action({ request }) {
   const formData = await request.formData()
-  let { account, password } = Object.fromEntries(formData)
+  const { account, password } = Object.fromEntries(formData)
   storage.lastConnected = {
     account,
     password,
@@ -28,8 +28,7 @@ export async function action({ request }) {
   const loginRes = await fetch(backend.loginUrl, {
     method: "POST",
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
       account, password,
@@ -37,7 +36,7 @@ export async function action({ request }) {
   })
   if (loginRes.ok) {
     const { jwt } = await loginRes.json()
-    Cookies.set('jwt', jwt);
+    Cookies.set("jwt", jwt)
     return redirect("/view")
   } else {
     return null
@@ -68,7 +67,7 @@ export function ConnectDialog(props) {
         <FormControl variant="outlined">
           <InputLabel htmlFor="outlined-adornment-password">{i18n.connect.password}</InputLabel>
           <OutlinedInput
-            type={showPasscode ? 'text' : 'password'}
+            type={showPasscode ? "text" : "password"}
             label={i18n.connect.password}
             placeholder={i18n.connect.passwordPlaceholder}
             defaultValue={lastConnected?.password}
@@ -91,5 +90,5 @@ export function ConnectDialog(props) {
         </DialogActions>
       </Form>
     </Card>
-  );
-};
+  )
+}

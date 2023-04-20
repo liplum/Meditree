@@ -1,18 +1,18 @@
-import React from 'react'
+import React from "react"
 import {
   createHashRouter,
   RouterProvider,
 } from "react-router-dom"
-import { ConfigProvider, theme } from 'antd'
-import ReactDOM from 'react-dom/client'
-import { App, loader as appLoader } from './View'
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import './index.css'
+import { ConfigProvider, theme } from "antd"
+import ReactDOM from "react-dom/client"
+import { App, loader as appLoader } from "./View"
+import { ThemeProvider, createTheme } from "@mui/material/styles"
+import "./index.css"
 import {
   ConnectDialog,
   action as connectDialogAction,
-} from './Connect'
-import { CssBaseline } from '@mui/material'
+} from "./Connect"
+import { CssBaseline } from "@mui/material"
 
 const router = createHashRouter([
   {
@@ -26,11 +26,11 @@ const router = createHashRouter([
     loader: appLoader,
     shouldRevalidate: () => false,
   }
-]);
+])
 
 const darkTheme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: "dark",
   },
   components: {
     MuiButton: {
@@ -55,8 +55,8 @@ const darkTheme = createTheme({
       }
     }
   },
-});
-const root = ReactDOM.createRoot(document.getElementById('root'))
+})
+const root = ReactDOM.createRoot(document.getElementById("root"))
 root.render(
   <React.StrictMode>
     <ThemeProvider theme={darkTheme}>
@@ -64,7 +64,7 @@ root.render(
       <ConfigProvider
         theme={{
           token: {
-            colorPrimary: '#0A0A0A',
+            colorPrimary: "#0A0A0A",
             algorithm: theme.darkAlgorithm,
           },
         }}>

@@ -1,4 +1,4 @@
-import LocalizedStrings from 'react-localization';
+import LocalizedStrings from "react-localization"
 
 export const i18n = new LocalizedStrings({
   en: {
@@ -57,4 +57,4 @@ export const i18n = new LocalizedStrings({
       loginBtn: "登入",
     },
   }
-});
+})

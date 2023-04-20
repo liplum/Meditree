@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
-import { FileTreeNavigation } from "./FileTreeNavigation";
-import { updatePageTitle } from "./Env"
-import MenuIcon from '@mui/icons-material/Menu';
+import { FileTreeNavigation } from "./FileTreeNavigation"
+import { updatePageTitle, storage } from "./Env"
+import MenuIcon from "@mui/icons-material/Menu"
 
 import * as ft from "./FileTree"
 import {
@@ -9,17 +9,17 @@ import {
   defer,
   Await,
   useLocation,
-} from "react-router-dom";
+  useNavigate, useAsyncError 
+} from "react-router-dom"
 import { Box, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
-import { StarBorder, Star } from '@mui/icons-material';
-import { storage } from "./Env";
-import { FileDisplayBoard } from "./Playground";
-import { i18n } from "./I18n";
-import { SearchBar } from "./SearchBar";
+import { StarBorder, Star } from "@mui/icons-material"
+
+import { FileDisplayBoard } from "./Playground"
+import { i18n } from "./I18n"
+import { SearchBar } from "./SearchBar"
 import "./View.css"
-import { Failed, Loading } from "./Loading";
-import useForceUpdate from "use-force-update";
-import { useNavigate, useAsyncError } from 'react-router-dom';
+import { Failed, Loading } from "./Loading"
+import useForceUpdate from "use-force-update"
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
@@ -28,7 +28,7 @@ export const SelectedFileContext = createContext()
 export const FileNavigationContext = createContext()
 
 /// TODO: Drawer looks bad on tablet portrait mode.
-const drawerWidth = "min(max(30%,20rem),30rem)";
+const drawerWidth = "min(max(30%,20rem),30rem)"
 
 export async function loader() {
   const task = async () => {
@@ -49,7 +49,7 @@ export async function loader() {
   }
   return defer({
     fileTreeDelegate: task(),
-  });
+  })
 }
 
 function LoadErrorBoundary() {
@@ -58,7 +58,7 @@ function LoadErrorBoundary() {
   console.error(error)
   return <Failed text={i18n.loading.error[error.message] ?? i18n.loading.failed}>
     <Button variant="outlined" onClick={() => {
-      navigate("/");
+      navigate("/")
     }}>
       Back
     </Button>
@@ -66,7 +66,7 @@ function LoadErrorBoundary() {
 }
 
 export function App(props) {
-  const { fileTreeDelegate, params } = useLoaderData();
+  const { fileTreeDelegate, params } = useLoaderData()
 
   return (
     <main>
@@ -83,7 +83,7 @@ export function App(props) {
         </Await>
       </React.Suspense>
     </main>
-  );
+  )
 }
 
 function Body(props) {
@@ -103,12 +103,14 @@ function Body(props) {
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const location = useLocation()
   const defaultSelectedFile =
-    resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file")))
-    ?? (
-      fileTreeDelegate.key2File.size > 0 ? (
-        storage.getLastSelectedFile()
-        ?? ft.getFirstFile(fileTreeDelegate)
-      ) : null
+    resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file"))) ??
+    (
+      fileTreeDelegate.key2File.size > 0
+        ? (
+            storage.getLastSelectedFile() ??
+        ft.getFirstFile(fileTreeDelegate)
+          )
+        : null
     )
   const [selectedFile, setSelectedFile] = useState(defaultSelectedFile)
   const [searchPrompt, setSearchPrompt] = useState()
@@ -128,7 +130,7 @@ function Body(props) {
   function goFile(curFile, delta) {
     if (!(curFile && "key" in curFile)) return
     let nextKey = curFile.key + delta
-    while (0 <= nextKey && nextKey < fileTreeDelegate.maxKey) {
+    while (nextKey >= 0 && nextKey < fileTreeDelegate.maxKey) {
       const next = fileTreeDelegate.key2File.get(nextKey)
       if (!next) {
         nextKey += delta
@@ -169,7 +171,7 @@ function Body(props) {
   }
   const filterByPrompt = (file) => {
     if (onlyShowStarred && !astrology[file.path]) {
-      return false;
+      return false
     }
     if (!searchPrompt) return true
     return file.path.toLowerCase().includes(searchPrompt.trim().toLocaleLowerCase())
@@ -177,9 +179,9 @@ function Body(props) {
 
   const drawer = <div
     style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
+      display: "flex",
+      flexDirection: "column",
+      height: "100%",
     }}>
     <div style={{
       display: "flex",
@@ -197,7 +199,7 @@ function Body(props) {
         onSearch={(prompt) => setSearchPrompt(prompt)}
       />
     </div>
-    <div style={{ flex: 1, overflow: 'auto' }}>
+    <div style={{ flex: 1, overflow: "auto" }}>
       <FileTreeNavigation
         searchDelegate={filterByPrompt}
       />
@@ -205,7 +207,7 @@ function Body(props) {
   </div>
   const body = (
     <Box sx={{
-      display: 'flex', height: "100vh",
+      display: "flex", height: "100vh",
     }}>
       <Box // left drawer
         component="nav"
@@ -221,8 +223,8 @@ function Body(props) {
             keepMounted: true, // Better open performance on mobile.
           }}
           sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
           }}
         >
           {drawer}
@@ -230,8 +232,8 @@ function Body(props) {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
           }}
           open
         >
@@ -261,7 +263,7 @@ function Body(props) {
 }
 
 export function ResponsiveAppBar(props) {
-  const [isDrawerOpen, setIsDrawerOpen] = useContext(IsDrawerOpenContext);
+  const [isDrawerOpen, setIsDrawerOpen] = useContext(IsDrawerOpenContext)
   return <AppBar
     position="fixed"
     sx={{
@@ -277,7 +279,7 @@ export function ResponsiveAppBar(props) {
         onClick={() => {
           setIsDrawerOpen(!isDrawerOpen)
         }}
-        sx={{ mr: 2, display: { sm: 'none' } }}
+        sx={{ mr: 2, display: { sm: "none" } }}
       >
         <MenuIcon />
       </IconButton>

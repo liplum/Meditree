@@ -1,16 +1,16 @@
-import './Playground.css'
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import "./Playground.css"
+import React, { useContext, useEffect, useRef, useState } from "react"
 import { isMobile } from "react-device-detect"
-import { AstrologyContext, FileNavigationContext, ResponsiveAppBar, SelectedFileContext } from './View';
+import { AstrologyContext, FileNavigationContext, ResponsiveAppBar, SelectedFileContext } from "./View"
 import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
-import { StarBorder, Star } from '@mui/icons-material';
-import { backend } from './Env';
-import useForceUpdate from 'use-force-update';
-import { i18n } from './I18n';
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import { Failed } from './Loading';
-import { filesize } from "filesize";
+import { StarBorder, Star } from "@mui/icons-material"
+import { backend } from "./Env"
+import useForceUpdate from "use-force-update"
+import { i18n } from "./I18n"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
+import { Failed } from "./Loading"
+import { filesize } from "filesize"
 import { VideoJS } from "./VideoPlayer"
 
 const VideoRenderer = React.memo(VideoRendererImpl)
@@ -93,7 +93,8 @@ export function FileDisplayBoard(props) {
             <Chip label={filesize(file.size, { base: 2, standard: "jedec" })} />
           }
           <Tooltip title={
-            isFileStarred ? i18n.playground.unstarBtn
+            isFileStarred
+              ? i18n.playground.unstarBtn
               : i18n.playground.starBtn
           }>
             <IconButton onClick={() => {
@@ -112,7 +113,7 @@ export function FileDisplayBoard(props) {
     </ErrorBoundary>
   </>
 }
-const isMobileSafari = /iP(ad|hone|od).+Version\/[\d\.]+.*Safari/i.test(navigator.userAgent);
+const isMobileSafari = /iP(ad|hone|od).+Version\/[\d\.]+.*Safari/i.test(navigator.userAgent)
 function VideoRendererImpl({ file }) {
   // for HLS support on mobile safari
   // ref: http://jsfiddle.net/fxfktztx/1, https://stackoverflow.com/a/47632587/13691173
@@ -125,7 +126,7 @@ function VideoRendererImpl({ file }) {
     liveui: true,
     html5: {
       vhs: {
-        overrideNative: overrideNative
+        overrideNative
       }
     },
     nativeVideoTracks: !overrideNative,
@@ -155,7 +156,7 @@ function AudioRenderer({ file }) {
     src={file.url}
     alt={file.path}
     onMouseDown={(event) => {
-      event.stopPropagation();
+      event.stopPropagation()
     }}
     className={"video-view"} />
 }
@@ -199,7 +200,6 @@ function Markdown({ src, alt, parentDir }) {
   }
 }
 
-
 function PlainTextRenderer(file) {
   const [text, setText] = useState()
 
@@ -215,9 +215,10 @@ function PlainTextRenderer(file) {
   } else {
     return <Typography variant="p" component="div"
       style={{
-        whiteSpace: 'pre-wrap',
-        overflowWrap: 'break-word',
-        height: "90%", overflow: "auto"
+        whiteSpace: "pre-wrap",
+        overflowWrap: "break-word",
+        height: "90%",
+        overflow: "auto"
       }}>
       {text ?? file.path}
     </Typography>
@@ -226,13 +227,13 @@ function PlainTextRenderer(file) {
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
-    super(props);
-    this.state = { hasError: false };
+    super(props)
+    this.state = { hasError: false }
   }
 
   static getDerivedStateFromError(error) {
     // Update state so the next render will show the fallback UI.
-    return { hasError: true };
+    return { hasError: true }
   }
 
   componentDidCatch(error, info) {
@@ -242,9 +243,9 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       // You can render any custom fallback UI
-      return this.props.fallback;
+      return this.props.fallback
     }
 
-    return this.props.children;
+    return this.props.children
   }
 }

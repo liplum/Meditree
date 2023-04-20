@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { Tree } from 'antd'
+import React, { useContext, useEffect, useState } from "react"
+import { Tree } from "antd"
 import * as ft from "./FileTree"
-import { FileTreeDeleagteContext, SelectedFileContext } from './View';
-import { useTheme } from '@mui/material/styles';
-const { DirectoryTree } = Tree;
-import { FolderOff } from '@mui/icons-material';
+import { FileTreeDeleagteContext, SelectedFileContext } from "./View"
+import { useTheme } from "@mui/material/styles"
+import { FolderOff } from "@mui/icons-material"
+const { DirectoryTree } = Tree
 export function FileTreeNavigation(props) {
   const [delegate] = useContext(FileTreeDeleagteContext)
   const [renderTree, setRenderTree] = useState()
@@ -22,10 +22,11 @@ export function FileTreeNavigation(props) {
 
   const theme = useTheme()
   if (!renderTree) return
-  if (renderTree.children.length <= 0)
+  if (renderTree.children.length <= 0) {
     return <div className="no-file-label" >
       <FolderOff style={{ width: "8rem", height: "8rem" }} />
-    </div>
+    </div> 
+  }
   return (
     <DirectoryTree
       style={{
@@ -52,5 +53,5 @@ export function FileTreeNavigation(props) {
         }
       }}
     />
-  );
+  )
 }
