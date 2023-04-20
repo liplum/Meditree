@@ -36,7 +36,7 @@ export default function MongoDbPlugin(config: MongoDbPluginConfig): MeditreePlug
     onRegisterService(container) {
       if (client === undefined) throw new Error("MongoDb Client is not yet initialized.")
       const db = client.db(database)
-      container.rebind(TYPE.MongoDB).toValue({
+      container.bind(TYPE.MongoDB).toValue({
         db
       })
     },

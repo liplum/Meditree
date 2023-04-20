@@ -73,10 +73,6 @@ export class Container {
     return new Bind<R, TArgs>(this.createItem<R, TArgs>(token))
   }
 
-  rebind<R, TArgs extends any[] = any[]>(token: Token<R, TArgs> | symbol): Bind<R, TArgs> {
-    return this.remove(token).bind<R, TArgs>(token)
-  }
-
   remove(token: Token<any, any> | symbol): this {
     if (this.registry.get(getType(token)) === undefined) {
       return this
@@ -129,10 +125,6 @@ export class Container {
 
   /* Item related */
   private createItem<R, TArgs extends any[] = any[]>(token: Token<R, TArgs> | symbol): Item<R> {
-    if (this.registry.get(getType(token)) !== undefined) {
-      throw new Error(`object can only bound once: ${stringifyToken(token)}`)
-    }
-
     const item = {}
     this.registry.set(getType(token), item)
     return item

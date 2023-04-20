@@ -18,6 +18,7 @@ import StatisticsPlugin from "./plugin/statistics.js"
 import WatchPlugin from "./plugin/watch.js"
 import { Container, uniqueToken } from "./ioc.js"
 import { type UserService, type UserStorageService } from "./user.js"
+import cookieParser from "cookie-parser"
 
 export const TYPE = {
   HostTree: uniqueToken<(options: HostTreeOptions) => IHostTree>("HostTree"),
@@ -111,6 +112,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   const server = http.createServer(app)
   app.use(cors())
   app.use(express.json())
+  app.use(cookieParser())
   app.use(function (req, res, next) {
     try {
       decodeURIComponent(req.path)
