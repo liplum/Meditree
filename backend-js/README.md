@@ -45,6 +45,7 @@ Built-in plugins:
 - [statistics](#statistics): for counting file access times.
 - [watch](#watch): for watching the root directory changing and frequently rebuilding file tree.
 - [hls](#hls):
+- [jsondb](#jsondb):
 
 ### Cache
 
@@ -101,3 +102,7 @@ Example:
 ### Hls
 
 ### Watch
+
+### JsonDB
+
+[JsonDB](https://github.com/Belphemur/node-json-db)

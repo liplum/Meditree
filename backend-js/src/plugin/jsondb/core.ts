@@ -6,7 +6,7 @@ import { JsonDB, Config } from "node-json-db"
 // eslint-disable-next-line @typescript-eslint/dot-notation
 interface JsonDbPluginConfig {
   /**
-   * "meditree" by default.
+   * "meditree-jsondb" by default.
    */
   filename: string
   /**
@@ -36,7 +36,7 @@ export default function JsonDbPlugin(config: JsonDbPluginConfig): MeditreePlugin
   let db: JsonDB
   return {
     async init() {
-      const filename = config.filename ?? "meditree"
+      const filename = config.filename ?? "meditree-jsondb"
       db = new JsonDB(
         new Config(
           filename,

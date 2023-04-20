@@ -67,6 +67,10 @@ export async function resolvePluginList<TPlugin>(
     // Get the plugin configuration.
     const pluginConfig = plugins[pluginName]
 
+    if (!pluginConfig) {
+      throw new Error(`${pluginName} isn't enabled.`)
+    }
+
     // Resolve the dependencies of this plugin before adding it to the list of resolved plugins.
     if (pluginConfig.depends) {
       for (const dependencyName of pluginConfig.depends) {
