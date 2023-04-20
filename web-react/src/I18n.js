@@ -22,12 +22,11 @@ export const i18n = new LocalizedStrings({
     },
     connect: {
       title: "Connect to Meditree Server",
-      server: "Server",
       account: "Account",
       password: "Password",
       accountPlaceholder: "Optional",
       passwordPlaceholder: "Optional",
-      connectBtn: "Connect",
+      loginBtn: "Login",
     },
   },
   zh: {
@@ -51,12 +50,11 @@ export const i18n = new LocalizedStrings({
     },
     connect: {
       title: "连接 Meditree 服务器",
-      server: "服务器",
       account: "账号",
       password: "密码",
       accountPlaceholder: "可选",
       passwordPlaceholder: "可选",
-      connectBtn: "连接",
+      loginBtn: "登入",
     },
   }
 });

@@ -12,7 +12,6 @@ import remarkGfm from 'remark-gfm'
 import { Failed } from './Loading';
 import { filesize } from "filesize";
 import { VideoJS } from "./VideoPlayer"
-import videojs from "video.js";
 
 const VideoRenderer = React.memo(VideoRendererImpl)
 

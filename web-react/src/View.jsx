@@ -10,9 +10,9 @@ import {
   Await,
   useLocation,
 } from "react-router-dom";
-import { Box, Divider, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip, Typography } from "@mui/material"
+import { Box, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
-import { backend, storage } from "./Env";
+import { storage } from "./Env";
 import { FileDisplayBoard } from "./Playground";
 import { i18n } from "./I18n";
 import { SearchBar } from "./SearchBar";
@@ -20,7 +20,6 @@ import "./View.css"
 import { Failed, Loading } from "./Loading";
 import useForceUpdate from "use-force-update";
 import { useNavigate, useAsyncError } from 'react-router-dom';
-import { makeUrl } from "./Utils";
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
@@ -119,9 +118,7 @@ function Body(props) {
   useEffect(() => {
     if (selectedFile) {
       updatePageTitle(selectedFile.path)
-      navigate(makeUrl("/view?", {
-        file: selectedFile.path
-      }))
+      navigate(`/view?file=${encodeURIComponent(selectedFile.path)}`)
     } else {
       updatePageTitle(i18n.noFile)
     }

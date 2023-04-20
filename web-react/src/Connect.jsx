@@ -1,5 +1,5 @@
 // Import required modules
-import { Button, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, DialogActions, DialogTitle, Card, CardActions, InputAdornment, IconButton, OutlinedInput, InputLabel } from '@mui/material';
+import { Button, FormControl, DialogActions, Card, InputAdornment, IconButton, OutlinedInput, InputLabel } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import {
   redirect,
@@ -87,7 +87,7 @@ export function ConnectDialog(props) {
           />
         </FormControl>
         <DialogActions>
-          <Button type="submit">{i18n.connect.connectBtn}</Button>
+          <Button type="submit">{i18n.connect.loginBtn}</Button>
         </DialogActions>
       </Form>
     </Card>
