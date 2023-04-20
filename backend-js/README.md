@@ -76,7 +76,7 @@ Example:
 ```json5
 {
   "root": "./public", // Serve static resources from the "./public" directory.
-  "requireAuth": false // Allow access to the built-in homepage without a passcode.
+  "requireAuth": false // Allow access to the built-in homepage without authentication.
 }
 ```
 

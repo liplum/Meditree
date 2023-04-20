@@ -13,7 +13,7 @@ interface HomepagePluginConfig {
    */
   root?: string
   /**
-   * Whether the built-in homepage reqiures passcode.
+   * Whether the built-in homepage reqiures authentication.
    * True by default.
    */
   requireAuth?: boolean

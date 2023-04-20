@@ -13,7 +13,6 @@ export interface AsParentConfig {
   child: string[]
   publicKey: string
   privateKey: string
-  passcode?: string
 }
 
 export interface AsChildConfig {
@@ -21,7 +20,6 @@ export interface AsChildConfig {
   parent: string[]
   publicKey: string
   privateKey: string
-  passcode?: string
   reconnectInterval?: number
 }
 
@@ -56,10 +54,6 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
    * If not specified, {@link name} will be used.
    */
   displayName?: string
-  /**
-   * If set, requests need passcode in authentication headers, body or cookies(not yet implemented).
-   */
-  passcode?: string
   fileType: Record<string, string>
   plugin?: Record<string, Record<string, any>>
   ignore?: string[]

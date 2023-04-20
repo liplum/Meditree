@@ -13,7 +13,6 @@ import { encrypt, decrypt, generateNonce } from "./crypt.js"
 import type http from "http"
 interface NodeMeta {
   name: string
-  passcode?: string
 }
 
 class SubNode implements FileTreeLike {
@@ -465,7 +464,6 @@ async function authenticateForParent(
   log.info(`Authenticated on ${parent}.`)
   const nodeMeta: NodeMeta = {
     name: config.name,
-    passcode: config.passcode,
   }
   net.send("node-meta", nodeMeta)
   const nodeMetaResultPayload: {
