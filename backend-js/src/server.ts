@@ -16,6 +16,9 @@ import HLSPlugin from "./plugin/hls.js"
 import MinifyPlugin from "./plugin/minify.js"
 import StatisticsPlugin from "./plugin/statistics.js"
 import WatchPlugin from "./plugin/watch.js"
+import MongoDBPlugin from "./plugin/mongodb.js"
+import MongoDBUserPlugin from "./plugin/mongodb-user.js"
+import AuthPlugin from "./plugin/auth.js"
 import { Container, uniqueToken } from "./ioc.js"
 import { type UserService, type UserStorageService } from "./user.js"
 import cookieParser from "cookie-parser"
@@ -44,14 +47,9 @@ export async function startServer(config: AppConfig): Promise<void> {
   // Phrase 3: create "Main" logger.
   const log = createLogger("Main")
 
-  // Phrase 4: register all plugins.
+  // Phrase 4: register all built-in plugins.
   const pluginTypes: PluginRegistry<MeditreePlugin> = {}
-  pluginTypes.cache = (config) => CachePlugin(config)
-  pluginTypes.homepage = (config) => HomepagePlugin(config)
-  pluginTypes.hls = (config) => HLSPlugin(config)
-  pluginTypes.minify = (config) => MinifyPlugin(config)
-  pluginTypes.statistics = (config) => StatisticsPlugin(config)
-  pluginTypes.watch = (config) => WatchPlugin(config)
+  registerBuiltinPlugins(pluginTypes)
 
   // Phrase 5: create IOC container.
   const container = new Container()
@@ -369,4 +367,16 @@ export interface MeditreePlugin extends FileTreePlugin {
    */
   onFileRequested?(req: Request, res: Response, file: ResolvedFile): Promise<void> | Promise<boolean | undefined>
   onExit?(): void
+}
+
+function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>): void {
+  registry.cache = (config) => CachePlugin(config)
+  registry.homepage = (config) => HomepagePlugin(config)
+  registry.hls = (config) => HLSPlugin(config)
+  registry.minify = (config) => MinifyPlugin(config)
+  registry.statistics = (config) => StatisticsPlugin(config)
+  registry.watch = (config) => WatchPlugin(config)
+  registry.mongodb = (config) => MongoDBPlugin(config)
+  registry["mongodb-user"] = (config) => MongoDBUserPlugin(config)
+  registry.auth = (config) => AuthPlugin(config)
 }
