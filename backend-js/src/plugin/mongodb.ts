@@ -1,6 +1,7 @@
 import { type Db, MongoClient, type MongoClientOptions } from "mongodb"
 import { type MeditreePlugin } from "../server.js"
 import { uniqueToken } from "../ioc.js"
+import { createLogger } from "../logger.js"
 
 export const HLSMediaType = "application/x-mpegURL"
 // eslint-disable-next-line @typescript-eslint/dot-notation
@@ -24,13 +25,16 @@ export const TYPE = {
 export default function MongoDbPlugin(config: MongoDbPluginConfig): MeditreePlugin {
   if (!config.url) throw new Error("MongoDb url cannot be empty or null.")
   const database = config.database ?? "meditree"
+  const log = createLogger("MongoDB")
   let client: MongoClient
   return {
     async init() {
       client = new MongoClient(config.url, config.options)
+      log.info(`MongoDB Client connected to ${config.url}`)
     },
     onExit() {
       client?.close(true)
+      log.info("MongoDB Client closed.")
     },
     onRegisterService(container) {
       if (client === undefined) throw new Error("MongoDb Client is not yet initialized.")
