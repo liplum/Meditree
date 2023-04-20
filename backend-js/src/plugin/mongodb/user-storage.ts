@@ -1,9 +1,9 @@
-import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
-import { type User } from "../user.js"
-import { TYPE as MongodbType } from "./mongodb.js"
+import { TYPE as MeditreeType, type MeditreePlugin } from "../../server.js"
+import { type User } from "../../user.js"
+import { TYPE as MongoDBType } from "./core.js"
 export const HLSMediaType = "application/x-mpegURL"
 // eslint-disable-next-line @typescript-eslint/dot-notation
-interface MongoDbUserPluginConfig {
+interface MongoDDUserPluginConfig {
   /**
    * "users" by default.
    */
@@ -13,11 +13,11 @@ interface MongoDbUserPluginConfig {
 /**
  * Plugin dependency: `mongodb`.
  */
-export default function MongoDbUserPlugin(config: MongoDbUserPluginConfig): MeditreePlugin {
+export default function MongoDBUserPlugin(config: MongoDDUserPluginConfig): MeditreePlugin {
   const collection = config.collection ?? "users"
   return {
     onRegisterService(container) {
-      const mongodb = container.get(MongodbType.MongoDB)
+      const mongodb = container.get(MongoDBType.MongoDB)
       const users = mongodb.db.collection(collection)
       container.bind(MeditreeType.UserStorage).toValue({
         async addUser(user) {

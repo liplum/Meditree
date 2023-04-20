@@ -1,9 +1,8 @@
 import { type Db, MongoClient, type MongoClientOptions } from "mongodb"
-import { type MeditreePlugin } from "../server.js"
-import { uniqueToken } from "../ioc.js"
-import { createLogger } from "../logger.js"
+import { type MeditreePlugin } from "../../server.js"
+import { uniqueToken } from "../../ioc.js"
+import { createLogger } from "../../logger.js"
 
-export const HLSMediaType = "application/x-mpegURL"
 // eslint-disable-next-line @typescript-eslint/dot-notation
 interface MongoDbPluginConfig {
   url: string
@@ -23,7 +22,7 @@ export const TYPE = {
 }
 
 export default function MongoDbPlugin(config: MongoDbPluginConfig): MeditreePlugin {
-  if (!config.url) throw new Error("MongoDb url cannot be empty or null.")
+  if (!config.url) throw new Error("MongoDB url cannot be empty or null.")
   const database = config.database ?? "meditree"
   const log = createLogger("MongoDB")
   let client: MongoClient
@@ -37,7 +36,7 @@ export default function MongoDbPlugin(config: MongoDbPluginConfig): MeditreePlug
       log.info("MongoDB Client closed.")
     },
     onRegisterService(container) {
-      if (client === undefined) throw new Error("MongoDb Client is not yet initialized.")
+      if (client === undefined) throw new Error("MongoDB Client is not initialized.")
       const db = client.db(database)
       container.bind(TYPE.MongoDB).toValue({
         db
