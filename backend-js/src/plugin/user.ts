@@ -1,22 +1,31 @@
 import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
-import { type UserStorageService, type UserService } from "../user.js"
+import { type UserStorageService } from "../user.js"
 import uuid from "uuid"
 import jwt from "jsonwebtoken"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation
 interface UserPluginConfig {
-
+  /**
+   * "/login" by default.
+   */
+  loginPath?: string
+  /**
+   * "2h" by default.
+   */
+  jwtExpiration?: string
 }
 
 export default function UserPlugin(config: UserPluginConfig): MeditreePlugin {
   let storage: UserStorageService
+  const loginPath = config.loginPath ?? "/login"
+  const jwtExpiration = config.jwtExpiration ?? "2h"
   const jwtSecret = uuid.v4()
   return {
     onRegisterService(container) {
       storage = container.get(MeditreeType.UserStorage)
       container.bind(MeditreeType.User).toValue({
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        authenticationMeddleware: async (req, res, next) => {
+        authentication: async (req, res, next) => {
           // Get the JWT from the cookie
           const token = req.cookies.jwt
           if (!token) {
@@ -45,7 +54,7 @@ export default function UserPlugin(config: UserPluginConfig): MeditreePlugin {
     },
     async onRegisterExpressHandler(app) {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      app.post("/login", async (req, res) => {
+      app.post(loginPath, async (req, res) => {
         const { account, password } = req.body
         // only finding active staffs
         const user = await storage.getUser(account)
@@ -55,7 +64,7 @@ export default function UserPlugin(config: UserPluginConfig): MeditreePlugin {
         }
         // Create JWT token
         const token = jwt.sign(account, jwtSecret, {
-          expiresIn: "4h"
+          expiresIn: jwtExpiration
         })
         // Send token in response and staff info
         return res.json({

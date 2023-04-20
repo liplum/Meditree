@@ -1,6 +1,5 @@
 import { type Db, MongoClient, type MongoClientOptions } from "mongodb"
-import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
-import { type User, type UserStorageService } from "../user.js"
+import { type MeditreePlugin } from "../server.js"
 import { uniqueToken } from "../ioc.js"
 
 export const HLSMediaType = "application/x-mpegURL"

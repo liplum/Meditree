@@ -42,5 +42,5 @@ export interface UserStorageService {
 }
 
 export interface UserService {
-  authenticationMeddleware: Handler
+  authentication: Handler
 }

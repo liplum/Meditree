@@ -1,9 +1,11 @@
 import { type FileTree, type File } from "../file.js"
 import { createLogger } from "../logger.js"
 import { type MeditreeNode } from "../meditree.js"
-import { type MeditreePlugin } from "../server.js"
+import { TYPE, type MeditreePlugin } from "../server.js"
 import express, { type RequestHandler } from "express"
 import fs from "fs"
+import { type UserService } from "../user.js"
+
 interface HomepagePluginConfig {
   /**
    * The root path for static resources.
@@ -14,13 +16,13 @@ interface HomepagePluginConfig {
    * Whether the built-in homepage reqiures passcode.
    * True by default.
    */
-  requirePasscode?: boolean
+  requireAuth?: boolean
 }
 
 export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
   const log = createLogger("Homepage")
   const root = config.root
-  const requirePasscode = config.requirePasscode ?? true
+  const requireAuth = config.requireAuth ?? true
   if (root) {
     if (fs.existsSync(root)) {
       log.info(`The ${root} is being served.`)
@@ -29,18 +31,24 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
     }
   }
 
+  // lazy-build the html
   let html: string | undefined
   let node: MeditreeNode
+  let userService: UserService
   return {
     async setupMeditreeNode(meditreeNode) {
       node = meditreeNode
       if (!root) {
-        meditreeNode.on("file-tree-update", (entireTree) => {
+        meditreeNode.on("file-tree-update", () => {
+          // clear the built html
           html = undefined
         })
       }
     },
-    async onRegisterExpressHandler(app, ctx) {
+    onRegisterService(container) {
+      userService = container.get(TYPE.User)
+    },
+    async onRegisterExpressHandler(app) {
       if (root) {
         app.use(express.static(root))
       } else {
@@ -52,8 +60,8 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
           }
           res.send(html)
         }]
-        if (requirePasscode) {
-          handlers.unshift(ctx.passcodeHandler)
+        if (requireAuth) {
+          handlers.unshift(userService.authentication)
         }
         app.get("/index.html", ...handlers)
         app.get("/", ...handlers)

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { EmptyHostTree, type FileTreePlugin, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
 import { type AppConfig, type AsParentConfig, type AsChildConfig } from "./config.js"
-import express, { type RequestHandler, type Request, type Response } from "express"
+import express, { type Request, type Response } from "express"
 import { cloneFileTreeJson, type FileTree, type LocalFileTree, type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo, type ReadStreamOptions } from "./meditree.js"
@@ -94,13 +94,17 @@ export async function startServer(config: AppConfig): Promise<void> {
     await plugin.init?.()
   }
 
-  // Phrase 9: register HostTree service.
+  // Phrase 9: register default service.
   container.bind(TYPE.HostTree)
     .toValue((options) =>
       !config.root
         ? new EmptyHostTree()
         : new HostTree(options)
     )
+
+  container.bind(TYPE.User).toValue({
+    authentication: (req, res, next) => { next() }
+  })
 
   // Phrase 10: plugins register or override services.
   for (const plugin of plugins) {
@@ -187,43 +191,21 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
   })
 
-  const passcodeHandler: RequestHandler = (req, res, next) => {
-    if (!config.passcode) {
-      next()
-      return
-    }
-    // If posscode is enabled.
-    try {
-      const passcode = decodeURI(req.query.passcode as string) ?? req.body.passcode
-      if (passcode !== config.passcode) {
-        res.status(401).json({ error: "incorrectPasscode" })
-      } else {
-        next()
-        return
-      }
-    } catch (e) {
-      res.status(400).send({ error: "badURI" })
-      return
-    }
-  }
-
-  const registryCtx = {
-    passcodeHandler,
-  }
+  const userService = container.get(TYPE.User)
 
   // Phrase 18: plugins patch the express app registering.
   for (const plugin of plugins) {
-    await plugin.onRegisterExpressHandler?.(app, registryCtx)
+    await plugin.onRegisterExpressHandler?.(app)
   }
 
   // Phrase 19: express app setup.
-  app.get("/list", passcodeHandler, (req, res) => {
+  app.get("/list", userService.authentication, (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
     res.send(fullTreeCache.json)
   })
 
-  app.get("/file(/*)", passcodeHandler, async (req, res) => {
+  app.get("/file(/*)", userService.authentication, async (req, res) => {
     let uri: string
     try {
       uri = decodeURI(req.baseUrl + req.path)
@@ -361,7 +343,7 @@ export interface MeditreePlugin extends FileTreePlugin {
 
   setupMeditreeNode?(node: MeditreeNode): Promise<void>
 
-  onRegisterExpressHandler?(app: express.Express, ctx: ExpressRegisteringContext): Promise<void>
+  onRegisterExpressHandler?(app: express.Express): Promise<void>
 
   onPostGenerated?(tree: LocalFileTree): void
 
@@ -387,7 +369,4 @@ export interface MeditreePlugin extends FileTreePlugin {
    */
   onFileRequested?(req: Request, res: Response, file: ResolvedFile): Promise<void> | Promise<boolean | undefined>
   onExit?(): void
-}
-export interface ExpressRegisteringContext {
-  passcodeHandler: RequestHandler
 }

@@ -69,14 +69,14 @@ Example:
 Properties:
 
 - **`root`** (string?): The root path for static resources. By default, a simple built-in homepage will be served.
-- **`requirePasscode`** (boolean?): Whether the built-in homepage requires a passcode to access. True by default.
+- **`requireAuth`** (boolean?): Whether the built-in homepage requires authentication. True by default.
 
 Example:
 
 ```json5
 {
   "root": "./public", // Serve static resources from the "./public" directory.
-  "requirePasscode": false // Allow access to the built-in homepage without a passcode.
+  "requireAuth": false // Allow access to the built-in homepage without a passcode.
 }
 ```
 
