@@ -4,7 +4,7 @@ import { type UserStorageService } from "../user.js"
 import { v4 as uuidv4 } from "uuid"
 import jwt from "jsonwebtoken"
 import { createLogger } from "../logger.js"
-import express from "express"
+import { Request } from "express"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation
 interface AuthPluginConfig {
@@ -45,7 +45,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
       container.bind(MeditreeType.Auth).toValue({
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         middleware: async (req, res, next) => {
-          // Get the JWT from the cookie, body or authorization header.
+          // Get the JWT from the cookie, body or authorization header in a fallback chain.
           const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
           if (!token) {
             res.status(401).send("Token missing")
@@ -113,8 +113,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   }
 }
 
-
-function getJwtFromAuthHeader(req: express.Request): string | null {
+function getJwtFromAuthHeader(req: Request): string | null {
   // Check if Authorization header is present
   const authHeader = req.headers.authorization
   if (!authHeader) {
@@ -127,6 +126,8 @@ function getJwtFromAuthHeader(req: express.Request): string | null {
     if (scheme[0] === "Bearer") {
       return scheme[1]
     }
+    return null
+  } catch (error) {
     return null
   }
 }
