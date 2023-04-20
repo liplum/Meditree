@@ -10,18 +10,10 @@ import { Timer } from "./timer.js"
 import { type PluginRegistry, resolvePluginList } from "./plugin.js"
 import { type Readable } from "stream"
 import http, { type Server } from "http"
-import CachePlugin from "./plugin/cache.js"
-import HomepagePlugin from "./plugin/homepage.js"
-import HLSPlugin from "./plugin/hls.js"
-import MinifyPlugin from "./plugin/minify.js"
-import StatisticsPlugin from "./plugin/statistics.js"
-import WatchPlugin from "./plugin/watch.js"
-import MongoDBPlugin from "./plugin/mongodb/core.js"
-import MongoDBUserPlugin from "./plugin/mongodb/user-storage.js"
-import AuthPlugin from "./plugin/auth.js"
 import { Container, uniqueToken } from "./ioc.js"
 import { type UserService, type UserStorageService } from "./user.js"
 import cookieParser from "cookie-parser"
+import { registerBuiltinPlugins } from "./builtin-plugin.js"
 
 export const TYPE = {
   HostTree: uniqueToken<(options: HostTreeOptions) => IHostTree>("HostTree"),
@@ -367,16 +359,4 @@ export interface MeditreePlugin extends FileTreePlugin {
    */
   onFileRequested?(req: Request, res: Response, file: ResolvedFile): Promise<void> | Promise<boolean | undefined>
   onExit?(): void
-}
-
-function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>): void {
-  registry.cache = (config) => CachePlugin(config)
-  registry.homepage = (config) => HomepagePlugin(config)
-  registry.hls = (config) => HLSPlugin(config)
-  registry.minify = (config) => MinifyPlugin(config)
-  registry.statistics = (config) => StatisticsPlugin(config)
-  registry.watch = (config) => WatchPlugin(config)
-  registry.mongodb = (config) => MongoDBPlugin(config)
-  registry["mongodb-user"] = (config) => MongoDBUserPlugin(config)
-  registry.auth = (config) => AuthPlugin(config)
 }

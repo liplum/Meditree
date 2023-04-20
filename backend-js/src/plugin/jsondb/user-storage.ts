@@ -11,7 +11,7 @@ interface JsonDBUserPluginConfig {
 }
 
 /**
- * Plugin dependency: `mongodb`.
+ * Plugin dependency: `jsondb`.
  */
 export default function JsonDbUserPlugin(config: JsonDBUserPluginConfig): MeditreePlugin {
   const path = config.path ?? "/users"
