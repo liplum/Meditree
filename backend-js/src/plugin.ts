@@ -42,7 +42,7 @@ export async function resolvePluginList<TPlugin>(
   onFound?: (name: string, plugin: TPlugin) => void,
   onNotFound?: (name: string) => void,
 ): Promise<TPlugin[]> {
-  const resolvedPlugins: TPlugin[] = []
+  const name2Resolved = new Map<string, TPlugin>()
 
   /**
    * Recursive function to resolve the dependencies of a plugin and add it to the list of resolved plugins.
@@ -58,6 +58,12 @@ export async function resolvePluginList<TPlugin>(
     // Add this plugin to the set of resolved plugins.
     seenPlugins.add(pluginName)
 
+    // Check if this plugin has already been created and return the existing instance.
+    const pluginInstance = name2Resolved.get(pluginName)
+    if (pluginInstance) {
+      return
+    }
+
     // Get the plugin configuration.
     const pluginConfig = plugins[pluginName]
 
@@ -71,7 +77,7 @@ export async function resolvePluginList<TPlugin>(
     // Create the plugin and add it to the list of resolved plugins.
     const plugin = await createPlugin(registry, pluginName, pluginConfig)
     if (plugin) {
-      resolvedPlugins.push(plugin)
+      name2Resolved.set(pluginName, plugin)
       onFound?.(pluginName, plugin)
     } else {
       onNotFound?.(pluginName)
@@ -83,7 +89,7 @@ export async function resolvePluginList<TPlugin>(
     await resolvePluginDependencies(pluginName, new Set())
   }
 
-  return resolvedPlugins
+  return Array.from(name2Resolved.values())
 }
 
 async function importModule(filePath: string): Promise<any> {
