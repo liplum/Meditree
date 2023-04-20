@@ -16,7 +16,7 @@ export function createDelegate({ name, root, }) {
     for (const [name, file] of entries) {
       if (!(file instanceof Object)) continue
       if (file["*hide"]) continue
-      let curKey = key++
+      const curKey = key++
       // if file has a type, it presents a file
       if (file["*type"]) {
         // fileObj is for both TreeVie component and actual FileTree.
@@ -58,6 +58,7 @@ export function createDelegate({ name, root, }) {
 }
 
 export function getFirstFile(fileTreeDelegate) {
+  // eslint-disable-next-line no-unreachable-loop
   for (const file of fileTreeDelegate.key2File.values()) {
     return file
   }
@@ -105,39 +106,39 @@ export function filter(renderTree, searchDelegate, getFileById) {
  */
 function reorder(array) {
   array.sort((a, b) => {
-    const [fileNameA, fileA] = a;
-    const [fileNameB, fileB] = b;
+    const [fileNameA, fileA] = a
+    const [fileNameB, fileB] = b
     // if both fileA and fileB are directories
     if (typeof fileA === "object" && typeof fileB === "object") {
       // just compare in string
       return fileNameA.localeCompare(fileNameB)
     }
 
-    const extensionA = fileNameA.split('.').pop();
-    const extensionB = fileNameB.split('.').pop();
+    const extensionA = fileNameA.split(".").pop()
+    const extensionB = fileNameB.split(".").pop()
 
     // Group files with the same extension together
     if (extensionA !== extensionB) {
-      return extensionA.localeCompare(extensionB);
+      return extensionA.localeCompare(extensionB)
     }
 
     // Compare files without the extension
-    const fileNameOnlyA = fileNameA.replace(/\.[^/.]+$/, '');
-    const fileNameOnlyB = fileNameB.replace(/\.[^/.]+$/, '');
+    const fileNameOnlyA = fileNameA.replace(/\.[^/.]+$/, "")
+    const fileNameOnlyB = fileNameB.replace(/\.[^/.]+$/, "")
 
     // Check if both file names contain only numbers
     if (/^\d+$/.test(fileNameOnlyA) && /^\d+$/.test(fileNameOnlyB)) {
-      return parseInt(fileNameOnlyA) - parseInt(fileNameOnlyB);
+      return parseInt(fileNameOnlyA) - parseInt(fileNameOnlyB)
     }
 
     // Check if both file names have a number in them
-    const numberA = parseInt(fileNameOnlyA.match(/\d+/));
-    const numberB = parseInt(fileNameOnlyB.match(/\d+/));
+    const numberA = parseInt(fileNameOnlyA.match(/\d+/))
+    const numberB = parseInt(fileNameOnlyB.match(/\d+/))
     if (numberA && numberB && numberA !== numberB) {
-      return numberA - numberB;
+      return numberA - numberB
     }
 
     // Use lexicographic order as a fallback
-    return fileNameA.localeCompare(fileNameB);
-  });
+    return fileNameA.localeCompare(fileNameB)
+  })
 }
