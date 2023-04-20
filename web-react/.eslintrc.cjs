@@ -30,5 +30,6 @@ module.exports = {
     "no-return-await": "off",
     "no-useless-return": "off",
     "yield-star-spacing": "off",
+    "react/prop-types": "off",
   }
 }

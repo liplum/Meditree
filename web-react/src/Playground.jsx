@@ -36,7 +36,7 @@ function resolveRenderer(type) {
   }
 }
 
-export function FileDisplayBoard(props) {
+export function FileDisplayBoard(_props) {
   const { isStarred, star, unstar } = useContext(AstrologyContext)
   const [file] = useContext(SelectedFileContext)
   const { goNextFile, goPreviousFile } = useContext(FileNavigationContext)
@@ -113,7 +113,7 @@ export function FileDisplayBoard(props) {
     </ErrorBoundary>
   </>
 }
-const isMobileSafari = /iP(ad|hone|od).+Version\/[\d\.]+.*Safari/i.test(navigator.userAgent)
+const isMobileSafari = /iP(ad|hone|od).+Version\/[\d.]+.*Safari/i.test(navigator.userAgent)
 function VideoRendererImpl({ file }) {
   // for HLS support on mobile safari
   // ref: http://jsfiddle.net/fxfktztx/1, https://stackoverflow.com/a/47632587/13691173
@@ -190,7 +190,7 @@ function Markdown({ src, alt, parentDir }) {
           if (uri.startsWith("http://") || uri.startsWith("https://")) {
             return uri
           } else {
-            return backend.reolsveFileUrl(server, `${parentDir}/${uri}`, passcode)
+            return backend.reolsveFileUrl(`${parentDir}/${uri}`)
           }
         }}
       >
@@ -231,12 +231,12 @@ class ErrorBoundary extends React.Component {
     this.state = { hasError: false }
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(_error) {
     // Update state so the next render will show the fallback UI.
     return { hasError: true }
   }
 
-  componentDidCatch(error, info) {
+  componentDidCatch(error, _info) {
     console.error(error)
   }
 
