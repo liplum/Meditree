@@ -1,6 +1,6 @@
 import { backend } from "./Env"
 
-export function createDelegate({ name, root, server, passcode }) {
+export function createDelegate({ name, root, }) {
   let key = 0
   const rootRenderTree = {
     key: key++,
@@ -30,7 +30,7 @@ export function createDelegate({ name, root, server, passcode }) {
           size: file.size,
           tracking: [...curDir.tracking, curKey],
         }
-        fileObj.url = backend.reolsveFileUrl(server, fileObj.path, passcode)
+        fileObj.url = backend.reolsveFileUrl(fileObj.path)
 
         key2File.set(curKey, fileObj)
         curDir.children.push(fileObj)

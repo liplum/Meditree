@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Tree } from 'antd'
 import * as ft from "./FileTree"
-import { FileTreeDeleagteContext, SelectedFileContext } from './Dashboard';
+import { FileTreeDeleagteContext, SelectedFileContext } from './View';
 import { useTheme } from '@mui/material/styles';
 const { DirectoryTree } = Tree;
 import { FolderOff } from '@mui/icons-material';

@@ -1,7 +1,7 @@
 import './Playground.css'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { isMobile } from "react-device-detect"
-import { AstrologyContext, BackendContext, FileNavigationContext, ResponsiveAppBar, SelectedFileContext } from './Dashboard';
+import { AstrologyContext, FileNavigationContext, ResponsiveAppBar, SelectedFileContext } from './View';
 import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
 import { StarBorder, Star } from '@mui/icons-material';
 import { backend } from './Env';
@@ -39,7 +39,6 @@ function resolveRenderer(type) {
 
 export function FileDisplayBoard(props) {
   const { isStarred, star, unstar } = useContext(AstrologyContext)
-  const { server, passcode } = useContext(BackendContext)
   const [file] = useContext(SelectedFileContext)
   const { goNextFile, goPreviousFile } = useContext(FileNavigationContext)
   const boardRef = useRef()
@@ -116,13 +115,6 @@ export function FileDisplayBoard(props) {
 }
 const isMobileSafari = /iP(ad|hone|od).+Version\/[\d\.]+.*Safari/i.test(navigator.userAgent);
 function VideoRendererImpl({ file }) {
-  const { passcode } = useContext(BackendContext)
-  useEffect(() => {
-    videojs.Vhs.xhr.beforeRequest = function (options) {
-      options.uri = backend.suffixWithPasscode(options.uri, passcode)
-      return options;
-    }
-  }, [passcode])
   // for HLS support on mobile safari
   // ref: http://jsfiddle.net/fxfktztx/1, https://stackoverflow.com/a/47632587/13691173
   const overrideNative = !isMobileSafari
@@ -180,7 +172,6 @@ function MarkdownRenderer({ file }) {
 }
 function Markdown({ src, alt, parentDir }) {
   const [markdown, setMarkdown] = useState()
-  const { server, passcode } = useContext(BackendContext)
 
   useEffect(() => {
     fetch(src)

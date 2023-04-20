@@ -7,62 +7,47 @@ import {
 } from 'react-router-dom';
 
 import {
+  backend,
   storage, updatePageTitle
 } from "./Env.js"
 import "./Connect.css"
 import { i18n } from './I18n.js';
-import { makeUrl, removePrefix, removeSuffix } from './Utils.js';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-
-export async function load() {
-  let server = import.meta.env.VITE_BACKEND
-  const passcode = import.meta.env.VITE_PASSCODE
-  if (server) {
-    server = removeSuffix(server, "/")
-    if (!server.startsWith("http") && !server.startsWith("https")) {
-      server = `https://${server}`
-    }
-    return redirect(makeUrl("/connect?", {
-      server: server,
-      passcode: passcode,
-    }))
-  }
-  return null
-}
+import { Visibility, VisibilityOff } from '@mui/icons-material'
+import Cookies from 'js-cookie'
 
 /**
  * Handle log in
  */
 export async function action({ request }) {
   const formData = await request.formData()
-  let { server, protocol, passcode } = Object.fromEntries(formData)
-  if (server.startsWith("https")) {
-    server = removePrefix(server, "https://")
-  } else if (server.startsWith("http://")) {
-    server = removePrefix(server, "http://")
-  }
-  server = removeSuffix(server, "/")
-  server = `${protocol}://${server}`
+  let { account, password } = Object.fromEntries(formData)
   storage.lastConnected = {
-    server,
-    passcode,
-    protocol,
+    account,
+    password,
   }
-  return redirect(makeUrl("/connect?", {
-    server: server,
-    passcode: passcode ? passcode : undefined,
-  }))
+  const loginRes = await fetch(backend.loginUrl, {
+    method: "POST",
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      account, password,
+    })
+  })
+  if (loginRes.ok) {
+    const { jwt } = await loginRes.json()
+    Cookies.set('jwt', jwt);
+    return redirect("/view")
+  } else {
+    return null
+  }
 }
-
-const serverPattern = /^((http|https):\/\/)?[^\s/$.?#].[^\s]*$/;
 export function ConnectDialog(props) {
   useEffect(() => {
     updatePageTitle(i18n.connect.title)
   }, [])
   const lastConnected = storage.lastConnected
-  const [server, setServer] = useState(lastConnected?.server ?? window.location.href)
-  // true means "http", while false means "https"
-  const [protocol, setProtocol] = useState(lastConnected?.protocol ?? "http")
   const [showPasscode, setShowPasscode] = useState(false)
   return (
     <Card id="connect-dialog">
@@ -70,46 +55,24 @@ export function ConnectDialog(props) {
       <Form method="post" id="connect-form" style={{
         flexDirection: "column", display: "flex",
       }}>
-        <FormControl style={{ alignSelf: "center" }}>
-          <RadioGroup name="protocol" row value={protocol}
-            onChange={(e) => {
-              if (server.startsWith("http://")) {
-                setProtocol("http")
-              } else if (server.startsWith("https://")) {
-                setProtocol("https")
-              } else {
-                setProtocol(e.target.value)
-              }
-            }}>
-            <FormControlLabel value="http" label="HTTP" control={<Radio />} />
-            <FormControlLabel value="https" label="HTTPS" control={<Radio />} />
-          </RadioGroup>
-        </FormControl>
-        <TextField
-          type="text" required
-          autoFocus
-          name="server"
-          value={server}
-          error={!serverPattern.test(server)}
-          onChange={(e) => {
-            const url = e.target.value
-            if (url.startsWith("http://")) {
-              setProtocol("http")
-            } else if (url.startsWith("https://")) {
-              setProtocol("https")
-            }
-            setServer(url)
-          }}
-          label={i18n.connect.server}
-        />
         <FormControl variant="outlined">
-          <InputLabel htmlFor="outlined-adornment-password">{i18n.connect.passcode}</InputLabel>
+          <InputLabel htmlFor="outlined-adornment">{i18n.connect.account}</InputLabel>
+          <OutlinedInput
+            type='text'
+            label={i18n.connect.account}
+            placeholder={i18n.connect.accountPlaceholder}
+            defaultValue={lastConnected?.account}
+            name="account"
+          />
+        </FormControl>
+        <FormControl variant="outlined">
+          <InputLabel htmlFor="outlined-adornment-password">{i18n.connect.password}</InputLabel>
           <OutlinedInput
             type={showPasscode ? 'text' : 'password'}
-            label={i18n.connect.passcode}
-            placeholder={i18n.connect.passcodePlaceholder}
-            defaultValue={lastConnected?.passcode}
-            name="passcode"
+            label={i18n.connect.password}
+            placeholder={i18n.connect.passwordPlaceholder}
+            defaultValue={lastConnected?.password}
+            name="password"
             endAdornment={
               <InputAdornment position="end">
                 <IconButton

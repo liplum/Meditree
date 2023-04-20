@@ -16,7 +16,7 @@ import { backend, storage } from "./Env";
 import { FileDisplayBoard } from "./Playground";
 import { i18n } from "./I18n";
 import { SearchBar } from "./SearchBar";
-import "./Dashboard.css"
+import "./View.css"
 import { Failed, Loading } from "./Loading";
 import useForceUpdate from "use-force-update";
 import { useNavigate, useAsyncError } from 'react-router-dom';
@@ -26,20 +26,14 @@ export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
 export const AstrologyContext = createContext()
 export const SelectedFileContext = createContext()
-export const BackendContext = createContext()
 export const FileNavigationContext = createContext()
 
 /// TODO: Drawer looks bad on tablet portrait mode.
 const drawerWidth = "min(max(30%,20rem),30rem)";
 
-export async function loader({ request }) {
-  const url = new URL(request.url);
-  const urlParams = new URLSearchParams(url.search);
-  const params = Object.fromEntries(urlParams.entries());
-  const listUrl = backend.listUrl(params.server, params.passcode)
+export async function loader() {
   const task = async () => {
-    console.log(`fetching ${listUrl}`)
-    const response = await fetch(listUrl, {
+    const response = await fetch("/list", {
       method: "GET",
     })
     if (response.ok) {
@@ -47,18 +41,15 @@ export async function loader({ request }) {
       const fileTreeDelegate = ft.createDelegate({
         name: payload.name,
         root: payload.root,
-        server: params.server,
-        passcode: params.passcode,
       })
       return fileTreeDelegate
     } else {
-      const { error } = await response.json()
+      const error = await response.text()
       throw new Error(error)
     }
   }
   return defer({
     fileTreeDelegate: task(),
-    params,
   });
 }
 
@@ -97,7 +88,7 @@ export function App(props) {
 }
 
 function Body(props) {
-  const { fileTreeDelegate, params } = props
+  const { fileTreeDelegate } = props
 
   function resolveFileFromPath(path, selectedFile) {
     if (path && selectedFile?.path !== path) {
@@ -110,14 +101,13 @@ function Body(props) {
     return null
   }
 
-  const { server, passcode } = params
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const location = useLocation()
   const defaultSelectedFile =
     resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file")))
     ?? (
       fileTreeDelegate.key2File.size > 0 ? (
-        storage.getLastSelectedFileOf(server)
+        storage.getLastSelectedFile()
         ?? ft.getFirstFile(fileTreeDelegate)
       ) : null
     )
@@ -129,15 +119,13 @@ function Body(props) {
   useEffect(() => {
     if (selectedFile) {
       updatePageTitle(selectedFile.path)
-      navigate(makeUrl("/connect?", {
-        server: server,
-        passcode: passcode,
+      navigate(makeUrl("/view?", {
         file: selectedFile.path
       }))
     } else {
       updatePageTitle(i18n.noFile)
     }
-    storage.setLastSelectedFileOf(server, selectedFile)
+    storage.setLastSelectedFile(selectedFile)
   }, [selectedFile])
 
   function goFile(curFile, delta) {
@@ -156,7 +144,7 @@ function Body(props) {
   const goNextFile = (curFile) => goFile(curFile, +1)
   const goPreviousFile = (curFile) => goFile(curFile, -1)
   const forceUpdate = useForceUpdate()
-  const astrology = storage.getAstrologyOf(server)
+  const astrology = storage.getAstrology()
   const astrologyCtx = {
     astrology,
     isStarred(file) {
@@ -167,7 +155,7 @@ function Body(props) {
       if (path && !astrology[path]) {
         // `1` instead of `true` to shrink the json size
         astrology[path] = 1
-        storage.setAstrologyOf(server, astrology)
+        storage.setAstrology(astrology)
         // rebuild for prompt filter
         forceUpdate()
       }
@@ -176,7 +164,7 @@ function Body(props) {
       const path = file?.path
       if (path && path in astrology) {
         delete astrology[path]
-        storage.setAstrologyOf(server, astrology)
+        storage.setAstrology(astrology)
         // rebuild for prompt filter
         forceUpdate()
       }
@@ -266,11 +254,9 @@ function Body(props) {
     <FileTreeDeleagteContext.Provider value={[fileTreeDelegate]}>
       <AstrologyContext.Provider value={astrologyCtx}>
         <SelectedFileContext.Provider value={[selectedFile, setSelectedFile]}>
-          <BackendContext.Provider value={params}>
-            <FileNavigationContext.Provider value={{ goFile, goNextFile, goPreviousFile }}>
-              {body}
-            </FileNavigationContext.Provider>
-          </BackendContext.Provider>
+          <FileNavigationContext.Provider value={{ goFile, goNextFile, goPreviousFile }}>
+            {body}
+          </FileNavigationContext.Provider>
         </SelectedFileContext.Provider>
       </AstrologyContext.Provider>
     </FileTreeDeleagteContext.Provider>

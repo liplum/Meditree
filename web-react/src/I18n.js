@@ -17,14 +17,16 @@ export const i18n = new LocalizedStrings({
       text: "Loading...",
       failed: "Failed to load content.",
       error: {
-        incorrectPasscode: "Incorrect Passcode",
+        incorrectPassword: "Incorrect Passcode",
       }
     },
     connect: {
-      title: "Connect to server",
+      title: "Connect to Meditree Server",
       server: "Server",
-      passcode: "Passcode",
-      passcodePlaceholder: "Optional",
+      account: "Account",
+      password: "Password",
+      accountPlaceholder: "Optional",
+      passwordPlaceholder: "Optional",
       connectBtn: "Connect",
     },
   },
@@ -44,14 +46,16 @@ export const i18n = new LocalizedStrings({
       text: "加载中……",
       failed: "无法加载目录",
       error: {
-        incorrectPasscode: "口令不正确",
+        incorrectPassword: "密码不正确",
       }
     },
     connect: {
-      title: "连接服务器",
+      title: "连接 Meditree 服务器",
       server: "服务器",
-      passcode: "口令",
-      passcodePlaceholder: "可选",
+      account: "账号",
+      password: "密码",
+      accountPlaceholder: "可选",
+      passwordPlaceholder: "可选",
       connectBtn: "连接",
     },
   }

@@ -5,12 +5,11 @@ import {
 } from "react-router-dom"
 import { ConfigProvider, theme } from 'antd'
 import ReactDOM from 'react-dom/client'
-import { App, loader as appLoader } from './Dashboard'
+import { App, loader as appLoader } from './View'
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './index.css'
 import {
   ConnectDialog,
-  load as connectDialogLoader,
   action as connectDialogAction,
 } from './Connect'
 import { CssBaseline } from '@mui/material'
@@ -19,11 +18,10 @@ const router = createHashRouter([
   {
     index: true,
     element: <ConnectDialog />,
-    loader: connectDialogLoader,
     action: connectDialogAction,
   },
   {
-    path: "/connect",
+    path: "/view",
     element: <App />,
     loader: appLoader,
     shouldRevalidate: () => false,
