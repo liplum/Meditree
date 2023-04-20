@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
 import { type UserStorageService } from "../user.js"
 import { v4 as uuidv4 } from "uuid"
 import jwt from "jsonwebtoken"
+import { createLogger } from "../logger.js"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation
 interface AuthPluginConfig {
@@ -13,12 +15,28 @@ interface AuthPluginConfig {
    * "2h" by default.
    */
   jwtExpiration?: string
+  /**
+   * No register by default.
+   * If given, the register will be used.
+   * 
+   * Without the built-in registration, an external server for user management can be used.
+   */
+  register?: RegisterConfig
+}
+
+interface RegisterConfig {
+  /**
+   * "/register" by default.
+   */
+  path?: string
 }
 
 export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   let storage: UserStorageService
+  const log = createLogger("Auth")
   const loginPath = config.loginPath ?? "/login"
   const jwtExpiration = config.jwtExpiration ?? "2h"
+  const register = config.register
   const jwtSecret = uuidv4()
   return {
     onRegisterService(container) {
@@ -53,13 +71,12 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
       })
     },
     async onRegisterExpressHandler(app) {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       app.post(loginPath, async (req, res) => {
         const { account, password } = req.body
         // only finding active staffs
         const user = await storage.getUser(account)
         if (!user || user.password !== password) {
-          res.status(401).send("Wrong Credentials")
+          res.status(401).send("Wrong credentials")
           return
         }
         // Create JWT token
@@ -71,6 +88,26 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
           jwt: token,
         })
       })
+
+      if (register) {
+        const registerPath = register.path ?? "/register"
+        log.info(`User registration hosts on ${registerPath}`)
+        app.post(registerPath, async (req, res) => {
+          const { account, password } = req.body
+          if (!(typeof account === "string" && typeof password === "string")) {
+            res.status(400).send("Account invalid")
+            return
+          }
+          const user = await storage.getUser(account)
+          if (user !== null) {
+            res.status(400).send("Account exists")
+            return
+          }
+          await storage.addUser({ account, password })
+          res.status(200).send("Account created")
+          return
+        })
+      }
     }
   }
 }
