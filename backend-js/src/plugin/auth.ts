@@ -1,10 +1,10 @@
 import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
 import { type UserStorageService } from "../user.js"
-import uuid from "uuid"
+import { v4 as uuidv4 } from "uuid"
 import jwt from "jsonwebtoken"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation
-interface UserPluginConfig {
+interface AuthPluginConfig {
   /**
    * "/login" by default.
    */
@@ -15,11 +15,11 @@ interface UserPluginConfig {
   jwtExpiration?: string
 }
 
-export default function UserPlugin(config: UserPluginConfig): MeditreePlugin {
+export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   let storage: UserStorageService
   const loginPath = config.loginPath ?? "/login"
   const jwtExpiration = config.jwtExpiration ?? "2h"
-  const jwtSecret = uuid.v4()
+  const jwtSecret = uuidv4()
   return {
     onRegisterService(container) {
       storage = container.get(MeditreeType.UserStorage)
