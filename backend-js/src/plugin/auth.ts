@@ -41,9 +41,9 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   return {
     onRegisterService(container) {
       storage = container.get(MeditreeType.UserStorage)
-      container.bind(MeditreeType.User).toValue({
+      container.bind(MeditreeType.Auth).toValue({
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        authentication: async (req, res, next) => {
+        middleware: async (req, res, next) => {
           // Get the JWT from the cookie
           const token = req.cookies.jwt
           if (!token) {

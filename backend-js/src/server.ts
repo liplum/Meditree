@@ -11,14 +11,14 @@ import { type PluginRegistry, resolvePluginList } from "./plugin.js"
 import { type Readable } from "stream"
 import http, { type Server } from "http"
 import { Container, uniqueToken } from "./ioc.js"
-import { type UserService, type UserStorageService } from "./user.js"
+import { type AuthService, type UserStorageService } from "./user.js"
 import cookieParser from "cookie-parser"
 import { registerBuiltinPlugins } from "./builtin-plugin.js"
 
 export const TYPE = {
   HostTree: uniqueToken<(options: HostTreeOptions) => IHostTree>("HostTree"),
   UserStorage: uniqueToken<UserStorageService>("UserStorage"),
-  User: uniqueToken<UserService>("User")
+  Auth: uniqueToken<AuthService>("Auth")
 }
 
 export async function startServer(config: AppConfig): Promise<void> {
@@ -92,8 +92,8 @@ export async function startServer(config: AppConfig): Promise<void> {
         : new HostTree(options)
     )
 
-  container.bind(TYPE.User).toValue({
-    authentication: (req, res, next) => { next() }
+  container.bind(TYPE.Auth).toValue({
+    middleware: (req, res, next) => { next() }
   })
 
   // Phrase 10: plugins register or override services.
@@ -181,7 +181,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
   })
 
-  const userService = container.get(TYPE.User)
+  const userService = container.get(TYPE.Auth)
 
   // Phrase 18: plugins patch the express app registering.
   for (const plugin of plugins) {
@@ -189,13 +189,13 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   // Phrase 19: express app setup.
-  app.get("/list", userService.authentication, (req, res) => {
+  app.get("/list", userService.middleware, (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
     res.send(fullTreeCache.json)
   })
 
-  app.get("/file(/*)", userService.authentication, async (req, res) => {
+  app.get("/file(/*)", userService.middleware, async (req, res) => {
     let uri: string
     try {
       uri = decodeURI(req.baseUrl + req.path)

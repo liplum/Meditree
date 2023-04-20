@@ -4,7 +4,7 @@ import { type MeditreeNode } from "../meditree.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
 import express, { type RequestHandler } from "express"
 import fs from "fs"
-import { type UserService } from "../user.js"
+import { type AuthService } from "../user.js"
 
 interface HomepagePluginConfig {
   /**
@@ -34,7 +34,7 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
   // lazy-build the html
   let html: string | undefined
   let node: MeditreeNode
-  let userService: UserService
+  let userService: AuthService
   return {
     async setupMeditreeNode(meditreeNode) {
       node = meditreeNode
@@ -46,7 +46,7 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
       }
     },
     onRegisterService(container) {
-      userService = container.get(TYPE.User)
+      userService = container.get(TYPE.Auth)
     },
     async onRegisterExpressHandler(app) {
       if (root) {
@@ -61,7 +61,7 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
           res.send(html)
         }]
         if (requireAuth) {
-          handlers.unshift(userService.authentication)
+          handlers.unshift(userService.middleware)
         }
         app.get("/index.html", ...handlers)
         app.get("/", ...handlers)

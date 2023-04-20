@@ -41,6 +41,6 @@ export interface UserStorageService {
   deleteUser(account: string): Promise<boolean>
 }
 
-export interface UserService {
-  authentication: Handler
+export interface AuthService {
+  middleware: Handler
 }
