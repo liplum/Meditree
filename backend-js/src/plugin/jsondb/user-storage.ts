@@ -15,36 +15,46 @@ interface JsonDBUserPluginConfig {
  */
 export default function JsonDbUserPlugin(config: JsonDBUserPluginConfig): MeditreePlugin {
   const path = config.path ?? "/users"
+  function getUserPath(user: User | string): string {
+    return typeof user === "string" ? `${path}/${user}` : `${path}/${user.account}`
+  }
   return {
     onRegisterService(container) {
       const jsonDB = container.get(JsonDBType.JsonDB)
+      const db = jsonDB.db
       container.bind(MeditreeType.UserStorage).toValue({
         async addUser(user) {
-          // TODO: impl
-          const users = await jsonDB.db.getData(path)
-          if (await users.findOne({ account: user.account })) {
+          const userPath = getUserPath(user)
+          if (await db.exists(userPath)) {
             // already existing
             return false
           }
-          await users.insertOne(user)
+          await db.push(userPath, user)
           return true
         },
         async getUser(account) {
-          const users = await jsonDB.db.getData(path)
-          return await users.findOne({ account }) as User | null
+          try {
+            const user = await db.getData(getUserPath(account))
+            return user
+          } catch (error) {
+            return null
+          }
         },
         async updateUser(user) {
-          const users = await jsonDB.db.getData(path)
-          if (await users.findOne({ account: user.account })) {
-            users.updateOne({ account: user.account }, user)
+          const userPath = getUserPath(user)
+          if (await db.exists(userPath)) {
+            await db.push(userPath, user)
             return true
           }
           return false
         },
         async deleteUser(account) {
-          const users = await jsonDB.db.getData(path)
-          const result = await users.deleteOne({ account })
-          return result.deletedCount > 0
+          const userPath = getUserPath(account)
+          if (await db.exists(userPath)) {
+            await db.delete(userPath)
+            return true
+          }
+          return false
         },
       })
     },
