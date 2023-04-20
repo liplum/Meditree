@@ -33,9 +33,13 @@ export default function JsonDbUserPlugin(config: JsonDBUserPluginConfig): Meditr
           return true
         },
         async getUser(account) {
+          const userPath = getUserPath(account)
+          if (!await db.exists(userPath)) {
+            // not existing
+            return null
+          }
           try {
-            const user = await db.getData(getUserPath(account))
-            return user
+            return await db.getData(getUserPath(account))
           } catch (error) {
             return null
           }

@@ -2,16 +2,12 @@
 import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
 import { type UserStorageService } from "../user.js"
 import { v4 as uuidv4 } from "uuid"
-import jwt from "jsonwebtoken"
+import jwt, { type JwtPayload } from "jsonwebtoken"
 import { createLogger } from "../logger.js"
 import { type Request } from "express"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation
 interface AuthPluginConfig {
-  /**
-   * "/login" by default.
-   */
-  loginPath?: string
   /**
    * "2h" by default.
    */
@@ -35,7 +31,6 @@ interface RegisterConfig {
 export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   let storage: UserStorageService
   const log = createLogger("Auth")
-  const loginPath = config.loginPath ?? "/login"
   const jwtExpiration = config.jwtExpiration ?? "2h"
   const register = config.register
   const jwtSecret = uuidv4()
@@ -54,7 +49,8 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
           // Handle missing token error
           // Verify the JWT using the secret key
           try {
-            const account = jwt.verify(token, jwtSecret)
+            const jwtPayload = jwt.verify(token, jwtSecret) as JwtPayload
+            const account = jwtPayload.account
             if (typeof account !== "string") {
               res.status(401).json({ error: "Token invalid" })
               return
@@ -72,7 +68,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
       })
     },
     async onRegisterExpressHandler(app) {
-      app.post(loginPath, async (req, res) => {
+      app.post("/login", async (req, res) => {
         const { account, password } = req.body
         // only finding active staffs
         const user = await storage.getUser(account)
@@ -81,7 +77,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
           return
         }
         // Create JWT token
-        const token = jwt.sign(account, jwtSecret, {
+        const token = jwt.sign({ account }, jwtSecret, {
           expiresIn: jwtExpiration
         })
         // Send token in response and staff info
@@ -105,7 +101,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
             return
           }
           await storage.addUser({ account, password })
-          res.status(200).json({ error: "Account created" })
+          res.status(200).json({ result: "Account created" })
           return
         })
       }
