@@ -4,7 +4,7 @@ import { type UserStorageService } from "../user.js"
 import { v4 as uuidv4 } from "uuid"
 import jwt from "jsonwebtoken"
 import { createLogger } from "../logger.js"
-import { Request } from "express"
+import { type Request } from "express"
 
 // eslint-disable-next-line @typescript-eslint/dot-notation
 interface AuthPluginConfig {
@@ -48,7 +48,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
           // Get the JWT from the cookie, body or authorization header in a fallback chain.
           const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
           if (!token) {
-            res.status(401).send("Token missing")
+            res.status(401).json({ error: "Token missing" })
             return
           }
           // Handle missing token error
@@ -56,16 +56,16 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
           try {
             const account = jwt.verify(token, jwtSecret)
             if (typeof account !== "string") {
-              res.status(401).send("Token invalid")
+              res.status(401).json({ error: "Token invalid" })
               return
             }
             if (await storage.getUser(account) === null) {
-              res.status(401).send("Account not found")
+              res.status(401).json({ error: "No such Account" })
               return
             }
             next()
           } catch (error) {
-            res.status(401).send("Token invalid")
+            res.status(401).json({ error: "Token invalid" })
             return
           }
         }
@@ -77,7 +77,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
         // only finding active staffs
         const user = await storage.getUser(account)
         if (!user || user.password !== password) {
-          res.status(401).send("Wrong credentials")
+          res.status(401).json({ error: "Wrong credentials" })
           return
         }
         // Create JWT token
@@ -96,16 +96,16 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
         app.post(registerPath, async (req, res) => {
           const { account, password } = req.body
           if (!(typeof account === "string" && typeof password === "string")) {
-            res.status(400).send("Account invalid")
+            res.status(400).json({ error: "Account invalid" })
             return
           }
           const user = await storage.getUser(account)
           if (user !== null) {
-            res.status(400).send("Account exists")
+            res.status(400).json({ error: "Account exists" })
             return
           }
           await storage.addUser({ account, password })
-          res.status(200).send("Account created")
+          res.status(200).json({ error: "Account created" })
           return
         })
       }

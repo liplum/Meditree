@@ -111,7 +111,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     try {
       decodeURIComponent(req.path)
     } catch (error) {
-      res.status(400).send({ error: "badURI" })
+      res.status(400).json({ error: "badURI" })
       return
     }
     next()
@@ -200,7 +200,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     try {
       uri = decodeURI(req.baseUrl + req.path)
     } catch (e) {
-      res.status(400).send({ error: "badURI" })
+      res.status(400).json({ error: "badURI" })
       return
     }
     let path = removePrefix(uri, "/file/")
