@@ -22,29 +22,24 @@ onMounted(() => {
     .then((data) => {
       const fileTree = parseFileTree(`/file`, data)
       root.value = fileTree
+      selectedDir.value = fileTree
     });
 })
 const drawer = ref(true)
-const selectedFSO = computed(() => {
+const selectedFile = computed(() => {
   const filePath = router.currentRoute.value.query.file as string
   if (filePath) {
-    return root.value.find(filePath)
-  } else {
-    return null
+    const found = root.value.find(filePath)
+    return found instanceof FileInfo ? found : null
   }
+  return null
 })
-const selectedDir = ref()
-watch(selectedFSO, (fso, oldFso) => {
-  console.log("fso", fso)
-  console.log("oldFso", oldFso)
-  if (fso instanceof FileInfo) {
-    if (fso.parent) {
-      selectedDir.value = fso.parent
-    } else {
-      selectedDir.value = root.value
-    }
-  } else if (fso instanceof DirectoryInfo) {
-    selectedDir.value = fso
+const selectedDir = ref(root.value)
+watch(selectedFile, (value, old) => {
+  if (value instanceof FileInfo && value.parent) {
+    selectedDir.value = value.parent
+  } else {
+    selectedDir.value = root.value
   }
 })
 function onSelecteFile(file: FileInfo) {
@@ -63,10 +58,10 @@ const breakpoint = display.mdAndDown
 <template>
   <v-layout>
     <v-navigation-drawer v-model="drawer" :clipped="breakpoint" :width="breakpoint ? 320 : 600">
-      <Explorer :root="root" v-model="selectedDir" @select-file="onSelecteFile"></Explorer>
+      <Explorer v-model="selectedDir" @select-file="onSelecteFile"></Explorer>
     </v-navigation-drawer>
     <v-main style="height:100vh;">
-      <DisplayBoard :file="selectedFSO instanceof FileInfo ? selectedFSO : undefined">
+      <DisplayBoard :file="selectedFile instanceof FileInfo ? selectedFile : undefined">
         <template #app-bar-pre v-if="breakpoint">
           <v-app-bar-nav-icon @click="drawer = !drawer" />
         </template>
