@@ -13,6 +13,10 @@ interface AuthPluginConfig {
    */
   jwtExpiration?: string
   /**
+   * A random uuid v4 by default.
+   */
+  jwtSecret?: string
+  /**
    * No register by default.
    * If given, the register will be used.
    * 
@@ -33,7 +37,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   const log = createLogger("Auth")
   const jwtExpiration = config.jwtExpiration ?? "2h"
   const register = config.register
-  const jwtSecret = uuidv4()
+  const jwtSecret = config.jwtSecret ?? uuidv4()
   return {
     onRegisterService(container) {
       storage = container.get(MeditreeType.UserStorage)
