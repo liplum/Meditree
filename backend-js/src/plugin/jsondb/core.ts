@@ -48,8 +48,7 @@ export default function JsonDbPlugin(config: JsonDbPluginConfig): MeditreePlugin
       log.info(`JsonDB is loaded from ${filename}`)
     },
     onExit() {
-      db?.save()
-      log.info("JsonDB saved and closed.")
+      log.info("JsonDB closed.")
     },
     onRegisterService(container) {
       if (db === undefined) throw new Error("JsonDB is not initialized.")
