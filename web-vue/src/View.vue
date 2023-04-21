@@ -4,6 +4,10 @@ import { useDisplay } from 'vuetify'
 import Explorer from "./Explorer/Explorer.vue";
 import { ref } from "vue";
 import { DirectoryInfo, FileInfo, parseFileTree } from "./FileTree";
+import { useRouter } from "vue-router"
+import { computed } from "@vue/reactivity";
+import { onMounted } from "vue";
+const router = useRouter()
 function createRoot(): DirectoryInfo {
   const dir = new DirectoryInfo()
   dir.path = "/"
@@ -12,17 +16,34 @@ function createRoot(): DirectoryInfo {
 }
 const root = ref(createRoot())
 // for testing
-fetch(`/list`, { method: "GET" })
-  .then((res) => res.json())
-  .then((data) => {
-    const fileTree = parseFileTree(`/file`, data)
-    root.value = fileTree
-  });
+onMounted(() => {
+  fetch(`/list`, { method: "GET" })
+    .then((res) => res.json())
+    .then((data) => {
+      const fileTree = parseFileTree(`/file`, data)
+      root.value = fileTree
+    });
+})
 const drawer = ref(true)
-const selectedFile = ref<FileInfo>()
+const selectedFSO = computed(() => {
+  const filePath = router.currentRoute.value.query.file as string
+  if (filePath) {
+    const found = root.value.find(filePath)
+    console.log(found)
+    return found
+  } else {
+    return null
+  }
+})
+const selectedFile = computed(() => selectedFSO.value instanceof FileInfo ? selectedFSO.value : undefined)
+const selectedDir = computed(() => selectedFSO.value instanceof DirectoryInfo ? selectedFSO.value : undefined)
 function onSelecteFile(file: FileInfo) {
-  console.log(file) 
-  selectedFile.value = file
+  router.push({
+    path: "/view",
+    query: {
+      file: file.path,
+    }
+  })
 }
 const display = useDisplay()
 // for responsive drawer

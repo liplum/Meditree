@@ -17,13 +17,14 @@ function resolveRenderer(type: string) {
   if (type.startsWith("audio")) {
     return AudioRenderer
   }
-  
+
   return null
 }
 
 const props = defineProps<{
   file?: FileInfo;
 }>();
+const file = computed(() => props.file)
 const renderer = computed(() => {
   if (props.file) {
     return resolveRenderer(props.file.type);
@@ -42,9 +43,15 @@ const size = computed(() => {
   <v-app>
     <v-app-bar prominent>
       <slot name="app-bar-pre"></slot>
-      <v-app-bar-title>
-        {{ props.file?.name }}
-      </v-app-bar-title>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ props }">
+          <v-app-bar-title v-bind="props">
+            {{ file?.name }}
+          </v-app-bar-title>
+        </template>
+        <p>{{ file?.path }}</p>
+      </v-tooltip>
+
       <template #append>
         <v-chip v-if="size">
           {{ size }}

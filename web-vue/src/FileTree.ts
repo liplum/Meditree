@@ -22,7 +22,7 @@ export class DirectoryInfo implements FileSystemObject {
   name: string
   path: string
   hidden: boolean = false
-  files: (FileInfo | DirectoryInfo)[] = []
+  files = new Map<string, FileInfo | DirectoryInfo>
 
   toString(): string {
     return this.name
@@ -33,8 +33,28 @@ export class DirectoryInfo implements FileSystemObject {
   }
 
   addChild(file: FileInfo | DirectoryInfo): void {
-    this.files.push(file)
+    this.files.set(file.name, file)
     file.parent = this
+  }
+
+  find(path: string): FileInfo | DirectoryInfo | null {
+    const parts = path.split("/");
+    let cur: FileInfo | DirectoryInfo = this;
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (cur instanceof DirectoryInfo) {
+        const child = cur.files.get(part);
+        if (!child) {
+          return null;
+        }
+        cur = child;
+      } else {
+        // cur is a FileInfo, and we can't go any deeper.
+        return null;
+      }
+    }
+    return cur;
   }
 }
 

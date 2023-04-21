@@ -15,7 +15,13 @@ const props = withDefaults(defineProps<Props>(), {
 });
 const files = computed(() => {
   if (props.searchDelegate) {
-    return props.dir.files.filter(props.searchDelegate)
+    const filtered = new Map<string, FileInfo | DirectoryInfo>()
+    for (const [name, file] of props.dir.files) {
+      if (props.searchDelegate(file)) {
+        filtered.set(name, file)
+      }
+    }
+    return filtered
   } else {
     return props.dir.files
   }
@@ -31,7 +37,7 @@ const emit = defineEmits<{
   <template v-if="props.view === 'grid'">
     <v-container fluid>
       <v-row no-gutters align-self="stretch">
-        <v-col v-for="(file, name, index) in files" :key="name" cols="auto" style="width: 8rem;">
+        <v-col v-for="[name, file] in files" :key="name" cols="auto" style="width: 8rem;">
           <template v-bind="props" v-if="(file instanceof FileInfo)">
             <File @click="emit('clickFile', file)" :file="file" />
           </template>
