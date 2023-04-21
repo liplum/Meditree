@@ -29,7 +29,7 @@ export function createDelegate({ name, root, }) {
           size: file.size,
           tracking: [...curDir.tracking, curKey],
         }
-        fileObj.url = `file/${encodeURIComponent(fileObj.path)}`
+        fileObj.url = `file/${fileObj.path}`
         path2File.set(fileObj.path, fileObj)
         key2File.set(curKey, fileObj)
         curDir.children.push(fileObj)

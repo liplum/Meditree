@@ -38,7 +38,7 @@ if (mainCmd.cmd === "get") {
 } else if (mainCmd.cmd === "gen") {
   const genDef = [
     { name: "path", defaultOption: true },
-    { name: "time", type: Number, defaultValue: 8, alias: "t" },
+    { name: "time", type: Number, defaultValue: 5, alias: "t" },
     { name: "ext", multiple: true, defaultValue: ["mp4"], alias: "x" },
     { name: "overwrite", type: Boolean, defaultValue: false, alias: "w" }
   ]
@@ -127,7 +127,7 @@ async function convertVideo({ filepath, time, overwrite }) {
       .outputOptions("-segment_list_flags", "cache")
       // segment duration (in seconds)
       .outputOptions("-hls_time", time)
-      .outputOptions("-segment_list_entry_prefix", encodeURI(`${pureName}/`))
+      .outputOptions("-hls_base_url", `${pureName}/`)
       // segment filename format
       .outputOptions("-hls_segment_filename", join(outputDir, "%d.ts"))
       .output(join(parentDir, `${pureName}.m3u8`))
@@ -135,6 +135,7 @@ async function convertVideo({ filepath, time, overwrite }) {
         bar.update(progress.percent / 100)
       })
       .on("end", () => {
+        bar.update(1)
         console.log(`"${m3u8File}" is done.`)
         resolve(true)
       })
