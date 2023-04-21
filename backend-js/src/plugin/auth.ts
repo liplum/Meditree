@@ -47,7 +47,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
           // Get the JWT from the cookie, body or authorization header in a fallback chain.
           const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
           if (!token) {
-            res.status(401).json({ error: "Token missing" })
+            res.status(401).send("Token Missing")
             return
           }
           // Handle missing token error
@@ -56,16 +56,16 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
             const jwtPayload = jwt.verify(token, jwtSecret) as JwtPayload
             const account = jwtPayload.account
             if (typeof account !== "string") {
-              res.status(401).json({ error: "Token invalid" })
+              res.status(401).send("Token Invalid")
               return
             }
             if (await storage.getUser(account) === null) {
-              res.status(401).json({ error: "No such Account" })
+              res.status(401).send("No Such Account")
               return
             }
             next()
           } catch (error) {
-            res.status(401).json({ error: "Token invalid" })
+            res.status(401).send("Token Invalid")
             return
           }
         }
@@ -77,7 +77,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
         // only finding active staffs
         const user = await storage.getUser(account)
         if (!user || user.password !== password) {
-          res.status(401).json({ error: "Wrong credentials" })
+          res.status(401).send("Wrong Credentials")
           return
         }
         // Create JWT token
@@ -96,16 +96,16 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
         app.post(registerPath, async (req, res) => {
           const { account, password } = req.body
           if (!(typeof account === "string" && typeof password === "string")) {
-            res.status(400).json({ error: "Account invalid" })
+            res.status(400).send("Credentials Invalid")
             return
           }
           const user = await storage.getUser(account)
           if (user !== null) {
-            res.status(400).json({ error: "Account exists" })
+            res.status(400).send("Account Exists")
             return
           }
           await storage.addUser({ account, password })
-          res.status(200).json({ result: "Account created" })
+          res.status(200).send("Account Created")
           return
         })
       }

@@ -1,7 +1,7 @@
 import "./Playground.css"
 import React, { useContext, useEffect, useRef, useState } from "react"
 import { isMobile } from "react-device-detect"
-import { AstrologyContext, FileNavigationContext, ResponsiveAppBar, SelectedFileContext } from "./View"
+import { AstrologyContext, FileNavigationContext, ResponsiveAppBar } from "./View"
 import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
 import { StarBorder, Star } from "@mui/icons-material"
 import { backend } from "./Env"
@@ -36,9 +36,8 @@ function resolveRenderer(type) {
   }
 }
 
-export function FileDisplayBoard(_props) {
+export function FileDisplayBoard({ file }) {
   const { isStarred, star, unstar } = useContext(AstrologyContext)
-  const [file] = useContext(SelectedFileContext)
   const { goNextFile, goPreviousFile } = useContext(FileNavigationContext)
   const boardRef = useRef()
   const forceUpdate = useForceUpdate()

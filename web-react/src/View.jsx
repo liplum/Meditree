@@ -9,7 +9,7 @@ import {
   defer,
   Await,
   useLocation,
-  useNavigate, useAsyncError 
+  useNavigate, useAsyncError
 } from "react-router-dom"
 import { Box, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from "@mui/icons-material"
@@ -24,7 +24,6 @@ import useForceUpdate from "use-force-update"
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
 export const AstrologyContext = createContext()
-export const SelectedFileContext = createContext()
 export const FileNavigationContext = createContext()
 
 /// TODO: Drawer looks bad on tablet portrait mode.
@@ -56,6 +55,11 @@ function LoadErrorBoundary() {
   const error = useAsyncError()
   const navigate = useNavigate()
   console.error(error)
+  useEffect(() => {
+    if (error.message === "Token Invalid") {
+      navigate("/")
+    }
+  }, [error])
   return <Failed text={i18n.loading.error[error.message] ?? i18n.loading.failed}>
     <Button variant="outlined" onClick={() => {
       navigate("/")
@@ -66,7 +70,7 @@ function LoadErrorBoundary() {
 }
 
 export function App(props) {
-  const { fileTreeDelegate, params } = useLoaderData()
+  const { fileTreeDelegate } = useLoaderData()
 
   return (
     <main>
@@ -78,7 +82,7 @@ export function App(props) {
           errorElement={<LoadErrorBoundary />}
         >
           {(delegate) => (
-            <Body fileTreeDelegate={delegate} params={params} />
+            <Body fileTreeDelegate={delegate} />
           )}
         </Await>
       </React.Suspense>
@@ -86,59 +90,55 @@ export function App(props) {
   )
 }
 
-function Body(props) {
-  const { fileTreeDelegate } = props
+function tryResolveFile(...fallbacks) {
+  for (const fallback of fallbacks) {
+    const resolved = fallback()
+    if (resolved) {
+      return resolved
+    }
+  }
+  return null
+}
 
-  function resolveFileFromPath(path, selectedFile) {
-    if (path && selectedFile?.path !== path) {
-      for (const file of fileTreeDelegate.key2File.values()) {
-        if (file.path === path) {
-          return file
-        }
+function resolveFileFromPath(path, fileTreeDelegate) {
+  if (path) {
+    for (const file of fileTreeDelegate.path2File.values()) {
+      if (file.path === path) {
+        return file
       }
     }
-    return null
   }
+  return null
+}
 
+function findNextFile(fileTreeDelegate, curFile, delta) {
+  if (!(curFile && "key" in curFile)) return curFile
+  let nextKey = curFile.key + delta
+  while (nextKey >= 0 && nextKey < fileTreeDelegate.maxKey) {
+    const next = fileTreeDelegate.key2File.get(nextKey)
+    if (!next) {
+      nextKey += delta
+    } else {
+      return next
+    }
+  }
+}
+
+function Body({ fileTreeDelegate }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState()
   const location = useLocation()
-  const defaultSelectedFile =
-    resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file"))) ??
-    (
-      fileTreeDelegate.key2File.size > 0
-        ? (
-            storage.getLastSelectedFile() ??
-        ft.getFirstFile(fileTreeDelegate)
-          )
-        : null
-    )
-  const [selectedFile, setSelectedFile] = useState(defaultSelectedFile)
   const [searchPrompt, setSearchPrompt] = useState()
   const [onlyShowStarred, setOnlyShowStarred] = useState()
   const navigate = useNavigate()
+  const selectedFile = tryResolveFile(
+    () => resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file")), fileTreeDelegate),
+    () => fileTreeDelegate.path2File.size > 0 ? storage.getLastSelectedFile() : null,
+    () => fileTreeDelegate.path2File.size > 0 ? ft.getFirstFile(fileTreeDelegate) : null
+  )
 
-  useEffect(() => {
-    if (selectedFile) {
-      updatePageTitle(selectedFile.path)
-      navigate(`/view?file=${encodeURIComponent(selectedFile.path)}`)
-    } else {
-      updatePageTitle(i18n.noFile)
-    }
-    storage.setLastSelectedFile(selectedFile)
-  }, [selectedFile])
-
-  function goFile(curFile, delta) {
-    if (!(curFile && "key" in curFile)) return
-    let nextKey = curFile.key + delta
-    while (nextKey >= 0 && nextKey < fileTreeDelegate.maxKey) {
-      const next = fileTreeDelegate.key2File.get(nextKey)
-      if (!next) {
-        nextKey += delta
-      } else {
-        setSelectedFile(next)
-        return
-      }
-    }
+  const goFile = (curFile, delta) => {
+    const file = findNextFile(fileTreeDelegate, curFile, delta)
+    navigate(`/view?file=${encodeURIComponent(file.path)}`)
   }
   const goNextFile = (curFile) => goFile(curFile, +1)
   const goPreviousFile = (curFile) => goFile(curFile, -1)
@@ -169,6 +169,7 @@ function Body(props) {
       }
     }
   }
+
   const filterByPrompt = (file) => {
     if (onlyShowStarred && !astrology[file.path]) {
       return false
@@ -201,6 +202,7 @@ function Body(props) {
     </div>
     <div style={{ flex: 1, overflow: "auto" }}>
       <FileTreeNavigation
+        selectedFile={selectedFile}
         searchDelegate={filterByPrompt}
       />
     </div>
@@ -245,18 +247,16 @@ function Body(props) {
         sx={{ padding: "1rem", flexGrow: 1, width: { sm: `calc(100% - ${drawerWidth})` } }}
       >
         <Toolbar />
-        <FileDisplayBoard />
+        <FileDisplayBoard file={selectedFile} />
       </Box>
     </Box>
   )
   return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
     <FileTreeDeleagteContext.Provider value={[fileTreeDelegate]}>
       <AstrologyContext.Provider value={astrologyCtx}>
-        <SelectedFileContext.Provider value={[selectedFile, setSelectedFile]}>
-          <FileNavigationContext.Provider value={{ goFile, goNextFile, goPreviousFile }}>
-            {body}
-          </FileNavigationContext.Provider>
-        </SelectedFileContext.Provider>
+        <FileNavigationContext.Provider value={{ goFile, goNextFile, goPreviousFile }}>
+          {body}
+        </FileNavigationContext.Provider>
       </AstrologyContext.Provider>
     </FileTreeDeleagteContext.Provider>
   </IsDrawerOpenContext.Provider>

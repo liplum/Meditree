@@ -1,31 +1,30 @@
 import React, { useContext, useEffect, useState } from "react"
 import { Tree } from "antd"
 import * as ft from "./FileTree"
-import { FileTreeDeleagteContext, SelectedFileContext } from "./View"
+import { FileTreeDeleagteContext } from "./View"
 import { useTheme } from "@mui/material/styles"
 import { FolderOff } from "@mui/icons-material"
+import { useNavigate } from "react-router"
 const { DirectoryTree } = Tree
-export function FileTreeNavigation(props) {
+
+export function FileTreeNavigation({ selectedFile, searchDelegate }) {
   const [delegate] = useContext(FileTreeDeleagteContext)
   const [renderTree, setRenderTree] = useState()
-  const [selectedFile, setSelectedFile] = useContext(SelectedFileContext)
-
+  const navigate = useNavigate()
   useEffect(() => {
     if (!delegate) return
-    if (props.searchDelegate) {
-      const newRenderTree = ft.filter(delegate.renderTree, props.searchDelegate,
-        (id) => delegate.key2File.get(id)
-      )
+    if (searchDelegate) {
+      const newRenderTree = ft.filter(delegate.renderTree, searchDelegate)
       setRenderTree(newRenderTree)
     }
-  }, [props.searchDelegate, delegate])
+  }, [searchDelegate, delegate])
 
   const theme = useTheme()
   if (!renderTree) return
   if (renderTree.children.length <= 0) {
     return <div className="no-file-label" >
       <FolderOff style={{ width: "8rem", height: "8rem" }} />
-    </div> 
+    </div>
   }
   return (
     <DirectoryTree
@@ -39,17 +38,10 @@ export function FileTreeNavigation(props) {
       treeData={renderTree.children}
       defaultSelectedKeys={[selectedFile?.nodeId]}
       defaultExpandedKeys={selectedFile?.tracking}
-      onSelect={(keys, _) => {
-        if (keys.length > 0) {
-          let key = keys[0]
-          if (typeof key === "string") {
-            key = parseInt(key)
-            if (isNaN(key)) return
-          }
-          const file = delegate.key2File.get(key)
-          if (file && file.path !== selectedFile.path) {
-            setSelectedFile(file)
-          }
+      onSelect={(_keys, info) => {
+        if (info.node.isLeaf) {
+          const selected = info.node
+          navigate(`/view?file=${encodeURIComponent(selected.path)}`)
         }
       }}
     />

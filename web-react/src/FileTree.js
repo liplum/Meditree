@@ -10,6 +10,7 @@ export function createDelegate({ name, root, }) {
     tracking: [key]
   }
   const key2File = new Map()
+  const path2File = new Map()
   function createNode(curDir, curFileTree) {
     const entries = Object.entries(curFileTree)
     reorder(entries)
@@ -31,7 +32,7 @@ export function createDelegate({ name, root, }) {
           tracking: [...curDir.tracking, curKey],
         }
         fileObj.url = backend.reolsveFileUrl(fileObj.path)
-
+        path2File.set(fileObj.path, fileObj)
         key2File.set(curKey, fileObj)
         curDir.children.push(fileObj)
       } else {
@@ -52,6 +53,7 @@ export function createDelegate({ name, root, }) {
   return {
     renderTree: rootRenderTree,
     key2File,
+    path2File,
     maxKey: key,
     name,
   }
@@ -59,7 +61,7 @@ export function createDelegate({ name, root, }) {
 
 export function getFirstFile(fileTreeDelegate) {
   // eslint-disable-next-line no-unreachable-loop
-  for (const file of fileTreeDelegate.key2File.values()) {
+  for (const file of fileTreeDelegate.path2File.values()) {
     return file
   }
   return null
@@ -69,11 +71,11 @@ export function getFirstFile(fileTreeDelegate) {
  *  @author chatGPT
  *  @returns the render tree
  */
-export function filter(renderTree, searchDelegate, getFileById) {
+export function filter(renderTree, searchDelegate) {
   function filterTree(tree) {
     // base case: leaf node
     if (!tree.children) {
-      const file = getFileById(tree.key)
+      const file = tree
       return searchDelegate(file) ? tree : null
     }
 
