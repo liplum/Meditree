@@ -26,10 +26,4 @@ export const storage = {
   setLastSelectedFile(value) {
     window.localStorage.setItem("lastSelectedFile", JSON.stringify(value))
   },
-  get lastConnected() {
-    return JSON.parse(window.localStorage.getItem("lastConnected")) ?? null
-  },
-  set lastConnected(value) {
-    window.localStorage.setItem("lastConnected", JSON.stringify(value))
-  },
 }

@@ -9,15 +9,15 @@ import { App, loader as appLoader } from "./View"
 import { ThemeProvider, createTheme } from "@mui/material/styles"
 import "./index.css"
 import {
-  ConnectDialog,
+  LoginDialog,
   action as connectDialogAction,
-} from "./Connect"
+} from "./Login"
 import { CssBaseline } from "@mui/material"
 
 const router = createHashRouter([
   {
     index: true,
-    element: <ConnectDialog />,
+    element: <LoginDialog />,
     action: connectDialogAction,
   },
   {

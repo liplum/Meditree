@@ -10,7 +10,7 @@ import {
   backend,
   storage, updatePageTitle
 } from "./Env.js"
-import "./Connect.css"
+import "./Login.css"
 import { i18n } from "./I18n.js"
 import { Visibility, VisibilityOff } from "@mui/icons-material"
 import Cookies from "js-cookie"
@@ -42,16 +42,15 @@ export async function action({ request }) {
     return null
   }
 }
-export function ConnectDialog(props) {
+export function LoginDialog(props) {
   useEffect(() => {
     updatePageTitle(i18n.connect.title)
   }, [])
-  const lastConnected = storage.lastConnected
   const [showPasscode, setShowPasscode] = useState(false)
   return (
-    <Card id="connect-dialog">
+    <Card id="login-dialog">
       <h1>{i18n.connect.title}</h1>
-      <Form method="post" id="connect-form" style={{
+      <Form method="post" id="login-form" style={{
         flexDirection: "column", display: "flex",
       }}>
         <FormControl variant="outlined">
@@ -60,7 +59,6 @@ export function ConnectDialog(props) {
             type='text'
             label={i18n.connect.account}
             placeholder={i18n.connect.accountPlaceholder}
-            defaultValue={lastConnected?.account}
             name="account"
           />
         </FormControl>
@@ -70,7 +68,6 @@ export function ConnectDialog(props) {
             type={showPasscode ? "text" : "password"}
             label={i18n.connect.password}
             placeholder={i18n.connect.passwordPlaceholder}
-            defaultValue={lastConnected?.password}
             name="password"
             endAdornment={
               <InputAdornment position="end">
