@@ -3,7 +3,6 @@ import { LocalFile, LocalFileTree } from "../file.js"
 import { type MeditreePlugin } from "../server.js"
 
 export const HLSMediaType = "application/x-mpegURL"
-// eslint-disable-next-line @typescript-eslint/dot-notation
 interface HLSPluginConfig {
   /**
    * Whether to hide the directory of .ts files for m3u8 index.
@@ -14,7 +13,7 @@ interface HLSPluginConfig {
 export default function HLSPlugin(config: HLSPluginConfig): MeditreePlugin {
   const hideTsDir = config.hideTsDir ?? true
   return {
-    onPostGenerated(tree) {
+    onLocalFileTreePostGenerated(tree) {
       if (!hideTsDir) return
       for (let file of tree.visit((name, file) => {
         return file instanceof LocalFile && file["*type"] === HLSMediaType

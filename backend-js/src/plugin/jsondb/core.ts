@@ -3,7 +3,6 @@ import { uniqueToken } from "../../ioc.js"
 import { createLogger } from "../../logger.js"
 import { JsonDB, Config } from "node-json-db"
 
-// eslint-disable-next-line @typescript-eslint/dot-notation
 interface JsonDbPluginConfig {
   /**
    * "meditree-jsondb" by default.

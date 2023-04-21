@@ -135,11 +135,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   // Phrase 14: create MeditreeNode and attach plugins to it.
   const node = new MeditreeNode()
   node.plugins = plugins
-  const fileTypes = Array.from(Object.values(config.fileType))
-  node.subNodeFilter = (file) => {
-    return !file["*type"] || fileTypes.includes(file["*type"])
-  }
-
+  
   // Phrase 15: plugins patch the MeditreeNode setup.
   for (const plugin of plugins) {
     await plugin.setupMeditreeNode?.(node)
@@ -335,7 +331,7 @@ export interface MeditreePlugin extends FileTreePlugin {
 
   onRegisterExpressHandler?(app: express.Express): Promise<void>
 
-  onPostGenerated?(tree: LocalFileTree): void
+  onLocalFileTreePostGenerated?(tree: LocalFileTree): void
 
   /**
    * @param tree the entire file tree will be sent to both clients and parent nodes.

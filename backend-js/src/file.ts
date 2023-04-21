@@ -106,7 +106,7 @@ export class LocalFileTree implements FileTreeLike {
       const currentPart = pathParts[index]
       cur = cur.name2File.get(currentPart)
     }
-    
+
     if (cur instanceof LocalFile) {
       return new ResolvedFile(cur, pathParts.join("/"))
     } else {
@@ -170,7 +170,11 @@ export class LocalFileTree implements FileTreeLike {
  * Don't mutate the file tree during filtering.
  * @returns a new tree that contains filtered but still the same instances.
  */
-export function filterFileTreeJson(tree: FileTree, filter: (file: File | FileTree) => boolean): FileTree {
+export function filterFileTreeJson(
+  tree: FileTree,
+  fileFilter: (file: File) => boolean,
+  dirFilter?: (dir: FileTree) => boolean
+): FileTree {
   const filteredTree: FileTree = {}
   if (tree["*hide"]) {
     filteredTree["*hide"] = true
@@ -178,13 +182,13 @@ export function filterFileTreeJson(tree: FileTree, filter: (file: File | FileTre
   for (const [name, fileOrSubtree] of Object.entries(tree)) {
     // it's a file
     if (fileOrSubtree["*type"]) {
-      if (filter(fileOrSubtree as File)) {
+      if (fileFilter(fileOrSubtree as File)) {
         filteredTree[name] = fileOrSubtree
       }
     } else {
       // it's a folder
-      if (filter(fileOrSubtree as FileTree)) {
-        const filteredSubtree = filterFileTreeJson(fileOrSubtree as FileTree, filter)
+      if (dirFilter === undefined || dirFilter(fileOrSubtree as FileTree)) {
+        const filteredSubtree = filterFileTreeJson(fileOrSubtree as FileTree, fileFilter, dirFilter)
         if (Object.keys(filteredSubtree).length > 0) {
           filteredTree[name] = filteredSubtree
         }

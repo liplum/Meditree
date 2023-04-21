@@ -8,6 +8,7 @@ import MinifyPlugin from "./plugin/minify.js"
 import StatisticsPlugin from "./plugin/statistics.js"
 import WatchPlugin from "./plugin/watch.js"
 import AuthPlugin from "./plugin/auth.js"
+import LimiterPlugin from "./plugin/limiter.js"
 // mongoDB
 import MongoDBPlugin from "./plugin/mongodb/core.js"
 import MongoDBUserPlugin from "./plugin/mongodb/user-storage.js"
@@ -23,6 +24,8 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
   registry.statistics = (config) => StatisticsPlugin(config)
   registry.watch = (config) => WatchPlugin(config)
   registry.auth = (config) => AuthPlugin(config)
+  registry.limiter = (config) => LimiterPlugin(config)
+
   // mongoDB
   registry.mongodb = (config) => MongoDBPlugin(config)
   registry["mongodb-user"] = (config) => MongoDBUserPlugin(config)

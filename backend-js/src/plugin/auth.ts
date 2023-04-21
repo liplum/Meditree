@@ -6,7 +6,6 @@ import jwt, { type JwtPayload } from "jsonwebtoken"
 import { createLogger } from "../logger.js"
 import { type Request } from "express"
 
-// eslint-disable-next-line @typescript-eslint/dot-notation
 interface AuthPluginConfig {
   /**
    * "2h" by default.

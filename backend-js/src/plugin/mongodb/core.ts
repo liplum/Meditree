@@ -3,7 +3,6 @@ import { type MeditreePlugin } from "../../server.js"
 import { uniqueToken } from "../../ioc.js"
 import { createLogger } from "../../logger.js"
 
-// eslint-disable-next-line @typescript-eslint/dot-notation
 interface MongoDbPluginConfig {
   url: string
   /**

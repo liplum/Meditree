@@ -2,7 +2,6 @@ import { TYPE as MeditreeType, type MeditreePlugin } from "../../server.js"
 import { type User } from "../../user.js"
 import { TYPE as JsonDBType } from "./core.js"
 export const HLSMediaType = "application/x-mpegURL"
-// eslint-disable-next-line @typescript-eslint/dot-notation
 interface JsonDBUserPluginConfig {
   /**
    * "/users" by default.
