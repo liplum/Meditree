@@ -60,7 +60,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
               return
             }
             if (await storage.getUser(account) === null) {
-              res.status(401).send("No Such Account")
+              res.status(401).send("Token Invalid")
               return
             }
             next()
