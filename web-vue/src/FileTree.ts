@@ -62,7 +62,6 @@ export class DirectoryInfo implements FileSystemObject {
 interface File {
   "*type": string;
   "*hide"?: boolean;
-  path?: string;
   size?: string;
 }
 
@@ -79,8 +78,7 @@ export function parseFileTree(baseUrl: string, tree: { name: string, root: Direc
     fi.name = name;
     fi.type = file["*type"];
     fi.hidden = file["*hide"] || false;
-    fi.path = file.path ??
-      (parent ? `${parent.path}/${name}` : name)
+    fi.path = parent ? `${parent.path}/${name}` : name
     fi.url = `${baseUrl}/${fi.path}`
     fi.size = file.size;
     return fi;

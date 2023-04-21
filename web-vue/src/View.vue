@@ -27,7 +27,7 @@ onMounted(() => {
 })
 const drawer = ref(true)
 const selectedFile = computed(() => {
-  const filePath = router.currentRoute.value.query.file as string
+  const filePath = decodeURIComponent(router.currentRoute.value.query.file as string)
   if (filePath) {
     const found = root.value.find(filePath)
     return found instanceof FileInfo ? found : null
@@ -46,7 +46,7 @@ function onSelecteFile(file: FileInfo) {
   router.push({
     path: "/view",
     query: {
-      file: file.path,
+      file: encodeURIComponent(file.path),
     }
   })
 }
