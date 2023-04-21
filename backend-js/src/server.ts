@@ -192,14 +192,13 @@ export async function startServer(config: AppConfig): Promise<void> {
   })
 
   app.get("/file(/*)", userService.middleware, async (req, res) => {
-    let uri: string
+    let path: string = removePrefix(req.baseUrl + req.path, "/file/")
     try {
-      uri = decodeURI(req.baseUrl + req.path)
+      path = decodeURIComponent(path)
     } catch (e) {
       res.status(400).send("URI Invalid")
       return
     }
-    let path = removePrefix(uri, "/file/")
     path = removeSuffix(path, "/")
     const resolved = node.resolveFile(path.split("/"))
     if (!resolved?.inner?.["*type"]) {
