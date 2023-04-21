@@ -1,11 +1,3 @@
-export function listUrl(baseUrl, passcode) {
-  if (passcode) {
-    return `${baseUrl}/list?passcode=${passcode}`
-  } else {
-    return `${baseUrl}/list`
-  }
-}
-
 export function reolsveFileUrl(baseUrl, path, passcode) {
   if (passcode) {
     return encodeURI(`${baseUrl}/file/${path}?passcode=${passcode}`)

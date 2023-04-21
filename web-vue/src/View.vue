@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import DisplayBoard from "./Display/DisplayBoard.vue";
-import ConnectDialog from "./ConnectDialog.vue";
 import { useDisplay } from 'vuetify'
 import Explorer from "./Explorer/Explorer.vue";
 import { ref } from "vue";
@@ -12,18 +11,17 @@ function createRoot(): DirectoryInfo {
   return dir
 }
 const root = ref(createRoot())
-const backend = "http://localhost:81"
 // for testing
-fetch(`${backend}/list`, { method: "GET" })
+fetch(`/list`, { method: "GET" })
   .then((res) => res.json())
   .then((data) => {
-    const fileTree = parseFileTree(`${backend}/file`, data)
+    const fileTree = parseFileTree(`/file`, data)
     root.value = fileTree
   });
 const drawer = ref(true)
 const selectedFile = ref<FileInfo>()
 function onSelecteFile(file: FileInfo) {
-  console.log(file)
+  console.log(file) 
   selectedFile.value = file
 }
 const display = useDisplay()
