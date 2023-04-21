@@ -5,10 +5,7 @@ import {
   redirect,
   Form,
 } from "react-router-dom"
-import {
-  backend,
-  updatePageTitle
-} from "./Env.js"
+import { updatePageTitle } from "./Env.js"
 import "./Login.css"
 import { i18n } from "./I18n.js"
 import { Visibility, VisibilityOff } from "@mui/icons-material"
@@ -20,7 +17,7 @@ import Cookies from "js-cookie"
 export async function action({ request }) {
   const formData = await request.formData()
   const { account, password } = Object.fromEntries(formData)
-  const loginRes = await fetch(backend.loginUrl, {
+  const loginRes = await fetch("/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

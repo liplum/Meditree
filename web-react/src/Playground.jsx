@@ -4,7 +4,6 @@ import { isMobile } from "react-device-detect"
 import { AstrologyContext, FileNavigationContext, ResponsiveAppBar } from "./View"
 import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
 import { StarBorder, Star } from "@mui/icons-material"
-import { backend } from "./Env"
 import useForceUpdate from "use-force-update"
 import { i18n } from "./I18n"
 import ReactMarkdown from "react-markdown"
@@ -189,7 +188,7 @@ function Markdown({ src, alt, parentDir }) {
           if (uri.startsWith("http://") || uri.startsWith("https://")) {
             return uri
           } else {
-            return backend.reolsveFileUrl(`${parentDir}/${uri}`)
+            return `file/${encodeURIComponent(`${parentDir}/${uri}`)}`
           }
         }}
       >

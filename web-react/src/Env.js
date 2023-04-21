@@ -1,16 +1,5 @@
-import { removePrefix } from "./Utils"
-
 export function updatePageTitle(title) {
   document.title = `${title} - Meditree`
-}
-export const backend = {
-  loginUrl: "/login",
-  reolsveFileUrl(path) {
-    if (path.startsWith("/")) {
-      path = removePrefix(path, "/")
-    }
-    return encodeURI(`/file/${path}`)
-  },
 }
 
 export const storage = {

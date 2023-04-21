@@ -1,5 +1,3 @@
-import { backend } from "./Env"
-
 export function createDelegate({ name, root, }) {
   let key = 0
   const rootRenderTree = {
@@ -26,12 +24,12 @@ export function createDelegate({ name, root, }) {
           isLeaf: true,
           title: name,
           key: curKey,
-          path: file.path ?? `${curDir.path}/${name}`,
+          path: curDir ? `${curDir.path}/${name}` : name,
           type: file["*type"],
           size: file.size,
           tracking: [...curDir.tracking, curKey],
         }
-        fileObj.url = backend.reolsveFileUrl(fileObj.path)
+        fileObj.url = `file/${encodeURIComponent(fileObj.path)}`
         path2File.set(fileObj.path, fileObj)
         key2File.set(curKey, fileObj)
         curDir.children.push(fileObj)
@@ -40,7 +38,7 @@ export function createDelegate({ name, root, }) {
         const dirObj = {
           key: curKey,
           title: name,
-          path: `${curDir.path}/${name}`,
+          path: curDir && curDir !== rootRenderTree ? `${curDir.path}/${name}` : name,
           children: [],
           tracking: [...curDir.tracking, curKey],
         }
