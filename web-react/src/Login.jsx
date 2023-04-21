@@ -5,10 +5,9 @@ import {
   redirect,
   Form,
 } from "react-router-dom"
-
 import {
   backend,
-  storage, updatePageTitle
+  updatePageTitle
 } from "./Env.js"
 import "./Login.css"
 import { i18n } from "./I18n.js"
@@ -21,10 +20,6 @@ import Cookies from "js-cookie"
 export async function action({ request }) {
   const formData = await request.formData()
   const { account, password } = Object.fromEntries(formData)
-  storage.lastConnected = {
-    account,
-    password,
-  }
   const loginRes = await fetch(backend.loginUrl, {
     method: "POST",
     headers: {
