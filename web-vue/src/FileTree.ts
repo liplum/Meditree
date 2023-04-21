@@ -3,6 +3,7 @@ export interface FileSystemObject {
   name: string;
   hidden: boolean
 }
+
 export class FileInfo implements FileSystemObject {
   parent?: DirectoryInfo
   name: string

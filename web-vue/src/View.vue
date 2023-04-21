@@ -2,7 +2,7 @@
 import DisplayBoard from "./Display/DisplayBoard.vue";
 import { useDisplay } from 'vuetify'
 import Explorer from "./Explorer/Explorer.vue";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { DirectoryInfo, FileInfo, parseFileTree } from "./FileTree";
 import { useRouter } from "vue-router"
 import { computed } from "@vue/reactivity";
@@ -28,15 +28,25 @@ const drawer = ref(true)
 const selectedFSO = computed(() => {
   const filePath = router.currentRoute.value.query.file as string
   if (filePath) {
-    const found = root.value.find(filePath)
-    console.log(found)
-    return found
+    return root.value.find(filePath)
   } else {
     return null
   }
 })
-const selectedFile = computed(() => selectedFSO.value instanceof FileInfo ? selectedFSO.value : undefined)
-const selectedDir = computed(() => selectedFSO.value instanceof DirectoryInfo ? selectedFSO.value : undefined)
+const selectedDir = ref()
+watch(selectedFSO, (fso, oldFso) => {
+  console.log("fso", fso)
+  console.log("oldFso", oldFso)
+  if (fso instanceof FileInfo) {
+    if (fso.parent) {
+      selectedDir.value = fso.parent
+    } else {
+      selectedDir.value = root.value
+    }
+  } else if (fso instanceof DirectoryInfo) {
+    selectedDir.value = fso
+  }
+})
 function onSelecteFile(file: FileInfo) {
   router.push({
     path: "/view",
@@ -53,10 +63,10 @@ const breakpoint = display.mdAndDown
 <template>
   <v-layout>
     <v-navigation-drawer v-model="drawer" :clipped="breakpoint" :width="breakpoint ? 320 : 600">
-      <Explorer :root="root" @select-file="onSelecteFile"></Explorer>
+      <Explorer :root="root" v-model="selectedDir" @select-file="onSelecteFile"></Explorer>
     </v-navigation-drawer>
     <v-main style="height:100vh;">
-      <DisplayBoard :file="selectedFile">
+      <DisplayBoard :file="selectedFSO instanceof FileInfo ? selectedFSO : undefined">
         <template #app-bar-pre v-if="breakpoint">
           <v-app-bar-nav-icon @click="drawer = !drawer" />
         </template>

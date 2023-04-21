@@ -5,41 +5,29 @@ import DirectoryView, { SearchDelegate } from "./DirectoryView.vue";
 import { computed } from "@vue/reactivity";
 const props = defineProps<{
   root: DirectoryInfo;
+  modelValue: DirectoryInfo;
 }>();
 const emit = defineEmits<{
   (e: "selectFile", file: FileInfo): void
+  (e: "update:modelValue", value: DirectoryInfo): void
 }>()
-const curDir = ref<DirectoryInfo>(props.root)
 const search = ref()
 watch(() => props.root, (value, old) => {
-  curDir.value = value
+  emit('update:modelValue', value)
 })
 function onDirClick(dir: DirectoryInfo) {
-  curDir.value = dir
+  emit('update:modelValue', dir)
 }
 function onNaviBack() {
-  const parent = curDir.value.parent
+  const parent = props.modelValue.parent
   if (parent) {
-    curDir.value = parent
+    emit('update:modelValue', parent)
   }
 }
-const address = computed(() => {
-  let addres = ""
-  let cur: DirectoryInfo | undefined = curDir.value
-  while (cur) {
-    if (cur.isRoot) {
-      addres += "/"
-    } else {
-      addres += cur.name
-    }
-    cur = cur.parent
-  }
-  return addres
-})
 const searchDelegate = computed<SearchDelegate | undefined>(() => {
   if (search.value) {
     return (file) => {
-      return file.name.toLocaleLowerCase().includes(search.value.toLocaleLowerCase())
+      return file.name.trim().toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase())
     }
   }
   return
@@ -48,14 +36,14 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
 <template>
   <v-app>
     <v-app-bar prominent>
-      <template v-if="curDir.isRoot">
+      <template v-if="props.modelValue?.isRoot">
         <v-app-bar-nav-icon disabled icon="mdi-home" />
       </template>
       <template v-else>
         <v-app-bar-nav-icon @click="onNaviBack" icon="mdi-arrow-left" />
       </template>
       <v-app-bar-title>
-        {{ curDir?.name }}
+        {{ props.modelValue?.name }}
       </v-app-bar-title>
       <v-spacer></v-spacer>
       <template #append>
@@ -64,8 +52,8 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
       </template>
     </v-app-bar>
     <v-main style="height: 100vh;overflow-y:auto;">
-      <template v-if="curDir">
-        <DirectoryView @click-dir="onDirClick" :dir="curDir" @click-file="emit('selectFile', $event)"
+      <template v-if="props.modelValue">
+        <DirectoryView @click-dir="onDirClick" :dir="props.modelValue" @click-file="emit('selectFile', $event)"
           :search-delegate="searchDelegate" />
       </template>
     </v-main>
