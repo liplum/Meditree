@@ -102,14 +102,11 @@ export class LocalFileTree implements FileTreeLike {
  */
   resolveFile(pathParts: string[]): ResolvedFile | null {
     let cur: LocalFile | LocalFileTree | undefined = this
-    let index = 0
-
-    while (index < pathParts.length && cur instanceof LocalFileTree) {
+    for (let index = 0; index < pathParts.length && cur instanceof LocalFileTree; index++) {
       const currentPart = pathParts[index]
       cur = cur.name2File.get(currentPart)
-      index++
     }
-
+    
     if (cur instanceof LocalFile) {
       return new ResolvedFile(cur, pathParts.join("/"))
     } else {

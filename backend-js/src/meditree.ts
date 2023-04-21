@@ -32,13 +32,10 @@ class SubNode implements FileTreeLike {
   resolveFile(pathParts: string[]): ResolvedFile | null {
     if (!this.tree) return null
     let cur: File | FileTree = this.tree
-    let curIndex = 0
-
-    while (curIndex < pathParts.length) {
+    for (let curIndex = 0; curIndex < pathParts.length; curIndex++) {
       const curPart = pathParts[curIndex]
       if (cur[curPart] === undefined) return null
       cur = cur[curPart]
-      curIndex++
     }
 
     if (cur["*type"]) {
