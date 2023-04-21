@@ -20,8 +20,8 @@ export const i18n = new LocalizedStrings({
         incorrectPassword: "Incorrect Passcode",
       }
     },
-    connect: {
-      title: "Connect to Meditree Server",
+    login: {
+      title: "Log in Meditree Server",
       account: "Account",
       password: "Password",
       accountPlaceholder: "Optional",
@@ -48,8 +48,8 @@ export const i18n = new LocalizedStrings({
         incorrectPassword: "密码不正确",
       }
     },
-    connect: {
-      title: "连接 Meditree 服务器",
+    login: {
+      title: "登入 Meditree 服务器",
       account: "账号",
       password: "密码",
       accountPlaceholder: "可选",

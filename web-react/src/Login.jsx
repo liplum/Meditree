@@ -44,30 +44,30 @@ export async function action({ request }) {
 }
 export function LoginDialog(props) {
   useEffect(() => {
-    updatePageTitle(i18n.connect.title)
+    updatePageTitle(i18n.login.title)
   }, [])
   const [showPasscode, setShowPasscode] = useState(false)
   return (
     <Card id="login-dialog">
-      <h1>{i18n.connect.title}</h1>
+      <h1>{i18n.login.title}</h1>
       <Form method="post" id="login-form" style={{
         flexDirection: "column", display: "flex",
       }}>
         <FormControl variant="outlined">
-          <InputLabel htmlFor="outlined-adornment">{i18n.connect.account}</InputLabel>
+          <InputLabel htmlFor="outlined-adornment">{i18n.login.account}</InputLabel>
           <OutlinedInput
             type='text'
-            label={i18n.connect.account}
-            placeholder={i18n.connect.accountPlaceholder}
+            label={i18n.login.account}
+            placeholder={i18n.login.accountPlaceholder}
             name="account"
           />
         </FormControl>
         <FormControl variant="outlined">
-          <InputLabel htmlFor="outlined-adornment-password">{i18n.connect.password}</InputLabel>
+          <InputLabel htmlFor="outlined-adornment-password">{i18n.login.password}</InputLabel>
           <OutlinedInput
             type={showPasscode ? "text" : "password"}
-            label={i18n.connect.password}
-            placeholder={i18n.connect.passwordPlaceholder}
+            label={i18n.login.password}
+            placeholder={i18n.login.passwordPlaceholder}
             name="password"
             endAdornment={
               <InputAdornment position="end">
@@ -83,7 +83,7 @@ export function LoginDialog(props) {
           />
         </FormControl>
         <DialogActions>
-          <Button type="submit">{i18n.connect.loginBtn}</Button>
+          <Button type="submit">{i18n.login.loginBtn}</Button>
         </DialogActions>
       </Form>
     </Card>

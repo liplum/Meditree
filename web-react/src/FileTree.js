@@ -19,7 +19,7 @@ export function createDelegate({ name, root, }) {
       const curKey = key++
       // if file has a type, it presents a file
       if (file["*type"]) {
-        // fileObj is for both TreeVie component and actual FileTree.
+        // fileObj is for both TreeView component and actual FileTree.
         const fileObj = {
           name,
           isLeaf: true,
