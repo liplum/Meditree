@@ -70,7 +70,7 @@ interface Directory {
   [name: string]: File | Directory | any;
 }
 
-export function parseFileTree(baseUrl: string, tree: { name: string, root: Directory }): DirectoryInfo {
+export function parseFileTree(tree: { name: string, root: Directory }): DirectoryInfo {
 
   function parseFile(name: string, file: File, parent?: DirectoryInfo): FileInfo {
     const fi = new FileInfo();
@@ -79,7 +79,7 @@ export function parseFileTree(baseUrl: string, tree: { name: string, root: Direc
     fi.type = file["*type"];
     fi.hidden = file["*hide"] || false;
     fi.path = parent ? `${parent.path}/${name}` : name
-    fi.url = `${baseUrl}/${fi.path}`
+    fi.url = `file/${fi.path}`
     fi.size = file.size;
     return fi;
   }

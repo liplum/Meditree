@@ -20,7 +20,7 @@ onMounted(() => {
   fetch(`/list`, { method: "GET" })
     .then((res) => res.json())
     .then((data) => {
-      const fileTree = parseFileTree(`/file`, data)
+      const fileTree = parseFileTree(data)
       root.value = fileTree
       selectedDir.value = fileTree
     });
