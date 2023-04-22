@@ -24,5 +24,4 @@ yarn-error.log*
 meditree.json
 meditree-cache
 .log
-meditree-statistics.json
 meditree-jsondb
