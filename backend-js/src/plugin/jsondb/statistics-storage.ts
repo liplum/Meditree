@@ -26,6 +26,7 @@ export default function JsonDBStatisticsPlugin(config: JsonDBStatisticsPluginCon
           const path = encodeURIComponent(filePath)
           if (await statistics.exists(path)) {
             const entry = await statistics.getData(path) as StatisticsEntry
+            entry.view ??= 0
             entry.view += 1
             await statistics.push(path, entry)
           } else {
