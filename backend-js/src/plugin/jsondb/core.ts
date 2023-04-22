@@ -54,7 +54,7 @@ export default function JsonDbPlugin(config: JsonDbPluginConfig): MeditreePlugin
               config.syncOnSave,
             ))
             name2DB.set(name, db)
-            log.info(`${name} collection is loaded.`)
+            log.info(`"${name}" collection is loaded.`)
           }
           return db
         }
