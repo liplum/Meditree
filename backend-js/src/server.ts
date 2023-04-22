@@ -49,9 +49,6 @@ export async function startServer(config: AppConfig): Promise<void> {
     ? await resolvePluginList(pluginTypes, config.plugin,
       (name) => {
         log.info(`Plugin[${name}] resgisered.`)
-      },
-      (name) => {
-        log.error(`Plugin[${name}] doesn't exist.`)
       })
     : []
 
