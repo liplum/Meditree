@@ -4,23 +4,23 @@ import { TYPE as JsonDBType } from "./core.js"
 export const HLSMediaType = "application/x-mpegURL"
 interface JsonDBUserPluginConfig {
   /**
-   * "/users" by default.
+   * "users" by default.
    */
-  path?: string
+  collection?: string
 }
 
 /**
  * Plugin dependency: `jsondb`.
  */
 export default function JsonDbUserPlugin(config: JsonDBUserPluginConfig): MeditreePlugin {
-  const path = config.path ?? "/users"
+  const collection = config.collection ?? "users"
   function getUserPath(user: User | string): string {
-    return typeof user === "string" ? `${path}/${user}` : `${path}/${user.account}`
+    return typeof user === "string" ? `/${user}` : `/${user.account}`
   }
   return {
     onRegisterService(container) {
       const jsonDB = container.get(JsonDBType.JsonDB)
-      const db = jsonDB.db
+      const db = jsonDB.loadDB(collection)
       container.bind(MeditreeType.UserStorage).toValue({
         async addUser(user) {
           const userPath = getUserPath(user)

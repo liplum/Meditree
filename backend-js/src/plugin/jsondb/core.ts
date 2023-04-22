@@ -7,7 +7,7 @@ interface JsonDbPluginConfig {
   /**
    * "meditree-jsondb" by default.
    */
-  filename: string
+  dir: string
   /**
    * true by default.
    */
@@ -23,7 +23,7 @@ interface JsonDbPluginConfig {
 }
 
 export interface JsonDbService {
-  db: JsonDB
+  loadDB(name: string): JsonDB
 }
 
 export const TYPE = {
@@ -32,28 +32,31 @@ export const TYPE = {
 
 export default function JsonDbPlugin(config: JsonDbPluginConfig): MeditreePlugin {
   const log = createLogger("JsonDB")
-  let db: JsonDB
+  const dir = config.dir ?? "meditree-jsondb"
+  const name2DB = new Map<string, JsonDB>()
   return {
     async init() {
-      const filename = config.filename ?? "meditree-jsondb"
-      db = new JsonDB(
-        new Config(
-          filename,
-          config.saveOnPush,
-          config.humanReadable,
-          "/",
-          config.syncOnSave,
-        )
-      )
-      log.info(`JsonDB is loaded from ${filename}`)
+      log.info(`JsonDB will load from ${dir}`)
     },
     onExit() {
       log.info("JsonDB closed.")
     },
     onRegisterService(container) {
-      if (db === undefined) throw new Error("JsonDB is not initialized.")
       container.bind(TYPE.JsonDB).toValue({
-        db
+        loadDB(name) {
+          let db = name2DB.get(name)
+          if (db === undefined) {
+            db = new JsonDB(new Config(
+              `${dir}/${name}`,
+              config.saveOnPush,
+              config.humanReadable,
+              "/",
+              config.syncOnSave,
+            ))
+            name2DB.set(name, db)
+          }
+          return db
+        }
       })
     },
   }
