@@ -179,9 +179,12 @@ export class MeditreeNode extends EventEmitter implements FileTreeLike {
     const obj: FileTree = {
       ...this.localTree?.json
     }
-    // TODO: What if node name conflicts with a file or a folder?
     for (const node of this.name2Child.values()) {
       if (node.tree) {
+        // warn if node name conflicts with a local file.
+        if (obj[node.name]) {
+          this.log.warn(`Node name "${node.name}]" conflicts with a local file.`)
+        }
         obj[node.name] = node.tree
       }
     }
