@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { EmptyHostTree, type FileTreePlugin, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
 import { type AppConfig, type AsParentConfig, type AsChildConfig } from "./config.js"
-import express, { type Request, type Response } from "express"
+import express, { type Handler, type Request, type Response } from "express"
 import { cloneFileTreeJson, type FileTree, type LocalFileTree, type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo, type ReadStreamOptions } from "./meditree.js"
@@ -11,14 +11,16 @@ import { type PluginRegistry, resolvePluginList } from "./plugin.js"
 import { type Readable } from "stream"
 import http, { type Server } from "http"
 import { Container, uniqueToken } from "./ioc.js"
-import { type AuthService, type UserStorageService } from "./user.js"
 import cookieParser from "cookie-parser"
 import { registerBuiltinPlugins } from "./builtin-plugin.js"
 
 export const TYPE = {
   HostTree: uniqueToken<(options: HostTreeOptions) => IHostTree>("HostTree"),
-  UserStorage: uniqueToken<UserStorageService>("UserStorage"),
   Auth: uniqueToken<AuthService>("Auth")
+}
+
+export interface AuthService {
+  middleware: Handler
 }
 
 export async function startServer(config: AppConfig): Promise<void> {
@@ -135,7 +137,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   // Phrase 14: create MeditreeNode and attach plugins to it.
   const node = new MeditreeNode()
   node.plugins = plugins
-  
+
   // Phrase 15: plugins patch the MeditreeNode setup.
   for (const plugin of plugins) {
     await plugin.setupMeditreeNode?.(node)

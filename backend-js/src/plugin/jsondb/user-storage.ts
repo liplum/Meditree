@@ -1,5 +1,5 @@
-import { TYPE as MeditreeType, type MeditreePlugin } from "../../server.js"
-import { type User } from "../../user.js"
+import { type MeditreePlugin } from "../../server.js"
+import { TYPE as AuthType, type User } from "../auth.js"
 import { TYPE as JsonDBType } from "./core.js"
 export const HLSMediaType = "application/x-mpegURL"
 interface JsonDBUserPluginConfig {
@@ -21,7 +21,7 @@ export default function JsonDbUserPlugin(config: JsonDBUserPluginConfig): Meditr
     onRegisterService(container) {
       const jsonDB = container.get(JsonDBType.JsonDB)
       const db = jsonDB.loadDB(collection)
-      container.bind(MeditreeType.UserStorage).toValue({
+      container.bind(AuthType.UserStorage).toValue({
         async addUser(user) {
           const userPath = getUserPath(user)
           if (await db.exists(userPath)) {
