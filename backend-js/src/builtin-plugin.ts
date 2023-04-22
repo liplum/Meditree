@@ -1,4 +1,4 @@
-import { type PluginConfig, type PluginConstructor, type PluginRegistry } from "./plugin.js"
+import { type PluginMetaclass, type PluginConstructor, type PluginRegistry } from "./plugin.js"
 import { type MeditreePlugin } from "./server.js"
 
 import CachePlugin from "./plugin/cache.js"
@@ -18,14 +18,16 @@ import JsonDBPlugin from "./plugin/jsondb/core.js"
 import JsonDBUserPlugin from "./plugin/jsondb/user-storage.js"
 import JsonDBStatisticsPlugin from "./plugin/jsondb/statistics-storage.js"
 
+type Creator = PluginConstructor<MeditreePlugin>
+
+type Metaclass = PluginMetaclass<MeditreePlugin>
+
 export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>): void {
   registry.cache = (config) => CachePlugin(config)
   registry.homepage = (config) => HomepagePlugin(config)
   registry.hls = (config) => HLSPlugin(config)
   registry.minify = (config) => MinifyPlugin(config)
-  registry.statistics = (config) => StatisticsPlugin(config)
   registry.watch = (config) => WatchPlugin(config)
-  registry.auth = (config) => AuthPlugin(config)
   registry.limiter = (config) => LimiterPlugin(config)
 
   // mongoDB
@@ -36,13 +38,50 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
   registry.jsondb = (config) => JsonDBPlugin(config)
   registry["jsondb-user"] = withDefaultDp(JsonDBUserPlugin, "jsondb")
   registry["jsondb-statistics"] = withDefaultDp(JsonDBStatisticsPlugin, "jsondb")
+
+  // has dependencies
+  registry.statistics = mapEngine(StatisticsPlugin, {
+    jsondb: ["jsondb", "jsondb-statistics"],
+    mongodb: ["mongodb", "mongodb-statistics"],
+  })
+  registry.auth = mapEngine(AuthPlugin, {
+    jsondb: ["jsondb", "jsondb-user"],
+    mongodb: ["mongodb", "mongodb-user"],
+  })
 }
 
-function withDefaultDp(ctor: PluginConstructor<MeditreePlugin>, ...defaults: string[]): PluginConstructor<MeditreePlugin> {
-  return (config: PluginConfig) => {
-    if (!config.depends?.length) {
-      config.depends = defaults
+function withDefaultDp(create: Creator, ...defaults: string[]): Metaclass {
+  return {
+    create,
+    preprocess(name, config, all) {
+      if (!config.depends?.length) {
+        config.depends = defaults
+      }
+      for (const defaultPluginName of defaults) {
+        all[defaultPluginName] ??= {}
+      }
+    },
+  }
+}
+
+function mapEngine(create: Creator, engines: Record<string, string[]>): Metaclass {
+  return {
+    create,
+    preprocess(name, config, all) {
+      const dependencies = engines[config.engine]
+      if (dependencies?.length) {
+        config.depends ??= []
+        for (const dp of dependencies) {
+          addUnique(config.depends, dp)
+          all[dp] ??= {}
+        }
+      }
     }
-    return ctor(config)
+  }
+}
+
+function addUnique(list: any[], e: any): void {
+  if (!list.includes(e)) {
+    list.push(e)
   }
 }

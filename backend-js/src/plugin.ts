@@ -1,9 +1,10 @@
 import fs from "fs"
 import { pathToFileURL } from "url"
 
-export type PluginConstructor<TPlugin, TConfig extends PluginConfig = any> = (config: TConfig) => TPlugin
-
-export type PluginRegistry<TPlugin, TConfig extends PluginConfig = any> = Record<string, (config: TConfig) => TPlugin>
+export type PluginRegistry<
+  TPlugin,
+  TConfig extends PluginConfig = any
+> = Record<string, PluginProvider<TPlugin, TConfig>>
 
 export interface PluginConfig {
   /**
@@ -16,10 +17,20 @@ export interface PluginConfig {
   [key: string]: any
 }
 
+export type PluginConstructor<TPlugin, TConfig extends PluginConfig = any> = (config: TConfig) => TPlugin
+export interface PluginMetaclass<TPlugin, TConfig extends PluginConfig = any> {
+  preprocess?(name: string, config: TConfig, all: Record<string, PluginConfig>): void
+  create: PluginConstructor<TPlugin, TConfig>
+}
+export type PluginProvider<
+  TPlugin,
+  TConfig extends PluginConfig = any
+> = PluginConstructor<TPlugin, TConfig> | PluginMetaclass<TPlugin, TConfig>
+
 async function createPlugin<TPlugin>(
-  registry: PluginRegistry<TPlugin>, name: string, config: PluginConfig
+  name: string, config: PluginConfig,
+  ctor?: PluginConstructor<TPlugin>,
 ): Promise<TPlugin | null> {
-  const ctor = registry[name]
   if (ctor) {
     // for built-in plugins
     return ctor(typeof config === "object" ? config : {})
@@ -33,6 +44,18 @@ async function createPlugin<TPlugin>(
   }
 }
 
+function getCtor<TPlugin, TConfig extends PluginConfig = any>(
+  maybe?: PluginConstructor<TPlugin, TConfig> | PluginMetaclass<TPlugin, TConfig>
+): PluginConstructor<TPlugin, TConfig> | undefined {
+  if (typeof maybe === "object") {
+    return maybe.create
+  }
+  if (typeof maybe === "function") {
+    return maybe
+  }
+  return
+}
+
 /**
  * Resolves a list of plugins and their dependencies.
  * @param plugins A record of plugin configurations keyed by their names.
@@ -44,6 +67,17 @@ export async function resolvePluginList<TPlugin>(
   onFound?: (name: string, plugin: TPlugin) => void,
   onNotFound?: (name: string) => void,
 ): Promise<TPlugin[]> {
+  // clear duplicate dependencies
+  for (const [pluginName, config] of Object.entries(plugins)) {
+    const builtinPluginProvider = registry[pluginName]
+    if (typeof builtinPluginProvider === "object") {
+      builtinPluginProvider.preprocess?.(pluginName, config, plugins)
+    }
+    if (config.depends?.length) {
+      config.depends = [...new Set(config.depends)]
+    }
+  }
+
   const name2Resolved = new Map<string, TPlugin>()
 
   /**
@@ -74,14 +108,15 @@ export async function resolvePluginList<TPlugin>(
     }
 
     // Resolve the dependencies of this plugin before adding it to the list of resolved plugins.
-    if (pluginConfig.depends) {
+    if (pluginConfig.depends?.length) {
       for (const dependencyName of pluginConfig.depends) {
         await resolvePluginDependencies(dependencyName, seenPlugins)
       }
     }
 
+    const ctor = getCtor(registry[pluginName])
     // Create the plugin and add it to the list of resolved plugins.
-    const plugin = await createPlugin(registry, pluginName, pluginConfig)
+    const plugin = await createPlugin(pluginName, pluginConfig, ctor)
     if (plugin) {
       name2Resolved.set(pluginName, plugin)
       onFound?.(pluginName, plugin)
