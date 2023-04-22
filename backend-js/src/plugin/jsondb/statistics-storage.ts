@@ -12,7 +12,9 @@ interface JsonDBStatisticsPluginConfig {
 interface StatisticsEntry {
   view: number
 }
-
+/**
+ * Default plugin dependencies: `jsondb`.
+ */
 export default function JsonDBStatisticsPlugin(config: JsonDBStatisticsPluginConfig): MeditreePlugin {
   const collection = config.collection ?? "statistics"
   return {

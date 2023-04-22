@@ -1,4 +1,4 @@
-import { type PluginRegistry } from "./plugin.js"
+import { type PluginConfig, type PluginConstructor, type PluginRegistry } from "./plugin.js"
 import { type MeditreePlugin } from "./server.js"
 
 import CachePlugin from "./plugin/cache.js"
@@ -30,10 +30,19 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
 
   // mongoDB
   registry.mongodb = (config) => MongoDBPlugin(config)
-  registry["mongodb-user"] = (config) => MongoDBUserPlugin(config)
-  registry["mongodb-statistics"] = (config) => MongoDBStatisticsPlugin(config)
+  registry["mongodb-user"] = withDefaultDp(MongoDBUserPlugin, "mongodb")
+  registry["mongodb-statistics"] = withDefaultDp(MongoDBStatisticsPlugin, "mongodb")
   // JsonDB
   registry.jsondb = (config) => JsonDBPlugin(config)
-  registry["jsondb-user"] = (config) => JsonDBUserPlugin(config)
-  registry["jsondb-statistics"] = (config) => JsonDBStatisticsPlugin(config)
+  registry["jsondb-user"] = withDefaultDp(JsonDBUserPlugin, "jsondb")
+  registry["jsondb-statistics"] = withDefaultDp(JsonDBStatisticsPlugin, "jsondb")
+}
+
+function withDefaultDp(ctor: PluginConstructor<MeditreePlugin>, ...defaults: string[]): PluginConstructor<MeditreePlugin> {
+  return (config: PluginConfig) => {
+    if (!config.depends?.length) {
+      config.depends = defaults
+    }
+    return ctor(config)
+  }
 }

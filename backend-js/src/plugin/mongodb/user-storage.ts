@@ -10,7 +10,7 @@ interface MongoDDUserPluginConfig {
 }
 
 /**
- * Plugin dependency: `mongodb`.
+ * Default plugin dependencies: `mongodb`.
  */
 export default function MongoDBUserPlugin(config: MongoDDUserPluginConfig): MeditreePlugin {
   const collection = config.collection ?? "users"

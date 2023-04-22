@@ -1,7 +1,9 @@
 import fs from "fs"
 import { pathToFileURL } from "url"
 
-export type PluginRegistry<TPlugin> = Record<string, (config: any) => TPlugin>
+export type PluginConstructor<TPlugin, TConfig extends PluginConfig = any> = (config: TConfig) => TPlugin
+
+export type PluginRegistry<TPlugin, TConfig extends PluginConfig = any> = Record<string, (config: TConfig) => TPlugin>
 
 export interface PluginConfig {
   /**

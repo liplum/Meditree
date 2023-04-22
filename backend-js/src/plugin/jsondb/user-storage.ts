@@ -10,7 +10,7 @@ interface JsonDBUserPluginConfig {
 }
 
 /**
- * Plugin dependency: `jsondb`.
+ * Default plugin dependencies: `jsondb`.
  */
 export default function JsonDbUserPlugin(config: JsonDBUserPluginConfig): MeditreePlugin {
   const collection = config.collection ?? "users"

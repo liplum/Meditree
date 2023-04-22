@@ -10,6 +10,9 @@ interface MongoDBStatisticsPluginConfig {
   collection?: string
 }
 
+/**
+ * Default plugin dependencies: `mongodb`.
+ */
 export default function MongoDBStatisticsPlugin(config: MongoDBStatisticsPluginConfig): MeditreePlugin {
   const collection = config.collection ?? "statistics"
   return {
