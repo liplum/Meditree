@@ -12,9 +12,11 @@ import LimiterPlugin from "./plugin/limiter.js"
 // mongoDB
 import MongoDBPlugin from "./plugin/mongodb/core.js"
 import MongoDBUserPlugin from "./plugin/mongodb/user-storage.js"
+import MongoDBStatisticsPlugin from "./plugin/mongodb/statistics-storage.js"
 // JsonDB
 import JsonDBPlugin from "./plugin/jsondb/core.js"
 import JsonDBUserPlugin from "./plugin/jsondb/user-storage.js"
+import JsonDBStatisticsPlugin from "./plugin/jsondb/statistics-storage.js"
 
 export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>): void {
   registry.cache = (config) => CachePlugin(config)
@@ -29,7 +31,9 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
   // mongoDB
   registry.mongodb = (config) => MongoDBPlugin(config)
   registry["mongodb-user"] = (config) => MongoDBUserPlugin(config)
+  registry["mongodb-statistics"] = (config) => MongoDBStatisticsPlugin(config)
   // JsonDB
   registry.jsondb = (config) => JsonDBPlugin(config)
   registry["jsondb-user"] = (config) => JsonDBUserPlugin(config)
+  registry["jsondb-statistics"] = (config) => JsonDBStatisticsPlugin(config)
 }
