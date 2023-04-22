@@ -84,7 +84,7 @@ export declare interface MeditreeNode {
 
   emit(event: "file-tree-update", entireFree: FileTree): boolean
   emit(event: "child-node-change", child: SubNode, isAdded: boolean): boolean
-  emit(event: "parent-node-change", parent: ParentNode, isAdded: boolean): this
+  emit(event: "parent-node-change", parent: ParentNode, isAdded: boolean): boolean
 }
 export interface MeditreeNodePlugin {
   onEntireTreeUpdated?(tree: FileTree): FileTree

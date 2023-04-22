@@ -13,10 +13,12 @@ import http, { type Server } from "http"
 import { Container, uniqueToken } from "./ioc.js"
 import cookieParser from "cookie-parser"
 import { registerBuiltinPlugins } from "./builtin-plugin.js"
+import { EventEmitter } from "events"
 
 export const TYPE = {
   HostTree: uniqueToken<(options: HostTreeOptions) => IHostTree>("HostTree"),
-  Auth: uniqueToken<RequestHandler>("Auth")
+  Auth: uniqueToken<RequestHandler>("Auth"),
+  Events: uniqueToken<MeditreeEvents>("Events"),
 }
 
 export async function startServer(config: AppConfig): Promise<void> {
@@ -88,6 +90,10 @@ export async function startServer(config: AppConfig): Promise<void> {
     )
 
   container.bind(TYPE.Auth).toValue((req, res, next) => { next() })
+
+  const events = new EventEmitter() as MeditreeEvents
+
+  container.bind(TYPE.Events).toValue(events)
 
   // Phrase 10: plugins register or override services.
   for (const plugin of plugins) {
@@ -198,12 +204,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       res.status(404).end()
       return
     }
-    for (const plugin of plugins) {
-      if (await plugin.onFileRequested?.(req, res, resolved)) {
-        res.status(400).end()
-        return
-      }
-    }
+    events.emit("file-requested", req, res, resolved)
     const fileType = resolved.inner["*type"]
     res.contentType(fileType)
     const expireTime = new Date(Date.now() + config.cacheMaxAge)
@@ -341,10 +342,11 @@ export interface MeditreePlugin extends FileTreePlugin {
    * @returns undefined if not handled by this plugin.
    */
   onNodeCreateReadStream?(node: MeditreeNode, file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
-
-  /**
-   * @returns whether to prevent streaming {@link file}.
-   */
-  onFileRequested?(req: Request, res: Response, file: ResolvedFile): Promise<void> | Promise<boolean | undefined>
   onExit?(): void
+}
+
+export interface MeditreeEvents extends EventEmitter {
+  on(event: "file-requested", listener: (req: Request, res: Response, file: ResolvedFile) => void): this
+  off(event: "file-requested", listener: (req: Request, res: Response, file: ResolvedFile) => void): this
+  emit(event: "file-requested", req: Request, res: Response, file: ResolvedFile): boolean
 }

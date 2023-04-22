@@ -1,10 +1,19 @@
 import { uniqueToken } from "../ioc.js"
-import { type MeditreePlugin } from "../server.js"
-interface StatisticsPluginConfig {
+import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
 
-}
 export const TYPE = {
   StatisticsStorage: uniqueToken<StatisticsStorageService>("StatisticsStorage")
+}
+
+export interface StatisticsStorageService {
+  increment(filePath: string): Promise<void>
+  getViewCount(filePath: string): Promise<number | undefined>
+}
+interface StatisticsPluginConfig {
+  /**
+   * 
+   */
+  statisticsPath?: string
 }
 
 export default function StatisticsPlugin(config: StatisticsPluginConfig): MeditreePlugin {
@@ -12,14 +21,10 @@ export default function StatisticsPlugin(config: StatisticsPluginConfig): Meditr
   return {
     onRegisterService(container) {
       statistics = container.get(TYPE.StatisticsStorage)
-    },
-    async onFileRequested(req, res, file) {
-      statistics.increment(file.path)
+      const events = container.get(MeditreeType.Events)
+      events.on("file-requested", (req, res, file) => {
+        statistics.increment(file.path)
+      })
     },
   }
-}
-
-export interface StatisticsStorageService {
-  increment(filePath: string): Promise<void>
-  getViewCount(filePath: string): Promise<number | undefined>
 }
