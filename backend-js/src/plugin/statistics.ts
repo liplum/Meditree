@@ -1,3 +1,4 @@
+import { uniqueToken } from "../ioc.js"
 import { type MeditreePlugin } from "../server.js"
 import fs from "fs"
 type StatisticsPluginConfig = JsonBackend
@@ -9,6 +10,10 @@ interface JsonBackend {
    * "meditree-statistics.json" by default.
    */
   path?: string
+}
+
+export const TYPE = {
+  StatisticsStorage: uniqueToken<StatisticsStorageService>("StatisticsStorage")
 }
 
 type Statistics = Record<string, number>
@@ -38,4 +43,9 @@ export default function StatisticsPlugin(config: StatisticsPluginConfig): Meditr
   } else {
     throw new Error(`engine "${config.engine as string}" in statistics plugin is not supported.`)
   }
+}
+
+export interface StatisticsStorageService {
+  increment(filePath: string): Promise<void>
+  getViewCount(filePath: string): Promise<number | undefined>
 }
