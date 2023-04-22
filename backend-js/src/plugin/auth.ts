@@ -43,35 +43,33 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   return {
     onRegisterService(container) {
       storage = container.get(TYPE.UserStorage)
-      container.bind(MeditreeType.Auth).toValue({
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        middleware: async (req, res, next) => {
-          // Get the JWT from the cookie, body or authorization header in a fallback chain.
-          const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
-          if (!token) {
-            res.status(401).send("Token Missing")
-            return
-          }
-          // Handle missing token error
-          // Verify the JWT using the secret key
-          try {
-            const jwtPayload = jwt.verify(token, jwtSecret) as JwtPayload
-            const account = jwtPayload.account
-            if (typeof account !== "string") {
-              res.status(401).send("Token Invalid")
-              return
-            }
-            if (await storage.getUser(account) === null) {
-              res.status(401).send("Token Invalid")
-              return
-            }
-            next()
-          } catch (error) {
+      container.bind(MeditreeType.Auth).toValue(async (req, res, next) => {
+        // Get the JWT from the cookie, body or authorization header in a fallback chain.
+        const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
+        if (!token) {
+          res.status(401).send("Token Missing")
+          return
+        }
+        // Handle missing token error
+        // Verify the JWT using the secret key
+        try {
+          const jwtPayload = jwt.verify(token, jwtSecret) as JwtPayload
+          const account = jwtPayload.account
+          if (typeof account !== "string") {
             res.status(401).send("Token Invalid")
             return
           }
+          if (await storage.getUser(account) === null) {
+            res.status(401).send("Token Invalid")
+            return
+          }
+          next()
+        } catch (error) {
+          res.status(401).send("Token Invalid")
+          return
         }
-      })
+      }
+      )
     },
     async onRegisterExpressHandler(app) {
       app.post("/login", async (req, res) => {

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { EmptyHostTree, type FileTreePlugin, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
 import { type AppConfig, type AsParentConfig, type AsChildConfig } from "./config.js"
-import express, { type Handler, type Request, type Response } from "express"
+import express, { type RequestHandler, type Request, type Response } from "express"
 import { cloneFileTreeJson, type FileTree, type LocalFileTree, type ResolvedFile } from "./file.js"
 import cors from "cors"
 import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo, type ReadStreamOptions } from "./meditree.js"
@@ -16,11 +16,7 @@ import { registerBuiltinPlugins } from "./builtin-plugin.js"
 
 export const TYPE = {
   HostTree: uniqueToken<(options: HostTreeOptions) => IHostTree>("HostTree"),
-  Auth: uniqueToken<AuthService>("Auth")
-}
-
-export interface AuthService {
-  middleware: Handler
+  Auth: uniqueToken<RequestHandler>("Auth")
 }
 
 export async function startServer(config: AppConfig): Promise<void> {
@@ -94,9 +90,7 @@ export async function startServer(config: AppConfig): Promise<void> {
         : new HostTree(options)
     )
 
-  container.bind(TYPE.Auth).toValue({
-    middleware: (req, res, next) => { next() }
-  })
+  container.bind(TYPE.Auth).toValue((req, res, next) => { next() })
 
   // Phrase 10: plugins register or override services.
   for (const plugin of plugins) {
@@ -179,7 +173,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
   })
 
-  const userService = container.get(TYPE.Auth)
+  const authMiddleware = container.get(TYPE.Auth)
 
   // Phrase 18: plugins patch the express app registering.
   for (const plugin of plugins) {
@@ -187,13 +181,13 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   // Phrase 19: express app setup.
-  app.get("/list", userService.middleware, (req, res) => {
+  app.get("/list", authMiddleware, (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
     res.send(fullTreeCache.json)
   })
 
-  app.get("/file(/*)", userService.middleware, async (req, res) => {
+  app.get("/file(/*)", authMiddleware, async (req, res) => {
     let path: string = removePrefix(req.baseUrl + req.path, "/file/")
     try {
       path = decodeURIComponent(path)
