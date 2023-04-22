@@ -8,7 +8,7 @@ export interface LogLevel {
   color?: ChalkInstance
 }
 
-function createLogLevel(
+export function createLogLevel(
   signal: string,
   level: number,
   color?: ChalkInstance,
@@ -18,6 +18,10 @@ function createLogLevel(
     level,
     color,
   }
+}
+
+export function extendsLogLevel(parent: LogLevel, override: Partial<LogLevel>): LogLevel {
+  return { ...parent, ...override }
 }
 
 export const LogLevels = {
@@ -51,9 +55,11 @@ export interface Logger {
   verbose(message: string | object): void
   log(level: LogLevel, message: string | object): void
 }
+
 export function createLogger(channel?: string): Logger {
   return new LoggerImpl(channel,)
 }
+
 class LoggerImpl implements Logger {
   private readonly channel?: string
 
