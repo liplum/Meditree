@@ -19,17 +19,25 @@ To learn more about `backend-go` please refer to its [README](/backend-go/README
 
 ### React /web-react
 
-This is a single-page application (SPA) created with JavaScript and React.
+This is a single-page application (SPA) created with JavaScript and React Functional Component.
 It offers the following features:
 
-1. The ability to connect to a server on one page, allowing users to connect to multiple servers by opening a new page.
-2. A directory-tree-like view that makes it easy to browse files in one place.
-3. Case-insensitive file search in the root directory.
-4. Client-side routing for a better loading experience and to reduce server-side overhead. You can share any URL with others, and they will open the same file.
+1. A directory-tree-like view that makes it easy to browse files in one place.
+2. Case-insensitive file search in the root directory.
+3. Client-side routing for a better loading experience and to reduce server-side overhead.
+4. The same URL will end up with the same file. This can be shared across `web-react` and `web-vue`.
 
 To learn more about `web-react` please refer to its [README](/web-react/README.md).
 
 ### Vue /web-vue
+
+This is a single-page application (SPA) created with TypeScript and Vue3 Composition API.
+It offers the following features:
+
+1. A file-explorer-like view makes more sense for users.
+2. Case-insensitive file search in the current directory.
+3. Client-side routing for a better loading experience and to reduce server-side overhead.
+4. The same URL will end up with the same file. This can be shared across `web-react` and `web-vue`.
 
 To learn more about `web-vue` please refer to its [README](/web-vue/README.md).
 
@@ -56,7 +64,6 @@ Note when you runs the `backend-js`, some essential settings will be generated o
   "name": "My-Meditree-Node", // better to be unique.
   "port": 8080, // 8080 doesn't require sudo on linux.
   "root": "/path/to/root", // [optional] the root direcotry of a local file tree.
-  "rebuildInterval": 3000, // [optional] how often to rebuild the local file tree when watching changes.
   "plugin": {
     "homepage": { // Use homepage plugin to serve a static webiste.
       "root": "/path/to/web-react/dist"
@@ -79,7 +86,7 @@ server {
     listen 80;
     server_name your_site.com;
 
-    # For example, serving the frontend on 8080 port internally and "/" externally.
+    # For example, serving the backend on 8080 port internally and "/" externally.
     location / {
         proxy_pass http://localhost:8080;
         proxy_set_header Host $host;
