@@ -129,25 +129,39 @@ export function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig 
 }
 
 export function findConfig({ rootDir, filename }: { rootDir: string, filename: string }): AppConfig {
-  const curDir = rootDir
-  let configFile = findFSOInTree(curDir, filename)
+  let configFile = findFSOInTreeByName(rootDir, filename)
   if (configFile) {
+    // if config file exists, read and load it
     const config = setupConfig(JSON.parse(fs.readFileSync(configFile, "utf8")) ?? {})
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     return config
   } else {
+    // if non-existing, try to create it and throw an Error to prompt users.
     const config: AppConfig = setupConfig(defaultConfig)
-    configFile = path.join(curDir, filename)
+    // perfer the ancestor that has `package.json` file.
+    const ancestors = listAncestors(rootDir)
+    const dirHasPackageJson = ancestors.find((dir) =>
+      fs.existsSync(path.join(dir, "package.json"))
+    )
+    if (dirHasPackageJson) {
+      rootDir = dirHasPackageJson
+    }
+    configFile = path.join(rootDir, filename)
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
     throw new Error(`Configuration not found. ${configFile} is created.`)
   }
 }
 
-function findFSOInTree(dir: string, fileName: string): string | null {
+function findFSOInTreeByName(root: string, fileName: string): string | null {
+  return findFSOInTree(root, (dir) => path.join(dir, fileName))
+}
+
+function findFSOInTree(root: string, attemp: (dir: string) => string | undefined | null): string | null {
+  let dir = root
   let lastDir: string | null = null
   while (dir !== lastDir) {
-    const configFile = path.join(dir, fileName)
-    if (fs.existsSync(configFile)) {
+    const configFile = attemp(dir)
+    if (configFile && fs.existsSync(configFile)) {
       return configFile
     } else {
       lastDir = dir
@@ -155,4 +169,26 @@ function findFSOInTree(dir: string, fileName: string): string | null {
     }
   }
   return null
+}
+
+/**
+ * List the existing ancestor directories based on {@link root} given,
+ * starting with the nearest ancestor,
+ * and ending with the root directory of file system.
+
+ * @param root the root directory path to search
+ * @returns a list of all existing ancestors.
+ */
+function listAncestors(root: string): string[] {
+  const ancestors: string[] = []
+  let dir = root
+  let lastDir: string | null = null
+  while (dir !== lastDir) {
+    if (fs.existsSync(dir)) {
+      ancestors.push(dir)
+    }
+    lastDir = dir
+    dir = path.dirname(dir)
+  }
+  return ancestors
 }
