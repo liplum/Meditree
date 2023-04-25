@@ -269,13 +269,13 @@ export async function startServer(config: AppConfig): Promise<void> {
   const hostname = config.hostname
   if (hostname) {
     server.listen(config.port, config.hostname, (): void => {
-      log.info(`Server running at http://${hostname}:${config.port}/`)
+      log.info(`Server running at http://${hostname}:${config.port}/.`)
       // Phrase 24: stop the starting timer.
       timer.stop("Start Server", log.info)
     })
   } else {
     server.listen(config.port, (): void => {
-      log.info(`Server running at http://localhost:${config.port}/`)
+      log.info(`Server running at http://localhost:${config.port}/.`)
       // Phrase 24: stop the starting timer.
       timer.stop("Start Server", log.info)
     })

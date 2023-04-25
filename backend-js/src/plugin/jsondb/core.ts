@@ -2,6 +2,7 @@ import { type MeditreePlugin } from "../../server.js"
 import { uniqueToken } from "../../ioc.js"
 import { createLogger } from "../../logger.js"
 import { JsonDB, Config } from "node-json-db"
+import path from "path"
 
 interface JsonDbPluginConfig {
   /**
@@ -36,7 +37,7 @@ export default function JsonDbPlugin(config: JsonDbPluginConfig): MeditreePlugin
   const name2DB = new Map<string, JsonDB>()
   return {
     async init() {
-      log.info(`JsonDB will load from ${dir}`)
+      log.info(`JsonDB will load from ${path.resolve(dir)}.`)
     },
     onExit() {
       log.info("JsonDB closed.")

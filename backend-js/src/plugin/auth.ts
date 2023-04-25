@@ -92,7 +92,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
 
       if (register) {
         const registerPath = register.path ?? "/register"
-        log.info(`User registration hosts on ${registerPath}`)
+        log.info(`User registration hosts on "${registerPath}".`)
         app.post(registerPath, async (req, res) => {
           const { account, password } = req.body
           if (!(typeof account === "string" && typeof password === "string")) {
