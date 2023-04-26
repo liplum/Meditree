@@ -1,5 +1,5 @@
 import path from "path"
-import { LocalFile, LocalFileTree } from "../file.js"
+import { LocalFileTree } from "../file.js"
 import { type MeditreePlugin } from "../server.js"
 
 export const HLSMediaType = "application/x-mpegURL"
@@ -15,10 +15,7 @@ export default function HLSPlugin(config: HLSPluginConfig): MeditreePlugin {
   return {
     onLocalFileTreePostGenerated(tree) {
       if (!hideTsDir) return
-      for (let file of tree.visit((name, file) => {
-        return file instanceof LocalFile && file["*type"] === HLSMediaType
-      })) {
-        file = file as LocalFile
+      for (const file of tree.visitFile((file) => file["*type"] === HLSMediaType)) {
         const pureName = path.basename(file.localPath, path.extname(file.localPath))
         const tsDir = file.parent.name2File.get(pureName)
         if (tsDir instanceof LocalFileTree) {

@@ -153,14 +153,33 @@ export class LocalFileTree implements FileTreeLike {
     return obj
   }
 
-  * visit(predicate?: (name: string, file: LocalFile | FileTree) => boolean): Iterable<LocalFile | LocalFileTree> {
-    for (const [name, file] of this.name2File.entries()) {
-      if (!predicate || predicate(name, file)) {
-        if (file instanceof LocalFileTree) {
-          yield* file.visit(predicate)
-        } else {
+  * visitFile(
+    fileFilter?: (file: File) => boolean,
+    dirFilter?: (dir: FileTree) => boolean,
+  ): Iterable<LocalFile> {
+    for (const file of this.name2File.values()) {
+      if (file instanceof LocalFileTree) {
+        if (!dirFilter || dirFilter(file)) {
+          yield* file.visitFile(fileFilter, dirFilter)
+        }
+      } else {
+        if (!fileFilter || fileFilter(file)) {
           yield file
         }
+      }
+    }
+  }
+
+  * visitDir(
+    fileFilter?: (file: File) => boolean,
+    dirFilter?: (dir: FileTree) => boolean,
+  ): Iterable<LocalFileTree> {
+    for (const file of this.name2File.values()) {
+      if (file instanceof LocalFileTree) {
+        if (!dirFilter || dirFilter(file)) {
+          yield file
+        }
+        yield* file.visitDir(fileFilter, dirFilter)
       }
     }
   }
@@ -173,7 +192,7 @@ export class LocalFileTree implements FileTreeLike {
 export function filterFileTreeJson(
   tree: FileTree,
   fileFilter: (file: File) => boolean,
-  dirFilter?: (dir: FileTree) => boolean
+  dirFilter?: (dir: FileTree) => boolean,
 ): FileTree {
   const filteredTree: FileTree = {}
   if (tree["*hide"]) {
