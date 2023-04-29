@@ -33,14 +33,15 @@ async function login(event) {
       Cookies.set("jwt", jwt)
       router.push("/view")
     } else {
-      throw new Error(await loginRes.text())
+      const cause = await loginRes.text()
+      throw new Error(cause)
     }
   } catch (error) {
-    console.error(error);
-    errorCause.value = error
-    showErrorDialog.value = true;
+    console.error(error)
+    errorCause.value = error.message
+    showErrorDialog.value = true
   } finally {
-    isLogingIn.value = false;
+    isLogingIn.value = false
   }
 }
 </script>
