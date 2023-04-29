@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { computed } from "@vue/reactivity";
 import { DirectoryInfo } from "../FileTree";
 import { truncateString } from "../Utils"
-const props = defineProps<{
+const p = defineProps<{
   dir: DirectoryInfo;
 }>();
-const dir = computed(() => props.dir)
 </script>
 <template>
   <v-card class="mx-auto dir-card">
@@ -13,9 +11,9 @@ const dir = computed(() => props.dir)
       <v-icon size="4rem" icon="mdi-folder" />
       <v-tooltip bottom>
         <template v-slot:activator="{ props }">
-          <span v-bind="props" style="text-align: center;">{{ truncateString(dir.name, 16) }}</span>
+          <span v-bind="props" style="text-align: center;">{{ truncateString(p.dir.name, 16) }}</span>
         </template>
-        <p>{{ dir.path }}</p>
+        <p>{{ p.dir.path }}</p>
       </v-tooltip>
     </div>
   </v-card>
