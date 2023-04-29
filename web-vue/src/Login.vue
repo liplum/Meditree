@@ -9,6 +9,8 @@ const showPassword = ref(false);
 const isLogingIn = ref(false);
 const showErrorDialog = ref(false);
 
+const errorCause = ref("")
+
 async function login(event) {
   const result = await event;
   if (!result.valid) {
@@ -35,6 +37,7 @@ async function login(event) {
     }
   } catch (error) {
     console.error(error);
+    errorCause.value = error
     showErrorDialog.value = true;
   } finally {
     isLogingIn.value = false;
@@ -66,7 +69,12 @@ async function login(event) {
 
   <v-dialog v-model="showErrorDialog" width="auto">
     <v-card>
-      <v-card-text>Failed to Login.</v-card-text>
+      <template v-if="errorCause">
+        <v-card-text>Failed to Login due to {{ errorCause }}.</v-card-text>
+      </template>
+      <template v-else>
+        <v-card-text>Failed to Login.</v-card-text>
+      </template>
       <v-card-actions>
         <v-btn color="primary" @click="showErrorDialog = false">Close</v-btn>
       </v-card-actions>
