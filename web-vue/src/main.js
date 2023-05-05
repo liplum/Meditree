@@ -15,16 +15,9 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
 import { l10nChart } from "./i18n"
-import { useI18n, createI18n } from 'vue-i18n'
+import { createI18n } from 'vue-i18n'
 
-const app = createApp(App, {
-  setup() {
-    // call `useI18n`, and spread `t` from  `useI18n` returning
-    const { t } = useI18n()
-    // return render context that included `t`
-    return { t }
-  }
-})
+const app = createApp(App)
 
 const vuetify = createVuetify({
   components,
@@ -59,9 +52,8 @@ app.use(router)
 const i18n = createI18n({
   legacy: false, // you must set `false`, to use Composition API
   fallbackLocale: 'en', // set fallback locale
-  l10nChart, // set locale messages
-  // If you need to specify other options, you can set other options
-  // ...
+  messages: l10nChart, // set locale messages
+  silentFallbackWarn: true,
 })
 
 app.use(i18n)

@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import Cookies from "js-cookie"
-import { useRouter } from "vue-router";
+import { useRouter } from "vue-router"
+import { useI18n } from "vue-i18n"
 const router = useRouter()
+const { t } = useI18n({ inheritLocale: true })
 const account = ref("");
 const password = ref("");
 const showPassword = ref(false);
@@ -44,12 +46,18 @@ async function login(event) {
     isLogingIn.value = false
   }
 }
+
+function onMounted(arg0: () => void, arg1: (event: any) => Promise<void>) {
+  throw new Error("Function not implemented.");
+}
 </script>
 <template>
   <div class="dialog">
     <v-sheet rounded width="450" class="mx-auto sheet">
       <v-card-title>
-        <h2 style="text-align: center">Connect to server</h2>
+        <h2 style="text-align: center">
+          {{ t("login.title") }}
+        </h2>
       </v-card-title>
       <v-form validate-on="submit" @submit.prevent="login" :loading="isLogingIn">
         <v-card-text>
