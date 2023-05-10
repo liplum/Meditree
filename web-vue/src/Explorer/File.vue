@@ -14,7 +14,6 @@ function resolveIcon(type: string): string {
   }
   return "mdi-file"
 }
-
 </script>
 
 <template>

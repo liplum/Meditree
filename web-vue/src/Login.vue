@@ -5,11 +5,11 @@ import { useRouter } from "vue-router"
 import { useI18n } from "vue-i18n"
 const router = useRouter()
 const { t } = useI18n({ inheritLocale: true })
-const account = ref("");
-const password = ref("");
-const showPassword = ref(false);
-const isLogingIn = ref(false);
-const showErrorDialog = ref(false);
+const account = ref("")
+const password = ref("")
+const showPassword = ref(false)
+const isLogingIn = ref(false)
+const showErrorDialog = ref(false)
 
 const errorCause = ref("")
 
@@ -22,7 +22,7 @@ async function login(event) {
     // if no account is posted, assume password is not required.
     router.push("/view")
   }
-  isLogingIn.value = true;
+  isLogingIn.value = true
   try {
     const loginRes = await fetch("/login", {
       method: "POST",

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { DirectoryInfo } from "../FileTree";
+import { DirectoryInfo } from "../FileTree"
 import { truncateString } from "../Utils"
 const p = defineProps<{
-  dir: DirectoryInfo;
-}>();
+  dir: DirectoryInfo
+}>()
 </script>
+
 <template>
   <v-card class="mx-auto dir-card">
     <div class="row-center">
