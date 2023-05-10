@@ -28,7 +28,7 @@ export function token<R, TArgs extends any[] = any[]>(name: string): Token<R, TA
 }
 
 export function uniqueToken<R, TArgs extends any[] = any[]>(name: string): Token<R, TArgs> {
-  return { type: Symbol.for(name) } as any as Token<R, TArgs>
+  return { type: Symbol.for(name) } satisfies Token<R, TArgs>
 }
 
 function stringifyToken(token: Token<any, any> | symbol): string {
@@ -95,16 +95,16 @@ export class Container {
       throw new Error(`Nothing bound to ${stringifyToken(token)}`)
     }
     if (item.type === ItemType.value) {
-      return item.injected as R
+      return item.injected satisfies R
     } else if (item.type === ItemType.factory) {
-      const factory = item.injected as Factory<R, TArgs>
+      const factory = item.injected satisfies Factory<R, TArgs>
       if (item.singleton) {
         return (item.cache = item.cache ?? factory(...injectedArgs))
       } else {
         return factory(...injectedArgs)
       }
     } else {
-      const Ctor = item.injected as Constructor<R, TArgs>
+      const Ctor = item.injected satisfies Constructor<R, TArgs>
       if (item.singleton) {
         return (item.cache = item.cache ?? new Ctor(...injectedArgs))
       } else {

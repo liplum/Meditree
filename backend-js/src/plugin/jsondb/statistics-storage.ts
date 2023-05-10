@@ -25,7 +25,7 @@ export default function JsonDBStatisticsPlugin(config: JsonDBStatisticsPluginCon
         async increment(filePath: string) {
           const path = `/${filePath}`
           if (await statistics.exists(path)) {
-            const entry = await statistics.getData(path) as StatisticsEntry
+            const entry: StatisticsEntry = await statistics.getData(path)
             entry.view ??= 0
             entry.view += 1
             await statistics.push(path, entry)
@@ -36,7 +36,7 @@ export default function JsonDBStatisticsPlugin(config: JsonDBStatisticsPluginCon
         async getViewCount(filePath: string) {
           const path = `/${filePath}`
           if (await statistics.exists(`/${path}`)) {
-            const entry = await statistics.getData(path) as StatisticsEntry
+            const entry: StatisticsEntry = await statistics.getData(path)
             return entry.view
           } else {
             return

@@ -152,7 +152,7 @@ function buildFromFileTree(
       const curPath = parentPath ? `${parentPath}/${name}` : name
       if (file["*type"]) {
         // it's file
-        const fi = file as File
+        const fi = file satisfies File
         const clz = fi["*type"].startsWith("image") ? "class='has-preview'" : ""
         div.push(`<a href="/file/${curPath}" ${clz}>${name}</a>,`)
       } else {
@@ -160,7 +160,7 @@ function buildFromFileTree(
         div.push(`<details ${indent === 0 ? "open" : ""}>`)
         div.push(`<summary class="${getIndentClz(indent)}"><a>${name}\\</a></summary>`)
         div.push(`<div class="${getIndentClz(indent)}">`)
-        buildSubtree(file as FileTree, curPath, indent + 1)
+        buildSubtree(file satisfies FileTree, curPath, indent + 1)
         div.push("<div>")
         div.push("</details>")
       }
