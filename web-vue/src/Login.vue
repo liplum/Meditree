@@ -18,6 +18,10 @@ async function login(event) {
   if (!result.valid) {
     return;
   }
+  if (!account.value) {
+    // if no account is posted, assume password is not required.
+    router.push("/view")
+  }
   isLogingIn.value = true;
   try {
     const loginRes = await fetch("/login", {

@@ -17,6 +17,10 @@ import Cookies from "js-cookie"
 export async function action({ request }) {
   const formData = await request.formData()
   const { account, password } = Object.fromEntries(formData)
+  if (!account) {
+    // if no account is posted, assume password is not required.
+    return redirect("/view")
+  }
   const loginRes = await fetch("/login", {
     method: "POST",
     headers: {
