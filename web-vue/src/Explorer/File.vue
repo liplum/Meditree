@@ -1,11 +1,9 @@
 <script lang="ts" setup>
-import { computed } from "@vue/reactivity";
 import { FileInfo } from "../FileTree";
 import { truncateString } from "../Utils"
-const props = defineProps<{
+const p = defineProps<{
   file: FileInfo;
 }>();
-const file = computed(() => props.file)
 function resolveIcon(type: string): string {
   if (type.startsWith("image")) return "mdi-image"
   if (type.startsWith("video")) return "mdi-video"
@@ -22,12 +20,14 @@ function resolveIcon(type: string): string {
 <template>
   <v-card class="mx-auto file-card">
     <div class="row-center">
-      <v-icon size="4rem" :icon="resolveIcon(file.type)" />
+      <v-icon size="4rem" :icon="resolveIcon(p.file.type)" />
       <v-tooltip bottom>
         <template v-slot:activator="{ props }">
-          <span v-bind="props" style="text-align: center;">{{ truncateString(file.name, 16) }}</span>
+          <span v-bind="props" style="text-align: center;">
+            {{ truncateString(p.file.name, 16) }}
+          </span>
         </template>
-        <p>{{ file.path }}</p>
+        <p>{{ p.file.path }}</p>
       </v-tooltip>
     </div>
   </v-card>

@@ -1,13 +1,17 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import Cookies from "js-cookie"
-import { useRouter } from "vue-router";
+import { useRouter } from "vue-router"
+import { useI18n } from "vue-i18n"
 const router = useRouter()
+const { t } = useI18n({ inheritLocale: true })
 const account = ref("");
 const password = ref("");
 const showPassword = ref(false);
 const isLogingIn = ref(false);
 const showErrorDialog = ref(false);
+
+const errorCause = ref("")
 
 async function login(event) {
   const result = await event;
@@ -31,21 +35,29 @@ async function login(event) {
       Cookies.set("jwt", jwt)
       router.push("/view")
     } else {
-      throw new Error(await loginRes.text())
+      const cause = await loginRes.text()
+      throw new Error(cause)
     }
   } catch (error) {
-    console.error(error);
-    showErrorDialog.value = true;
+    console.error(error)
+    errorCause.value = error.message
+    showErrorDialog.value = true
   } finally {
-    isLogingIn.value = false;
+    isLogingIn.value = false
   }
+}
+
+function onMounted(arg0: () => void, arg1: (event: any) => Promise<void>) {
+  throw new Error("Function not implemented.");
 }
 </script>
 <template>
   <div class="dialog">
     <v-sheet rounded width="450" class="mx-auto sheet">
       <v-card-title>
-        <h2 style="text-align: center">Connect to server</h2>
+        <h2 style="text-align: center">
+          {{ t("login.title") }}
+        </h2>
       </v-card-title>
       <v-form validate-on="submit" @submit.prevent="login" :loading="isLogingIn">
         <v-card-text>
@@ -66,7 +78,12 @@ async function login(event) {
 
   <v-dialog v-model="showErrorDialog" width="auto">
     <v-card>
-      <v-card-text>Failed to Login.</v-card-text>
+      <template v-if="errorCause">
+        <v-card-text>Failed to Login due to {{ errorCause }}.</v-card-text>
+      </template>
+      <template v-else>
+        <v-card-text>Failed to Login.</v-card-text>
+      </template>
       <v-card-actions>
         <v-btn color="primary" @click="showErrorDialog = false">Close</v-btn>
       </v-card-actions>
