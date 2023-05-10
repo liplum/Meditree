@@ -26,9 +26,6 @@ export const IsDrawerOpenContext = createContext()
 export const AstrologyContext = createContext()
 export const FileNavigationContext = createContext()
 
-/// TODO: Drawer looks bad on tablet portrait mode.
-const drawerWidth = "min(max(30%,20rem),30rem)"
-
 export async function loader() {
   const task = async () => {
     const response = await fetch("/list", {
@@ -179,91 +176,55 @@ function Body({ fileTreeDelegate }) {
     return file.path.toLowerCase().includes(searchPrompt.trim().toLocaleLowerCase())
   }
 
-  const drawer = <div
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      height: "100%",
-    }}>
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      padding: "10px 0px 10px 0px",
-      justifyContent: "space-evenly",
-    }}>
-      <Tooltip title={i18n.search.starFilter}>
-        <IconButton onClick={() => setOnlyShowStarred(!onlyShowStarred)}>
-          {onlyShowStarred ? <Star /> : <StarBorder />}
-        </IconButton>
-      </Tooltip>
-      <SearchBar
-        placeholder={i18n.search.placeholder}
-        onSearch={(prompt) => setSearchPrompt(prompt)}
-      />
-    </div>
-    <div style={{ flex: 1, overflow: "auto" }}>
-      <FileTreeNavigation
-        selectedFile={selectedFile}
-        searchDelegate={filterByPrompt}
-      />
-    </div>
-  </div>
-  const body = (
-    <Box sx={{
-      display: "flex", height: "100vh",
-    }}>
-      <Box // left drawer
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-      >
-        <Drawer
-          variant="temporary"
-          open={isDrawerOpen}
-          onClose={() => {
-            setIsDrawerOpen(false)
-          }}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
-          sx={{
-            display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
-          }}
-        >
-          {drawer}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: "none", sm: "block" },
-            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
-      <Box // right content
-        component="main"
-        sx={{ padding: "1rem", flexGrow: 1, width: { sm: `calc(100% - ${drawerWidth})` } }}
-      >
+  const main = (
+    <ResponsiveDrawer
+      isDrawerOpen={isDrawerOpen}
+      setIsDrawerOpen={setIsDrawerOpen}
+      drawer={<>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          padding: "10px 0px 10px 0px",
+          justifyContent: "space-evenly",
+        }}>
+          <Tooltip title={i18n.search.starFilter}>
+            <IconButton onClick={() => setOnlyShowStarred(!onlyShowStarred)}>
+              {onlyShowStarred ? <Star /> : <StarBorder />}
+            </IconButton>
+          </Tooltip>
+          <SearchBar
+            placeholder={i18n.search.placeholder}
+            onSearch={(prompt) => setSearchPrompt(prompt)}
+          />
+        </div>
+        <div style={{ flex: 1, overflow: "auto" }}>
+          <FileTreeNavigation
+            selectedFile={selectedFile}
+            searchDelegate={filterByPrompt}
+          />
+        </div>
+      </>}
+      body={<>
         <Toolbar />
         <FileDisplayBoard file={selectedFile} />
-      </Box>
-    </Box>
+      </>}
+    />
   )
   return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
     <FileTreeDeleagteContext.Provider value={[fileTreeDelegate]}>
       <AstrologyContext.Provider value={astrologyCtx}>
         <FileNavigationContext.Provider value={{ goFile, goNextFile, goPreviousFile }}>
-          {body}
+          {main}
         </FileNavigationContext.Provider>
       </AstrologyContext.Provider>
     </FileTreeDeleagteContext.Provider>
   </IsDrawerOpenContext.Provider>
 }
 
-export function ResponsiveAppBar(props) {
+/// TODO: Drawer looks bad on tablet portrait mode.
+const drawerWidth = "min(max(30%,20rem),30rem)"
+
+export function ResponsiveAppBar({ children }) {
   const [isDrawerOpen, setIsDrawerOpen] = useContext(IsDrawerOpenContext)
   return <AppBar
     position="fixed"
@@ -284,7 +245,59 @@ export function ResponsiveAppBar(props) {
       >
         <MenuIcon />
       </IconButton>
-      {props.children}
+      {children}
     </Toolbar>
   </AppBar>
+}
+
+export function ResponsiveDrawer({ isDrawerOpen, setIsDrawerOpen, drawer, body }) {
+  drawer = <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      height: "100%",
+    }}>
+    {drawer}
+  </div>
+  return <Box sx={{
+    display: "flex", height: "100vh",
+  }}>
+    <Box // left drawer
+      component="nav"
+      sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+    >
+      <Drawer
+        variant="temporary"
+        open={isDrawerOpen}
+        onClose={() => {
+          setIsDrawerOpen(false)
+        }}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile.
+        }}
+        sx={{
+          display: { xs: "block", sm: "none" },
+          "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+        }}
+      >
+        {drawer}
+      </Drawer>
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: "none", sm: "block" },
+          "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+        }}
+        open
+      >
+        {drawer}
+      </Drawer>
+    </Box>
+    <Box // right content
+      component="main"
+      sx={{ padding: "1rem", flexGrow: 1, width: { sm: `calc(100% - ${drawerWidth})` } }}
+    >
+      {body}
+    </Box>
+  </Box>
 }
