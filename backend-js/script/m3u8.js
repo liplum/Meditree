@@ -40,16 +40,21 @@ if (mainCmd.cmd === "get") {
     { name: "path", defaultOption: true },
     { name: "time", type: Number, defaultValue: 5, alias: "t" },
     { name: "ext", multiple: true, defaultValue: ["mp4"], alias: "x" },
-    { name: "overwrite", type: Boolean, defaultValue: false, alias: "w" }
+    { name: "overwrite", type: Boolean, defaultValue: false, alias: "w" },
+    { name: "dest", alias: "d" },
   ]
   const opt = commandLineArgs(genDef, { argv, stopAtFirstUnknown: true })
-  await processOnFileTree(opt.path, (filepath) => opt.ext.includes(removePrefix(extname(filepath), ".")), async (filepath) => {
-    await convertVideo({
-      filepath,
-      time: opt.time,
-      overwrite: opt.overwrite,
+  const ext = opt.ext.map(e => e.toLocaleLowerCase())
+  await processOnFileTree(opt.path,
+    (filepath) => ext.includes(removePrefix(extname(filepath).toLocaleLowerCase(), ".")),
+    async (filepath) => {
+      await convertVideo({
+        filepath,
+        time: opt.time,
+        overwrite: opt.overwrite,
+        destDir: opt.dest,
+      })
     })
-  })
 } else if (mainCmd.cmd === "fix") {
   const fixDef = [
     { name: "path", defaultOption: true },
@@ -96,29 +101,31 @@ function removePrefix(str, prefix) {
   return str
 }
 
-async function convertVideo({ filepath, time, overwrite }) {
+async function convertVideo({ videoPath, time, overwrite, destDir }) {
+  if (!destDir) {
+    destDir = dirname(videoPath)
+  }
+  const pureName = basename(videoPath, extname(videoPath)).trim()
+  const outputDir = join(destDir, pureName)
   return new Promise((resolve, reject) => {
-    const pureName = basename(filepath, extname(filepath)).trim()
-    const parentDir = dirname(filepath)
-    const outputDir = join(parentDir, pureName)
     if (fs.existsSync(outputDir) && !fs.statSync(outputDir).isDirectory()) {
       reject(new Error(`"${outputDir}" exists but it's not a directory.`))
     }
-    const m3u8File = join(parentDir, `${pureName}.m3u8`)
+    const m3u8File = join(destDir, `${pureName}.m3u8`)
     if (fs.existsSync(m3u8File) && fs.existsSync(outputDir) && !overwrite) {
       console.log(`"${m3u8File}" already exists.`)
       resolve(false)
       return
     }
     fs.mkdirSync(outputDir, { recursive: true })
-    const bar = new ProgressBar(`:percent [:bar] "${filepath}"`, {
+    const bar = new ProgressBar(`:percent [:bar] "${videoPath}"`, {
       complete: "=",
       head: ">",
       incomplete: " ",
       width: 25,
       total: 100
     })
-    new Ffmpeg(filepath)
+    new Ffmpeg(videoPath)
       .outputOptions([
         '-c:v libx264', // video codec
         '-c:a aac', // audio codec
