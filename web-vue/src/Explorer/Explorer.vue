@@ -29,6 +29,7 @@ const searchDelegate = computed<SearchDelegate | undefined>(() => {
   return
 })
 </script>
+
 <template>
   <v-app>
     <v-app-bar prominent>

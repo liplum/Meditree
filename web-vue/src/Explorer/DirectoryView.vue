@@ -6,13 +6,13 @@ import { computed } from "@vue/reactivity";
 export type SearchDelegate = (file: FileInfo | DirectoryInfo) => boolean
 export type ViewMode = "list" | "grid"
 export interface Props {
-  dir: DirectoryInfo;
-  searchDelegate?: SearchDelegate;
-  view?: ViewMode;
+  dir: DirectoryInfo
+  searchDelegate?: SearchDelegate
+  view?: ViewMode
 }
 const props = withDefaults(defineProps<Props>(), {
   view: "grid",
-});
+})
 const files = computed(() => {
   if (props.searchDelegate) {
     const filtered = new Map<string, FileInfo | DirectoryInfo>()
@@ -30,7 +30,6 @@ const emit = defineEmits<{
   (e: "clickFile", file: FileInfo): void
   (e: "clickDir", file: DirectoryInfo): void
 }>()
-
 </script>
 
 <template>

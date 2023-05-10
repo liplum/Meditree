@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { computed } from "@vue/reactivity";
-import { FileInfo } from "../FileTree";
+import { computed } from "@vue/reactivity"
+import { FileInfo } from "../FileTree"
 import ImageRenderer from "./Image.vue"
 import VideoRenderer from "./Video.vue"
 import AudioRenderer from "./Audio.vue"
@@ -22,8 +22,8 @@ function resolveRenderer(type: string) {
 }
 
 const props = defineProps<{
-  file?: FileInfo;
-}>();
+  file?: FileInfo
+}>()
 const file = computed(() => props.file)
 const renderer = computed(() => {
   if (props.file) {
