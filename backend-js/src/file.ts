@@ -201,13 +201,13 @@ export function filterFileTreeJson(
   for (const [name, fileOrSubtree] of Object.entries(tree)) {
     // it's a file
     if (fileOrSubtree["*type"]) {
-      if (fileFilter(fileOrSubtree as File)) {
+      if (fileFilter(fileOrSubtree satisfies File)) {
         filteredTree[name] = fileOrSubtree
       }
     } else {
       // it's a folder
-      if (dirFilter === undefined || dirFilter(fileOrSubtree as FileTree)) {
-        const filteredSubtree = filterFileTreeJson(fileOrSubtree as FileTree, fileFilter, dirFilter)
+      if (dirFilter === undefined || dirFilter(fileOrSubtree satisfies FileTree)) {
+        const filteredSubtree = filterFileTreeJson(fileOrSubtree satisfies FileTree, fileFilter, dirFilter)
         if (Object.keys(filteredSubtree).length > 0) {
           filteredTree[name] = filteredSubtree
         }
@@ -232,7 +232,7 @@ export function cloneFileTreeJson(tree: FileTree): FileTree {
       newTree[name] = { ...fileOrSubtree }
     } else {
       // it's a folder
-      const filteredSubtree = cloneFileTreeJson(fileOrSubtree as FileTree)
+      const filteredSubtree = cloneFileTreeJson(fileOrSubtree satisfies FileTree)
       if (Object.keys(filteredSubtree).length > 0) {
         newTree[name] = filteredSubtree
       }
