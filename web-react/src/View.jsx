@@ -134,6 +134,11 @@ function Body({ fileTreeDelegate }) {
     () => fileTreeDelegate.path2File.size > 0 ? ft.getFirstFile(fileTreeDelegate) : null
   )
 
+  useEffect(() => {
+    updatePageTitle(selectedFile.path)
+    storage.setLastSelectedFile(selectedFile)
+  }, [selectedFile])
+
   const goFile = (curFile, delta) => {
     const file = findNextFile(fileTreeDelegate, curFile, delta)
     navigate(`/view?file=${encodeURIComponent(file.path)}`)
