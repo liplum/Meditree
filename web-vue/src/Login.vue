@@ -47,9 +47,6 @@ async function login(event) {
   }
 }
 
-function onMounted(arg0: () => void, arg1: (event: any) => Promise<void>) {
-  throw new Error("Function not implemented.");
-}
 </script>
 <template>
   <div class="dialog">
@@ -61,15 +58,14 @@ function onMounted(arg0: () => void, arg1: (event: any) => Promise<void>) {
       </v-card-title>
       <v-form validate-on="submit" @submit.prevent="login" :loading="isLogingIn">
         <v-card-text>
-          <v-text-field v-model="account" label="Account"></v-text-field>
-
+          <v-text-field v-model="account" :label="t('login.account')"></v-text-field>
           <v-text-field v-model="password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="showPassword ? 'text' : 'password'" label="Password"
+            :type="showPassword ? 'text' : 'password'" :label="t('login.password')"
             @click:append="showPassword = !showPassword"></v-text-field>
         </v-card-text>
         <v-card-actions>
           <v-btn color="primary" :disabled="isLogingIn" rounded type="submit">
-            Connect
+            {{ t("login.login") }}
           </v-btn>
         </v-card-actions>
       </v-form>
@@ -82,7 +78,7 @@ function onMounted(arg0: () => void, arg1: (event: any) => Promise<void>) {
         <v-card-text>Failed to Login due to {{ errorCause }}.</v-card-text>
       </template>
       <template v-else>
-        <v-card-text>Failed to Login.</v-card-text>
+        <v-card-text>{{ t("login.error.failed") }}</v-card-text>
       </template>
       <v-card-actions>
         <v-btn color="primary" @click="showErrorDialog = false">Close</v-btn>
