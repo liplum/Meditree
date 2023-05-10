@@ -49,12 +49,6 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
    * If not specified, a uuid v4 will be generated.
    */
   name: string
-  /**
-   * //TODO: Unused
-   * The display name of the server.
-   * If not specified, {@link name} will be used.
-   */
-  displayName?: string
   fileType: Record<string, string>
   plugin?: Record<string, Record<string, any>>
   ignore?: string[]
