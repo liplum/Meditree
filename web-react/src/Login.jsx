@@ -62,8 +62,8 @@ export function LoginDialog(props) {
           label={i18n.login.password}
           placeholder={i18n.login.passwordPlaceholder}
           name="password"
-          endAdornment={
-            <InputAdornment position="end">
+          InputProps={{
+            endAdornment: <InputAdornment position="end">
               <IconButton
                 onClick={() => { setShowPasscode(!showPasscode) }}
                 onMouseDown={() => { setShowPasscode(!showPasscode) }}
@@ -72,7 +72,7 @@ export function LoginDialog(props) {
                 {showPasscode ? <Visibility /> : <VisibilityOff />}
               </IconButton>
             </InputAdornment>
-          }
+          }}
         />
         <DialogActions>
           <Button type="submit">{i18n.login.loginBtn}</Button>
