@@ -1,5 +1,5 @@
 // Import required modules
-import { Button, FormControl, DialogActions, Card, InputAdornment, IconButton, OutlinedInput, InputLabel } from "@mui/material"
+import { Button, DialogActions, Card, InputAdornment, IconButton, TextField } from "@mui/material"
 import React, { useEffect, useState } from "react"
 import {
   redirect,
@@ -49,35 +49,31 @@ export function LoginDialog(props) {
       <Form method="post" id="login-form" style={{
         flexDirection: "column", display: "flex",
       }}>
-        <FormControl variant="outlined">
-          <InputLabel htmlFor="outlined-adornment">{i18n.login.account}</InputLabel>
-          <OutlinedInput
-            type='text'
-            label={i18n.login.account}
-            placeholder={i18n.login.accountPlaceholder}
-            name="account"
-          />
-        </FormControl>
-        <FormControl variant="outlined">
-          <InputLabel htmlFor="outlined-adornment-password">{i18n.login.password}</InputLabel>
-          <OutlinedInput
-            type={showPasscode ? "text" : "password"}
-            label={i18n.login.password}
-            placeholder={i18n.login.passwordPlaceholder}
-            name="password"
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => { setShowPasscode(!showPasscode) }}
-                  onMouseDown={() => { setShowPasscode(!showPasscode) }}
-                  aria-label="toggle password visibility"
-                >
-                  {showPasscode ? <Visibility /> : <VisibilityOff />}
-                </IconButton>
-              </InputAdornment>
-            }
-          />
-        </FormControl>
+        <TextField
+          variant="outlined"
+          type='text'
+          label={i18n.login.account}
+          placeholder={i18n.login.accountPlaceholder}
+          name="account"
+        />
+        <TextField
+          variant="outlined"
+          type={showPasscode ? "text" : "password"}
+          label={i18n.login.password}
+          placeholder={i18n.login.passwordPlaceholder}
+          name="password"
+          endAdornment={
+            <InputAdornment position="end">
+              <IconButton
+                onClick={() => { setShowPasscode(!showPasscode) }}
+                onMouseDown={() => { setShowPasscode(!showPasscode) }}
+                aria-label="toggle password visibility"
+              >
+                {showPasscode ? <Visibility /> : <VisibilityOff />}
+              </IconButton>
+            </InputAdornment>
+          }
+        />
         <DialogActions>
           <Button type="submit">{i18n.login.loginBtn}</Button>
         </DialogActions>
