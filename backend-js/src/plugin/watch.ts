@@ -5,17 +5,18 @@ import { type MeditreePlugin } from "../server.js"
 import type fs from "fs"
 import { TYPE } from "../server.js"
 import EventEmitter from "events"
+import { parseTime } from "../utils.js"
 interface WatchPluginConfig {
   /**
-   * 10000(ms) by default.
+   * 10s by default.
    */
-  rebuildInterval?: number
+  rebuildInterval?: number | string
 }
 /**
  * Watch plugin will watch the root directory changing and frequently rebuild the local file tree.
  */
 export default function WatchPlugin(config: WatchPluginConfig): MeditreePlugin {
-  const rebuildInterval = config.rebuildInterval ?? 10 * 1000
+  const rebuildInterval = parseTime(config.rebuildInterval, "10s")
   return {
     onRegisterService(container) {
       container.bind(TYPE.HostTree)

@@ -11,6 +11,7 @@ import fs from "fs"
 import { type AsParentConfig, type AsChildConfig, } from "./config.js"
 import { encrypt, decrypt, generateNonce } from "./crypt.js"
 import type http from "http"
+import { parseTime } from "./utils.js"
 interface NodeMeta {
   name: string
 }
@@ -325,13 +326,14 @@ export async function setupAsChild(
     await connectTo(parent)
   }
   if (config.reconnectInterval) {
+    const interval = parseTime(config.reconnectInterval)
     setInterval(async () => {
       for (const parent of config.parent) {
         if (!connected.includes(parent)) {
           await connectTo(parent)
         }
       }
-    }, config.reconnectInterval).unref()
+    }, interval).unref()
   }
   async function connectTo(parent: string): Promise<void> {
     const log = createLogger(`Parent[${parent}]`)

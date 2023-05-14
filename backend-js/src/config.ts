@@ -21,7 +21,7 @@ export interface AsChildConfig {
   parent: string[]
   publicKey: string
   privateKey: string
-  reconnectInterval?: number
+  reconnectInterval?: number | string
 }
 
 export interface AppConfig extends AsParentConfig, AsChildConfig {
@@ -71,7 +71,6 @@ export interface AppConfig extends AsParentConfig, AsChildConfig {
 
 const defaultConfig: Partial<AppConfig> = {
   port: 80,
-  rebuildInterval: 3000,
   cacheMaxAge: 604800,
   fileType: {
     "**/*.mp4": "video/mp4",

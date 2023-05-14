@@ -6,6 +6,8 @@ import path, { join, dirname } from "path"
 import { promisify } from "util"
 import { hash32Bit } from "../crypt.js"
 import { createLogger } from "../logger.js"
+import { parseTime } from "../utils.js"
+
 interface CachePluginConfig {
   /**
    * The max file size for being cached.
@@ -16,7 +18,7 @@ interface CachePluginConfig {
    * The max time in ms to live for the cache.
    * 24 hours by default.
    */
-  maxAge?: number
+  maxAge?: number | string
   /**
    * The cache root direcotry.
    * "meditree-cache" by default.
@@ -28,7 +30,7 @@ const fsstate = promisify(fs.stat)
 const mkdir = promisify(fs.mkdir)
 export default function CachePlugin(config: CachePluginConfig): MeditreePlugin {
   const maxSize = config.maxSize ?? 10 * 1024 * 1024
-  const maxAge = config.maxAge ?? 24 * 60 * 60 * 1000
+  const maxAge = parseTime(config.maxAge, "24h")
   const root = config.root ?? "meditree-cache"
   const log = createLogger("Cache")
   log.info(`The cache directory is located at ${path.resolve(root)}.`)

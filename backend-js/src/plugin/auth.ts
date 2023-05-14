@@ -13,7 +13,7 @@ interface AuthPluginConfig {
   /**
    * "2h" by default.
    */
-  jwtExpiration?: string
+  jwtExpiration?: number | string
   /**
    * A random uuid v4 by default.
    */
