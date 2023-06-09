@@ -12,8 +12,13 @@ export interface PluginConfig {
    */
   depends?: string[]
   /**
- * Any additional configuration options for the plugin.
- */
+   * Whether this plugin is disabled or not.
+   * False by default.
+   */
+  _disabled?: boolean
+  /**
+   * Any additional configuration options for the plugin.
+   */
   [key: string]: any
 }
 
@@ -42,6 +47,18 @@ async function resolvePluginProvider<TPlugin, TConfig extends PluginConfig = any
   }
 }
 
+function fliterDisabledPlugin(
+  plugins: Record<string, PluginConfig>,
+): Record<string, PluginConfig> {
+  const res = {}
+  for (const [pluginName, pluginConfig] of Object.entries(plugins)) {
+    if (pluginConfig._disabled !== true) {
+      res[pluginName] = pluginConfig
+    }
+  }
+  return res
+}
+
 /**
  * Resolves a list of plugins and their dependencies.
  * @param plugins A record of plugin configurations keyed by their names.
@@ -52,6 +69,7 @@ export async function resolvePluginList<TPlugin>(
   plugins: Record<string, PluginConfig>,
   onFound?: (name: string, plugin: TPlugin) => void,
 ): Promise<TPlugin[]> {
+  plugins = fliterDisabledPlugin(plugins)
   const name2PluginProvider = new Map<string, PluginProvider<TPlugin>>()
   /**
    * PluginProvider resolution has 3 phrases:

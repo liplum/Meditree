@@ -84,9 +84,9 @@ export async function startServer(config: AppConfig): Promise<void> {
   // Phrase 9: register default service.
   container.bind(TYPE.HostTree)
     .toValue((options) =>
-      !config.root
-        ? new EmptyHostTree()
-        : new HostTree(options)
+      config.root
+        ? new HostTree(options)
+        : new EmptyHostTree()
     )
 
   container.bind(TYPE.Auth).toValue((req, res, next) => { next() })
