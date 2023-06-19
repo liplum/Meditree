@@ -40,11 +40,9 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   const jwtExpiration = config.jwtExpiration ?? "7d"
   const register = config.register
   const jwtSecret = config.jwtSecret ?? uuidv4()
-  let iocContainer
   return {
     onRegisterService(container) {
       storage = container.get(TYPE.UserStorage)
-      iocContainer = container
       container.bind(MeditreeType.Auth).toValue(async (req, res, next) => {
         // Get the JWT from the cookie, body or authorization header in a fallback chain.
         const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
@@ -90,10 +88,6 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
         return res.json({
           jwt: token,
         })
-      })
-
-      app.get("/verify", iocContainer.get(MeditreeType.Auth), (req, res) => {
-        res.sendStatus(200).end()
       })
 
       if (register) {

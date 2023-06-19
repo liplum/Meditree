@@ -183,6 +183,11 @@ export async function startServer(config: AppConfig): Promise<void> {
     await plugin.onRegisterExpressHandler?.(app)
   }
 
+  // For authentication verification
+  app.get("/verify", authMiddleware, (req, res) => {
+    res.sendStatus(200).end()
+  })
+
   // Phrase 19: express app setup.
   app.get("/list", authMiddleware, (req, res) => {
     res.status(200)
