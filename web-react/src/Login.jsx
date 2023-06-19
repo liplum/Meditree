@@ -20,6 +20,7 @@ export async function loader() {
   if (validationRes.ok) {
     return redirect("/view")
   } else {
+    Cookies.remove("jwt")
     return null
   }
 }
@@ -48,6 +49,7 @@ export async function action({ request }) {
     Cookies.set("jwt", jwt)
     return redirect("/view")
   } else {
+    Cookies.remove("jwt")
     return null
   }
 }

@@ -47,10 +47,10 @@ const router = createRouter({
         if (!jwt) return next()
         // if jwt was generated, verify it.
         const validationRes = await fetch("/verify")
-        console.log(validationRes)
         if (validationRes.ok) {
           next("/view")
         } else {
+          Cookies.remove("jwt")
           next()
         }
       }
