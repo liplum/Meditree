@@ -11,7 +11,7 @@ export const TYPE = {
 }
 interface AuthPluginConfig {
   /**
-   * "2h" by default.
+   * "7d" by default.
    */
   jwtExpiration?: number | string
   /**
@@ -37,7 +37,7 @@ interface RegisterConfig {
 export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   let storage: UserStorageService
   const log = createLogger("Auth")
-  const jwtExpiration = config.jwtExpiration ?? "2h"
+  const jwtExpiration = config.jwtExpiration ?? "7d"
   const register = config.register
   const jwtSecret = config.jwtSecret ?? uuidv4()
   return {
