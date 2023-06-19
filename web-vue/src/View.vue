@@ -1,23 +1,21 @@
 <script lang="ts" setup>
-import DisplayBoard from "./Display/DisplayBoard.vue";
+import DisplayBoard from "./Display/DisplayBoard.vue"
 import { useDisplay } from 'vuetify'
-import Explorer from "./Explorer/Explorer.vue";
-import { ref, watch } from "vue";
-import { DirectoryInfo, FileInfo, parseFileTree } from "./FileTree";
+import Explorer from "./Explorer/Explorer.vue"
+import { ref, watch } from "vue"
+import { DirectoryInfo, FileInfo, parseFileTree } from "./FileTree"
 import { useRouter } from "vue-router"
-import { computed } from "@vue/reactivity";
-import { onMounted } from "vue";
+import { computed } from "@vue/reactivity"
+import { onMounted } from "vue"
+import { storage } from "./Env"
 const router = useRouter()
-function createRoot(): DirectoryInfo {
-  const dir = new DirectoryInfo()
-  dir.path = "/"
-  dir.name = "Root"
-  return dir
-}
-const root = ref(createRoot())
+const _root = new DirectoryInfo()
+_root.path = "/"
+_root.name = "Root"
+const root = ref(_root)
 // for testing
 onMounted(async () => {
-  const res = await fetch(`/list`, { method: "GET" })
+  const res = await fetch(`/list`)
   if (res.ok) {
     const json = await res.json()
     const fileTree = parseFileTree(json)
@@ -31,7 +29,9 @@ onMounted(async () => {
 })
 const drawer = ref(true)
 const selectedFile = computed(() => {
-  const filePath = decodeURIComponent(router.currentRoute.value.query.file as string)
+  let filePath: string | null = decodeURIComponent(router.currentRoute.value.query.file as string)
+  filePath = filePath === "null" || filePath === "undefined" ? null : filePath
+  storage.lastFilePathFromUrl = filePath
   if (filePath) {
     const found = root.value.find(filePath)
     return found instanceof FileInfo ? found : null

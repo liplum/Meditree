@@ -3,6 +3,7 @@ import { ref } from "vue";
 import Cookies from "js-cookie"
 import { useRouter } from "vue-router"
 import { useI18n } from "vue-i18n"
+import { storage } from "./Env";
 const router = useRouter()
 const { t } = useI18n({ inheritLocale: true })
 const account = ref("")
@@ -37,7 +38,12 @@ async function login(event) {
     if (loginRes.ok) {
       const { jwt } = await loginRes.json()
       Cookies.set("jwt", jwt)
-      router.push("/view")
+      const lastPath = storage.lastFilePathFromUrl
+      if (lastPath) {
+        router.push(`/view?file=${encodeURIComponent(lastPath)}`)
+      } else {
+        router.push("/view")
+      }
     } else {
       const cause = await loginRes.text()
       throw new Error(cause)
