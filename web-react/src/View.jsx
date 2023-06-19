@@ -27,7 +27,9 @@ export const AstrologyContext = createContext()
 export const FileNavigationContext = createContext()
 
 export async function loader({ request }) {
-  storage.lastFilePathFromUrl = decodeURIComponent(new URL(request.url).searchParams.get("file"))
+  let lastPath = decodeURIComponent(new URL(request.url).searchParams.get("file"))
+  lastPath = lastPath === "null" || lastPath === "undefined" ? null : lastPath
+  storage.lastFilePathFromUrl = lastPath
   const task = async () => {
     const response = await fetch("/list", {
       method: "GET",

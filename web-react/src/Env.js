@@ -13,6 +13,7 @@ export const storage = {
     return window.localStorage.getItem("lastFilePathFromUrl")
   },
   set lastFilePathFromUrl(value) {
-    window.localStorage.setItem("lastFilePathFromUrl", value)
+    if (value) window.localStorage.setItem("lastFilePathFromUrl", value)
+    else window.localStorage.removeItem("lastFilePathFromUrl")
   },
 }
