@@ -9,10 +9,10 @@ export const storage = {
   setAstrology(value) {
     window.localStorage.setItem("astrology", JSON.stringify(value))
   },
-  getLastSelectedFile() {
-    return JSON.parse(window.localStorage.getItem("lastSelectedFile"))
+  get lastFilePathFromUrl() {
+    return window.localStorage.getItem("lastFilePathFromUrl")
   },
-  setLastSelectedFile(value) {
-    window.localStorage.setItem("lastSelectedFile", JSON.stringify(value))
+  set lastFilePathFromUrl(value) {
+    window.localStorage.setItem("lastFilePathFromUrl", value)
   },
 }

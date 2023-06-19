@@ -10,8 +10,7 @@ export const i18n = new LocalizedStrings({
     playground: {
       starBtn: "Add To Star",
       unstarBtn: "Remove From Star",
-      unsupportedFileType: "The file has an unsupported type.",
-      nofileSelected: "There is no file selected."
+      unsupportedFileType: "The file has an unsupported type."
     },
     loading: {
       text: "Loading...",
@@ -38,8 +37,7 @@ export const i18n = new LocalizedStrings({
     playground: {
       starBtn: "收藏",
       unstarBtn: "取消收藏",
-      unsupportedFileType: "文件类型不支持。",
-      nofileSelected: "没有文件被选中。",
+      unsupportedFileType: "文件类型不支持。"
     },
     loading: {
       text: "加载中……",

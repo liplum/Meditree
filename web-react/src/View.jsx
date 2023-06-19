@@ -48,26 +48,7 @@ export async function loader() {
   })
 }
 
-function LoadErrorBoundary() {
-  const error = useAsyncError()
-  const navigate = useNavigate()
-  console.error(error)
-  useEffect(() => {
-    const type = error.message
-    if (type === "Token Invalid" || type === "Token Missing") {
-      navigate("/")
-    }
-  }, [error])
-  return <Failed text={i18n.loading.error[error.message] ?? i18n.loading.failed}>
-    <Button variant="outlined" onClick={() => {
-      navigate("/")
-    }}>
-      Back
-    </Button>
-  </Failed>
-}
-
-export function App(props) {
+export function App() {
   const { fileTreeDelegate } = useLoaderData()
 
   return (
@@ -86,16 +67,6 @@ export function App(props) {
       </React.Suspense>
     </main>
   )
-}
-
-function tryResolveFile(...fallbacks) {
-  for (const fallback of fallbacks) {
-    const resolved = fallback()
-    if (resolved) {
-      return resolved
-    }
-  }
-  return null
 }
 
 function resolveFileFromPath(path, fileTreeDelegate) {
@@ -128,15 +99,12 @@ function Body({ fileTreeDelegate }) {
   const [searchPrompt, setSearchPrompt] = useState()
   const [onlyShowStarred, setOnlyShowStarred] = useState()
   const navigate = useNavigate()
-  const selectedFile = tryResolveFile(
-    () => resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file")), fileTreeDelegate),
-    () => fileTreeDelegate.path2File.size > 0 ? storage.getLastSelectedFile() : null,
-    () => fileTreeDelegate.path2File.size > 0 ? ft.getFirstFile(fileTreeDelegate) : null
-  )
+  const selectedFile = resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file")), fileTreeDelegate)
 
   useEffect(() => {
-    updatePageTitle(selectedFile.path)
-    storage.setLastSelectedFile(selectedFile)
+    if (selectedFile) {
+      updatePageTitle(selectedFile.path)
+    }
   }, [selectedFile])
 
   const goFile = (curFile, delta) => {
@@ -305,4 +273,23 @@ export function ResponsiveDrawer({ isDrawerOpen, setIsDrawerOpen, drawer, body }
       {body}
     </Box>
   </Box>
+}
+
+function LoadErrorBoundary() {
+  const error = useAsyncError()
+  const navigate = useNavigate()
+  console.error(error)
+  useEffect(() => {
+    const type = error.message
+    if (type === "Token Invalid" || type === "Token Missing") {
+      navigate("/")
+    }
+  }, [error])
+  return <Failed text={i18n.loading.error[error.message] ?? i18n.loading.failed}>
+    <Button variant="outlined" onClick={() => {
+      navigate("/")
+    }}>
+      Back
+    </Button>
+  </Failed>
 }

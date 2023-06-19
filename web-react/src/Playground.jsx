@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useRef, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { AstrologyContext, FileNavigationContext, ResponsiveAppBar } from "./View"
 import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
-import { StarBorder, Star } from "@mui/icons-material"
+import { StarBorder, Star, FolderOff } from "@mui/icons-material"
 import useForceUpdate from "use-force-update"
 import { i18n } from "./I18n"
 import ReactMarkdown from "react-markdown"
@@ -41,7 +41,11 @@ export function FileDisplayBoard({ file }) {
   const boardRef = useRef()
   const forceUpdate = useForceUpdate()
   let content = null
-  if (file) {
+  if (!file) {
+    content = <div className="no-file-label" >
+      <FolderOff style={{ width: "8rem", height: "8rem" }} />
+    </div>
+  } else {
     const Renderer = resolveRenderer(file.type)
     // wheel control works so bad when using trackpad.
     content = <div
@@ -82,7 +86,7 @@ export function FileDisplayBoard({ file }) {
     <ResponsiveAppBar>
       <Tooltip title={file?.path}>
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          {file ? file.name : i18n.playground.nofileSelected}
+          {file ? file.name : null}
         </Typography>
       </Tooltip>
       {file && // only display if any file is selected
