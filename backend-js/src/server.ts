@@ -188,6 +188,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
     res.send(fullTreeCache.json)
+    res.end()
   })
 
   app.get("/file(/*)", authMiddleware, async (req, res) => {
@@ -201,7 +202,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     path = removeSuffix(path, "/")
     const resolved = node.resolveFile(path.split("/"))
     if (!resolved?.inner?.["*type"]) {
-      res.status(404).end()
+      res.sendStatus(404).end()
       return
     }
     events.emit("file-requested", req, res, resolved)
@@ -240,11 +241,11 @@ export async function startServer(config: AppConfig): Promise<void> {
       stream = await node.createReadStream(file, options)
     }
     if (!stream) {
-      res.status(404).end()
+      res.sendStatus(404).end()
       return
     }
     stream.on("error", (_) => {
-      res.sendStatus(500)
+      res.sendStatus(500).end()
     })
     stream.pipe(res)
   }
