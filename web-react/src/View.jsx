@@ -26,7 +26,8 @@ export const IsDrawerOpenContext = createContext()
 export const AstrologyContext = createContext()
 export const FileNavigationContext = createContext()
 
-export async function loader() {
+export async function loader({ request }) {
+  storage.lastFilePathFromUrl = decodeURIComponent(new URL(request.url).searchParams.get("file"))
   const task = async () => {
     const response = await fetch("/list", {
       method: "GET",

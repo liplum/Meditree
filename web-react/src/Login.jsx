@@ -5,7 +5,7 @@ import {
   redirect,
   Form,
 } from "react-router-dom"
-import { updatePageTitle } from "./Env.js"
+import { storage, updatePageTitle } from "./Env.js"
 import "./Login.css"
 import { i18n } from "./I18n.js"
 import { Visibility, VisibilityOff } from "@mui/icons-material"
@@ -47,7 +47,12 @@ export async function action({ request }) {
   if (loginRes.ok) {
     const { jwt } = await loginRes.json()
     Cookies.set("jwt", jwt)
-    return redirect("/view")
+    const lastPath = storage.lastFilePathFromUrl
+    if (lastPath) {
+      return redirect(`/view?file=${encodeURIComponent(lastPath)}`)
+    } else {
+      return redirect("/view")
+    }
   } else {
     Cookies.remove("jwt")
     return null
