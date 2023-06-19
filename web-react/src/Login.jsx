@@ -11,6 +11,16 @@ import { i18n } from "./I18n.js"
 import { Visibility, VisibilityOff } from "@mui/icons-material"
 import Cookies from "js-cookie"
 
+// Skip login if jwt is still valid.
+export async function loader() {
+  const validationRes = await fetch("/verify")
+  if (validationRes.ok) {
+    return redirect("/view")
+  } else {
+    return null
+  }
+}
+
 /**
  * Handle log in
  */
