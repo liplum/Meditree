@@ -16,14 +16,18 @@ function createRoot(): DirectoryInfo {
 }
 const root = ref(createRoot())
 // for testing
-onMounted(() => {
-  fetch(`/list`, { method: "GET" })
-    .then((res) => res.json())
-    .then((data) => {
-      const fileTree = parseFileTree(data)
-      root.value = fileTree
-      selectedDir.value = fileTree
-    });
+onMounted(async () => {
+  const res = await fetch(`/list`, { method: "GET" })
+  if (res.ok) {
+    const json = await res.json()
+    const fileTree = parseFileTree(json)
+    root.value = fileTree
+    selectedDir.value = fileTree
+  } else {
+    const message = await res.text()
+    console.error(message)
+    router.push("/")
+  }
 })
 const drawer = ref(true)
 const selectedFile = computed(() => {

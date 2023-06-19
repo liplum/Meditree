@@ -16,6 +16,7 @@ import * as directives from 'vuetify/directives'
 
 import { l10nChart } from "./i18n"
 import { createI18n } from 'vue-i18n'
+import Cookies from "js-cookie"
 
 const app = createApp(App)
 
@@ -36,15 +37,26 @@ const vuetify = createVuetify({
 
 app.use(vuetify)
 
-const routes = [
-  { path: '/', component: Login },
-  { path: '/view', component: View },
-]
-
 const router = createRouter({
   // 4. Provide the history implementation to use. We are using the hash history for simplicity here.
   history: createWebHashHistory(),
-  routes, // short for `routes: routes`
+  routes: [
+    {
+      path: '/', component: Login, beforeEnter: async (to, from, next) => {
+        const jwt = Cookies.get("jwt")
+        if (!jwt) return next()
+        // if jwt was generated, verify it.
+        const validationRes = await fetch("/verify")
+        console.log(validationRes)
+        if (validationRes.ok) {
+          next("/view")
+        } else {
+          next()
+        }
+      }
+    },
+    { path: '/view', component: View },
+  ], // short for `routes: routes`
 })
 
 app.use(router)
