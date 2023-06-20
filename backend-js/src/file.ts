@@ -56,17 +56,8 @@ export class VirtualFile implements File {
 }
 
 export type PathFilter = (path: string) => boolean
-export class ResolvedFile {
-  inner: File
-  [key: string]: any
-  path: string
-  constructor(file: File, path: string) {
-    this.inner = file
-    this.path = path
-  }
-}
 export interface FileTreeLike {
-  resolveFile: (pathParts: string[]) => ResolvedFile | null
+  resolveFile: (pathParts: string[]) => LocalFile | null
   toJSON: () => FileTree
 }
 
@@ -100,7 +91,7 @@ export class LocalFileTree implements FileTreeLike {
  * @param pathParts The parts of the file's path.
  * @returns The resolved file or `null` if it could not be found.
  */
-  resolveFile(pathParts: string[]): ResolvedFile | null {
+  resolveFile(pathParts: string[]): LocalFile | null {
     let cur: LocalFile | LocalFileTree | undefined = this
     for (let index = 0; index < pathParts.length && cur instanceof LocalFileTree; index++) {
       const currentPart = pathParts[index]
@@ -108,7 +99,7 @@ export class LocalFileTree implements FileTreeLike {
     }
 
     if (cur instanceof LocalFile) {
-      return new ResolvedFile(cur, pathParts.join("/"))
+      return cur
     } else {
       return null
     }

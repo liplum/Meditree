@@ -39,31 +39,12 @@ and the value is an object for configuring the plugin.
 
 Built-in plugins:
 
-- [cache](#cache): for caching files from subnodes.
 - [homepage](#homepage): for hosting a static website.
 - [minify](#minify): for minifying list json for client rendering.
 - [statistics](#statistics): for counting file access times.
 - [watch](#watch): for watching the root directory changing and frequently rebuilding file tree.
 - [hls](#hls):
 - [jsondb](#jsondb):
-
-### Cache
-
-Properties:
-
-- **`maxSize`** (number?): The maximum file size, in bytes, that can be cached. Defaults to 10MB.
-- **`maxAge`** (number?): The maximum time, in milliseconds, that a file can be cached before it is invalidated. Defaults to 24 hours.
-- **`root`** (string?): The root directory for the cache. Defaults to "meditree-cache".
-
-Example:
-
-```json5
-{
-  "maxSize": 5242880, // Cache files with a maximum size of 5MB.
-  "maxAge": 3600000, // Invalidate cached files after 1 hour (3600000 milliseconds).
-  "root": "./my-cache-directory" // Use the directory "./my-cache-directory" as the root directory for the cache.
-}
-```
 
 ### Homepage
 

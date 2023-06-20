@@ -1,5 +1,5 @@
 import chokidar from "chokidar"
-import { type LocalFileTree, type FileTreeLike, type FileTree, type ResolvedFile } from "../file.js"
+import { type LocalFileTree, type FileTreeLike, type FileTree, type LocalFile } from "../file.js"
 import { type IHostTree, type HostTreeOptions, makeFilePathClassifier, makeFSOFilter, type FSOFilter, type FileClassifier, createFileTreeFrom, shallowEqual } from "../host.js"
 import { type MeditreePlugin } from "../server.js"
 import type fs from "fs"
@@ -117,7 +117,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.rebuildLoopTask = null
   }
 
-  resolveFile(pathParts: string[]): ResolvedFile | null {
+  resolveFile(pathParts: string[]): LocalFile | null {
     return this.fileTree?.resolveFile(pathParts)
   }
 }

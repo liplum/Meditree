@@ -1,7 +1,7 @@
 import fs from "fs"
 import path from "path"
 import minimatch, { type MinimatchOptions } from "minimatch"
-import { type FileTreeLike, LocalFile, type FileType, type FileTree, type ResolvedFile } from "./file.js"
+import { type FileTreeLike, LocalFile, type FileType, type FileTree } from "./file.js"
 import { LocalFileTree } from "./file.js"
 import EventEmitter from "events"
 import { promisify } from "util"
@@ -30,7 +30,7 @@ export declare interface IHostTree {
 }
 
 export class EmptyHostTree implements FileTreeLike, IHostTree {
-  resolveFile: (pathParts: string[]) => ResolvedFile | null
+  resolveFile: (pathParts: string[]) => LocalFile | null
   toJSON: () => FileTree
   on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this {
     return this
@@ -95,7 +95,7 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.emit("rebuild", tree)
   }
 
-  resolveFile(pathParts: string[]): ResolvedFile | null {
+  resolveFile(pathParts: string[]): LocalFile | null {
     return this.fileTree?.resolveFile(pathParts)
   }
 }

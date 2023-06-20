@@ -1,30 +1,10 @@
 import fs from "fs"
 import path from "path"
-import nacl from "tweetnacl"
 import { v4 as uuidv4 } from "uuid"
 import { HLSMediaType } from "./plugin/hls.js"
 import { findFSOInTreeByName, listAncestors } from "./file-finding.js"
 
-export interface AsParentConfig {
-  name: string
-  port: number
-  /**
-   * The public key of node.
-   */
-  child: string[]
-  publicKey: string
-  privateKey: string
-}
-
-export interface AsChildConfig {
-  name: string
-  parent: string[]
-  publicKey: string
-  privateKey: string
-  reconnectInterval?: number | string
-}
-
-export interface AppConfig extends AsParentConfig, AsChildConfig {
+export interface AppConfig {
   /** 
    * The network interface on which the application will listen for incoming connections.
    * 0.0.0.0(all interfaces) by default.
@@ -85,8 +65,6 @@ const defaultConfig: Partial<AppConfig> = {
     "**/*.m3u8": HLSMediaType,
     "**/*.ts": "video/mpeg", // TODO: conflict with typescript file
   },
-  parent: [],
-  child: [],
 }
 
 // default to ignore application on macOS
@@ -104,15 +82,6 @@ export function injectDefaultConfig(config?: AppConfig | Partial<AppConfig>): Ap
 
 export function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
   const newConfig = (config ? { ...config } : {}) as AppConfig
-  if (newConfig.privateKey) {
-    if (!newConfig.publicKey) {
-      newConfig.publicKey = Buffer.from(nacl.box.keyPair.fromSecretKey(Uint8Array.from(Buffer.from(newConfig.privateKey))).publicKey).toString("base64")
-    }
-  } else if (!newConfig.publicKey) {
-    const { publicKey, secretKey } = nacl.box.keyPair()
-    newConfig.publicKey = Buffer.from(publicKey).toString("base64")
-    newConfig.privateKey = Buffer.from(secretKey).toString("base64")
-  }
   if (!newConfig.name) {
     newConfig.name = uuidv4()
   }

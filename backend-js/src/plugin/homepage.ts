@@ -1,6 +1,6 @@
 import { type FileTree, type File } from "../file.js"
 import { createLogger } from "../logger.js"
-import { type MeditreeNode } from "../meditree.js"
+import { type Meditree } from "../meditree.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
 import express, { type RequestHandler } from "express"
 import fs from "fs"
@@ -32,13 +32,12 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
 
   // lazy-build the html
   let html: string | undefined
-  let node: MeditreeNode
+  let meditree: Meditree
   let authMiddleware: RequestHandler
   return {
-    async setupMeditreeNode(meditreeNode) {
-      node = meditreeNode
+    async setupMeditree(meditree) {
       if (!root) {
-        meditreeNode.on("file-tree-update", () => {
+        meditree.on("file-tree-update", () => {
           // clear the built html
           html = undefined
         })
@@ -55,7 +54,7 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
           res.status(200)
           res.contentType("text/html")
           if (html === undefined) {
-            html = buildIndexHtml(node.toJSON())
+            html = buildIndexHtml(meditree.toJSON())
           }
           res.send(html)
         }]

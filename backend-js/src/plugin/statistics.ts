@@ -23,7 +23,7 @@ export default function StatisticsPlugin(config: StatisticsPluginConfig): Meditr
       statistics = container.get(TYPE.StatisticsStorage)
       const events = container.get(MeditreeType.Events)
       events.on("file-requested", (req, res, file) => {
-        statistics.increment(file.path)
+        statistics.increment(file.localPath)
       })
     },
   }
