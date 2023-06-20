@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { EmptyHostTree, type FileTreePlugin, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
-import { type AppConfig, type AsParentConfig, type AsChildConfig } from "./config.js"
+import { type AppConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
-import { cloneFileTreeJson, type FileTree, type LocalFileTree, type ResolvedFile } from "./file.js"
+import { cloneFileTreeJson, type FileTree, type LocalFileTree, type LocalFile } from "./file.js"
 import cors from "cors"
-import { setupAsParent, setupAsChild, MeditreeNode, type FileTreeInfo, type ReadStreamOptions } from "./meditree.js"
+import { Meditree, type FileTreeInfo, type ReadStreamOptions } from "./meditree.js"
 import { LogLevels, createLogger, globalOptions, initGlobalLogFile } from "./logger.js"
 import { Timer } from "./timer.js"
 import { type PluginRegistry, resolvePluginList } from "./plugin.js"
@@ -132,7 +132,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   })
 
   // Phrase 14: create MeditreeNode and attach plugins to it.
-  const node = new MeditreeNode()
+  const node = new Meditree()
   node.plugins = plugins
 
   // Phrase 15: plugins patch the MeditreeNode setup.
@@ -206,12 +206,12 @@ export async function startServer(config: AppConfig): Promise<void> {
     }
     path = removeSuffix(path, "/")
     const resolved = node.resolveFile(path.split("/"))
-    if (!resolved?.inner?.["*type"]) {
+    if (!resolved?.["*type"]) {
       res.sendStatus(404).end()
       return
     }
     events.emit("file-requested", req, res, resolved)
-    const fileType = resolved.inner["*type"]
+    const fileType = resolved["*type"]
     res.contentType(fileType)
     const expireTime = new Date(Date.now() + config.cacheMaxAge)
     res.setHeader("Expires", expireTime.toUTCString())
@@ -221,25 +221,25 @@ export async function startServer(config: AppConfig): Promise<void> {
   /**
    * Ranged is for videos and audios. On Safari mobile, range headers is used.
    */
-  async function pipeFile(req: Request, res: Response, file: ResolvedFile): Promise<void> {
+  async function pipeFile(req: Request, res: Response, file: LocalFile): Promise<void> {
     let { start, end } = resolveRange(req.headers.range)
     start ??= 0
-    end ??= file.inner.size - 1
+    end ??= file.size - 1
     const retrievedLength = (end + 1) - start
 
     res.statusCode = req.headers.range ? 206 : 200
 
     res.setHeader("content-length", retrievedLength)
     if (req.headers.range) {
-      res.setHeader("content-range", `bytes ${start}-${end}/${file.inner.size}`)
+      res.setHeader("content-range", `bytes ${start}-${end}/${file.size}`)
       res.setHeader("accept-ranges", "bytes")
     }
     let stream: Readable | null | undefined
     const options = { start, end, }
     for (const plugin of plugins) {
       if (stream !== undefined) break
-      if (plugin.onNodeCreateReadStream) {
-        stream = await plugin.onNodeCreateReadStream(node, file, options)
+      if (plugin.onCreateFileStream) {
+        stream = await plugin.onCreateFileStream(node, file, options)
       }
     }
     if (stream === undefined) {
@@ -259,30 +259,18 @@ export async function startServer(config: AppConfig): Promise<void> {
   hostTree.start()
   await hostTree.rebuildFileTree()
 
-  // Phrase 21: setup Meditree as a parent node if needed.
-  // If node is defined and not empty, subnodes can connect to this.
-  if (config.child?.length && config.publicKey && config.privateKey) {
-    await setupAsParent(node, config as any as AsParentConfig, server)
-  }
-
-  // Phrase 22: setup Meditree as a child node if needed.
-  // If central is defined and not empty, it will try connecting to every central.
-  if (config.parent?.length && config.publicKey && config.privateKey) {
-    await setupAsChild(node, config as any as AsChildConfig)
-  }
-
-  // Phrase 23: listen to dedicated port.
+  // Phrase 21: listen to dedicated port.
   const hostname = config.hostname
   if (hostname) {
     server.listen(config.port, config.hostname, (): void => {
       log.info(`Server running at http://${hostname}:${config.port}/.`)
-      // Phrase 24: stop the starting timer.
+      // Phrase 22: stop the starting timer.
       timer.stop("Start Server", log.info)
     })
   } else {
     server.listen(config.port, (): void => {
       log.info(`Server running at http://localhost:${config.port}/.`)
-      // Phrase 24: stop the starting timer.
+      // Phrase 22: stop the starting timer.
       timer.stop("Start Server", log.info)
     })
   }
@@ -326,7 +314,7 @@ export interface MeditreePlugin extends FileTreePlugin {
 
   setupServer?(app: Express.Application, server: Server): Promise<void>
 
-  setupMeditreeNode?(node: MeditreeNode): Promise<void>
+  setupMeditreeNode?(node: Meditree): Promise<void>
 
   onRegisterExpressHandler?(app: express.Express): Promise<void>
 
@@ -347,12 +335,12 @@ export interface MeditreePlugin extends FileTreePlugin {
    * The first plugin which returns a non-undefined value will be taken.
    * @returns undefined if not handled by this plugin.
    */
-  onNodeCreateReadStream?(node: MeditreeNode, file: ResolvedFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
+  onCreateFileStream?(node: Meditree, file: LocalFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
   onExit?(): void
 }
 
 export interface MeditreeEvents extends EventEmitter {
-  on(event: "file-requested", listener: (req: Request, res: Response, file: ResolvedFile) => void): this
-  off(event: "file-requested", listener: (req: Request, res: Response, file: ResolvedFile) => void): this
-  emit(event: "file-requested", req: Request, res: Response, file: ResolvedFile): boolean
+  on(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile) => void): this
+  off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile) => void): this
+  emit(event: "file-requested", req: Request, res: Response, file: LocalFile): boolean
 }

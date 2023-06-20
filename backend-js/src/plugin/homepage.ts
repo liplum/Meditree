@@ -1,6 +1,6 @@
 import { type FileTree, type File } from "../file.js"
 import { createLogger } from "../logger.js"
-import { type MeditreeNode } from "../meditree.js"
+import { type Meditree } from "../meditree.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
 import express, { type RequestHandler } from "express"
 import fs from "fs"
@@ -32,7 +32,7 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
 
   // lazy-build the html
   let html: string | undefined
-  let node: MeditreeNode
+  let node: Meditree
   let authMiddleware: RequestHandler
   return {
     async setupMeditreeNode(meditreeNode) {

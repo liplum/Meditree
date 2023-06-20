@@ -1,7 +1,6 @@
 import { type PluginMetaclass, type PluginConstructor, type PluginRegistry } from "./plugin.js"
 import { type MeditreePlugin } from "./server.js"
 
-import CachePlugin from "./plugin/cache.js"
 import HomepagePlugin from "./plugin/homepage.js"
 import HLSPlugin from "./plugin/hls.js"
 import MinifyPlugin from "./plugin/minify.js"
@@ -23,7 +22,6 @@ type Creator = PluginConstructor<MeditreePlugin>
 type Metaclass = PluginMetaclass<MeditreePlugin>
 
 export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>): void {
-  registry.cache = (config) => CachePlugin(config)
   registry.homepage = (config) => HomepagePlugin(config)
   registry.hls = (config) => HLSPlugin(config)
   registry.minify = (config) => MinifyPlugin(config)
