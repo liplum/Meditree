@@ -131,22 +131,22 @@ export async function startServer(config: AppConfig): Promise<void> {
     plugins,
   })
 
-  // Phrase 14: create MeditreeNode and attach plugins to it.
-  const node = new Meditree()
-  node.plugins = plugins
+  // Phrase 14: create Meditree and attach plugins to it.
+  const meditree = new Meditree()
+  meditree.plugins = plugins
 
-  // Phrase 15: plugins patch the MeditreeNode setup.
+  // Phrase 15: plugins patch the Meditree setup.
   for (const plugin of plugins) {
-    await plugin.setupMeditreeNode?.(node)
+    await plugin.setupMeditree?.(meditree)
   }
 
   // Phrase 16: listen to HostTree "rebuild" event, and update the local file tree.
   hostTree.on("rebuild", (fileTree) => {
-    node.updateFileTreeFromLocal(config.name, fileTree)
+    meditree.updateFileTreeFromLocal(config.name, fileTree)
     log.info("Local file tree is rebuilt.")
   })
 
-  // Phrase 17: create file tree cache and listen to updates from subnode.
+  // Phrase 17: create file tree cache and listen to updates from local file tree.
   const initialFileTree = {
     name: config.name,
     root: {},
@@ -156,7 +156,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     json: JSON.stringify(initialFileTree, null, 1),
   }
 
-  node.on("file-tree-update", (entireTree) => {
+  meditree.on("file-tree-update", (entireTree) => {
     if (plugins) {
       entireTree = cloneFileTreeJson(entireTree)
       for (const plugin of plugins) {
@@ -205,7 +205,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       return
     }
     path = removeSuffix(path, "/")
-    const resolved = node.resolveFile(path.split("/"))
+    const resolved = meditree.resolveFile(path.split("/"))
     if (!resolved?.["*type"]) {
       res.sendStatus(404).end()
       return
@@ -239,11 +239,11 @@ export async function startServer(config: AppConfig): Promise<void> {
     for (const plugin of plugins) {
       if (stream !== undefined) break
       if (plugin.onCreateFileStream) {
-        stream = await plugin.onCreateFileStream(node, file, options)
+        stream = await plugin.onCreateFileStream(meditree, file, options)
       }
     }
     if (stream === undefined) {
-      stream = await node.createReadStream(file, options)
+      stream = await meditree.createReadStream(file, options)
     }
     if (!stream) {
       res.sendStatus(404).end()
@@ -314,14 +314,14 @@ export interface MeditreePlugin extends FileTreePlugin {
 
   setupServer?(app: Express.Application, server: Server): Promise<void>
 
-  setupMeditreeNode?(node: Meditree): Promise<void>
+  setupMeditree?(meditree: Meditree): Promise<void>
 
   onRegisterExpressHandler?(app: express.Express): Promise<void>
 
   onLocalFileTreePostGenerated?(tree: LocalFileTree): void
 
   /**
-   * @param tree the entire file tree will be sent to both clients and parent nodes.
+   * @param tree the entire file tree.
    * @returns a new file tree or the same instance.
    */
   onEntireTreeUpdated?(tree: FileTree): FileTree
@@ -335,7 +335,7 @@ export interface MeditreePlugin extends FileTreePlugin {
    * The first plugin which returns a non-undefined value will be taken.
    * @returns undefined if not handled by this plugin.
    */
-  onCreateFileStream?(node: Meditree, file: LocalFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
+  onCreateFileStream?(meditree: Meditree, file: LocalFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
   onExit?(): void
 }
 

@@ -21,12 +21,12 @@ export declare interface Meditree {
 
   emit(event: "file-tree-update", entireFree: FileTree): boolean
 }
-export interface MeditreeNodePlugin {
+export interface MeditreePlugin {
   onEntireTreeUpdated?(tree: FileTree): FileTree
 }
 export class Meditree extends EventEmitter implements FileTreeLike {
   localTree?: { name: string, tree: FileTreeLike, json: FileTree }
-  plugins?: MeditreeNodePlugin[]
+  plugins?: MeditreePlugin[]
   log: Logger = createLogger("Meditree")
 
   resolveFile(pathParts: string[]): LocalFile | null {
