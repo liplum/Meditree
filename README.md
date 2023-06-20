@@ -61,7 +61,7 @@ Note when you runs the `backend-js`, some essential settings will be generated o
 
 ```json5
 {
-  "name": "My-Meditree-Node", // better to be unique.
+  "name": "My-Meditree", // Name to show.
   "port": 8080, // 8080 doesn't require sudo on linux.
   "root": "/path/to/root", // [optional] the root direcotry of a local file tree.
   "plugin": {
@@ -86,19 +86,11 @@ server {
     listen 80;
     server_name your_site.com;
 
-    # For example, serving the backend on 8080 port internally and "/" externally.
+    # For example, serving the backend on 8080 port locally, and proxy it to 80 port and "/" externally.
     location / {
         proxy_pass http://localhost:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-    }
-    
-    # For Meditree node communication via websocket.
-    location /ws {
-        proxy_pass http://localhost:8080/ws;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
     }
 }
 ```
@@ -112,21 +104,6 @@ interface File {
   "*type": string;
   "*hide"?: boolean;
   size?: string;
-}
-
-interface Directory {
-  "*hide"?: boolean;
-  [name: string]: File | Directory | any;
-}
-```
-
-The payload for server communication:
-
-```ts
-interface File {
-  "*type": string;
-  "*hide"?: boolean;
-  size: string;
 }
 
 interface Directory {
