@@ -31,7 +31,7 @@ export interface AppConfig {
   name: string
   fileType: Record<string, string>
   plugin?: Record<string, Record<string, any>>
-  ignore?: string[]
+  ignore: string[]
   /**
    * 7 days by default.
    */
@@ -65,6 +65,7 @@ const defaultConfig: Partial<AppConfig> = {
     "**/*.m3u8": HLSMediaType,
     "**/*.ts": "video/mpeg", // TODO: conflict with typescript file
   },
+  ignore: [],
 }
 
 // default to ignore application on macOS

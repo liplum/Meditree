@@ -127,7 +127,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     name: config.name,
     pattern2FileType: config.fileType,
     log: createLogger("LocalFileTree"),
-    ignorePattern: config.ignore ?? [],
+    ignorePattern: config.ignore,
   })
 
   // Phrase 14: create Meditree and attach plugins to it.
