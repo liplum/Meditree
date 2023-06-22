@@ -1,11 +1,13 @@
 import chokidar from "chokidar"
 import { type LocalFileTree, type FileTreeLike, type FileTree, type LocalFile } from "../file.js"
-import { type IHostTree, type HostTreeOptions, makeFilePathClassifier, makeFSOFilter, type FSOFilter, type FileClassifier, createFileTreeFrom, shallowEqual } from "../host.js"
+import { type IHostTree, type HostTreeOptions, makeFilePathClassifier, makeFSOFilter, type FSOFilter, type FileClassifier, createFileTreeFrom } from "../host.js"
 import { type MeditreePlugin } from "../server.js"
 import type fs from "fs"
 import { TYPE } from "../server.js"
 import EventEmitter from "events"
 import { parseTime } from "../utils.js"
+import { type Logger } from "../logger.js"
+
 interface WatchPluginConfig {
   /**
    * 10s by default.
@@ -28,42 +30,25 @@ export default function WatchPlugin(config: WatchPluginConfig): MeditreePlugin {
 }
 
 export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
-  private _options: HostTreeOptions
+  private readonly root: string
+  private readonly log?: Logger
   private fileTree: LocalFileTree
   private fileWatcher: fs.FSWatcher | null = null
   private readonly rebuildInterval: number
-  private filePathClassifier: FileClassifier
-  private fileFilter: FSOFilter
+  private readonly filePathClassifier: FileClassifier
+  private readonly fileFilter: FSOFilter
   private rebuildCounter = 0
   constructor(options: HostTreeOptions, rebuildInterval: number) {
     super()
     this.rebuildInterval = rebuildInterval
-    this.options = options
+    this.root = options.root
+    this.log = options.log
+    this.filePathClassifier = makeFilePathClassifier(options.pattern2FileType)
+    this.fileFilter = makeFSOFilter(options.ignorePattern)
   }
 
   toJSON(): FileTree {
     return this.fileTree.toJSON()
-  }
-
-  get options(): HostTreeOptions {
-    return this._options
-  }
-
-  set options(value: HostTreeOptions) {
-    this._options = value
-    this.filePathClassifier = makeFilePathClassifier(value.pattern2FileType)
-    this.fileFilter = makeFSOFilter(value.ignorePattern)
-  }
-
-  async updateOptions(options: HostTreeOptions): Promise<void> {
-    const oldOptions = this.options
-    if (shallowEqual(oldOptions, options)) return
-    this.options = options
-    if (oldOptions.root !== options.root) {
-      this.stop()
-      this.start()
-    }
-    await this.rebuildFileTree()
   }
 
   get isWatching(): boolean {
@@ -83,10 +68,10 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
       }
     })
     this.rebuildLoopTask.unref()
-    this.fileWatcher = chokidar.watch(this.options.root, {
+    this.fileWatcher = chokidar.watch(this.root, {
       ignoreInitial: true,
     }).on("all", (event, filePath) => {
-      this.options.log?.verbose(`[${event}]${filePath}`)
+      this.log?.verbose(`[${event}]${filePath}`)
       // const relative = path.relative(this.root, filePath)
       if (event === "add" || event === "unlink") {
         if (this.filePathClassifier(filePath) == null) return
@@ -99,9 +84,9 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   async rebuildFileTree(): Promise<void> {
     this.shouldRebuild = false
     const tree = await createFileTreeFrom({
-      root: this.options.root,
+      root: this.root,
       classifier: this.filePathClassifier,
-      includes: this.fileFilter,
+      includes: this.fileFilter,Host
       ignoreEmptyDir: true,
     })
     this.rebuildCounter = 0
