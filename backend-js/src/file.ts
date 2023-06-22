@@ -4,6 +4,7 @@ export interface File {
   size: number
   "*hide"?: boolean
 }
+
 export interface FileTree {
   ["*hide"]?: boolean
   [name: string]: File | FileTree | any
@@ -20,30 +21,6 @@ export class LocalFile implements File {
     this["*type"] = type
     this.size = size
     this.localPath = localPath
-  }
-
-  toJSON(): File {
-    return {
-      "*type": this["*type"],
-      size: this.size,
-      "*hide": this["*hide"],
-    }
-  }
-}
-
-export class VirtualFile implements File {
-  readonly "*type": string
-  readonly buffer: Buffer
-  "*hide"?: boolean | undefined
-  readonly path: string
-  constructor(type: FileType, buffer: Buffer, path: string) {
-    this["*type"] = type
-    this.path = path
-    this.buffer = buffer
-  }
-
-  get size(): number {
-    return this.buffer.byteLength
   }
 
   toJSON(): File {
