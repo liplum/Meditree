@@ -103,7 +103,6 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
       classifier: this.filePathClassifier,
       includes: this.fileFilter,
       ignoreEmptyDir: true,
-      plugins: this.options.plugins,
     })
     this.rebuildCounter = 0
     this.fileTree = tree
