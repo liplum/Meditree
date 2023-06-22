@@ -49,7 +49,7 @@ export class Meditree extends EventEmitter implements FileTreeLike {
     }
   }
 
-  updateFileTreeFromLocal(name: string, tree: FileTreeLike): void {
+  onLocalFileTreeUpdate(name: string, tree: FileTreeLike): void {
     const json = tree.toJSON()
     this.localTree = { name, tree, json }
     this.emitNewEntireTreeUpdateEvent()

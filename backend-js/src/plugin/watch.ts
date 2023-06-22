@@ -51,7 +51,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
 
   set options(value: HostTreeOptions) {
     this._options = value
-    this.filePathClassifier = makeFilePathClassifier(value.fileTypePattern)
+    this.filePathClassifier = makeFilePathClassifier(value.pattern2FileType)
     this.fileFilter = makeFSOFilter(value.ignorePattern)
   }
 

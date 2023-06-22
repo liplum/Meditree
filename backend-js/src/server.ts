@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { EmptyHostTree, type FileTreePlugin, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
+import { EmptyHostTree, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
 import { type AppConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
 import { cloneFileTreeJson, type FileTree, type LocalFileTree, type LocalFile } from "./file.js"
@@ -125,10 +125,9 @@ export async function startServer(config: AppConfig): Promise<void> {
   const hostTree = container.get(TYPE.HostTree)({
     root: config.root as string,
     name: config.name,
-    fileTypePattern: config.fileType,
+    pattern2FileType: config.fileType,
     log: createLogger("LocalFileTree"),
     ignorePattern: config.ignore ?? [],
-    plugins,
   })
 
   // Phrase 14: create Meditree and attach plugins to it.
@@ -141,8 +140,11 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   // Phrase 16: listen to HostTree "rebuild" event, and update the local file tree.
-  hostTree.on("rebuild", (fileTree) => {
-    meditree.updateFileTreeFromLocal(config.name, fileTree)
+  hostTree.on("rebuild", (localTree) => {
+    for (const plugin of plugins) {
+      plugin.onLocalFileTreeGenerated?.(localTree)
+    }
+    meditree.onLocalFileTreeUpdate(config.name, localTree)
     log.info("Local file tree is rebuilt.")
   })
 
@@ -307,7 +309,7 @@ function resolveRange(range?: string): { start?: number, end?: number } {
   return { start, end }
 }
 
-export interface MeditreePlugin extends FileTreePlugin {
+export interface MeditreePlugin {
   onRegisterService?(container: Container): void
 
   init?(): Promise<void>
@@ -318,7 +320,7 @@ export interface MeditreePlugin extends FileTreePlugin {
 
   onRegisterExpressHandler?(app: express.Express): Promise<void>
 
-  onLocalFileTreePostGenerated?(tree: LocalFileTree): void
+  onLocalFileTreeGenerated?(tree: LocalFileTree): void
 
   /**
    * @param tree the entire file tree.

@@ -5,7 +5,6 @@ import { type FileTreeLike, LocalFile, type FileType, type FileTree } from "./fi
 import { LocalFileTree } from "./file.js"
 import EventEmitter from "events"
 import { promisify } from "util"
-import { type MeditreePlugin } from "./server.js"
 import { type Logger } from "./logger.js"
 
 export interface HostTreeOptions {
@@ -14,10 +13,9 @@ export interface HostTreeOptions {
   */
   root: string
   name: string
-  fileTypePattern: Record<string, string>
+  pattern2FileType: Record<string, string>
   ignorePattern: string[]
   log?: Logger
-  plugins?: MeditreePlugin[]
 }
 
 export declare interface IHostTree {
@@ -86,10 +84,9 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
   async rebuildFileTree(): Promise<void> {
     const tree = await createFileTreeFrom({
       root: this.options.root,
-      classifier: makeFilePathClassifier(this.options.fileTypePattern),
+      classifier: makeFilePathClassifier(this.options.pattern2FileType),
       includes: makeFSOFilter(this.options.ignorePattern),
       ignoreEmptyDir: true,
-      plugins: this.options.plugins,
     })
     this.fileTree = tree
     this.emit("rebuild", tree)
@@ -148,11 +145,7 @@ export function shallowEqual(obj1: any, obj2: any): boolean {
 export const statAsync = promisify(fs.stat)
 export const readdirAsync = promisify(fs.readdir)
 
-export interface FileTreePlugin {
-  onLocalFileTreePostGenerated?(tree: FileTree): void
-}
-
-export async function createFileTreeFrom({ root, ignoreEmptyDir, classifier, includes, log, plugins }: {
+export async function createFileTreeFrom({ root, ignoreEmptyDir, classifier, includes, log }: {
   root: string
   classifier: FileClassifier
   includes: (path: string) => boolean
@@ -161,7 +154,6 @@ export async function createFileTreeFrom({ root, ignoreEmptyDir, classifier, inc
    */
   ignoreEmptyDir: boolean
   log?: Logger
-  plugins?: FileTreePlugin[]
 }): Promise<LocalFileTree> {
   const stats = await statAsync(root)
   if (!stats.isDirectory()) {
@@ -207,10 +199,5 @@ export async function createFileTreeFrom({ root, ignoreEmptyDir, classifier, inc
     }
   }
   await walk(tree, root)
-  if (plugins?.length) {
-    for (const plugin of plugins) {
-      plugin.onLocalFileTreePostGenerated?.(tree)
-    }
-  }
   return tree
 }
