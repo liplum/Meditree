@@ -83,13 +83,10 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   // Phrase 9: register default service.
   container.bind(TYPE.HostTree)
-    .toValue((options) =>
-      config.root
-        ? new HostTree(options)
-        : new EmptyHostTree()
-    )
+    .toValue((options) => new HostTree(options))
 
-  container.bind(TYPE.Auth).toValue((req, res, next) => { next() })
+  container.bind(TYPE.Auth)
+    .toValue((req, res, next) => { next() })
 
   const events = new EventEmitter() as MeditreeEvents
 
@@ -122,13 +119,17 @@ export async function startServer(config: AppConfig): Promise<void> {
   }
 
   // Phrase 13: resolve the HostTree service.
-  const hostTree = container.get(TYPE.HostTree)({
-    root: config.root as string,
-    name: config.name,
-    pattern2FileType: config.fileType,
-    log: createLogger("LocalFileTree"),
-    ignorePattern: config.ignore,
-  })
+  const hostTreeCtor = container.get(TYPE.HostTree)
+  let hostTree: IHostTree = new EmptyHostTree()
+  if (config.root) {
+    hostTree = hostTreeCtor({ 
+      root: config.root as string,
+      name: config.name,
+      pattern2FileType: config.fileType,
+      log: createLogger("LocalFileTree"),
+      ignorePattern: config.ignore,
+    })
+  }
 
   // Phrase 14: create Meditree and attach plugins to it.
   const meditree = new Meditree()
