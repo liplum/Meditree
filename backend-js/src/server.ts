@@ -122,13 +122,27 @@ export async function startServer(config: AppConfig): Promise<void> {
   const hostTreeCtor = container.get(TYPE.HostTree)
   let hostTree: IHostTree = new EmptyHostTree()
   if (config.root) {
-    hostTree = hostTreeCtor({ 
-      root: config.root as string,
-      name: config.name,
+    const logger = createLogger("LocalFileTree")
+    const common = {
       pattern2FileType: config.fileType,
-      log: createLogger("LocalFileTree"),
+      log: logger,
       ignorePattern: config.ignore,
-    })
+    }
+    if (typeof config.root === "string") {
+      hostTree = hostTreeCtor({
+        root: config.root,
+        name: config.name,
+        ...common,
+      })
+    } else if (Array.isArray(config.root)) {
+      for (const root of config.root) {
+
+      }
+    } else {
+      for (const [name, root] of Object.entries(config.root)) {
+
+      }
+    }
   }
 
   // Phrase 14: create Meditree and attach plugins to it.
