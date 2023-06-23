@@ -30,6 +30,7 @@ export default function WatchPlugin(config: WatchPluginConfig): MeditreePlugin {
 }
 
 export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
+  readonly name: string
   private readonly root: string
   private readonly log?: Logger
   private fileTree: LocalFileTree
@@ -43,6 +44,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.rebuildInterval = rebuildInterval
     this.root = options.root
     this.log = options.log
+    this.name = options.name
     this.filePathClassifier = makeFilePathClassifier(options.pattern2FileType)
     this.fileFilter = makeFSOFilter(options.ignorePattern)
   }
@@ -84,9 +86,10 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   async rebuildFileTree(): Promise<void> {
     this.shouldRebuild = false
     const tree = await createFileTreeFrom({
+      name: this.name,
       root: this.root,
       classifier: this.filePathClassifier,
-      includes: this.fileFilter,Host
+      includes: this.fileFilter,
       ignoreEmptyDir: true,
     })
     this.rebuildCounter = 0

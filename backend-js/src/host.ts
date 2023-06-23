@@ -19,6 +19,7 @@ export interface HostTreeOptions {
 }
 
 export declare interface IHostTree {
+  readonly name: string
   on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this
   off(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this
   emit(event: "rebuild", fileTree: LocalFileTree): boolean
@@ -29,6 +30,7 @@ export declare interface IHostTree {
 
 export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
   private readonly root: string
+  readonly name: string
   private readonly log?: Logger
   private fileTree: LocalFileTree
   private readonly filePathClassifier: FileClassifier
@@ -37,6 +39,7 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
     super()
     this.root = options.root
     this.log = options.log
+    this.name = options.name
     this.filePathClassifier = makeFilePathClassifier(options.pattern2FileType)
     this.fileFilter = makeFSOFilter(options.ignorePattern)
   }
@@ -53,6 +56,7 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
 
   async rebuildFileTree(): Promise<void> {
     const tree = await createFileTreeFrom({
+      name: this.name,
       root: this.root,
       classifier: this.filePathClassifier,
       includes: this.fileFilter,
@@ -99,7 +103,8 @@ export function makeFilePathClassifier(fileTypePattern: Record<string, string>):
 export const statAsync = promisify(fs.stat)
 export const readdirAsync = promisify(fs.readdir)
 
-export async function createFileTreeFrom({ root, ignoreEmptyDir, classifier, includes, log }: {
+export async function createFileTreeFrom({ name: rootName, root, ignoreEmptyDir, classifier, includes, log }: {
+  name?: string
   root: string
   classifier: FileClassifier
   includes: (path: string) => boolean
@@ -113,7 +118,7 @@ export async function createFileTreeFrom({ root, ignoreEmptyDir, classifier, inc
   if (!stats.isDirectory()) {
     throw Error(`${root} isn't a directory`)
   }
-  const tree = new LocalFileTree(path.basename(root), root)
+  const tree = new LocalFileTree(rootName ?? path.basename(root), root)
   async function walk(
     tree: LocalFileTree,
     curDir: string,
@@ -157,8 +162,16 @@ export async function createFileTreeFrom({ root, ignoreEmptyDir, classifier, inc
 }
 
 export class EmptyHostTree implements FileTreeLike, IHostTree {
-  resolveFile: (pathParts: string[]) => LocalFile | null
-  toJSON: () => FileTree
+  readonly name: string
+  constructor(name: string) {
+    this.name = name
+  }
+  resolveFile(pathParts: string[]): LocalFile | null {
+    return null
+  }
+  toJSON(): FileTree {
+    return {}
+  }
   on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this {
     return this
   }
@@ -178,5 +191,73 @@ export class EmptyHostTree implements FileTreeLike, IHostTree {
   }
 
   async rebuildFileTree(): Promise<void> {
+  }
+}
+
+interface HostTreeEntry {
+  hostTree: IHostTree
+  rebuildListener: (fileTree: LocalFileTree) => void
+}
+
+export class CustomHostTree implements FileTreeLike, IHostTree {
+  readonly name: string
+  private readonly name2Subtree = new Map<string, HostTreeEntry>()
+  private readonly dispatcher = new EventEmitter()
+  private builtFileTree: LocalFileTree
+  constructor(options: HostTreeOptions) {
+    this.name = options.name
+    this.builtFileTree = new LocalFileTree(this.name, "")
+  }
+
+  resolveFile(pathParts: string[]): LocalFile | null {
+    return null
+  }
+
+  toJSON(): FileTree {
+    return this.builtFileTree.toJSON()
+  }
+
+  addSubtree(subtree: IHostTree): void {
+    if (this === subtree) throw new Error("Cannot add self.")
+    const listener = (fileTree: LocalFileTree): void => {
+      this.onSubtreeRebuild(subtree, fileTree)
+    }
+    this.name2Subtree.set(subtree.name, {
+      hostTree: subtree, rebuildListener: listener
+    })
+    subtree.on("rebuild", listener)
+  }
+
+  onSubtreeRebuild(subtree: IHostTree, itsLocalTree: LocalFileTree): void {
+  }
+
+  on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this {
+    return this
+  }
+
+  off(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this {
+    return this
+  }
+
+  emit(event: "rebuild", fileTree: LocalFileTree): boolean {
+    return true
+  }
+
+  start(): void {
+    for (const { hostTree } of this.name2Subtree.values()) {
+      hostTree.start()
+    }
+  }
+
+  stop(): void {
+    for (const { hostTree } of this.name2Subtree.values()) {
+      hostTree.stop()
+    }
+  }
+
+  async rebuildFileTree(): Promise<void> {
+    for (const { hostTree } of this.name2Subtree.values()) {
+      await hostTree.rebuildFileTree()
+    }
   }
 }
