@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { EmptyHostTree, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
+import { ComposebleHostTree, EmptyHostTree, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
 import { type AppConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
 import { cloneFileTreeJson, type FileTree, type LocalFileTree, type LocalFile } from "./file.js"
@@ -14,6 +14,7 @@ import { Container, uniqueToken } from "./ioc.js"
 import cookieParser from "cookie-parser"
 import { registerBuiltinPlugins } from "./builtin-plugin.js"
 import { EventEmitter } from "events"
+import path from "path"
 
 export const TYPE = {
   HostTree: uniqueToken<(options: HostTreeOptions) => IHostTree>("HostTree"),
@@ -135,12 +136,21 @@ export async function startServer(config: AppConfig): Promise<void> {
         ...common,
       })
     } else if (Array.isArray(config.root)) {
+      const rootHostTree = new ComposebleHostTree(config.name)
+      hostTree = rootHostTree
       for (const root of config.root) {
-
+        const name = path.basename(root)
+        rootHostTree.addSubtree(hostTreeCtor({
+          root, name, ...common
+        }))
       }
     } else {
+      const rootHostTree = new ComposebleHostTree(config.name)
+      hostTree = rootHostTree
       for (const [name, root] of Object.entries(config.root)) {
-
+        rootHostTree.addSubtree(hostTreeCtor({
+          root, name, ...common
+        }))
       }
     }
   }

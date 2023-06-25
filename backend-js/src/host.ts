@@ -206,9 +206,9 @@ export class ComposebleHostTree extends EventEmitter implements FileTreeLike, IH
   readonly name: string
   private readonly name2Subtree = new Map<string, HostTreeEntry>()
   private readonly builtFileTree: LocalFileTree
-  constructor(options: HostTreeOptions) {
+  constructor(name: string) {
     super()
-    this.name = options.name
+    this.name = name
     this.builtFileTree = new LocalFileTree(this.name)
   }
 
