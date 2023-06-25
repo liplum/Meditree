@@ -42,9 +42,12 @@ export class LocalFileTree implements FileTreeLike {
   readonly parent?: LocalFileTree
   hidden?: boolean
   private readonly name2File = new Map<string, LocalFile | LocalFileTree>()
-  readonly rootPath: string
+  /**
+   * If `rootPath` is undefined, it indicates this file tree is vitrual.
+   */
+  readonly rootPath?: string
   readonly name: string
-  constructor(name: string, rootPath: string, parent?: LocalFileTree) {
+  constructor(name: string, rootPath?: string, parent?: LocalFileTree) {
     this.rootPath = rootPath
     this.name = name
     this.parent = parent

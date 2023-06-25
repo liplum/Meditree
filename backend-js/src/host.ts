@@ -166,12 +166,15 @@ export class EmptyHostTree implements FileTreeLike, IHostTree {
   constructor(name: string) {
     this.name = name
   }
+
   resolveFile(pathParts: string[]): LocalFile | null {
     return null
   }
+
   toJSON(): FileTree {
     return {}
   }
+
   on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this {
     return this
   }
@@ -199,14 +202,14 @@ interface HostTreeEntry {
   rebuildListener: (fileTree: LocalFileTree) => void
 }
 
-export class CustomHostTree implements FileTreeLike, IHostTree {
+export class ComposebleHostTree extends EventEmitter implements FileTreeLike, IHostTree {
   readonly name: string
   private readonly name2Subtree = new Map<string, HostTreeEntry>()
-  private readonly dispatcher = new EventEmitter()
-  private builtFileTree: LocalFileTree
+  private readonly builtFileTree: LocalFileTree
   constructor(options: HostTreeOptions) {
+    super()
     this.name = options.name
-    this.builtFileTree = new LocalFileTree(this.name, "")
+    this.builtFileTree = new LocalFileTree(this.name)
   }
 
   resolveFile(pathParts: string[]): LocalFile | null {
@@ -229,18 +232,8 @@ export class CustomHostTree implements FileTreeLike, IHostTree {
   }
 
   onSubtreeRebuild(subtree: IHostTree, itsLocalTree: LocalFileTree): void {
-  }
-
-  on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this {
-    return this
-  }
-
-  off(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this {
-    return this
-  }
-
-  emit(event: "rebuild", fileTree: LocalFileTree): boolean {
-    return true
+    this.builtFileTree.addFile(subtree.name, itsLocalTree)
+    this.emit("rebuild", this.builtFileTree)
   }
 
   start(): void {
