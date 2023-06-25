@@ -102,10 +102,10 @@ const minimatchOptions: MinimatchOptions = {
 }
 
 export type FSOFilter = (path: string) => boolean
-export function makeFSOFilter(ignorePattern: string[]): FSOFilter {
+export function makeFSOFilter(ignorePatterns: string[]): FSOFilter {
   return (path) => {
-    for (const ignore of ignorePattern) {
-      if (minimatch(path, ignore, minimatchOptions)) {
+    for (const pattern of ignorePatterns) {
+      if (minimatch(path, pattern, minimatchOptions)) {
         return false
       }
     }
