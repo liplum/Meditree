@@ -41,7 +41,7 @@ export interface FileTreeLike {
 export class LocalFileTree implements FileTreeLike {
   readonly parent?: LocalFileTree
   hidden?: boolean
-  readonly name2File = new Map<string, LocalFile | LocalFileTree>()
+  private readonly name2File = new Map<string, LocalFile | LocalFileTree>()
   readonly rootPath: string
   readonly name: string
   constructor(name: string, rootPath: string, parent?: LocalFileTree) {
@@ -100,6 +100,10 @@ export class LocalFileTree implements FileTreeLike {
 
   removeFile(name: string): void {
     this.name2File.delete(name)
+  }
+
+  getFile(name: string): LocalFile | LocalFileTree | undefined {
+    return this.name2File.get(name)
   }
 
   createSubtree(name: string, rootPath: string): LocalFileTree {

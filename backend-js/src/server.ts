@@ -120,7 +120,7 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   // Phrase 13: resolve the HostTree service.
   const hostTreeCtor = container.get(TYPE.HostTree)
-  let hostTree: IHostTree = new EmptyHostTree()
+  let hostTree: IHostTree = new EmptyHostTree(config.name)
   if (config.root) {
     const logger = createLogger("LocalFileTree")
     const common = {
