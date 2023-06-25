@@ -19,7 +19,7 @@ export interface AppConfig {
    *
    * By default, no local file tree will be created.
    * 
-   * If an array of paths is given,a virtual file tree will be created with the given paths.
+   * If an array of paths is given, a virtual file tree will be created with the given paths.
    * 
    * If a map of name to path is given, a virtual file tree will be created with the specified names and paths.
    */
