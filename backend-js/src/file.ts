@@ -85,11 +85,14 @@ export class LocalFileTree implements FileTreeLike {
     }
   }
 
-  get subtreeChildrenCount(): number {
+  /**
+   * 
+   */
+  countSubtreeChildren(): number {
     let total = 0
     for (const file of this.name2File.values()) {
       if (file instanceof LocalFileTree) {
-        total += file.subtreeChildrenCount
+        total += file.countSubtreeChildren()
       } else {
         total++
       }

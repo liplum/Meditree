@@ -146,7 +146,7 @@ export async function createFileTreeFrom({ name: rootName, root, ignoreEmptyDir,
         } else if (stat.isDirectory()) {
           const subtree = tree.createSubtree(fileName, filePath)
           await walk(subtree, filePath)
-          if (!ignoreEmptyDir || subtree.subtreeChildrenCount > 0) {
+          if (!ignoreEmptyDir || subtree.countSubtreeChildren() > 0) {
             tree.addFile(fileName, subtree)
           }
         } else {
@@ -213,7 +213,7 @@ export class ComposebleHostTree extends EventEmitter implements FileTreeLike, IH
   }
 
   resolveFile(pathParts: string[]): LocalFile | null {
-    return null
+    return this.builtFileTree.resolveFile(pathParts)
   }
 
   toJSON(): FileTree {
@@ -229,6 +229,15 @@ export class ComposebleHostTree extends EventEmitter implements FileTreeLike, IH
       hostTree: subtree, rebuildListener: listener
     })
     subtree.on("rebuild", listener)
+  }
+
+  removeSubtree(subtree: IHostTree): boolean {
+    const entry = this.name2Subtree.get(subtree.name)
+    if (!entry) return false
+    const { hostTree, rebuildListener } = entry
+    hostTree.off("rebuild", rebuildListener)
+    this.name2Subtree.delete(hostTree.name)
+    return true
   }
 
   onSubtreeRebuild(subtree: IHostTree, itsLocalTree: LocalFileTree): void {
