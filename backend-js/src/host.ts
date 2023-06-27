@@ -14,7 +14,7 @@ export interface HostTreeOptions {
   root: string
   name: string
   pattern2FileType: Record<string, string>
-  ignorePattern: string[]
+  ignorePatterns: string[]
   log?: Logger
 }
 
@@ -41,7 +41,7 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.log = options.log
     this.name = options.name
     this.filePathClassifier = makeFilePathClassifier(options.pattern2FileType)
-    this.fileFilter = makeFSOFilter(options.ignorePattern)
+    this.fileFilter = makeFSOFilter(options.ignorePatterns)
   }
 
   toJSON(): FileTree {
@@ -109,7 +109,7 @@ export async function createFileTreeFrom({ name: rootName, root, ignoreEmptyDir,
   classifier: FileClassifier
   includes: (path: string) => boolean
   /**
-   * whether to ignore the empty file tree
+   * whether to ignore the empty file tree.
    */
   ignoreEmptyDir: boolean
   log?: Logger

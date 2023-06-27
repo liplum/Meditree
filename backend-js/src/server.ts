@@ -127,7 +127,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     const common = {
       pattern2FileType: config.fileType,
       log: logger,
-      ignorePattern: config.ignore,
+      ignorePatterns: config.ignore ?? [],
     }
     if (typeof config.root === "string") {
       hostTree = hostTreeCtor({
