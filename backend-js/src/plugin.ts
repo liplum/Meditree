@@ -47,21 +47,12 @@ async function resolvePluginProvider<TPlugin, TConfig extends PluginConfig = any
   }
 }
 
-function fliterDisabledPlugin(
-  plugins: Record<string, PluginConfig | boolean>,
-): Record<string, PluginConfig> {
-  const res = {}
-  for (const [pluginName, confBody] of Object.entries(plugins)) {
-    if (typeof confBody === "boolean") {
-      // if the config body is literal `true`, it will be considered as empty.
-      if (confBody) {
-        res[pluginName] = {}
-      }
-    } else if (confBody._disabled !== true) {
-      res[pluginName] = confBody
-    }
+function isPluginDisabled(confBody: PluginConfig | boolean): boolean {
+  if (typeof confBody === "boolean") {
+    return !confBody
+  } else {
+    return confBody._disabled === true
   }
-  return res
 }
 
 /**
@@ -74,8 +65,26 @@ export async function resolvePluginList<TPlugin>(
   name2ConfBody: Record<string, PluginConfig | boolean>,
   onFound?: (name: string, plugin: TPlugin) => void,
 ): Promise<TPlugin[]> {
-  const name2Conf = fliterDisabledPlugin(name2ConfBody)
-  const name2PluginProvider = new Map<string, PluginProvider<TPlugin>>()
+  const name2Conf: Record<string, PluginConfig> = {}
+  for (const [pluginName, confBody] of Object.entries(name2ConfBody)) {
+    if (isPluginDisabled(confBody)) continue
+    if (typeof confBody === "boolean") {
+      name2Conf[pluginName] = {}
+    } else {
+      name2Conf[pluginName] = confBody
+      if (confBody._depends) {
+        if (Array.isArray(confBody._depends)) {
+          // if the config body is an array, clear duplicates.
+          confBody._depends = [...new Set(confBody._depends)]
+        } else if (typeof confBody._depends === "string") {
+          // if the config body is a string, wrap it into an array.
+          confBody._depends = [confBody._depends]
+        }
+      }
+    }
+  }
+
+  const name2Provider = new Map<string, PluginProvider<TPlugin>>()
   /**
    * PluginProvider resolution has 3 phrases:
    * Phrase 1: To resolve all PluginProviders. Resolved plugins should be cached.
@@ -90,7 +99,7 @@ export async function resolvePluginList<TPlugin>(
       if (config._depends?.length) {
         config._depends = [...new Set(config._depends)]
       }
-      let provider = name2PluginProvider.get(pluginName)
+      let provider = name2Provider.get(pluginName)
       if (!provider) {
         provider = await resolvePluginProvider(builtin, pluginName)
         if (!provider) {
@@ -100,7 +109,23 @@ export async function resolvePluginList<TPlugin>(
         if (typeof provider === "object") {
           provider.preprocess?.(pluginName, config, name2Conf)
         }
-        name2PluginProvider.set(pluginName, provider)
+        name2Provider.set(pluginName, provider)
+      }
+    }
+  }
+
+  // validate if all dependencies exist.
+  for (const [pluginName, config] of Object.entries(name2Conf)) {
+    if (config._depends?.length) {
+      for (const dp of config._depends) {
+        if (!name2Provider.has(dp)) {
+          const dpConfBody = name2ConfBody[dp]
+          if (dpConfBody !== undefined && isPluginDisabled(dpConfBody)) {
+            throw new Error(`The dependency[${dp}] of plugin[${pluginName}] is disabled.`)
+          } else {
+            throw new Error(`The dependency[${dp}] of plugin[${pluginName}] not found.`)
+          }
+        }
       }
     }
   }
@@ -133,7 +158,7 @@ export async function resolvePluginList<TPlugin>(
       }
     }
 
-    const provider = name2PluginProvider.get(pluginName)
+    const provider = name2Provider.get(pluginName)
     let plugin: TPlugin
     if (typeof provider === "object") {
       plugin = provider.create(conf)
