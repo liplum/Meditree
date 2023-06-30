@@ -139,14 +139,14 @@ export class LocalFileTree implements FileTreeLike {
     return obj
   }
 
-  * visitFile(
-    fileFilter?: (file: File) => boolean,
-    dirFilter?: (dir: FileTree) => boolean,
-  ): Iterable<LocalFile> {
+  * visitFile({ fileFilter, dirFilter }: {
+    fileFilter?: (file: File) => boolean
+    dirFilter?: (dir: FileTree) => boolean
+  }): Iterable<LocalFile> {
     for (const file of this.name2File.values()) {
       if (file instanceof LocalFileTree) {
         if (!dirFilter || dirFilter(file)) {
-          yield* file.visitFile(fileFilter, dirFilter)
+          yield* file.visitFile({ fileFilter, dirFilter })
         }
       } else {
         if (!fileFilter || fileFilter(file)) {
@@ -156,16 +156,16 @@ export class LocalFileTree implements FileTreeLike {
     }
   }
 
-  * visitDir(
-    fileFilter?: (file: File) => boolean,
-    dirFilter?: (dir: FileTree) => boolean,
-  ): Iterable<LocalFileTree> {
+  * visitDir({ fileFilter, dirFilter }: {
+    fileFilter?: (file: File) => boolean
+    dirFilter?: (dir: FileTree) => boolean
+  }): Iterable<LocalFileTree> {
     for (const file of this.name2File.values()) {
       if (file instanceof LocalFileTree) {
         if (!dirFilter || dirFilter(file)) {
           yield file
         }
-        yield* file.visitDir(fileFilter, dirFilter)
+        yield* file.visitDir({ fileFilter, dirFilter })
       }
     }
   }

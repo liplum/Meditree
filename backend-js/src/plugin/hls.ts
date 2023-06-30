@@ -15,7 +15,7 @@ export default function HLSPlugin(config: HLSPluginConfig): MeditreePlugin {
   return {
     onLocalFileTreeGenerated(tree) {
       if (!hideTsDir) return
-      for (const file of tree.visitFile((file) => file["*type"] === HLSMediaType)) {
+      for (const file of tree.visitFile({ fileFilter: (f) => f["*type"] === HLSMediaType })) {
         const pureName = path.basename(file.localPath, path.extname(file.localPath))
         const tsDir = file.parent.getFile(pureName)
         if (tsDir instanceof LocalFileTree) {
