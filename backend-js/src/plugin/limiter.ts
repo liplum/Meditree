@@ -14,7 +14,7 @@ interface LimiterPluginConfig {
 export default function LimiterPlugin(config: LimiterPluginConfig): MeditreePlugin {
   const maxFileSize = config.maxFileSize
   return {
-    onEntireTreeUpdated(fileTree) {
+    onClientFileTreeUpdated(fileTree) {
       return filterFileTreeJson(fileTree, (file) => {
         return maxFileSize === undefined || file.size < maxFileSize
       })

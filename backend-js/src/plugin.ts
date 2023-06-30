@@ -17,7 +17,7 @@ export interface PluginConfig {
    */
   _disabled?: boolean
   /**
-   * Any additional configuration options for the plugin.
+   * Other options for the plugin.
    */
   [key: string]: any
 }
@@ -66,12 +66,12 @@ export async function resolvePluginList<TPlugin>(
   onFound?: (name: string, plugin: TPlugin) => void,
 ): Promise<TPlugin[]> {
   const name2Conf: Record<string, PluginConfig> = {}
-  for (const [pluginName, confBody] of Object.entries(name2ConfBody)) {
+  for (const [name, confBody] of Object.entries(name2ConfBody)) {
     if (isPluginDisabled(confBody)) continue
     if (typeof confBody === "boolean") {
-      name2Conf[pluginName] = {}
+      name2Conf[name] = {}
     } else {
-      name2Conf[pluginName] = confBody
+      name2Conf[name] = confBody
       if (confBody._depends) {
         if (Array.isArray(confBody._depends)) {
           // if the config body is an array, clear duplicates.
@@ -94,36 +94,36 @@ export async function resolvePluginList<TPlugin>(
   let lastPluginCount: number | undefined
   while (lastPluginCount !== Object.keys(name2Conf).length) {
     lastPluginCount = Object.keys(name2Conf).length
-    for (const [pluginName, config] of Object.entries(name2Conf)) {
+    for (const [name, config] of Object.entries(name2Conf)) {
       // clear duplicate dependencies
       if (config._depends?.length) {
         config._depends = [...new Set(config._depends)]
       }
-      let provider = name2Provider.get(pluginName)
+      let provider = name2Provider.get(name)
       if (!provider) {
-        provider = await resolvePluginProvider(builtin, pluginName)
+        provider = await resolvePluginProvider(builtin, name)
         if (!provider) {
-          throw new Error(`Provider for plugin[${pluginName}] not found.`)
+          throw new Error(`Provider for plugin[${name}] not found.`)
         }
         // preprocess if it's the first time that plugin provider is resolved.
         if (typeof provider === "object") {
-          provider.preprocess?.(pluginName, config, name2Conf)
+          provider.preprocess?.(name, config, name2Conf)
         }
-        name2Provider.set(pluginName, provider)
+        name2Provider.set(name, provider)
       }
     }
   }
 
   // validate if all dependencies exist.
-  for (const [pluginName, config] of Object.entries(name2Conf)) {
+  for (const [name, config] of Object.entries(name2Conf)) {
     if (config._depends?.length) {
       for (const dp of config._depends) {
         if (!name2Provider.has(dp)) {
           const dpConfBody = name2ConfBody[dp]
           if (dpConfBody !== undefined && isPluginDisabled(dpConfBody)) {
-            throw new Error(`The dependency[${dp}] of plugin[${pluginName}] is disabled.`)
+            throw new Error(`The dependency[${dp}] of plugin[${name}] is disabled.`)
           } else {
-            throw new Error(`The dependency[${dp}] of plugin[${pluginName}] not found.`)
+            throw new Error(`The dependency[${dp}] of plugin[${name}] not found.`)
           }
         }
       }
@@ -173,8 +173,8 @@ export async function resolvePluginList<TPlugin>(
   }
 
   // Iterate over all the plugin configurations and resolve each one.
-  for (const pluginName of Object.keys(name2Conf)) {
-    resolvePluginDependencies(pluginName, new Set())
+  for (const name of Object.keys(name2Conf)) {
+    resolvePluginDependencies(name, new Set())
   }
 
   return Array.from(name2Resolved.values())

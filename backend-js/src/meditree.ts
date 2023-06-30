@@ -21,12 +21,9 @@ export declare interface Meditree {
 
   emit(event: "file-tree-update", entireFree: FileTree): boolean
 }
-export interface MeditreePlugin {
-  onEntireTreeUpdated?(tree: FileTree): FileTree
-}
+
 export class Meditree extends EventEmitter implements FileTreeLike {
   localTree?: { name: string, tree: FileTreeLike, json: FileTree }
-  plugins?: MeditreePlugin[]
   log: Logger = createLogger("Meditree")
 
   resolveFile(pathParts: string[]): LocalFile | null {
@@ -56,14 +53,7 @@ export class Meditree extends EventEmitter implements FileTreeLike {
   }
 
   private emitNewEntireTreeUpdateEvent(): void {
-    let entireTree: FileTree = this.toJSON()
-    if (this.plugins) {
-      for (const plugin of this.plugins) {
-        if (plugin.onEntireTreeUpdated) {
-          entireTree = plugin.onEntireTreeUpdated(entireTree)
-        }
-      }
-    }
+    const entireTree: FileTree = this.toJSON()
     this.emit("file-tree-update", entireTree)
   }
 

@@ -19,7 +19,7 @@ export default function MinifyPlugin(config: MinifyPluginConfig): MeditreePlugin
   const removeHidden = config.removeHidden ?? false
   const removeSize = config.removeSize ?? false
   return {
-    onEntireTreeForClient(tree): FileTree {
+    onClientFileTreeUpdated(tree): FileTree {
       if (removeHidden || removeSize) {
         function visit(cur: FileTree): void {
           for (const [name, fileOrSubtree] of Object.entries(cur)) {

@@ -157,7 +157,6 @@ export async function startServer(config: AppConfig): Promise<void> {
 
   // Phrase 14: create Meditree and attach plugins to it.
   const meditree = new Meditree()
-  meditree.plugins = plugins
 
   // Phrase 15: plugins patch the Meditree setup.
   for (const plugin of plugins) {
@@ -187,8 +186,8 @@ export async function startServer(config: AppConfig): Promise<void> {
     if (plugins) {
       entireTree = cloneFileTreeJson(entireTree)
       for (const plugin of plugins) {
-        if (plugin.onEntireTreeForClient) {
-          entireTree = plugin.onEntireTreeForClient(entireTree)
+        if (plugin.onClientFileTreeUpdated) {
+          entireTree = plugin.onClientFileTreeUpdated(entireTree)
         }
       }
     }
@@ -348,16 +347,10 @@ export interface MeditreePlugin {
   onLocalFileTreeGenerated?(tree: LocalFileTree): void
 
   /**
-   * @param tree the entire file tree.
-   * @returns a new file tree or the same instance.
-   */
-  onEntireTreeUpdated?(tree: FileTree): FileTree
-
-  /**
    * @param tree the entire file tree will be sent to clients soon.
    * @returns a new file tree or the same instance.
    */
-  onEntireTreeForClient?(tree: FileTree): FileTree
+  onClientFileTreeUpdated?(tree: FileTree): FileTree
   /**
    * The first plugin which returns a non-undefined value will be taken.
    * @returns undefined if not handled by this plugin.
