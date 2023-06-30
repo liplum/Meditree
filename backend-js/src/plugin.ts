@@ -10,7 +10,7 @@ export interface PluginConfig {
   /**
    * An array of the names of plugins that this plugin depends on.
    */
-  depends?: string[]
+  _depends?: string[]
   /**
    * Whether this plugin is disabled or not.
    * False by default.
@@ -48,11 +48,15 @@ async function resolvePluginProvider<TPlugin, TConfig extends PluginConfig = any
 }
 
 function fliterDisabledPlugin(
-  plugins: Record<string, PluginConfig>,
+  plugins: Record<string, PluginConfig | boolean>,
 ): Record<string, PluginConfig> {
   const res = {}
   for (const [pluginName, pluginConfig] of Object.entries(plugins)) {
-    if (pluginConfig._disabled !== true) {
+    if (typeof pluginConfig === "boolean") {
+      if (pluginConfig) {
+        res[pluginName] = {}
+      }
+    } else if (pluginConfig._disabled !== true) {
       res[pluginName] = pluginConfig
     }
   }
@@ -66,10 +70,10 @@ function fliterDisabledPlugin(
  */
 export async function resolvePluginList<TPlugin>(
   builtin: PluginRegistry<TPlugin>,
-  plugins: Record<string, PluginConfig>,
+  conf: Record<string, PluginConfig | boolean>,
   onFound?: (name: string, plugin: TPlugin) => void,
 ): Promise<TPlugin[]> {
-  plugins = fliterDisabledPlugin(plugins)
+  const name2Conf = fliterDisabledPlugin(conf)
   const name2PluginProvider = new Map<string, PluginProvider<TPlugin>>()
   /**
    * PluginProvider resolution has 3 phrases:
@@ -79,9 +83,9 @@ export async function resolvePluginList<TPlugin>(
    */
   async function resolvePluginProviders(): Promise<void> {
     let lastPluginCount: number | undefined
-    while (lastPluginCount !== Object.keys(plugins).length) {
-      lastPluginCount = Object.keys(plugins).length
-      for (const [pluginName, config] of Object.entries(plugins)) {
+    while (lastPluginCount !== Object.keys(name2Conf).length) {
+      lastPluginCount = Object.keys(name2Conf).length
+      for (const [pluginName, config] of Object.entries(name2Conf)) {
         let pluginProvider = name2PluginProvider.get(pluginName)
         if (!pluginProvider) {
           pluginProvider = await resolvePluginProvider(builtin, pluginName)
@@ -90,12 +94,12 @@ export async function resolvePluginList<TPlugin>(
           }
           // preprocess if it's the first time that plugin provider is resolved.
           if (typeof pluginProvider === "object") {
-            pluginProvider.preprocess?.(pluginName, config, plugins)
+            pluginProvider.preprocess?.(pluginName, config, name2Conf)
           }
           name2PluginProvider.set(pluginName, pluginProvider)
           // clear duplicate dependencies
-          if (config.depends?.length) {
-            config.depends = [...new Set(config.depends)]
+          if (config._depends?.length) {
+            config._depends = [...new Set(config._depends)]
           }
         }
       }
@@ -125,15 +129,15 @@ export async function resolvePluginList<TPlugin>(
     seenPlugins.add(pluginName)
 
     // Get the plugin configuration.
-    const pluginConfig = plugins[pluginName]
+    const pluginConfig = name2Conf[pluginName]
 
     if (!pluginConfig) {
       throw new Error(`${pluginName} isn't enabled.`)
     }
 
     // Resolve the dependencies of this plugin before adding it to the list of resolved plugins.
-    if (pluginConfig.depends?.length) {
-      for (const dependencyName of pluginConfig.depends) {
+    if (pluginConfig._depends?.length) {
+      for (const dependencyName of pluginConfig._depends) {
         resolvePluginDependencies(dependencyName, seenPlugins)
       }
     }
@@ -153,7 +157,7 @@ export async function resolvePluginList<TPlugin>(
   }
 
   // Iterate over all the plugin configurations and resolve each one.
-  for (const pluginName of Object.keys(plugins)) {
+  for (const pluginName of Object.keys(name2Conf)) {
     resolvePluginDependencies(pluginName, new Set())
   }
 

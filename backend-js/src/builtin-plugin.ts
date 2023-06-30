@@ -52,8 +52,8 @@ function withDefaultDp(create: Creator, ...defaults: string[]): Metaclass {
   return {
     create,
     preprocess(name, config, all) {
-      if (!config.depends?.length) {
-        config.depends = defaults
+      if (!config._depends?.length) {
+        config._depends = defaults
       }
       for (const defaultPluginName of defaults) {
         all[defaultPluginName] ??= {}
@@ -68,9 +68,9 @@ function mapEngine(create: Creator, engines: Record<string, string[]>): Metaclas
     preprocess(name, config, all) {
       const dependencies = engines[config.engine]
       if (dependencies?.length) {
-        config.depends ??= []
+        config._depends ??= []
         for (const dp of dependencies) {
-          addUnique(config.depends, dp)
+          addUnique(config._depends, dp)
           all[dp] ??= {}
         }
       }
