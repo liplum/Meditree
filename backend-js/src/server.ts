@@ -37,8 +37,10 @@ export async function startServer(config: AppConfig): Promise<void> {
       }
     }
   }
-  // Phrase 3: create "Main" logger.
+  // Phrase 3: create logger.
   const log = createLogger("Main")
+  const pluginLog = createLogger("Plugin")
+  const fileTreelog = createLogger("FileTree")
 
   // Phrase 4: register all built-in plugins.
   const pluginTypes: PluginRegistry<MeditreePlugin> = {}
@@ -51,7 +53,7 @@ export async function startServer(config: AppConfig): Promise<void> {
   const plugins = config.plugin
     ? await resolvePluginList(pluginTypes, config.plugin,
       (name) => {
-        log.info(`Plugin[${name}] resgisered.`)
+        pluginLog.info(`Plugin[${name}] resgisered.`)
       })
     : []
 
@@ -108,7 +110,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     try {
       decodeURIComponent(req.path)
     } catch (error) {
-      res.status(400).send("URI Invalid")
+      res.status(400).send("URI Invalid").end()
       return
     }
     next()
@@ -123,10 +125,9 @@ export async function startServer(config: AppConfig): Promise<void> {
   const hostTreeCtor = container.get(TYPE.HostTree)
   let hostTree: IHostTree = new EmptyHostTree(config.name)
   if (config.root) {
-    const logger = createLogger("LocalFileTree")
     const common = {
       pattern2FileType: config.fileType,
-      log: logger,
+      log: fileTreelog,
       ignorePatterns: config.ignore ?? [],
     }
     if (typeof config.root === "string") {
@@ -169,7 +170,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       plugin.onLocalFileTreeGenerated?.(localTree)
     }
     meditree.onLocalFileTreeUpdate(config.name, localTree)
-    log.info("Local file tree is rebuilt.")
+    fileTreelog.info("Local file tree is rebuilt.")
   })
 
   // Phrase 17: create file tree cache and listen to updates from local file tree.
