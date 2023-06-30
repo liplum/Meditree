@@ -7,6 +7,7 @@ import { TYPE } from "../server.js"
 import EventEmitter from "events"
 import { parseTime } from "../utils.js"
 import { type Logger } from "../logger.js"
+import { type LoopTask, createLoopTask } from "../timer.js"
 
 interface WatchPluginConfig {
   /**
@@ -106,36 +107,5 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
 
   resolveFile(pathParts: string[]): LocalFile | null {
     return this.fileTree?.resolveFile(pathParts)
-  }
-}
-
-interface LoopTask {
-  unref(): void
-  stop(): void
-  isRunning(): boolean
-}
-
-function createLoopTask(callback: (duration: number) => void): LoopTask {
-  let lastTime = new Date()
-
-  let timer: NodeJS.Timer | null = setInterval(() => {
-    const cur = new Date()
-    const duration = cur.getTime() - lastTime.getTime()
-    lastTime = cur
-    callback(duration)
-  })
-  return {
-    unref() {
-      timer?.unref()
-    },
-    stop() {
-      if (timer) {
-        clearInterval(timer)
-        timer = null
-      }
-    },
-    isRunning() {
-      return timer !== null
-    }
   }
 }

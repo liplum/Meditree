@@ -30,3 +30,34 @@ export class Timer {
     return time
   }
 }
+
+export interface LoopTask {
+  unref(): void
+  stop(): void
+  isRunning(): boolean
+}
+
+export function createLoopTask(callback: (duration: number) => void): LoopTask {
+  let lastTime = new Date()
+
+  let timer: NodeJS.Timer | null = setInterval(() => {
+    const cur = new Date()
+    const duration = cur.getTime() - lastTime.getTime()
+    lastTime = cur
+    callback(duration)
+  })
+  return {
+    unref() {
+      timer?.unref()
+    },
+    stop() {
+      if (timer) {
+        clearInterval(timer)
+        timer = null
+      }
+    },
+    isRunning() {
+      return timer !== null
+    }
+  }
+}
