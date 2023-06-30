@@ -85,14 +85,20 @@ export class LocalFileTree implements FileTreeLike {
     }
   }
 
+  private _subtreeFileCountCache?: number
+
   /**
-   * 
+   * Count the [LocalFile] from subtree recursively.
+   * The result is cached, so only the first call is expensive.
    */
-  countSubtreeChildren(): number {
+  countSubtreeFile(): number {
+    if (this._subtreeFileCountCache !== undefined) {
+      return this._subtreeFileCountCache
+    }
     let total = 0
     for (const file of this.name2File.values()) {
       if (file instanceof LocalFileTree) {
-        total += file.countSubtreeChildren()
+        total += file.countSubtreeFile()
       } else {
         total++
       }
@@ -102,10 +108,12 @@ export class LocalFileTree implements FileTreeLike {
 
   addFile(name: string, file: LocalFile | LocalFileTree): void {
     this.name2File.set(name, file)
+    this._subtreeFileCountCache = undefined
   }
 
   removeFile(name: string): void {
     this.name2File.delete(name)
+    this._subtreeFileCountCache = undefined
   }
 
   getFile(name: string): LocalFile | LocalFileTree | undefined {

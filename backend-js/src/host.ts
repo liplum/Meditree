@@ -146,7 +146,7 @@ export async function createFileTreeFrom({ name: rootName, root, ignoreEmptyDir,
         } else if (stat.isDirectory()) {
           const subtree = tree.createSubtree(fileName, filePath)
           await walk(subtree, filePath)
-          if (!ignoreEmptyDir || subtree.countSubtreeChildren() > 0) {
+          if (!ignoreEmptyDir || subtree.countSubtreeFile() > 0) {
             tree.addFile(fileName, subtree)
           }
         } else {
