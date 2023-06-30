@@ -68,9 +68,7 @@ Note when you runs the `backend-js`, some essential settings will be generated o
     "homepage": { // Use homepage plugin to serve a static webiste.
       "root": "/path/to/web-react/dist"
     },
-    "watch": {
-      // Use watch plugin to watch local file changes.
-    }
+    "watch": true // Use watch plugin to watch local file changes.
   }
 }
 ```
