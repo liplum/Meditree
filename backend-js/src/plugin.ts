@@ -51,13 +51,14 @@ function fliterDisabledPlugin(
   plugins: Record<string, PluginConfig | boolean>,
 ): Record<string, PluginConfig> {
   const res = {}
-  for (const [pluginName, pluginConfig] of Object.entries(plugins)) {
-    if (typeof pluginConfig === "boolean") {
-      if (pluginConfig) {
+  for (const [pluginName, confBody] of Object.entries(plugins)) {
+    if (typeof confBody === "boolean") {
+      // if the config body is literal `true`, it will be considered as empty.
+      if (confBody) {
         res[pluginName] = {}
       }
-    } else if (pluginConfig._disabled !== true) {
-      res[pluginName] = pluginConfig
+    } else if (confBody._disabled !== true) {
+      res[pluginName] = confBody
     }
   }
   return res
@@ -70,42 +71,39 @@ function fliterDisabledPlugin(
  */
 export async function resolvePluginList<TPlugin>(
   builtin: PluginRegistry<TPlugin>,
-  conf: Record<string, PluginConfig | boolean>,
+  name2ConfBody: Record<string, PluginConfig | boolean>,
   onFound?: (name: string, plugin: TPlugin) => void,
 ): Promise<TPlugin[]> {
-  const name2Conf = fliterDisabledPlugin(conf)
+  const name2Conf = fliterDisabledPlugin(name2ConfBody)
   const name2PluginProvider = new Map<string, PluginProvider<TPlugin>>()
   /**
    * PluginProvider resolution has 3 phrases:
-   * Phrase 1: resolve all PluginProviders. resolved should be cached.
-   * Phrase 2: preprocess all plugins, and keep dependencies distinct.
-   * Phrase 3: check if any new plugin was added from preprocessing. if yes, goto Phrase 1.
+   * Phrase 1: To resolve all PluginProviders. Resolved plugins should be cached.
+   * Phrase 2: To preprocess all plugins, and keep dependencies distinct.
+   * Phrase 3: To check if any new plugin was added from preprocessing. If yes, goto Phrase 1. This will be repeated until no more plugin is added.
    */
-  async function resolvePluginProviders(): Promise<void> {
-    let lastPluginCount: number | undefined
-    while (lastPluginCount !== Object.keys(name2Conf).length) {
-      lastPluginCount = Object.keys(name2Conf).length
-      for (const [pluginName, config] of Object.entries(name2Conf)) {
-        let pluginProvider = name2PluginProvider.get(pluginName)
-        if (!pluginProvider) {
-          pluginProvider = await resolvePluginProvider(builtin, pluginName)
-          if (!pluginProvider) {
-            throw new Error(`${pluginName} not found.`)
-          }
-          // preprocess if it's the first time that plugin provider is resolved.
-          if (typeof pluginProvider === "object") {
-            pluginProvider.preprocess?.(pluginName, config, name2Conf)
-          }
-          name2PluginProvider.set(pluginName, pluginProvider)
-          // clear duplicate dependencies
-          if (config._depends?.length) {
-            config._depends = [...new Set(config._depends)]
-          }
+  let lastPluginCount: number | undefined
+  while (lastPluginCount !== Object.keys(name2Conf).length) {
+    lastPluginCount = Object.keys(name2Conf).length
+    for (const [pluginName, config] of Object.entries(name2Conf)) {
+      // clear duplicate dependencies
+      if (config._depends?.length) {
+        config._depends = [...new Set(config._depends)]
+      }
+      let provider = name2PluginProvider.get(pluginName)
+      if (!provider) {
+        provider = await resolvePluginProvider(builtin, pluginName)
+        if (!provider) {
+          throw new Error(`Provider for plugin[${pluginName}] not found.`)
         }
+        // preprocess if it's the first time that plugin provider is resolved.
+        if (typeof provider === "object") {
+          provider.preprocess?.(pluginName, config, name2Conf)
+        }
+        name2PluginProvider.set(pluginName, provider)
       }
     }
   }
-  await resolvePluginProviders()
 
   const name2Resolved = new Map<string, TPlugin>()
   /**
@@ -114,11 +112,8 @@ export async function resolvePluginList<TPlugin>(
    * @param seenPlugins A set of already resolved plugins to avoid infinite recursion.
    */
   function resolvePluginDependencies(pluginName: string, seenPlugins: Set<string>): void {
-    // Check if this plugin has already been created and return the existing instance.
-    const pluginInstance = name2Resolved.get(pluginName)
-    if (pluginInstance) {
-      return
-    }
+    // Check if this plugin has already been created and stop resolving it.
+    if (name2Resolved.has(pluginName)) return
 
     // Check if this plugin has already been resolved to avoid infinite recursion.
     if (seenPlugins.has(pluginName)) {
@@ -129,15 +124,11 @@ export async function resolvePluginList<TPlugin>(
     seenPlugins.add(pluginName)
 
     // Get the plugin configuration.
-    const pluginConfig = name2Conf[pluginName]
-
-    if (!pluginConfig) {
-      throw new Error(`${pluginName} isn't enabled.`)
-    }
+    const conf = name2Conf[pluginName]
 
     // Resolve the dependencies of this plugin before adding it to the list of resolved plugins.
-    if (pluginConfig._depends?.length) {
-      for (const dependencyName of pluginConfig._depends) {
+    if (conf._depends?.length) {
+      for (const dependencyName of conf._depends) {
         resolvePluginDependencies(dependencyName, seenPlugins)
       }
     }
@@ -145,11 +136,11 @@ export async function resolvePluginList<TPlugin>(
     const provider = name2PluginProvider.get(pluginName)
     let plugin: TPlugin
     if (typeof provider === "object") {
-      plugin = provider.create(pluginConfig)
+      plugin = provider.create(conf)
     } else if (typeof provider === "function") {
-      plugin = provider(pluginConfig)
+      plugin = provider(conf)
     } else {
-      throw new Error(`${pluginName} not found.`)
+      throw new Error(`Provider for plugin[${pluginName}] not found.`)
     }
     // Create the plugin and add it to the list of resolved plugins.
     name2Resolved.set(pluginName, plugin)
