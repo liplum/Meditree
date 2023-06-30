@@ -56,16 +56,16 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
           const jwtPayload = jwt.verify(token, jwtSecret) as JwtPayload
           const account = jwtPayload.account
           if (typeof account !== "string") {
-            res.status(401).send("Token Invalid")
+            res.status(401).send("Token Invalid").end()
             return
           }
           if (await storage.getUser(account) === null) {
-            res.status(401).send("Token Invalid")
+            res.status(401).send("Token Invalid").end()
             return
           }
           next()
         } catch (error) {
-          res.status(401).send("Token Invalid")
+          res.status(401).send("Auth Error").end()
           return
         }
       }
