@@ -4,11 +4,11 @@ import { type MeditreePlugin } from "../server.js"
 interface MinifyPluginConfig {
   /**
    * Remove hiden files and folders from entire tree.
-   * False by default.
+   * True by default.
    */
   removeHidden?: boolean
   /**
-   * False by default.
+   * True by default.
    */
   removeSize?: boolean
 }
@@ -16,8 +16,8 @@ interface MinifyPluginConfig {
  * Minify plugin affects only file tree json for client side.
  */
 export default function MinifyPlugin(config: MinifyPluginConfig): MeditreePlugin {
-  const removeHidden = config.removeHidden ?? false
-  const removeSize = config.removeSize ?? false
+  const removeHidden = config.removeHidden ?? true
+  const removeSize = config.removeSize ?? true
   return {
     onClientFileTreeUpdated(tree): FileTree {
       if (removeHidden || removeSize) {

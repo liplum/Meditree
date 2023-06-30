@@ -25,10 +25,9 @@ and the value is an object for configuring the plugin.
 ```json5
 "plugin": {
   // loading built-in plugins
-  "cache": {},
   "minify": {
     "removeHidden": true,
-    "removePath": true
+    "removeSize": true
   },
   // loading external plugins from file
   "path/to/plugin.js":{
@@ -66,8 +65,8 @@ Example:
 
 Properties:
 
-- **`removeHidden`** (boolean?): Whether to remove hidden files and folders from the entire tree. False by default.
-- **`removeSize`** (boolean?): Whether to remove size information from the minified output. False by default.
+- **`removeHidden`** (boolean?): Whether to remove hidden files and folders from the entire tree. True by default.
+- **`removeSize`** (boolean?): Whether to remove size information from the minified output. True by default.
 
 Example:
 
