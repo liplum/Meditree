@@ -149,6 +149,7 @@ export async function startServer(config: AppConfig): Promise<void> {
       const rootHostTree = new ComposebleHostTree(config.name)
       hostTree = rootHostTree
       for (const [name, root] of Object.entries(config.root)) {
+        if (!name) throw new Error(`The root[${root}] maps no name.`)
         rootHostTree.addSubtree(hostTreeCtor({
           root, name, ...common
         }))
