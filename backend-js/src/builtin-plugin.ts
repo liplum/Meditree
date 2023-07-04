@@ -1,4 +1,4 @@
-import { type PluginMetaclass, type PluginConstructor, type PluginRegistry } from "./plugin.js"
+import { type PluginMetaclass, type PluginCtor, type PluginRegistry } from "./plugin.js"
 import { type MeditreePlugin } from "./server.js"
 
 import HomepagePlugin from "./plugin/homepage.js"
@@ -17,7 +17,7 @@ import JsonDBPlugin from "./plugin/jsondb/core.js"
 import JsonDBUserPlugin from "./plugin/jsondb/user-storage.js"
 import JsonDBStatisticsPlugin from "./plugin/jsondb/statistics-storage.js"
 
-type Creator = PluginConstructor<MeditreePlugin>
+type Ctor = PluginCtor<MeditreePlugin>
 
 type Metaclass = PluginMetaclass<MeditreePlugin>
 
@@ -48,31 +48,40 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
   })
 }
 
-function withDefaultDp(create: Creator, ...defaults: string[]): Metaclass {
+/**
+ * Create a mataclass that automatically added default dependencies.
+ * @param create the constructor of plugin
+ * @param defaults the default dependencies
+ * @returns a metaclass
+ */
+function withDefaultDp(create: Ctor, ...defaults: string[]): Metaclass {
   return {
     create,
     preprocess(name, config, all) {
-      if (!config._depends?.length) {
-        config._depends = defaults
-      }
-      for (const defaultPluginName of defaults) {
-        all[defaultPluginName] ??= {}
+      config._depends ??= []
+      for (const dp of defaults) {
+        addUnique(config._depends, dp)
+        all[dp] ??= {}
       }
     },
   }
 }
 
-function mapEngine(create: Creator, engines: Record<string, string[]>): Metaclass {
+/**
+ * Create a metaclass that automatically adds dedicated dependencies that engines require.
+ * @param create the constructor of plugin
+ * @param engines engine name -> all dependencies it requires 
+ * @returns a metaclass
+ */
+function mapEngine(create: Ctor, engines: Record<string, string[]>): Metaclass {
   return {
     create,
     preprocess(name, config, all) {
       const dependencies = engines[config.engine]
-      if (dependencies?.length) {
-        config._depends ??= []
-        for (const dp of dependencies) {
-          addUnique(config._depends, dp)
-          all[dp] ??= {}
-        }
+      config._depends ??= []
+      for (const dp of dependencies) {
+        addUnique(config._depends, dp)
+        all[dp] ??= {}
       }
     }
   }

@@ -21,16 +21,24 @@ export interface PluginConfig {
    */
   [key: string]: any
 }
-
-export type PluginConstructor<TPlugin, TConfig extends PluginConfig = any> = (config: TConfig) => TPlugin
+/**
+ * [PluginCtor] is a function that directly constructs a plugin object.
+ */
+export type PluginCtor<TPlugin, TConfig extends PluginConfig = any> = (config: TConfig) => TPlugin
+/**
+ * [PluginMetaclass] is an object that supports some extra phrases such as preprocessing.
+ */
 export interface PluginMetaclass<TPlugin, TConfig extends PluginConfig = any> {
   preprocess?(name: string, config: TConfig, all: Record<string, PluginConfig>): void
-  create: PluginConstructor<TPlugin, TConfig>
+  create: PluginCtor<TPlugin, TConfig>
 }
+/**
+ * A [PluginProvider] consists of [PluginCtor] and [PluginMetaclass].
+ */
 export type PluginProvider<
   TPlugin,
   TConfig extends PluginConfig = any
-> = PluginConstructor<TPlugin, TConfig> | PluginMetaclass<TPlugin, TConfig>
+> = PluginCtor<TPlugin, TConfig> | PluginMetaclass<TPlugin, TConfig>
 
 async function resolvePluginProvider<TPlugin, TConfig extends PluginConfig = any>(
   builtin: PluginRegistry<TPlugin, TConfig>,
