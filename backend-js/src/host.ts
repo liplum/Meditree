@@ -1,7 +1,7 @@
 import fs from "fs"
 import path from "path"
 import minimatch, { type MinimatchOptions } from "minimatch"
-import { type FileTreeLike, LocalFile, type FileType, type FileTree } from "./file.js"
+import { type FileTreeLike, LocalFile, type FileType, type FileTreeJson } from "./file.js"
 import { LocalFileTree } from "./file.js"
 import EventEmitter from "events"
 import { promisify } from "util"
@@ -44,7 +44,7 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.fileFilter = makeFSOFilter(options.ignorePatterns)
   }
 
-  toJSON(): FileTree {
+  toJSON(): FileTreeJson {
     return this.fileTree.toJSON()
   }
 
@@ -171,7 +171,7 @@ export class EmptyHostTree implements FileTreeLike, IHostTree {
     return null
   }
 
-  toJSON(): FileTree {
+  toJSON(): FileTreeJson {
     return {}
   }
 
@@ -216,7 +216,7 @@ export class ComposebleHostTree extends EventEmitter implements FileTreeLike, IH
     return this.builtFileTree.resolveFile(pathParts)
   }
 
-  toJSON(): FileTree {
+  toJSON(): FileTreeJson {
     return this.builtFileTree.toJSON()
   }
 

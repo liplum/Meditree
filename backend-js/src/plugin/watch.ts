@@ -1,5 +1,5 @@
 import chokidar from "chokidar"
-import { type LocalFileTree, type FileTreeLike, type FileTree, type LocalFile } from "../file.js"
+import { type LocalFileTree, type FileTreeLike, type FileTreeJson, type LocalFile } from "../file.js"
 import { type IHostTree, type HostTreeOptions, makeFilePathClassifier, makeFSOFilter, type FSOFilter, type FileClassifier, createFileTreeFrom } from "../host.js"
 import { type MeditreePlugin } from "../server.js"
 import type fs from "fs"
@@ -50,7 +50,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.fileFilter = makeFSOFilter(ignorePatterns)
   }
 
-  toJSON(): FileTree {
+  toJSON(): FileTreeJson {
     return this.fileTree.toJSON()
   }
 

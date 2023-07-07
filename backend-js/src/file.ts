@@ -1,16 +1,16 @@
 export type FileType = string
-export interface File {
+export interface FileJson {
   "*type": FileType
   size: number
   "*hide"?: boolean
 }
 
-export interface FileTree {
+export interface FileTreeJson {
   ["*hide"]?: boolean
-  [name: string]: File | FileTree | any
+  [name: string]: FileJson | FileTreeJson | any
 }
 
-export class LocalFile implements File {
+export class LocalFile implements FileJson {
   readonly parent: LocalFileTree
   readonly "*type": FileType
   readonly size: number
@@ -23,7 +23,7 @@ export class LocalFile implements File {
     this.localPath = localPath
   }
 
-  toJSON(): File {
+  toJSON(): FileJson {
     return {
       "*type": this["*type"],
       size: this.size,
@@ -35,7 +35,7 @@ export class LocalFile implements File {
 export type PathFilter = (path: string) => boolean
 export interface FileTreeLike {
   resolveFile: (pathParts: string[]) => LocalFile | null
-  toJSON: () => FileTree
+  toJSON: () => FileTreeJson
 }
 
 export class LocalFileTree implements FileTreeLike {
@@ -124,8 +124,8 @@ export class LocalFileTree implements FileTreeLike {
     return new LocalFileTree(name, rootPath, this)
   }
 
-  toJSON(): FileTree {
-    const obj: FileTree = {}
+  toJSON(): FileTreeJson {
+    const obj: FileTreeJson = {}
     if (this.hidden) {
       obj["*hide"] = this.hidden
     }
@@ -140,8 +140,8 @@ export class LocalFileTree implements FileTreeLike {
   }
 
   * visitFile({ fileFilter, dirFilter }: {
-    fileFilter?: (file: File) => boolean
-    dirFilter?: (dir: FileTree) => boolean
+    fileFilter?: (file: FileJson) => boolean
+    dirFilter?: (dir: FileTreeJson) => boolean
   }): Iterable<LocalFile> {
     for (const file of this.name2File.values()) {
       if (file instanceof LocalFileTree) {
@@ -157,8 +157,8 @@ export class LocalFileTree implements FileTreeLike {
   }
 
   * visitDir({ fileFilter, dirFilter }: {
-    fileFilter?: (file: File) => boolean
-    dirFilter?: (dir: FileTree) => boolean
+    fileFilter?: (file: FileJson) => boolean
+    dirFilter?: (dir: FileTreeJson) => boolean
   }): Iterable<LocalFileTree> {
     for (const file of this.name2File.values()) {
       if (file instanceof LocalFileTree) {
@@ -176,24 +176,24 @@ export class LocalFileTree implements FileTreeLike {
  * @returns a new tree that contains filtered but still the same instances.
  */
 export function filterFileTreeJson(
-  tree: FileTree,
-  fileFilter: (file: File) => boolean,
-  dirFilter?: (dir: FileTree) => boolean,
-): FileTree {
-  const filteredTree: FileTree = {}
+  tree: FileTreeJson,
+  fileFilter: (file: FileJson) => boolean,
+  dirFilter?: (dir: FileTreeJson) => boolean,
+): FileTreeJson {
+  const filteredTree: FileTreeJson = {}
   if (tree["*hide"]) {
     filteredTree["*hide"] = true
   }
   for (const [name, fileOrSubtree] of Object.entries(tree)) {
     // it's a file
     if (fileOrSubtree["*type"]) {
-      if (fileFilter(fileOrSubtree satisfies File)) {
+      if (fileFilter(fileOrSubtree satisfies FileJson)) {
         filteredTree[name] = fileOrSubtree
       }
     } else {
       // it's a folder
-      if (dirFilter === undefined || dirFilter(fileOrSubtree satisfies FileTree)) {
-        const filteredSubtree = filterFileTreeJson(fileOrSubtree satisfies FileTree, fileFilter, dirFilter)
+      if (dirFilter === undefined || dirFilter(fileOrSubtree satisfies FileTreeJson)) {
+        const filteredSubtree = filterFileTreeJson(fileOrSubtree satisfies FileTreeJson, fileFilter, dirFilter)
         if (Object.keys(filteredSubtree).length > 0) {
           filteredTree[name] = filteredSubtree
         }
@@ -207,8 +207,8 @@ export function filterFileTreeJson(
  * Clone a file tree.
  * All instances are newly-created.
  */
-export function cloneFileTreeJson(tree: FileTree): FileTree {
-  const newTree: FileTree = {}
+export function cloneFileTreeJson(tree: FileTreeJson): FileTreeJson {
+  const newTree: FileTreeJson = {}
   if (tree["*hide"]) {
     newTree["*hide"] = true
   }
@@ -218,7 +218,7 @@ export function cloneFileTreeJson(tree: FileTree): FileTree {
       newTree[name] = { ...fileOrSubtree }
     } else {
       // it's a folder
-      const filteredSubtree = cloneFileTreeJson(fileOrSubtree satisfies FileTree)
+      const filteredSubtree = cloneFileTreeJson(fileOrSubtree satisfies FileTreeJson)
       if (Object.keys(filteredSubtree).length > 0) {
         newTree[name] = filteredSubtree
       }

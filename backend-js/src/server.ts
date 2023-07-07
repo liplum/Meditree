@@ -2,7 +2,7 @@
 import { ComposebleHostTree, EmptyHostTree, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
 import { type AppConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
-import { cloneFileTreeJson, type FileTree, type LocalFileTree, type LocalFile } from "./file.js"
+import { cloneFileTreeJson, type FileTreeJson, type LocalFileTree, type LocalFile } from "./file.js"
 import cors from "cors"
 import { Meditree, type FileTreeInfo, type ReadStreamOptions } from "./meditree.js"
 import { LogLevels, createLogger, globalOptions, initGlobalLogFile } from "./logger.js"
@@ -352,7 +352,7 @@ export interface MeditreePlugin {
    * @param tree the entire file tree will be sent to clients soon.
    * @returns a new file tree or the same instance.
    */
-  onClientFileTreeUpdated?(tree: FileTree): FileTree
+  onClientFileTreeUpdated?(tree: FileTreeJson): FileTreeJson
   /**
    * The first plugin which returns a non-undefined value will be taken.
    * @returns undefined if not handled by this plugin.

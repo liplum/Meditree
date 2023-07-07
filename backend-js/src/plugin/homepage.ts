@@ -1,4 +1,4 @@
-import { type FileTree, type File } from "../file.js"
+import { type FileTreeJson, type FileJson } from "../file.js"
 import { createLogger } from "../logger.js"
 import { type Meditree } from "../meditree.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
@@ -70,7 +70,7 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
 }
 
 function buildIndexHtml(
-  fileTree: FileTree,
+  fileTree: FileTreeJson,
 ): string {
   let maxIndent = 0
   const indentClassName = (indent: number): string => `i${indent}`
@@ -139,20 +139,20 @@ function buildIndentStyleClass(
 }
 
 function buildFromFileTree(
-  tree: FileTree,
+  tree: FileTreeJson,
   getIndentClz: IndentClassNameBuilder,
 ): { tags: string[], maxIndent: number } {
   const div: string[] = []
   let maxIndent = 0
   div.push("<div>")
-  function buildSubtree(curTree: FileTree, parentPath: string, indent: number): void {
+  function buildSubtree(curTree: FileTreeJson, parentPath: string, indent: number): void {
     maxIndent = Math.max(indent, maxIndent)
     for (const [name, file] of Object.entries(curTree)) {
       if (file["*hide"]) continue
       const curPath = parentPath ? `${parentPath}/${name}` : name
       if (file["*type"]) {
         // it's file
-        const fi = file satisfies File
+        const fi = file satisfies FileJson
         const clz = fi["*type"].startsWith("image") ? "class='has-preview'" : ""
         div.push(`<a href="/file/${curPath}" ${clz}>${name}</a>,`)
       } else {
@@ -160,7 +160,7 @@ function buildFromFileTree(
         div.push(`<details ${indent === 0 ? "open" : ""}>`)
         div.push(`<summary class="${getIndentClz(indent)}"><a>${name}\\</a></summary>`)
         div.push(`<div class="${getIndentClz(indent)}">`)
-        buildSubtree(file satisfies FileTree, curPath, indent + 1)
+        buildSubtree(file satisfies FileTreeJson, curPath, indent + 1)
         div.push("<div>")
         div.push("</details>")
       }

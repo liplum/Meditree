@@ -1,4 +1,4 @@
-import { type FileTree } from "../file.js"
+import { type FileTreeJson } from "../file.js"
 import { type MeditreePlugin } from "../server.js"
 
 interface MinifyPluginConfig {
@@ -19,9 +19,9 @@ export default function MinifyPlugin(config: MinifyPluginConfig): MeditreePlugin
   const removeHidden = config.removeHidden ?? true
   const removeSize = config.removeSize ?? true
   return {
-    onClientFileTreeUpdated(tree): FileTree {
+    onClientFileTreeUpdated(tree): FileTreeJson {
       if (removeHidden || removeSize) {
-        function visit(cur: FileTree): void {
+        function visit(cur: FileTreeJson): void {
           for (const [name, fileOrSubtree] of Object.entries(cur)) {
             if (removeHidden && fileOrSubtree["*hide"]) {
               // I have to delete a dynamic property, because it's in json.
