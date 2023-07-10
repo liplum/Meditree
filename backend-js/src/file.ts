@@ -1,3 +1,6 @@
+import fs from "fs"
+import path from "path"
+
 export type FileType = string
 export interface FileJson {
   "*type": FileType
@@ -225,4 +228,45 @@ export function cloneFileTreeJson(tree: FileTreeJson): FileTreeJson {
     }
   }
   return newTree
+}
+
+export class File {
+  private _readable?: boolean
+  private _writable?: boolean
+  readonly path: string
+
+  constructor(path: string) {
+    this.path = path
+  }
+
+  get readable(): boolean {
+    return this._readable ?? false
+  }
+
+  get writable(): boolean {
+    return this._writable ?? false
+  }
+
+  checkReadable(): void {
+    try {
+      fs.accessSync(this.path, fs.constants.R_OK)
+      this._readable = true
+    } catch (error) {
+      this._readable = false
+    }
+  }
+
+  checkWritable(): void {
+    try {
+      fs.accessSync(this.path, fs.constants.W_OK)
+      this._writable = true
+    } catch (error) {
+      this._writable = false
+    }
+  }
+
+  ensureParent(): void {
+    const dir = path.dirname(this.path)
+    fs.mkdirSync(dir, { recursive: true })
+  }
 }
