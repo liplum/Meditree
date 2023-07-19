@@ -50,7 +50,7 @@ export interface AppConfig {
 
 const defaultConfig: AppConfig = {
   name: "Meditree",
-  port: 80,
+  port: 8080,
   cacheMaxAge: 604800,
   fileType: {
     "**/*.mp4": "video/mp4",
