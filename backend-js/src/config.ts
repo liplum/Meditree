@@ -1,8 +1,7 @@
 import fs from "fs"
-import path from "path"
 import { v4 as uuidv4 } from "uuid"
 import { HLSMediaType } from "./plugin/hls.js"
-import { findFSOInTreeByName, listAncestors } from "./file-finding.js"
+import { type File } from "./file.js"
 
 export interface AppConfig {
   /** 
@@ -49,7 +48,8 @@ export interface AppConfig {
   [key: string]: any
 }
 
-const defaultConfig: Partial<AppConfig> = {
+const defaultConfig: AppConfig = {
+  name: "Meditree",
   port: 80,
   cacheMaxAge: 604800,
   fileType: {
@@ -70,48 +70,43 @@ const defaultConfig: Partial<AppConfig> = {
 
 // default to ignore application on macOS
 if (process.platform === "darwin") {
-  defaultConfig.ignore = [
+  defaultConfig.ignore?.push(
     "**/*.app",
     "**/*.DS_Store"
-  ]
+  )
 }
 
-export function injectDefaultConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
-  const newConfig: AppConfig = Object.assign({}, defaultConfig, config ?? {}) as AppConfig
-  return newConfig
-}
-
-export function setupConfig(config?: AppConfig | Partial<AppConfig>): AppConfig {
-  const newConfig = (config ? { ...config } : {}) as AppConfig
+export function setupConfig(config: AppConfig | Partial<AppConfig> = {}): AppConfig {
+  const newConfig = config as AppConfig
   if (!newConfig.name) {
     newConfig.name = uuidv4()
   }
   if (!newConfig.fileType) {
     newConfig.fileType = defaultConfig.fileType as any
   }
+  if (!newConfig.port) {
+    newConfig.port = defaultConfig.port
+  }
+  if (!newConfig.ignore) {
+    newConfig.ignore = defaultConfig.ignore
+  }
   return newConfig
 }
 
-export function findConfig({ rootDir, filename }: { rootDir: string, filename: string }): AppConfig {
-  let configFile = findFSOInTreeByName(rootDir, filename)
-  if (configFile) {
-    // if config file exists, read and load it
-    const config = setupConfig(JSON.parse(fs.readFileSync(configFile, "utf8")) ?? {})
-    fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
-    return config
-  } else {
-    // if non-existing, try to create it and throw an Error to prompt users.
-    const config: AppConfig = setupConfig(defaultConfig)
-    // perfer the ancestor that has `package.json` file.
-    const ancestors = listAncestors(rootDir)
-    const dirHasPackageJson = ancestors.find((dir) =>
-      fs.existsSync(path.join(dir, "package.json"))
-    )
-    if (dirHasPackageJson) {
-      rootDir = dirHasPackageJson
-    }
-    configFile = path.join(rootDir, filename)
-    fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
-    throw new Error(`Configuration not found. ${configFile} is created.`)
+export function loadConfigFromFile(configFi: File): AppConfig {
+  if (!configFi.readable) {
+    return setupConfig()
   }
+  const data = fs.readFileSync(configFi.path, "utf8")
+  let json: any
+  try {
+    json = JSON.parse(data)
+  } catch {
+    json = {}
+  }
+  const config = setupConfig(json)
+  if (configFi.writable) {
+    fs.writeFileSync(configFi.path, JSON.stringify(config, null, 2))
+  }
+  return config
 }

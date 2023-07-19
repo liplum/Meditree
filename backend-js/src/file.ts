@@ -247,21 +247,23 @@ export class File {
     return this._writable ?? false
   }
 
-  checkReadable(): void {
+  checkReadable(): Error | undefined {
     try {
       fs.accessSync(this.path, fs.constants.R_OK)
       this._readable = true
     } catch (error) {
       this._readable = false
+      return error
     }
   }
 
-  checkWritable(): void {
+  checkWritable(): Error | undefined {
     try {
       fs.accessSync(this.path, fs.constants.W_OK)
       this._writable = true
     } catch (error) {
       this._writable = false
+      return error
     }
   }
 

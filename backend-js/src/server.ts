@@ -22,7 +22,9 @@ export const TYPE = {
   Events: uniqueToken<MeditreeEvents>("Events"),
 }
 
-export async function startServer(config: AppConfig): Promise<void> {
+export async function startServer(
+  config: AppConfig
+): Promise<void> {
   // Phrase 1: setup starting timer.
   const timer = new Timer()
   timer.start("Start Server")
