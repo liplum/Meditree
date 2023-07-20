@@ -202,7 +202,7 @@ interface HostTreeEntry {
   rebuildListener: (fileTree: LocalFileTree) => void
 }
 
-export class ComposebleHostTree extends EventEmitter implements FileTreeLike, IHostTree {
+export class CompoundHostTree extends EventEmitter implements FileTreeLike, IHostTree {
   readonly name: string
   private readonly name2Subtree = new Map<string, HostTreeEntry>()
   private readonly builtFileTree: LocalFileTree

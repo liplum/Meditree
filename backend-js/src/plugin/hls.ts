@@ -13,7 +13,7 @@ interface HLSPluginConfig {
 export default function HLSPlugin(config: HLSPluginConfig): MeditreePlugin {
   const hideTsDir = config.hideTsDir ?? true
   return {
-    onLocalFileTreeGenerated(tree) {
+    onLocalFileTreeRebuilt(tree) {
       if (!hideTsDir) return
       for (const file of tree.visitFile({ fileFilter: (f) => f["*type"] === HLSMediaType })) {
         const pureName = path.basename(file.localPath, path.extname(file.localPath))

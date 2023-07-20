@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { ComposebleHostTree, EmptyHostTree, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
+import { CompoundHostTree, EmptyHostTree, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
 import { type AppConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
 import { cloneFileTreeJson, type FileTreeJson, type LocalFileTree, type LocalFile } from "./file.js"
@@ -139,7 +139,7 @@ export async function startServer(
         ...common,
       })
     } else if (Array.isArray(config.root)) {
-      const rootHostTree = new ComposebleHostTree(config.name)
+      const rootHostTree = new CompoundHostTree(config.name)
       hostTree = rootHostTree
       for (const root of config.root) {
         const name = path.basename(root)
@@ -148,7 +148,7 @@ export async function startServer(
         }))
       }
     } else {
-      const rootHostTree = new ComposebleHostTree(config.name)
+      const rootHostTree = new CompoundHostTree(config.name)
       hostTree = rootHostTree
       for (const [name, root] of Object.entries(config.root)) {
         if (!name) throw new Error(`The root[${root}] maps no name.`)
@@ -170,10 +170,10 @@ export async function startServer(
   // Phrase 16: listen to HostTree "rebuild" event, and update the local file tree.
   hostTree.on("rebuild", (localTree) => {
     for (const plugin of plugins) {
-      plugin.onLocalFileTreeGenerated?.(localTree)
+      plugin.onLocalFileTreeRebuilt?.(localTree)
     }
     meditree.onLocalFileTreeUpdate(localTree)
-    fileTreelog.info("Local file tree is rebuilt.")
+    fileTreelog.info("Local file tree was rebuilt.")
   })
 
   // Phrase 17: create file tree cache and listen to updates from local file tree.
@@ -339,7 +339,7 @@ export interface MeditreePlugin {
 
   onRegisterExpressHandler?(app: express.Express): Promise<void>
 
-  onLocalFileTreeGenerated?(tree: LocalFileTree): void
+  onLocalFileTreeRebuilt?(tree: LocalFileTree): void
 
   /**
    * @param tree the entire file tree will be sent to clients soon.

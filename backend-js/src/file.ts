@@ -57,19 +57,6 @@ export class LocalFileTree implements FileTreeLike {
   }
 
   /**
-   * example: "a/b/c"
-   */
-  walkAncestorPathParts(): string[] {
-    const parts: string[] = []
-    let curTree = this.parent
-    while (curTree != null) {
-      parts.unshift(curTree.name)
-      curTree = curTree.parent
-    }
-    return parts
-  }
-
-  /**
  * Resolves a file given its path parts.
  * @param pathParts The parts of the file's path.
  * @returns The resolved file or `null` if it could not be found.
