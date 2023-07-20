@@ -177,14 +177,10 @@ export async function startServer(
   })
 
   // Phrase 17: create file tree cache and listen to updates from local file tree.
-  const initialFileTree = {
+  let treeJsonCache: string = JSON.stringify({
     name: config.name,
     root: {},
-  }
-  let fullTreeCache: { obj: FileTreeInfo, json: string } = {
-    obj: initialFileTree,
-    json: JSON.stringify(initialFileTree, null, 1),
-  }
+  }, null, 1)
 
   meditree.on("file-tree-update", (entireTree) => {
     if (plugins) {
@@ -195,15 +191,10 @@ export async function startServer(
         }
       }
     }
-    const info: FileTreeInfo = {
+    treeJsonCache = JSON.stringify({
       name: config.name,
       root: entireTree,
-    }
-    const infoString = JSON.stringify(info, null, 1)
-    fullTreeCache = {
-      obj: info,
-      json: infoString,
-    }
+    }, null, 1)
   })
 
   const authMiddleware = container.get(TYPE.Auth)
@@ -222,7 +213,7 @@ export async function startServer(
   app.get("/list", authMiddleware, (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
-    res.send(fullTreeCache.json)
+    res.send(treeJsonCache)
     res.end()
   })
 

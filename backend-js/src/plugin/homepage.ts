@@ -32,12 +32,12 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
 
   // lazy-build the html
   let html: string | undefined
-  let _meditree: Meditree
+  let meditree: Meditree
   let authMiddleware: RequestHandler
   return {
-    async setupMeditree(meditree) {
+    async setupMeditree(_meditree) {
       if (!root) {
-        _meditree = meditree
+        meditree = _meditree
         meditree.on("file-tree-update", () => {
           // clear the built html
           html = undefined
@@ -55,7 +55,7 @@ export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePl
           res.status(200)
           res.contentType("text/html")
           if (html === undefined) {
-            html = buildIndexHtml(_meditree.toJSON())
+            html = buildIndexHtml(meditree.toJSON())
           }
           res.send(html)
         }]
