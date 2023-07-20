@@ -48,12 +48,12 @@ export function initGlobalLogFile(direcotry: string): void {
   )
 }
 export interface Logger {
-  error(message: string | object): void
-  warn(message: string | object): void
-  info(message: string | object): void
-  debug(message: string | object): void
-  verbose(message: string | object): void
-  log(level: LogLevel, message: string | object): void
+  error(...msgs: any[]): void
+  warn(...msgs: any[]): void
+  info(...msgs: any[]): void
+  debug(...msgs: any[]): void
+  verbose(...msgs: any[]): void
+  log(level: LogLevel, ...msgs: any[]): void
 }
 
 export function createLogger(channel?: string): Logger {
@@ -67,35 +67,33 @@ class LoggerImpl implements Logger {
     this.channel = channel
   }
 
-  error = (message: string | object): void => {
-    this.log(LogLevels.ERROR, message)
+  error = (...msgs: any[]): void => {
+    this.log(LogLevels.ERROR, ...msgs)
   }
 
-  warn = (message: string | object): void => {
-    this.log(LogLevels.WARN, message)
+  warn = (...msgs: any[]): void => {
+    this.log(LogLevels.WARN, ...msgs)
   }
 
-  info = (message: string | object): void => {
-    this.log(LogLevels.INFO, message)
+  info = (...msgs: any[]): void => {
+    this.log(LogLevels.INFO, ...msgs)
   }
 
-  debug = (message: string | object): void => {
-    this.log(LogLevels.DEBUG, message)
+  debug = (...msgs: any[]): void => {
+    this.log(LogLevels.DEBUG, ...msgs)
   }
 
-  verbose = (message: string | object): void => {
-    this.log(LogLevels.VERBOSE, message)
+  verbose = (...msgs: any[]): void => {
+    this.log(LogLevels.VERBOSE, ...msgs)
   }
 
-  log = (level: LogLevel, message: string | object | Error): void => {
+  log = (level: LogLevel, ...msgs: any[]): void => {
     const timestamp = new Date().toISOString().slice(11, -2)
     const channel = this.channel ? `[${this.channel}] ` : " "
     let logLine = `|${timestamp}|${level.signal}|${channel}`
 
-    if (message instanceof Error) {
-      logLine += `${message.message} ${message?.stack ?? ""}`
-    } else {
-      logLine += format(message)
+    for (const entry of msgs) {
+      logLine = appendLogEntry(logLine, entry)
     }
 
     if (globalOptions.logFile) {
@@ -109,6 +107,15 @@ class LoggerImpl implements Logger {
       console.log(tint(logLine, level.color))
     }
   }
+}
+
+function appendLogEntry(origin: string, entry: any): string {
+  if (entry instanceof Error) {
+    origin += `${entry.message} ${entry?.stack ?? ""}`
+  } else {
+    origin += format(entry)
+  }
+  return origin
 }
 
 function tint(text: string, color?: ChalkInstance): string {

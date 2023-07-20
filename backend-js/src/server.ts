@@ -4,7 +4,7 @@ import { type AppConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
 import { cloneFileTreeJson, type FileTreeJson, type LocalFileTree, type LocalFile } from "./file.js"
 import cors from "cors"
-import { Meditree, type FileTreeInfo, type ReadStreamOptions } from "./meditree.js"
+import { Meditree, type ReadStreamOptions } from "./meditree.js"
 import { LogLevels, createLogger, globalOptions, initGlobalLogFile } from "./logger.js"
 import { Timer } from "./timer.js"
 import { type PluginRegistry, resolvePluginList } from "./plugin.js"
@@ -45,15 +45,15 @@ export async function startServer(
   const fileTreelog = createLogger("FileTree")
 
   // Phrase 4: register all built-in plugins.
-  const pluginTypes: PluginRegistry<MeditreePlugin> = {}
-  registerBuiltinPlugins(pluginTypes)
+  const builtinPluginTypes: PluginRegistry<MeditreePlugin> = {}
+  registerBuiltinPlugins(builtinPluginTypes)
 
   // Phrase 5: create IOC container.
   const container = new Container()
 
   // Phrase 6: instantiate plugins and respect dependencies.
   const plugins = config.plugin
-    ? await resolvePluginList(pluginTypes, config.plugin,
+    ? await resolvePluginList(builtinPluginTypes, config.plugin,
       (name) => {
         pluginLog.info(`Plugin[${name}] resgisered.`)
       })
@@ -130,7 +130,7 @@ export async function startServer(
     const common = {
       pattern2FileType: config.fileType,
       log: fileTreelog,
-      ignorePatterns: config.ignore ?? [],
+      ignorePatterns: config.ignore,
     }
     if (typeof config.root === "string") {
       hostTree = hostTreeCtor({
@@ -172,7 +172,7 @@ export async function startServer(
     for (const plugin of plugins) {
       plugin.onLocalFileTreeGenerated?.(localTree)
     }
-    meditree.onLocalFileTreeUpdate(config.name, localTree)
+    meditree.onLocalFileTreeUpdate(localTree)
     fileTreelog.info("Local file tree is rebuilt.")
   })
 
@@ -222,7 +222,7 @@ export async function startServer(
     try {
       path = decodeURIComponent(path)
     } catch (e) {
-      res.status(400).send("URI Invalid")
+      res.status(400).send("URI Invalid").end()
       return
     }
     path = removeSuffix(path, "/")

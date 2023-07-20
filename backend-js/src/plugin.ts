@@ -40,10 +40,10 @@ export type PluginProvider<
   TConfig extends PluginConfig = any
 > = PluginCtor<TPlugin, TConfig> | PluginMetaclass<TPlugin, TConfig>
 
-async function resolvePluginProvider<TPlugin, TConfig extends PluginConfig = any>(
-  builtin: PluginRegistry<TPlugin, TConfig>,
+async function resolvePluginProvider<TPlugin>(
+  builtin: PluginRegistry<TPlugin>,
   name: string
-): Promise<PluginProvider<TPlugin, TConfig> | undefined> {
+): Promise<PluginProvider<TPlugin> | undefined> {
   const ctor = builtin[name]
   if (ctor) {
     // for built-in plugins
@@ -129,7 +129,7 @@ export async function resolvePluginList<TPlugin>(
         if (!name2Provider.has(dp)) {
           const dpConfBody = name2ConfBody[dp]
           if (dpConfBody !== undefined && isPluginDisabled(dpConfBody)) {
-            throw new Error(`The dependency[${dp}] of plugin[${name}] is disabled.`)
+            throw new Error(`The dependency[${dp}] of plugin[${name}] was disabled.`)
           } else {
             throw new Error(`The dependency[${dp}] of plugin[${name}] not found.`)
           }

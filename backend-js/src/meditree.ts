@@ -6,14 +6,11 @@ import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
 
-export interface FileTreeInfo {
-  name: string
-  root: FileTreeJson
-}
 export interface ReadStreamOptions {
   start?: number
   end?: number
 }
+
 export declare interface Meditree {
   on(event: "file-tree-update", listener: (entireTree: FileTreeJson) => void): this
 
@@ -23,7 +20,7 @@ export declare interface Meditree {
 }
 
 export class Meditree extends EventEmitter implements FileTreeLike {
-  localTree?: { name: string, tree: FileTreeLike, json: FileTreeJson }
+  localTree?: { tree: FileTreeLike, json: FileTreeJson }
   log: Logger = createLogger("Meditree")
 
   resolveFile(pathParts: string[]): LocalFile | null {
@@ -42,19 +39,15 @@ export class Meditree extends EventEmitter implements FileTreeLike {
     try {
       return fs.createReadStream(file.localPath, options)
     } catch (error) {
+      this.log.error(`Cannot create read stream of ${file.localPath}.`, error)
       return null
     }
   }
 
-  onLocalFileTreeUpdate(name: string, tree: FileTreeLike): void {
+  onLocalFileTreeUpdate(tree: FileTreeLike): void {
     const json = tree.toJSON()
-    this.localTree = { name, tree, json }
-    this.emitNewEntireTreeUpdateEvent()
-  }
-
-  private emitNewEntireTreeUpdateEvent(): void {
-    const entireTree: FileTreeJson = this.toJSON()
-    this.emit("file-tree-update", entireTree)
+    this.localTree = { tree, json }
+    this.emit("file-tree-update", json)
   }
 
   toJSON(): FileTreeJson {
