@@ -258,6 +258,7 @@ export async function startServer(
     let stream: Readable | null | undefined
     const options = { start, end, }
     for (const plugin of plugins) {
+      // break the loop if any plugin has hooked creation.
       if (stream !== undefined) break
       if (plugin.onCreateFileStream) {
         stream = await plugin.onCreateFileStream(meditree, file, options)
