@@ -260,8 +260,8 @@ export async function startServer(
     for (const plugin of plugins) {
       // break the loop if any plugin has hooked creation.
       if (stream !== undefined) break
-      if (plugin.onCreateFileStream) {
-        stream = await plugin.onCreateFileStream(meditree, file, options)
+      if (plugin.onPreCreateFileStream) {
+        stream = await plugin.onPreCreateFileStream(meditree, file, options)
       }
     }
     if (stream === undefined) {
@@ -270,6 +270,11 @@ export async function startServer(
     if (!stream) {
       res.sendStatus(404).end()
       return
+    }
+    for (const plugin of plugins) {
+      if (plugin.onPostCreateFileStream) {
+        stream = await plugin.onPostCreateFileStream(meditree, file, stream)
+      }
     }
     stream.on("error", (_) => {
       res.sendStatus(500).end()
@@ -348,10 +353,15 @@ export interface MeditreePlugin {
    */
   onClientFileTreeUpdated?(tree: FileTreeJson): FileTreeJson
   /**
-   * The first plugin which returns a non-undefined value will be taken.
+   * A non-undefined value which is returned by any plugin will be taken and the hook will be stopped.
    * @returns undefined if not handled by this plugin.
    */
-  onCreateFileStream?(meditree: Meditree, file: LocalFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
+  onPreCreateFileStream?(meditree: Meditree, file: LocalFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
+  /**
+   * @param stream the former readable stream.
+   * @returns a new stream or the original stream
+   */
+  onPostCreateFileStream?(meditree: Meditree, file: LocalFile, stream: Readable): Promise<Readable>
   onExit?(): void
 }
 

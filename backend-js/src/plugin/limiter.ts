@@ -31,9 +31,7 @@ export default function LimiterPlugin(config: LimiterPluginConfig): MeditreePlug
   }
   const throttleRate = parseBytes(config.throttle, -1)
   if (throttleRate > 0) {
-    plugin.onCreateFileStream = async (meditree, file, options) => {
-      const stream = await meditree.createReadStream(file, options)
-      if (stream === null) return null
+    plugin.onPostCreateFileStream = async (meditree, file, stream) => {
       const throttle = new ThrottleTransform(throttleRate)
       return stream.pipe(throttle)
     }
