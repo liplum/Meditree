@@ -13,9 +13,7 @@ import Cookies from "js-cookie"
 
 // Skip login if jwt is still valid.
 export async function loader() {
-  const jwt = Cookies.get("jwt")
-  if (!jwt) return null
-  // if jwt was generated, verify it.
+  // try to verify the jwt, or the backend doesn't require jwt.
   const validationRes = await fetch("/verify")
   if (validationRes.ok) {
     return redirect("/view")

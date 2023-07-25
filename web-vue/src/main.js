@@ -43,9 +43,7 @@ const router = createRouter({
   routes: [
     {
       path: '/', component: Login, beforeEnter: async (to, from, next) => {
-        const jwt = Cookies.get("jwt")
-        if (!jwt) return next()
-        // if jwt was generated, verify it.
+        // try to verify the jwt, or the backend doesn't require jwt.
         const validationRes = await fetch("/verify")
         if (validationRes.ok) {
           next("/view")
