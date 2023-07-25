@@ -90,6 +90,9 @@ export function setupConfig(config: AppConfig | Partial<AppConfig> = {}): AppCon
   if (!newConfig.ignore) {
     newConfig.ignore = defaultConfig.ignore
   }
+  if (newConfig.cacheMaxAge === undefined) {
+    newConfig.cacheMaxAge = defaultConfig.cacheMaxAge
+  }
   return newConfig
 }
 
