@@ -209,7 +209,8 @@ export class CompoundHostTree extends EventEmitter implements FileTreeLike, IHos
   constructor(name: string) {
     super()
     this.name = name
-    this.builtFileTree = new LocalFileTree(this.name)
+    // use invalid characters for the path.
+    this.builtFileTree = new LocalFileTree(this.name, "?")
   }
 
   resolveFile(pathParts: string[]): LocalFile | null {
