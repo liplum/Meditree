@@ -5,33 +5,42 @@ export type FileType = string
 export interface FileJson {
   "*type": FileType
   size: number
+  "*tag"?: string
   "*hide"?: boolean
 }
 
 export interface FileTreeJson {
-  ["*hide"]?: boolean
+  "*tag"?: string
+  "*hide"?: boolean
   [name: string]: FileJson | FileTreeJson | any
 }
 
-export class LocalFile implements FileJson {
+export class LocalFile {
   readonly parent: LocalFileTree
-  readonly "*type": FileType
+  readonly type: FileType
   readonly size: number
   readonly localPath: string
-  "*hide"?: boolean
+  tag?: string
+  hidden?: boolean
   constructor(parent: LocalFileTree, type: FileType, size: number, localPath: string) {
     this.parent = parent
-    this["*type"] = type
+    this.type = type
     this.size = size
     this.localPath = localPath
   }
 
   toJSON(): FileJson {
-    return {
-      "*type": this["*type"],
+    const obj: FileJson = {
+      "*type": this.type,
       size: this.size,
-      "*hide": this["*hide"],
     }
+    if (this.hidden) {
+      obj["*hide"] = this.hidden
+    }
+    if (this.tag) {
+      obj["*tag"] = this.tag
+    }
+    return obj
   }
 }
 
@@ -50,6 +59,7 @@ export class LocalFileTree implements FileTreeLike {
    */
   readonly path?: string
   readonly name: string
+  tag?: string
   constructor(name: string, path: string, parent?: LocalFileTree) {
     this.path = path
     this.name = name
@@ -119,6 +129,9 @@ export class LocalFileTree implements FileTreeLike {
     if (this.hidden) {
       obj["*hide"] = this.hidden
     }
+    if (this.tag) {
+      obj["*tag"] = this.tag
+    }
     for (const [name, file] of this.name2File.entries()) {
       if (file instanceof LocalFileTree) {
         obj[name] = file.toJSON()
@@ -130,8 +143,8 @@ export class LocalFileTree implements FileTreeLike {
   }
 
   * visitFile({ fileFilter, dirFilter }: {
-    fileFilter?: (file: FileJson) => boolean
-    dirFilter?: (dir: FileTreeJson) => boolean
+    fileFilter?: (file: LocalFile) => boolean
+    dirFilter?: (dir: LocalFileTree) => boolean
   }): Iterable<LocalFile> {
     for (const file of this.name2File.values()) {
       if (file instanceof LocalFileTree) {

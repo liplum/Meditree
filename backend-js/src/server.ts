@@ -225,15 +225,14 @@ export async function startServer(
       res.status(400).send("URI Invalid").end()
       return
     }
-    path = removeSuffix(path, "/")
-    const resolved = meditree.resolveFile(path.split("/"))
-    if (!resolved?.["*type"]) {
+    const pathParts = path.split("/")
+    const resolved = meditree.resolveFile(pathParts)
+    if (!resolved?.type) {
       res.sendStatus(404).end()
       return
     }
     events.emit("file-requested", req, res, resolved)
-    const fileType = resolved["*type"]
-    res.contentType(fileType)
+    res.contentType(resolved.type)
     const expireTime = new Date(Date.now() + config.cacheMaxAge)
     res.setHeader("Expires", expireTime.toUTCString())
     res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)

@@ -99,14 +99,16 @@ server {
 
 ```ts
 interface File {
-  "*type": string;
-  "*hide"?: boolean;
-  size?: string;
+  "*type": string
+  "*tag"?: string
+  "*hide"?: boolean
+  size?: string
 }
 
 interface Directory {
-  "*hide"?: boolean;
-  [name: string]: File | Directory | any;
+  "*tag"?: string
+  "*hide"?: boolean
+  [name: string]: File | Directory | any
 }
 ```
 
