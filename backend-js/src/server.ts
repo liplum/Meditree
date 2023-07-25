@@ -226,6 +226,9 @@ export async function startServer(
       return
     }
     const pathParts = path.split("/")
+    while (pathParts.length && pathParts[pathParts.length - 1].length === 0) {
+      pathParts.pop()
+    }
     const resolved = meditree.resolveFile(pathParts)
     if (!resolved?.type) {
       res.sendStatus(404).end()

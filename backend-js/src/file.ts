@@ -73,12 +73,14 @@ export class LocalFileTree implements FileTreeLike {
  */
   resolveFile(pathParts: string[]): LocalFile | null {
     let cur: LocalFile | LocalFileTree | undefined = this
-    for (let index = 0; index < pathParts.length && cur instanceof LocalFileTree; index++) {
+    let index: number
+    for (index = 0; index < pathParts.length && cur instanceof LocalFileTree; index++) {
       const currentPart = pathParts[index]
       cur = cur.name2File.get(currentPart)
     }
 
-    if (cur instanceof LocalFile) {
+    // ensure it's a file, and the pathParts is exhausted.
+    if (cur instanceof LocalFile && index === pathParts.length) {
       return cur
     } else {
       return null
