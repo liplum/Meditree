@@ -15,6 +15,7 @@ import { VideoJS } from "./VideoPlayer"
 const VideoRenderer = React.memo(VideoRendererImpl)
 
 function resolveRenderer(type) {
+  if (typeof type !== "string") return
   if (type.startsWith("image")) {
     return ImageRenderer
   }
