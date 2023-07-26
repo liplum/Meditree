@@ -59,14 +59,18 @@ export class DirectoryInfo implements FileSystemObject {
   }
 }
 
-interface File {
+interface FileEntry {
+  "*tag"?: Record<string, number | string | boolean>
+  "*hide"?: boolean
+}
+
+interface File extends FileEntry {
   "*type": string
   "*hide"?: boolean
   size?: string
 }
 
-interface Directory {
-  "*hide"?: boolean
+interface Directory extends FileEntry {
   [name: string]: File | Directory | any
 }
 
@@ -91,13 +95,29 @@ export function parseFileTree(tree: { name: string, root: Directory }): Director
     dir.path = parent && !parent.isRoot ? `${parent.path}/${name}` : name
     dir.hidden = directory["*hide"] || false
     for (const [name, file] of Object.entries(directory)) {
-      if (name === "*hide") continue
+      if(name === "*hide" || name === "*tag") continue
+      const tag = file["*tag"]
       if (file.hasOwnProperty("*type")) {
         // Parse as file
         dir.addChild(parseFile(name, file as File, dir))
       } else {
         // Parse as directory
-        dir.addChild(parseDirectory(name, file as Directory, dir))
+        if (tag?.main) {
+          const mainName = tag.main
+          const mainFile = file[mainName]
+          const fi = new FileInfo()
+          fi.parent = parent
+          fi.name = name
+          fi.type = mainFile["*type"]
+          fi.hidden = file["*hide"] || false
+          fi.path = parent ? `${parent.path}/${name}/${mainName}` : `${name}/${mainName}`
+          fi.url = `file/${fi.path}`
+          fi.size = mainFile.size
+          dir.addChild(fi)
+        } else {
+          const subDir = parseDirectory(name, file as Directory, dir)
+          dir.addChild(subDir)
+        }
       }
     }
     return dir
