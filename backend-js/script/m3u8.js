@@ -37,7 +37,7 @@ if (mainCmd.cmd === "get") {
   await writeFile(outputPath, converted)
 } else if (mainCmd.cmd === "gen") {
   const genDef = [
-    { name: "path", defaultOption: true },
+    { name: "path", defaultOption: true, alias: "p" },
     { name: "time", type: Number, defaultValue: 5, alias: "t" },
     { name: "ext", multiple: true, defaultValue: ["mp4"], alias: "x" },
     { name: "overwrite", type: Boolean, defaultValue: false, alias: "w" },
@@ -55,31 +55,6 @@ if (mainCmd.cmd === "get") {
         destDir: opt.dest,
       })
     })
-} else if (mainCmd.cmd === "fix") {
-  const fixDef = [
-    { name: "path", defaultOption: true },
-    { name: "fix-url", type: Boolean, defaultValue: false },
-  ]
-  const opt = commandLineArgs(fixDef, { argv, stopAtFirstUnknown: true })
-  await processOnFileTree(opt.path, (filepath) => extname(filepath) === ".m3u8", async (filepath) => {
-    const pureName = basename(filepath, extname(filepath)).trim()
-    const tsDir = join(dirname(filepath), pureName)
-    if (!fs.existsSync(tsDir)) return
-    const data = await readFile(filepath)
-    const lines = data.toString().trim().split("\n")
-    const result = []
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i]
-      if (line.startsWith("#")) {
-        result.push(line)
-      } else {
-        const url = encodeURIComponent(`${pureName}/${line}`)
-        result.push(url)
-      }
-    }
-    const newText = result.join("\n")
-    await writeFile(filepath, newText)
-  })
 }
 
 async function processOnFileTree(fileOrDirPath, filter, task) {
@@ -111,7 +86,7 @@ async function convertVideo({ videoPath, time, overwrite, destDir }) {
     if (fs.existsSync(outputDir) && !fs.statSync(outputDir).isDirectory()) {
       reject(new Error(`"${outputDir}" exists but it's not a directory.`))
     }
-    const m3u8File = join(destDir, `${pureName}.m3u8`)
+    const m3u8File = join(outputDir, "index.m3u8")
     if (fs.existsSync(m3u8File) && fs.existsSync(outputDir) && !overwrite) {
       console.log(`"${m3u8File}" already exists.`)
       resolve(false)
@@ -134,10 +109,9 @@ async function convertVideo({ videoPath, time, overwrite, destDir }) {
       .outputOptions("-segment_list_flags", "cache")
       // segment duration (in seconds)
       .outputOptions("-hls_time", time)
-      .outputOptions("-hls_base_url", `${pureName}/`)
       // segment filename format
       .outputOptions("-hls_segment_filename", join(outputDir, "%d.ts"))
-      .output(join(outputDir, `${pureName}.m3u8`))
+      .output(m3u8File)
       .on("progress", (progress) => {
         bar.update(progress.percent / 100)
       })
