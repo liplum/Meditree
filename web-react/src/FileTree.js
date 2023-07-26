@@ -15,6 +15,7 @@ export function createDelegate({ name, root, }) {
     for (const [name, file] of entries) {
       if (!(file instanceof Object)) continue
       if (file["*hide"]) continue
+      const tag = file["*tag"]
       const curKey = key++
       // if file has a type, it presents a file
       if (file["*type"]) {
@@ -35,15 +36,34 @@ export function createDelegate({ name, root, }) {
         curDir.children.push(fileObj)
       } else {
         // otherwise, it presents a directory
-        const dirObj = {
-          key: curKey,
-          title: name,
-          path: curDir && curDir !== rootRenderTree ? `${curDir.path}/${name}` : name,
-          children: [],
-          tracking: [...curDir.tracking, curKey],
+        if (tag?.main) {
+          const mainName = tag.main
+          const mainFile = file[mainName]
+          const fileObj = {
+            name,
+            isLeaf: true,
+            title: name,
+            key: curKey,
+            path: curDir ? `${curDir.path}/${name}/${mainName}` : `${name}/${mainName}`,
+            type: mainFile["*type"],
+            size: mainFile.size,
+            tracking: [...curDir.tracking, curKey],
+          }
+          fileObj.url = `file/${fileObj.path}`
+          path2File.set(fileObj.path, fileObj)
+          key2File.set(curKey, fileObj)
+          curDir.children.push(fileObj)
+        } else {
+          const dirObj = {
+            key: curKey,
+            title: name,
+            path: curDir && curDir !== rootRenderTree ? `${curDir.path}/${name}` : name,
+            children: [],
+            tracking: [...curDir.tracking, curKey],
+          }
+          curDir.children.push(dirObj)
+          createNode(dirObj, file)
         }
-        curDir.children.push(dirObj)
-        createNode(dirObj, file)
       }
     }
   }
