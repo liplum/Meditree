@@ -219,16 +219,21 @@ export function cloneFileTreeJson(tree: FileTreeJson): FileTreeJson {
   if (tree["*hide"]) {
     newTree["*hide"] = true
   }
+  if (tree["*tag"]) {
+    newTree["*tag"] = { ...tree["*tag"] }
+  }
   for (const [name, fileOrSubtree] of Object.entries(tree)) {
+    if (name === "*tag") {
+      // skip the tag
+      continue
+    }
     // it's a file
     if (fileOrSubtree["*type"]) {
       newTree[name] = { ...fileOrSubtree }
     } else {
       // it's a folder
-      const filteredSubtree = cloneFileTreeJson(fileOrSubtree satisfies FileTreeJson)
-      if (Object.keys(filteredSubtree).length > 0) {
-        newTree[name] = filteredSubtree
-      }
+      const subtree = cloneFileTreeJson(fileOrSubtree satisfies FileTreeJson)
+      newTree[name] = subtree
     }
   }
   return newTree
