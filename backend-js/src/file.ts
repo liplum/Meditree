@@ -131,10 +131,10 @@ export class LocalFileTree implements FileTreeLike {
   toJSON(): FileTreeJson {
     const obj: FileTreeJson = {}
     if (this.hidden) {
-      obj["*hide"] = this.hidden
+      obj["*hide"] = true
     }
     if (this.tag) {
-      obj["*tag"] = this.tag
+      obj["*tag"] = { ...this.tag }
     }
     for (const [name, file] of this.name2File.entries()) {
       if (file instanceof LocalFileTree) {
@@ -223,10 +223,7 @@ export function cloneFileTreeJson(tree: FileTreeJson): FileTreeJson {
     newTree["*tag"] = { ...tree["*tag"] }
   }
   for (const [name, fileOrSubtree] of Object.entries(tree)) {
-    if (name === "*tag") {
-      // skip the tag
-      continue
-    }
+    if (name === "*tag" || name === "*hide") continue
     // it's a file
     if (fileOrSubtree["*type"]) {
       newTree[name] = { ...fileOrSubtree }
