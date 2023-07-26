@@ -139,15 +139,15 @@ export async function createFileTreeFrom({ name: rootName, root, ignoreEmptyDir,
           const fileType = classifier(filePath)
           if (fileType != null) {
             const localFile = new LocalFile(
-              tree, fileType, stat.size, filePath,
+              tree, fileType, stat.size, fileName, filePath,
             )
-            tree.addFile(fileName, localFile)
+            tree.addFile(localFile)
           }
         } else if (stat.isDirectory()) {
           const subtree = tree.createSubtree(fileName, filePath)
           await walk(subtree, filePath)
           if (!ignoreEmptyDir || subtree.countSubtreeFile() > 0) {
-            tree.addFile(fileName, subtree)
+            tree.addFile(subtree)
           }
         } else {
           log?.error(`Unknown file type of ${filePath}`)
@@ -242,7 +242,7 @@ export class CompoundHostTree extends EventEmitter implements FileTreeLike, IHos
   }
 
   onSubtreeRebuild(subtree: IHostTree, itsLocalTree: LocalFileTree): void {
-    this.builtFileTree.addFile(subtree.name, itsLocalTree)
+    this.builtFileTree.addFile(itsLocalTree, subtree.name)
     this.emit("rebuild", this.builtFileTree)
   }
 

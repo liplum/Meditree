@@ -5,24 +5,26 @@ export type FileType = string
 export interface FileJson {
   "*type": FileType
   size: number
-  "*tag"?: Record<string, object>
+  "*tag"?: Record<string, any>
   "*hide"?: boolean
 }
 
 export interface FileTreeJson {
-  "*tag"?: Record<string, object>
+  "*tag"?: Record<string, any>
   "*hide"?: boolean
   [name: string]: FileJson | FileTreeJson | any
 }
 
 export class LocalFile {
   readonly parent: LocalFileTree
+  readonly name: string
   readonly type: FileType
   readonly size: number
   readonly localPath: string
-  tag?: Record<string, object>
+  tag?: Record<string, any>
   hidden?: boolean
-  constructor(parent: LocalFileTree, type: FileType, size: number, localPath: string) {
+  constructor(parent: LocalFileTree, type: FileType, size: number, name: string, localPath: string) {
+    this.name = name
     this.parent = parent
     this.type = type
     this.size = size
@@ -59,7 +61,7 @@ export class LocalFileTree implements FileTreeLike {
    */
   readonly path?: string
   readonly name: string
-  tag?: Record<string, object>
+  tag?: Record<string, any>
   constructor(name: string, path: string, parent?: LocalFileTree) {
     this.path = path
     this.name = name
@@ -108,8 +110,8 @@ export class LocalFileTree implements FileTreeLike {
     return total
   }
 
-  addFile(name: string, file: LocalFile | LocalFileTree): void {
-    this.name2File.set(name, file)
+  addFile(file: LocalFile | LocalFileTree, name?: string,): void {
+    this.name2File.set(name ?? file.name, file)
     this._subtreeFileCountCache = undefined
   }
 
