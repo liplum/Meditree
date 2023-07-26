@@ -2,16 +2,17 @@ import fs from "fs"
 import path from "path"
 
 export type FileType = string
-export interface FileJson {
-  "*type": FileType
-  size: number
-  "*tag"?: Record<string, any>
+export interface FileEntryJson {
+  "*tag"?: Record<string, number | string | boolean>
   "*hide"?: boolean
 }
 
-export interface FileTreeJson {
-  "*tag"?: Record<string, any>
-  "*hide"?: boolean
+export interface FileJson extends FileEntryJson {
+  "*type": FileType
+  size: number
+}
+
+export interface FileTreeJson extends FileEntryJson {
   [name: string]: FileJson | FileTreeJson | any
 }
 
