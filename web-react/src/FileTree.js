@@ -13,7 +13,6 @@ export function createDelegate({ name, root, }) {
     const entries = Object.entries(curFileTree)
     reorder(entries)
     for (const [name, file] of entries) {
-      if (!(file instanceof Object)) continue
       if (file["*hide"]) continue
       const tag = file["*tag"]
       const curKey = key++
