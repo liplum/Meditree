@@ -52,12 +52,18 @@ export async function startServer(
   const container = new Container()
 
   // Phrase 6: instantiate plugins and respect dependencies.
-  const plugins = config.plugin
-    ? await resolvePluginList(builtinPluginTypes, config.plugin,
-      (name) => {
-        pluginLog.info(`Plugin[${name}] resgisered.`)
-      })
-    : []
+  let plugins: MeditreePlugin[] = []
+  if (config.plugin) {
+    try {
+      plugins = await resolvePluginList(builtinPluginTypes, config.plugin,
+        (name) => {
+          pluginLog.info(`Plugin[${name}] resgisered.`)
+        })
+    } catch (err) {
+      log.error(err)
+      process.exit(1)
+    }
+  }
 
   // Phrase 7: listen to all "exit-like" events, and handle them properly.
   function onExitPlugin(): void {
