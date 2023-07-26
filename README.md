@@ -100,13 +100,13 @@ server {
 ```ts
 interface File {
   "*type": string
-  "*tag"?: string
+  "*tag"?: Record<string, object>
   "*hide"?: boolean
   size?: string
 }
 
 interface Directory {
-  "*tag"?: string
+  "*tag"?: Record<string, object>
   "*hide"?: boolean
   [name: string]: File | Directory | any
 }

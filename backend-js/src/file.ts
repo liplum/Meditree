@@ -5,12 +5,12 @@ export type FileType = string
 export interface FileJson {
   "*type": FileType
   size: number
-  "*tag"?: string
+  "*tag"?: Record<string, object>
   "*hide"?: boolean
 }
 
 export interface FileTreeJson {
-  "*tag"?: string
+  "*tag"?: Record<string, object>
   "*hide"?: boolean
   [name: string]: FileJson | FileTreeJson | any
 }
@@ -20,7 +20,7 @@ export class LocalFile {
   readonly type: FileType
   readonly size: number
   readonly localPath: string
-  tag?: string
+  tag?: Record<string, object>
   hidden?: boolean
   constructor(parent: LocalFileTree, type: FileType, size: number, localPath: string) {
     this.parent = parent
@@ -59,7 +59,7 @@ export class LocalFileTree implements FileTreeLike {
    */
   readonly path?: string
   readonly name: string
-  tag?: string
+  tag?: Record<string, object>
   constructor(name: string, path: string, parent?: LocalFileTree) {
     this.path = path
     this.name = name
