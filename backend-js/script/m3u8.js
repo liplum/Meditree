@@ -49,7 +49,7 @@ if (mainCmd.cmd === "get") {
     (filepath) => ext.includes(removePrefix(extname(filepath).toLocaleLowerCase(), ".")),
     async (filepath) => {
       await convertVideo({
-        filepath,
+        videoPath: filepath,
         time: opt.time,
         overwrite: opt.overwrite,
         destDir: opt.dest,
@@ -137,7 +137,7 @@ async function convertVideo({ videoPath, time, overwrite, destDir }) {
       .outputOptions("-hls_base_url", `${pureName}/`)
       // segment filename format
       .outputOptions("-hls_segment_filename", join(outputDir, "%d.ts"))
-      .output(join(parentDir, `${pureName}.m3u8`))
+      .output(join(outputDir, `${pureName}.m3u8`))
       .on("progress", (progress) => {
         bar.update(progress.percent / 100)
       })
