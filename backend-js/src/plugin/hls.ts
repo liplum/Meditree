@@ -9,11 +9,11 @@ export default function HLSPlugin(config: HLSPluginConfig): MeditreePlugin {
     onLocalFileTreeRebuilt(tree) {
       for (const file of tree.visitFile({
         fileFilter: (f) => f.type === HLSMediaType,
-        dirFilter: (d) => d.tag?.icon === undefined,
+        dirFilter: (d) => d.tag?.main === undefined,
       })) {
         const dir = file.parent
         dir.tag ??= {}
-        dir.tag.icon = file.name
+        dir.tag.main = file.name
       }
     }
   }
