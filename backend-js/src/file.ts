@@ -2,27 +2,30 @@ import fs from "fs"
 import path from "path"
 
 export type FileType = string
-export interface FileJson {
-  "*type": FileType
-  size: number
-  "*tag"?: string
+export interface FileEntryJson {
+  "*tag"?: Record<string, number | string | boolean>
   "*hide"?: boolean
 }
 
-export interface FileTreeJson {
-  "*tag"?: string
-  "*hide"?: boolean
+export interface FileJson extends FileEntryJson {
+  "*type": FileType
+  size: number
+}
+
+export interface FileTreeJson extends FileEntryJson {
   [name: string]: FileJson | FileTreeJson | any
 }
 
 export class LocalFile {
   readonly parent: LocalFileTree
+  readonly name: string
   readonly type: FileType
   readonly size: number
   readonly localPath: string
-  tag?: string
+  tag?: Record<string, any>
   hidden?: boolean
-  constructor(parent: LocalFileTree, type: FileType, size: number, localPath: string) {
+  constructor(parent: LocalFileTree, type: FileType, size: number, name: string, localPath: string) {
+    this.name = name
     this.parent = parent
     this.type = type
     this.size = size
@@ -59,7 +62,7 @@ export class LocalFileTree implements FileTreeLike {
    */
   readonly path?: string
   readonly name: string
-  tag?: string
+  tag?: Record<string, any>
   constructor(name: string, path: string, parent?: LocalFileTree) {
     this.path = path
     this.name = name
@@ -108,8 +111,8 @@ export class LocalFileTree implements FileTreeLike {
     return total
   }
 
-  addFile(name: string, file: LocalFile | LocalFileTree): void {
-    this.name2File.set(name, file)
+  addFile(file: LocalFile | LocalFileTree, name?: string,): void {
+    this.name2File.set(name ?? file.name, file)
     this._subtreeFileCountCache = undefined
   }
 
@@ -129,10 +132,10 @@ export class LocalFileTree implements FileTreeLike {
   toJSON(): FileTreeJson {
     const obj: FileTreeJson = {}
     if (this.hidden) {
-      obj["*hide"] = this.hidden
+      obj["*hide"] = true
     }
     if (this.tag) {
-      obj["*tag"] = this.tag
+      obj["*tag"] = { ...this.tag }
     }
     for (const [name, file] of this.name2File.entries()) {
       if (file instanceof LocalFileTree) {
@@ -208,25 +211,35 @@ export function filterFileTreeJson(
   return filteredTree
 }
 
+export function* iterateFiles(tree: FileTreeJson): Iterable<[string, FileJson | FileTreeJson]> {
+  for (const entry of Object.entries(tree)) {
+    if (entry[0] === "*hide" || entry[0] === "*tag") {
+      continue
+    }
+    yield entry
+  }
+}
+
 /**
  * Clone a file tree.
- * All instances are newly-created.
+ * All instances are newly-created.w
  */
 export function cloneFileTreeJson(tree: FileTreeJson): FileTreeJson {
   const newTree: FileTreeJson = {}
   if (tree["*hide"]) {
     newTree["*hide"] = true
   }
-  for (const [name, fileOrSubtree] of Object.entries(tree)) {
+  if (tree["*tag"]) {
+    newTree["*tag"] = { ...tree["*tag"] }
+  }
+  for (const [name, fileOrSubtree] of iterateFiles(tree)) {
     // it's a file
     if (fileOrSubtree["*type"]) {
       newTree[name] = { ...fileOrSubtree }
     } else {
       // it's a folder
-      const filteredSubtree = cloneFileTreeJson(fileOrSubtree satisfies FileTreeJson)
-      if (Object.keys(filteredSubtree).length > 0) {
-        newTree[name] = filteredSubtree
-      }
+      const subtree = cloneFileTreeJson(fileOrSubtree satisfies FileTreeJson)
+      newTree[name] = subtree
     }
   }
   return newTree

@@ -1,4 +1,4 @@
-import { type FileTreeJson } from "../file.js"
+import { type FileTreeJson, iterateFiles, type FileJson } from "../file.js"
 import { type MeditreePlugin } from "../server.js"
 
 interface MinifyPluginConfig {
@@ -22,18 +22,18 @@ export default function MinifyPlugin(config: MinifyPluginConfig): MeditreePlugin
     onClientFileTreeUpdated(tree): FileTreeJson {
       if (removeHidden || removeSize) {
         function visit(cur: FileTreeJson): void {
-          for (const [name, fileOrSubtree] of Object.entries(cur)) {
-            if (removeHidden && fileOrSubtree["*hide"]) {
+          for (const [name, file] of iterateFiles(cur) as Iterable<[string, Partial<FileJson> | Partial<FileTreeJson>]>) {
+            if (removeHidden && file["*hide"]) {
               // I have to delete a dynamic property, because it's in json.
               // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
               delete cur[name]
             } else {
-              if (fileOrSubtree["*type"]) {
+              if (file["*type"]) {
                 if (removeSize) {
-                  delete fileOrSubtree.size
+                  delete file.size
                 }
               } else {
-                visit(fileOrSubtree)
+                visit(file)
               }
             }
           }
