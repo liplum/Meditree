@@ -2,18 +2,29 @@ import { type MeditreePlugin } from "../server.js"
 
 export const HLSMediaType = "application/x-mpegURL"
 interface HLSPluginConfig {
-  
+  /**
+   * Whether to hide .ts files in the folder where .m3u8 file is.
+   * "true" by default.
+   */
+  hideTsFile?: boolean
 }
+
 export default function HLSPlugin(config: HLSPluginConfig): MeditreePlugin {
+  const hideTsFile = config.hideTsFile ?? true
   return {
     onLocalFileTreeRebuilt(tree) {
-      for (const file of tree.visitFile({
+      for (const m3u8Fi of tree.visitFile({
         fileFilter: (f) => f.type === HLSMediaType,
         dirFilter: (d) => d.tag?.main === undefined,
       })) {
-        const dir = file.parent
+        const dir = m3u8Fi.parent
         dir.tag ??= {}
-        dir.tag.main = file.name
+        dir.tag.main = m3u8Fi.name
+        if (hideTsFile) {
+          for (const tsFi of dir.visitFile({ fileFilter: (f) => f !== m3u8Fi })) {
+            tsFi.hidden = true
+          }
+        }
       }
     }
   }
