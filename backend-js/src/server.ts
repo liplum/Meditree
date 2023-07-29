@@ -4,7 +4,7 @@ import { type AppConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
 import { cloneFileTreeJson, type FileTreeJson, type LocalFileTree, type LocalFile } from "./file.js"
 import cors from "cors"
-import { Meditree, type ReadStreamOptions } from "./meditree.js"
+import { FileTreeManager, type ReadStreamOptions } from "./manager.js"
 import { LogLevels, createLogger, globalOptions, initGlobalLogFile } from "./logger.js"
 import { Timer } from "./timer.js"
 import { type PluginRegistry, resolvePluginList } from "./plugin.js"
@@ -165,12 +165,12 @@ export async function startServer(
     }
   }
 
-  // Phrase 14: create Meditree and attach plugins to it.
-  const meditree = new Meditree()
+  // Phrase 14: create FileTree Manager and set it up.
+  const manager = new FileTreeManager()
 
-  // Phrase 15: plugins patch the Meditree setup.
+  // Phrase 15: plugins patch the FileTree manager setup.
   for (const plugin of plugins) {
-    await plugin.setupMeditree?.(meditree)
+    await plugin.setupManager?.(manager)
   }
 
   // Phrase 16: listen to HostTree "rebuild" event, and update the local file tree.
@@ -178,7 +178,7 @@ export async function startServer(
     for (const plugin of plugins) {
       plugin.onLocalFileTreeRebuilt?.(localTree)
     }
-    meditree.onLocalFileTreeUpdate(localTree)
+    manager.onLocalFileTreeUpdate(localTree)
     fileTreelog.info("Local file tree was rebuilt.")
   })
 
@@ -188,7 +188,7 @@ export async function startServer(
     root: {},
   }, null, 1)
 
-  meditree.on("file-tree-update", (entireTree) => {
+  manager.on("file-tree-update", (entireTree) => {
     if (plugins) {
       entireTree = cloneFileTreeJson(entireTree)
       for (const plugin of plugins) {
@@ -235,7 +235,7 @@ export async function startServer(
     while (pathParts.length && pathParts[pathParts.length - 1].length === 0) {
       pathParts.pop()
     }
-    const resolved = meditree.resolveFile(pathParts)
+    const resolved = manager.resolveFile(pathParts)
     if (!resolved?.type) {
       res.sendStatus(404).end()
       return
@@ -269,11 +269,11 @@ export async function startServer(
       // break the loop if any plugin has hooked creation.
       if (stream !== undefined) break
       if (plugin.onPreCreateFileStream) {
-        stream = await plugin.onPreCreateFileStream(meditree, file, options)
+        stream = await plugin.onPreCreateFileStream(manager, file, options)
       }
     }
     if (stream === undefined) {
-      stream = await meditree.createReadStream(file, options)
+      stream = await manager.createReadStream(file, options)
     }
     if (!stream) {
       res.sendStatus(404).end()
@@ -281,7 +281,7 @@ export async function startServer(
     }
     for (const plugin of plugins) {
       if (plugin.onPostCreateFileStream) {
-        stream = await plugin.onPostCreateFileStream(meditree, file, stream)
+        stream = await plugin.onPostCreateFileStream(manager, file, stream)
       }
     }
     stream.on("error", (_) => {
@@ -349,7 +349,7 @@ export interface MeditreePlugin {
 
   setupServer?(app: Express.Application, server: Server): Promise<void>
 
-  setupMeditree?(meditree: Meditree): Promise<void>
+  setupManager?(manager: FileTreeManager): Promise<void>
 
   onRegisterExpressHandler?(app: express.Express): Promise<void>
 
@@ -364,12 +364,12 @@ export interface MeditreePlugin {
    * A non-undefined value which is returned by any plugin will be taken and the hook will be stopped.
    * @returns undefined if not handled by this plugin.
    */
-  onPreCreateFileStream?(meditree: Meditree, file: LocalFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
+  onPreCreateFileStream?(manager: FileTreeManager, file: LocalFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
   /**
    * @param stream the former readable stream.
    * @returns a new stream or the original stream
    */
-  onPostCreateFileStream?(meditree: Meditree, file: LocalFile, stream: Readable): Promise<Readable>
+  onPostCreateFileStream?(manager: FileTreeManager, file: LocalFile, stream: Readable): Promise<Readable>
   onExit?(): void
 }
 

@@ -11,7 +11,7 @@ export interface ReadStreamOptions {
   end?: number
 }
 
-export declare interface Meditree {
+export declare interface FileTreeManager {
   on(event: "file-tree-update", listener: (entireTree: FileTreeJson) => void): this
 
   off(event: "file-tree-update", listener: (entireFree: FileTreeJson) => void): this
@@ -19,7 +19,7 @@ export declare interface Meditree {
   emit(event: "file-tree-update", entireFree: FileTreeJson): boolean
 }
 
-export class Meditree extends EventEmitter implements FileTreeLike {
+export class FileTreeManager extends EventEmitter implements FileTreeLike {
   localTree?: { tree: FileTreeLike, json: FileTreeJson }
   log: Logger = createLogger("Meditree")
 
