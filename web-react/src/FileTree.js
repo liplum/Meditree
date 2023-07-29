@@ -12,8 +12,7 @@ export function createDelegate({ name, root, }) {
   function createNode(curDir, curFileTree) {
     const entries = Object.entries(curFileTree)
     reorder(entries)
-    for (const [name, file] of entries) {
-      if(name === "*hide" || name === "*tag") continue
+    for (const [name, file] of iterateFiles(entries)) {
       const tag = file["*tag"]
       const curKey = key++
       // if file has a type, it presents a file
@@ -73,6 +72,15 @@ export function createDelegate({ name, root, }) {
     path2File,
     maxKey: key,
     name,
+  }
+}
+
+function* iterateFiles(tree) {
+  for (const entry of tree) {
+    if (entry[0] === "*hide" || entry[0] === "*tag") {
+      continue
+    }
+    yield entry
   }
 }
 
