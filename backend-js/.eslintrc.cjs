@@ -42,5 +42,6 @@ module.exports = {
     "no-useless-return": "off",
     "@typescript-eslint/method-signature-style": "off",
     "yield-star-spacing": "off",
+    "generator-star-spacing": "off",
   }
 }

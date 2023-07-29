@@ -211,9 +211,18 @@ export function filterFileTreeJson(
   return filteredTree
 }
 
+export function* iterateFiles(tree: FileTreeJson): Iterable<[string, FileJson | FileTreeJson]> {
+  for (const entry of Object.entries(tree)) {
+    if (entry[0] === "*hide" || entry[0] === "*tag") {
+      continue
+    }
+    yield entry
+  }
+}
+
 /**
  * Clone a file tree.
- * All instances are newly-created.
+ * All instances are newly-created.w
  */
 export function cloneFileTreeJson(tree: FileTreeJson): FileTreeJson {
   const newTree: FileTreeJson = {}
@@ -223,8 +232,7 @@ export function cloneFileTreeJson(tree: FileTreeJson): FileTreeJson {
   if (tree["*tag"]) {
     newTree["*tag"] = { ...tree["*tag"] }
   }
-  for (const [name, fileOrSubtree] of Object.entries(tree)) {
-    if (name === "*tag" || name === "*hide") continue
+  for (const [name, fileOrSubtree] of iterateFiles(tree)) {
     // it's a file
     if (fileOrSubtree["*type"]) {
       newTree[name] = { ...fileOrSubtree }
