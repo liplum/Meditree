@@ -85,9 +85,9 @@ function* iterateFiles(tree) {
 }
 
 export function getFirstFile(fileTreeDelegate) {
-  // eslint-disable-next-line no-unreachable-loop
-  for (const file of fileTreeDelegate.path2File.values()) {
-    return file
+  const values = fileTreeDelegate.path2File.values()
+  if (values.length) {
+    return values[0]
   }
   return null
 }

@@ -31,5 +31,6 @@ module.exports = {
     "no-useless-return": "off",
     "yield-star-spacing": "off",
     "react/prop-types": "off",
+    "generator-star-spacing": "off",
   }
 }
