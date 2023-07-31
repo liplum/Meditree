@@ -108,22 +108,8 @@ function parseDirectory(name: string, directory: Directory, parent?: DirectoryIn
       dir.addChild(parseFile(name, file as File, dir))
     } else {
       // Parse as directory
-      if (typeof tag?.main === "string") {
-        const mainName = tag.main
-        const mainFile = file[mainName]
-        const fi = new FileInfo()
-        fi.parent = parent
-        fi.name = name
-        fi.type = mainFile["*type"]
-        fi.hidden = file["*hide"] || false
-        fi.path = parent ? `${parent.path}/${name}/${mainName}` : `${name}/${mainName}`
-        fi.url = `file/${fi.path}`
-        fi.size = mainFile.size
-        dir.addChild(fi)
-      } else {
         const subDir = parseDirectory(name, file as Directory, dir)
         dir.addChild(subDir)
-      }
     }
   }
   return dir
