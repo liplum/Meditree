@@ -5,6 +5,9 @@ import ImageRenderer from "./Image.vue"
 import VideoRenderer from "./Video.vue"
 import AudioRenderer from "./Audio.vue"
 import { filesize } from "filesize"
+import { useI18n } from "vue-i18n"
+
+const { t } = useI18n({ inheritLocale: true })
 
 function resolveRenderer(type: string) {
   if (!type) return null
@@ -17,6 +20,7 @@ function resolveRenderer(type: string) {
   if (type.startsWith("audio")) {
     return AudioRenderer
   }
+  if (type === "application/x-mpegURL") return VideoRenderer
 
   return null
 }
@@ -33,7 +37,7 @@ const renderer = computed(() => {
   }
 })
 const size = computed(() => {
-  if (props.file) {
+  if (props.file?.size) {
     return filesize(props.file.size, { base: 2, standard: "jedec" }) as string
   }
 })
@@ -60,7 +64,17 @@ const size = computed(() => {
     </v-app-bar>
     <v-main>
       <template v-if="props.file">
-        <component :is="renderer" :file="props.file"></component>
+        <template v-if="renderer">
+          <component :is="renderer" :file="props.file"></component>
+        </template>
+        <template v-else>
+          <h1>{{ t("display.unsupportedFileType") }}</h1>
+        </template>
+      </template>
+      <template v-else>
+        <v-row justify="center">
+          <v-icon size="8rem" icon="mdi-folder-off" />
+        </v-row>
       </template>
     </v-main>
   </v-app>
