@@ -24,6 +24,10 @@ export class DirectoryInfo implements FileSystemObject {
   path: string
   hidden: boolean = false
   files = new Map<string, FileInfo | DirectoryInfo>
+  /**
+   * The entry point.
+   */
+  main?: FileInfo
 
   toString(): string {
     return this.name
@@ -102,14 +106,21 @@ function parseDirectory(name: string, directory: Directory, parent?: DirectoryIn
   dir.path = parent && !parent.isRoot ? `${parent.path}/${name}` : name
   dir.hidden = directory["*hide"] || false
   for (const [name, file] of iterateFiles(directory)) {
-    const tag = file["*tag"]
     if (file.hasOwnProperty("*type")) {
       // Parse as file
       dir.addChild(parseFile(name, file as File, dir))
     } else {
       // Parse as directory
-        const subDir = parseDirectory(name, file as Directory, dir)
-        dir.addChild(subDir)
+      const subDir = parseDirectory(name, file as Directory, dir)
+      dir.addChild(subDir)
+    }
+  }
+  const tag = directory["*tag"]
+  if (typeof tag?.main === "string") {
+    const mainName = tag.main
+    const mainFi = dir.files.get(mainName)
+    if (mainFi instanceof FileInfo) {
+      dir.main = mainFi
     }
   }
   return dir
