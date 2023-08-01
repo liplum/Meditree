@@ -65,7 +65,7 @@ const size = computed(() => {
     <v-main>
       <template v-if="props.file">
         <template v-if="renderer">
-          <component :is="renderer" :file="props.file"></component>
+          <component :is="renderer" :file="props.file"/>
         </template>
         <template v-else>
           <h1>{{ t("display.unsupportedFileType") }}</h1>

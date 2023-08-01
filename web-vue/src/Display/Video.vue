@@ -31,11 +31,3 @@ const videoOptions = {
     <video-player :options="videoOptions" />
   </v-responsive>
 </template>
-
-<style scoped>
-.container {
-  /* adjust the height as needed */
-  height: 100%;
-  width: 100%;
-}
-</style>

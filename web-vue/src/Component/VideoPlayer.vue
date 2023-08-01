@@ -1,11 +1,10 @@
 <template>
-  <div>
-    <video ref="videoPlayer" class="video-js"></video>
-  </div>
+  <video ref="videoPlayer" class="video-js vjs-fluid"></video>
 </template>
 
 <script>
-import videojs from 'video.js';
+import videojs from 'video.js'
+import 'video.js/dist/video-js.css'
 
 export default {
   name: 'VideoPlayer',
@@ -13,7 +12,7 @@ export default {
     options: {
       type: Object,
       default() {
-        return {};
+        return {}
       }
     }
   },
@@ -24,17 +23,13 @@ export default {
   },
   mounted() {
     this.player = videojs(this.$refs.videoPlayer, this.options, () => {
-      this.player.log('onPlayerReady', this);
+      this.player.log('onPlayerReady', this)
     });
   },
   beforeDestroy() {
     if (this.player) {
-      this.player.dispose();
+      this.player.dispose()
     }
   }
 }
 </script>
-
-<style>
-@import "video.js/dist/video-js.css";
-</style>
