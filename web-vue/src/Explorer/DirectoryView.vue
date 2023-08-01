@@ -14,17 +14,15 @@ const props = withDefaults(defineProps<Props>(), {
   view: "grid",
 })
 const files = computed(() => {
-  if (props.searchDelegate) {
-    const filtered = new Map<string, FileInfo | DirectoryInfo>()
-    for (const [name, file] of props.dir.files) {
-      if (props.searchDelegate(file)) {
-        filtered.set(name, file)
-      }
+  if (!props.searchDelegate) return props.dir.files
+  
+  const filtered = new Map<string, FileInfo | DirectoryInfo>()
+  for (const [name, file] of props.dir.files) {
+    if (props.searchDelegate(file)) {
+      filtered.set(name, file)
     }
-    return filtered
-  } else {
-    return props.dir.files
   }
+  return filtered
 })
 const emit = defineEmits<{
   (e: "clickFile", file: FileInfo): void
@@ -41,12 +39,7 @@ const emit = defineEmits<{
             <File @click="emit('clickFile', file)" :file="file" />
           </template>
           <template v-else>
-            <template v-if="file.main">
-              <File @click="emit('clickFile', file.main)" :file="file.main" />
-            </template>
-            <template v-else>
-              <Directory @click="emit('clickDir', file)" :dir="file" />
-            </template>
+            <Directory @click="emit('clickDir', file)" :dir="file" />
           </template>
         </v-col>
       </v-row>

@@ -24,10 +24,6 @@ export class DirectoryInfo implements FileSystemObject {
   path: string
   hidden: boolean = false
   files = new Map<string, FileInfo | DirectoryInfo>
-  /**
-   * The entry point.
-   */
-  main?: FileInfo
 
   toString(): string {
     return this.name
