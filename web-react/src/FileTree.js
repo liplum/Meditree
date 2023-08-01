@@ -23,7 +23,7 @@ export function createDelegate({ name, root, }) {
           isLeaf: true,
           title: name,
           key: curKey,
-          path: curDir ? `${curDir.path}/${name}` : name,
+          path: `${curDir.path}/${name}`,
           type: file["*type"],
           size: file.size,
           tracking: [...curDir.tracking, curKey],
@@ -42,12 +42,12 @@ export function createDelegate({ name, root, }) {
             isLeaf: true,
             title: name,
             key: curKey,
-            path: curDir ? `${curDir.path}/${name}/${mainName}` : `${name}/${mainName}`,
+            path: `${curDir.path}/${name}`,
             type: mainFile["*type"],
             size: mainFile.size,
             tracking: [...curDir.tracking, curKey],
           }
-          fileObj.url = `file/${fileObj.path}`
+          fileObj.url = `file/${curDir.path}/${name}/${mainName}`
           path2File.set(fileObj.path, fileObj)
           key2File.set(curKey, fileObj)
           curDir.children.push(fileObj)
@@ -55,7 +55,7 @@ export function createDelegate({ name, root, }) {
           const dirObj = {
             key: curKey,
             title: name,
-            path: curDir && curDir !== rootRenderTree ? `${curDir.path}/${name}` : name,
+            path: curDir !== rootRenderTree ? `${curDir.path}/${name}` : name,
             children: [],
             tracking: [...curDir.tracking, curKey],
           }
