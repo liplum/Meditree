@@ -12,6 +12,7 @@ function resolveIcon(type: string): string {
     if (type.endsWith("html")) return "mdi-text-long"
     return "mdi-text"
   }
+  if (type === "application/x-mpegURL") return "mdi-video"
   return "mdi-file"
 }
 </script>
@@ -22,8 +23,8 @@ function resolveIcon(type: string): string {
       <v-icon size="4rem" :icon="resolveIcon(p.file.type)" />
       <v-tooltip bottom>
         <template v-slot:activator="{ props }">
-          <span v-bind="props" style="text-align: center;">
-            {{ truncateString(p.file.name, 16) }}
+          <span v-bind="props" style="text-align: center;font-size: small;">
+            {{ truncateString(p.file.name, 32) }}
           </span>
         </template>
         <p>{{ p.file.path }}</p>

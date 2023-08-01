@@ -12,8 +12,8 @@ const p = defineProps<{
       <v-icon size="4rem" icon="mdi-folder" />
       <v-tooltip bottom>
         <template v-slot:activator="{ props }">
-          <span v-bind="props" style="text-align: center;">
-            {{ truncateString(p.dir.name, 16) }}
+          <span v-bind="props" style="text-align: center;font-size: small;">
+            {{ truncateString(p.dir.name, 24) }}
           </span>
         </template>
         <p>{{ p.dir.path }}</p>
