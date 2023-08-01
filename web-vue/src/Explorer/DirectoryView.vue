@@ -41,7 +41,12 @@ const emit = defineEmits<{
             <File @click="emit('clickFile', file)" :file="file" />
           </template>
           <template v-else>
-            <Directory @click="emit('clickDir', file)" :dir="file" />
+            <template v-if="file.main">
+              <File @click="emit('clickFile', file.main)" :file="file.main" />
+            </template>
+            <template v-else>
+              <Directory @click="emit('clickDir', file)" :dir="file" />
+            </template>
           </template>
         </v-col>
       </v-row>
