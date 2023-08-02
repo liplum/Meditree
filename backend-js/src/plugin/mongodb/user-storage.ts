@@ -41,6 +41,9 @@ export default function MongoDBUserPlugin(config: MongoDDUserPluginConfig): Medi
           const result = await users.deleteOne({ account })
           return result.deletedCount > 0
         },
+        async hasUser(account) {
+          return await users.countDocuments({ account }, { limit: 1 }) > 0
+        },
       })
     },
   }

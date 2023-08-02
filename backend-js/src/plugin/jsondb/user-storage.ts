@@ -59,6 +59,10 @@ export default function JsonDbUserPlugin(config: JsonDBUserPluginConfig): Meditr
           }
           return false
         },
+        async hasUser(account) {
+          const userPath = getUserPath(account)
+          return await db.exists(userPath)
+        }
       })
     },
   }

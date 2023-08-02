@@ -59,7 +59,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
             res.status(401).send("Token Invalid").end()
             return
           }
-          if (await storage.getUser(account) === null) {
+          if (await storage.hasUser(account)) {
             res.status(401).send("Token Invalid").end()
             return
           }
@@ -74,6 +74,10 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
     async onRegisterExpressHandler(app) {
       app.post("/login", async (req, res) => {
         const { account, password } = req.body
+        if (typeof account !== "string" || typeof password !== "string") {
+          res.status(400).send("Invalid Credentials")
+          return
+        }
         // only finding active staffs
         const user = await storage.getUser(account)
         if (!user || user.password !== password) {
@@ -152,11 +156,18 @@ export interface UserStorageService {
   addUser(user: User): Promise<boolean>
 
   /**
-   * Retrieves a user from the storage based on the account name.
-   * @param account The account name of the user to retrieve.
+   * Retrieves a user from the storage based on the account.
+   * @param account The account of the user to retrieve.
    * @returns The retrieved user object or `null` if the user was not found.
    */
   getUser(account: string): Promise<User | null>
+
+  /**
+   * Checks if a user with the specified account exists in the storage.
+   * @param account The account of the user to check.
+   * @returns A Promise that resolves to `true` if the user exists, `false` otherwise.
+  */
+  hasUser(account: string): Promise<boolean>
 
   /**
    * Updates an existing user in the storage.
@@ -166,8 +177,8 @@ export interface UserStorageService {
   updateUser(user: User): Promise<boolean>
 
   /**
-   * Deletes a user from the storage based on the account name.
-   * @param account The account name of the user to delete.
+   * Deletes a user from the storage based on the account.
+   * @param account The account of the user to delete.
    * @returns `true` if the user was deleted successfully, `false` otherwise.
    */
   deleteUser(account: string): Promise<boolean>
