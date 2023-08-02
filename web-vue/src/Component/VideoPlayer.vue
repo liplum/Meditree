@@ -1,35 +1,30 @@
+<script setup lang="ts">
+import videojs from 'video.js'
+import Player from 'video.js/dist/types/player';
+import 'video.js/dist/video-js.css'
+import { onBeforeMount, onMounted, ref, Ref } from 'vue';
+
+const props = defineProps({
+  options: Object
+})
+
+const player: Ref<Player | null> = ref(null)
+const videoPlayer: Ref<HTMLVideoElement | null> = ref(null);
+
+onMounted(() => {
+  player.value = videojs(videoPlayer.value!, props.options, () => {
+    player.value?.log('onPlayerReady', player.value)
+  })
+})
+
+onBeforeMount(() => {
+  if (player.value) {
+    player.value.dispose()
+  }
+})
+
+</script>
+
 <template>
   <video ref="videoPlayer" class="video-js vjs-fluid"></video>
 </template>
-
-<script>
-import videojs from 'video.js'
-import 'video.js/dist/video-js.css'
-
-export default {
-  name: 'VideoPlayer',
-  props: {
-    options: {
-      type: Object,
-      default() {
-        return {}
-      }
-    }
-  },
-  data() {
-    return {
-      player: null
-    }
-  },
-  mounted() {
-    this.player = videojs(this.$refs.videoPlayer, this.options, () => {
-      this.player.log('onPlayerReady', this)
-    });
-  },
-  beforeDestroy() {
-    if (this.player) {
-      this.player.dispose()
-    }
-  }
-}
-</script>
