@@ -60,10 +60,11 @@ const router = createRouter({
 app.use(router)
 
 const i18n = createI18n({
+  globalInjection: true,
   legacy: false, // you must set `false`, to use Composition API
   fallbackLocale: 'en', // set fallback locale
-  messages: l10nChart, // set locale messages
   silentFallbackWarn: true,
+  messages: l10nChart, // set locale messages
 })
 
 app.use(i18n)

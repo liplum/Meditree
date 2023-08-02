@@ -75,7 +75,7 @@ async function login(event) {
         </v-card-text>
         <v-card-actions>
           <v-btn color="primary" :disabled="isLogingIn" rounded type="submit">
-            {{ t("login.login") }}
+            {{ t("login.loginBtn") }}
           </v-btn>
         </v-card-actions>
       </v-form>
@@ -84,14 +84,11 @@ async function login(event) {
 
   <v-dialog v-model="showErrorDialog" width="auto">
     <v-card>
-      <template v-if="errorCause">
-        <v-card-text>Failed to Login due to {{ errorCause }}.</v-card-text>
-      </template>
-      <template v-else>
-        <v-card-text>{{ t("login.error.failed") }}</v-card-text>
-      </template>
+      <v-card-text>{{ t("login.failed") }}</v-card-text>
       <v-card-actions>
-        <v-btn color="primary" @click="showErrorDialog = false">Close</v-btn>
+        <v-btn color="primary" @click="showErrorDialog = false">
+          {{ t("login.closeBtn") }}
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
