@@ -12,7 +12,7 @@ function resolveIcon(type: string): string {
     if (type.endsWith("html")) return "mdi-text-long"
     return "mdi-text"
   }
-  if (type === "application/x-mpegURL") return "mdi-video"
+  if (type === "application/x-mpegURL") return "mdi-folder-play"
   return "mdi-file"
 }
 </script>
