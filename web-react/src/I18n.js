@@ -145,7 +145,7 @@ export const i18n = new LocalizedStrings({
       failed: "Помилка аутентифікації.",
     },
   },
-  jp: {
+  ja: {
     noFile: "ファイルがありません",
     search: {
       starFilter: "お気に入りのみ表示",
