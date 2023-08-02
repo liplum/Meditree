@@ -67,13 +67,13 @@ export function LoginDialog() {
             variant="outlined"
             type='text'
             label={i18n.login.account}
-            onChange={(e) => setAccount(e.value)}
+            onChange={(e) => setAccount(e.target.value)}
           />
           <TextField
             variant="outlined"
             type={showPasscode ? "text" : "password"}
             label={i18n.login.password}
-            onChange={(e) => setPassword(e.value)}
+            onChange={(e) => setPassword(e.target.value)}
             InputProps={{
               endAdornment: <InputAdornment position="end">
                 <IconButton
