@@ -47,7 +47,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
         // Get the JWT from the cookie, body or authorization header in a fallback chain.
         const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
         if (!token) {
-          res.status(401).send("Token Missing")
+          res.status(401).send("Token Missing").end()
           return
         }
         // Handle missing token error
