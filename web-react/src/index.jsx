@@ -11,7 +11,6 @@ import "./index.css"
 import {
   LoginDialog,
   loader as loginLoader,
-  action as connectDialogAction,
 } from "./Login"
 import { CssBaseline } from "@mui/material"
 
@@ -20,7 +19,6 @@ const router = createHashRouter([
     index: true,
     element: <LoginDialog />,
     loader: loginLoader,
-    action: connectDialogAction,
   },
   {
     path: "/view",

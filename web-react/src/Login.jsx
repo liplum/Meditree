@@ -1,9 +1,9 @@
 // Import required modules
-import { Button, DialogActions, Card, InputAdornment, IconButton, TextField } from "@mui/material"
+import { Button, DialogActions, Card, InputAdornment, IconButton, TextField, Dialog, DialogTitle } from "@mui/material"
 import React, { useEffect, useState } from "react"
 import {
   redirect,
-  Form,
+  useNavigate
 } from "react-router-dom"
 import { storage, updatePageTitle } from "./Env.js"
 import "./Login.css"
@@ -23,79 +23,93 @@ export async function loader() {
   }
 }
 
-/**
- * Handle log in
- */
-export async function action({ request }) {
-  const formData = await request.formData()
-  const { account, password } = Object.fromEntries(formData)
-  if (!account) {
-    // if no account is posted, assume password is not required.
-    return redirect("/view")
-  }
-  const loginRes = await fetch("/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      account, password,
-    })
-  })
-  if (loginRes.ok) {
-    const { jwt } = await loginRes.json()
-    Cookies.set("jwt", jwt)
-    const lastPath = storage.lastFilePathFromUrl
-    if (lastPath) {
-      return redirect(`/view?file=${encodeURIComponent(lastPath)}`)
-    } else {
-      return redirect("/view")
-    }
-  } else {
-    Cookies.remove("jwt")
-    return null
-  }
-}
-export function LoginDialog(props) {
+export function LoginDialog() {
   useEffect(() => {
     updatePageTitle(i18n.login.title)
   }, [])
+  const navigate = useNavigate()
+  const [account, setAccount] = useState("")
+  const [password, setPassword] = useState("")
   const [showPasscode, setShowPasscode] = useState(false)
+  const [failedDialogOpen, setFailedDialogOpen] = React.useState(false)
+  const onLogin = async () => {
+    const loginRes = await fetch("/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        account, password,
+      })
+    })
+    if (loginRes.ok) {
+      const { jwt } = await loginRes.json()
+      Cookies.set("jwt", jwt)
+      const lastPath = storage.lastFilePathFromUrl
+      if (lastPath) {
+        navigate(`/view?file=${encodeURIComponent(lastPath)}`)
+      } else {
+        navigate("/view")
+      }
+    } else {
+      Cookies.remove("jwt")
+      setFailedDialogOpen(true)
+    }
+  }
   return (
-    <Card id="login-dialog">
-      <h1>{i18n.login.title}</h1>
-      <Form method="post" id="login-form" style={{
-        flexDirection: "column", display: "flex",
-      }}>
-        <TextField
-          variant="outlined"
-          type='text'
-          label={i18n.login.account}
-          placeholder={i18n.login.accountPlaceholder}
-          name="account"
-        />
-        <TextField
-          variant="outlined"
-          type={showPasscode ? "text" : "password"}
-          label={i18n.login.password}
-          placeholder={i18n.login.passwordPlaceholder}
-          name="password"
-          InputProps={{
-            endAdornment: <InputAdornment position="end">
-              <IconButton
-                onClick={() => { setShowPasscode(!showPasscode) }}
-                onMouseDown={() => { setShowPasscode(!showPasscode) }}
-                aria-label="toggle password visibility"
-              >
-                {showPasscode ? <Visibility /> : <VisibilityOff />}
-              </IconButton>
-            </InputAdornment>
-          }}
-        />
-        <DialogActions>
-          <Button type="submit">{i18n.login.loginBtn}</Button>
-        </DialogActions>
-      </Form>
-    </Card>
+    <>
+      <Card id="login-dialog">
+        <h1>{i18n.login.title}</h1>
+        <div id="login-form" style={{
+          flexDirection: "column", display: "flex",
+        }}>
+          <TextField
+            variant="outlined"
+            type='text'
+            label={i18n.login.account}
+            onChange={(e) => setAccount(e.value)}
+          />
+          <TextField
+            variant="outlined"
+            type={showPasscode ? "text" : "password"}
+            label={i18n.login.password}
+            onChange={(e) => setPassword(e.value)}
+            InputProps={{
+              endAdornment: <InputAdornment position="end">
+                <IconButton
+                  onClick={() => { setShowPasscode(!showPasscode) }}
+                  onMouseDown={() => { setShowPasscode(!showPasscode) }}
+                  aria-label="toggle-password-visibility"
+                >
+                  {showPasscode ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            }}
+          />
+          <DialogActions>
+            <Button type="submit" onClick={onLogin}>{i18n.login.loginBtn}</Button>
+          </DialogActions>
+        </div>
+      </Card>
+      <LoginFailedDialog
+        open={failedDialogOpen}
+        setOpen={setFailedDialogOpen} />
+    </>
+  )
+}
+
+function LoginFailedDialog({ open, setOpen }) {
+  const handleClose = () => {
+    setOpen(false)
+  }
+  return (
+    <Dialog open={open}>
+      <DialogTitle>{i18n.login.failed}</DialogTitle>
+      <DialogActions>
+        <Button onClick={handleClose} autoFocus>
+          {i18n.login.closeBtn}
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }
