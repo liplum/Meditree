@@ -3,17 +3,11 @@ export function updatePageTitle(title) {
 }
 
 export const storage = {
-  getAstrology() {
-    return JSON.parse(window.localStorage.getItem("astrology")) ?? {}
-  },
-  setAstrology(value) {
-    window.localStorage.setItem("astrology", JSON.stringify(value))
-  },
   get lastFilePathFromUrl() {
-    return window.localStorage.getItem("lastFilePathFromUrl")
+    return window.localStorage.getItem("last-file-path-from-url")
   },
   set lastFilePathFromUrl(value) {
-    if (value) window.localStorage.setItem("lastFilePathFromUrl", value)
-    else window.localStorage.removeItem("lastFilePathFromUrl")
+    if (value) window.localStorage.setItem("last-file-path-from-url", value)
+    else window.localStorage.removeItem("last-file-path-from-url")
   },
 }

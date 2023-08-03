@@ -20,10 +20,11 @@ import { SearchBar } from "./SearchBar"
 import "./View.css"
 import { Failed, Loading } from "./Loading"
 import useForceUpdate from "use-force-update"
+import { StarChart } from "./StarChart"
 
 export const FileTreeDeleagteContext = createContext()
 export const IsDrawerOpenContext = createContext()
-export const AstrologyContext = createContext()
+export const StarChartContext = createContext()
 export const FileNavigationContext = createContext()
 
 export async function loader({ request }) {
@@ -117,35 +118,31 @@ function Body({ fileTreeDelegate }) {
   const goNextFile = (curFile) => goFile(curFile, +1)
   const goPreviousFile = (curFile) => goFile(curFile, -1)
   const forceUpdate = useForceUpdate()
-  const astrology = storage.getAstrology()
-  const astrologyCtx = {
-    astrology,
+  const starChart = new StarChart()
+  starChart.load()
+  const starChartCtx = {
+    starChart,
     isStarred(file) {
-      return file && astrology[file.path]
+      return file && starChart.isStarred(file.path)
     },
     star(file) {
       const path = file?.path
-      if (path && !astrology[path]) {
-        // `1` instead of `true` to shrink the json size
-        astrology[path] = 1
-        storage.setAstrology(astrology)
-        // rebuild for prompt filter
-        forceUpdate()
-      }
+      if (!path) return
+      starChart.star(path)
+      // rebuild for prompt filter
+      forceUpdate()
     },
     unstar(file) {
       const path = file?.path
-      if (path && path in astrology) {
-        delete astrology[path]
-        storage.setAstrology(astrology)
-        // rebuild for prompt filter
-        forceUpdate()
-      }
+      if (!path) return
+      starChart.unstar(path)
+      // rebuild for prompt filter
+      forceUpdate()
     }
   }
 
   const filterByPrompt = (file) => {
-    if (onlyShowStarred && !astrology[file.path]) {
+    if (onlyShowStarred && !starChart.isStarred(file.path)) {
       return false
     }
     if (!searchPrompt) return true
@@ -188,11 +185,11 @@ function Body({ fileTreeDelegate }) {
   )
   return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
     <FileTreeDeleagteContext.Provider value={[fileTreeDelegate]}>
-      <AstrologyContext.Provider value={astrologyCtx}>
+      <StarChartContext.Provider value={starChartCtx}>
         <FileNavigationContext.Provider value={{ goFile, goNextFile, goPreviousFile }}>
           {main}
         </FileNavigationContext.Provider>
-      </AstrologyContext.Provider>
+      </StarChartContext.Provider>
     </FileTreeDeleagteContext.Provider>
   </IsDrawerOpenContext.Provider>
 }
