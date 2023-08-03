@@ -5,7 +5,7 @@ export const l10nChart = {
       starFilter: "Show Favorites Only",
       placeholder: "Search Files or Folders"
     },
-    playground: {
+    display: {
       starBtn: "Add to Favorites",
       unstarBtn: "Remove from Favorites",
       unsupportedFileType: "This file type is not supported."
@@ -29,7 +29,7 @@ export const l10nChart = {
       starFilter: "仅显示收藏",
       placeholder: "搜索文件或文件夹"
     },
-    playground: {
+    display: {
       starBtn: "添加收藏",
       unstarBtn: "取消收藏",
       unsupportedFileType: "文件类型不支持。"
@@ -53,7 +53,7 @@ export const l10nChart = {
       starFilter: "僅顯示收藏",
       placeholder: "搜尋檔案或資料夾"
     },
-    playground: {
+    display: {
       starBtn: "加入收藏",
       unstarBtn: "從收藏移除",
       unsupportedFileType: "檔案類型不支援。"
@@ -77,7 +77,7 @@ export const l10nChart = {
       starFilter: "Afficher uniquement les favoris",
       placeholder: "Rechercher des fichiers ou des dossiers"
     },
-    playground: {
+    display: {
       starBtn: "Ajouter aux favoris",
       unstarBtn: "Retirer des favoris",
       unsupportedFileType: "Ce type de fichier n'est pas pris en charge."
@@ -101,7 +101,7 @@ export const l10nChart = {
       starFilter: "Показать только избранное",
       placeholder: "Поиск файлов или папок"
     },
-    playground: {
+    display: {
       starBtn: "Добавить в избранное",
       unstarBtn: "Убрать из избранного",
       unsupportedFileType: "Этот тип файла не поддерживается."
@@ -125,7 +125,7 @@ export const l10nChart = {
       starFilter: "Показати лише обрані",
       placeholder: "Пошук файлів або папок"
     },
-    playground: {
+    display: {
       starBtn: "Додати до обраного",
       unstarBtn: "Видалити з обраного",
       unsupportedFileType: "Цей тип файлу не підтримується."
@@ -149,7 +149,7 @@ export const l10nChart = {
       starFilter: "お気に入りのみ表示",
       placeholder: "ファイルまたはフォルダを検索"
     },
-    playground: {
+    display: {
       starBtn: "お気に入りに追加",
       unstarBtn: "お気に入りから削除",
       unsupportedFileType: "このファイルタイプはサポートされていません。"

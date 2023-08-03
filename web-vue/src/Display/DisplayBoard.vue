@@ -6,6 +6,10 @@ import VideoRenderer from "./Video.vue"
 import AudioRenderer from "./Audio.vue"
 import { filesize } from "filesize"
 import { useI18n } from "vue-i18n"
+import { inject } from "vue"
+import { StarChart } from "../StarChart"
+import { ref } from "vue"
+import { watch } from "vue"
 
 const { t } = useI18n({ inheritLocale: true })
 
@@ -28,7 +32,27 @@ function resolveRenderer(type: string) {
 const props = defineProps<{
   file?: FileInfo
 }>()
-const file = computed(() => props.file)
+const starChart = inject<StarChart>("star-chart")
+const isStarred = ref(false)
+function evalIsStarred(): boolean {
+  if (starChart && props.file) {
+    return starChart.isStarred(props.file)
+  }
+  return false
+}
+watch(() => props.file, () => {
+  isStarred.value = evalIsStarred()
+})
+function onStarClick() {
+  if (starChart && props.file) {
+    if (isStarred.value) {
+      starChart.unstar(props.file)
+    } else {
+      starChart.star(props.file)
+    }
+    isStarred.value = evalIsStarred()
+  }
+}
 const renderer = computed(() => {
   if (props.file) {
     return resolveRenderer(props.file.type);
@@ -57,15 +81,22 @@ const size = computed(() => {
       </v-tooltip>
 
       <template #append>
-        <v-chip v-if="size">
-          {{ size }}
-        </v-chip>
+        <v-row align="center" justify="center">
+          <v-col cols="auto">
+            <v-chip v-if="size">
+              {{ size }}
+            </v-chip>
+          </v-col>
+          <v-col cols="auto" v-if="props.file">
+            <v-btn @click="onStarClick" :icon="isStarred ? 'mdi-star' : 'mdi-star-outline'" />
+          </v-col>
+        </v-row>
       </template>
     </v-app-bar>
     <v-main>
       <template v-if="props.file">
         <template v-if="renderer">
-          <component :is="renderer" :file="props.file"/>
+          <component :is="renderer" :file="props.file" />
         </template>
         <template v-else>
           <h1>{{ t("display.unsupportedFileType") }}</h1>

@@ -17,6 +17,7 @@ import * as directives from 'vuetify/directives'
 import { l10nChart } from "./i18n"
 import { createI18n } from 'vue-i18n'
 import Cookies from "js-cookie"
+import { StarChart } from './StarChart'
 
 const app = createApp(App)
 
@@ -68,5 +69,10 @@ const i18n = createI18n({
 })
 
 app.use(i18n)
+
+const starChart = new StarChart()
+starChart.load()
+
+app.provide("star-chart", starChart)
 
 app.mount('#app')

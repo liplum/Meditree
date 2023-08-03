@@ -108,6 +108,7 @@ function parseDirectory(name: string, directory: Directory, parent?: DirectoryIn
     } else {
       // Parse as directory
       const tag = file["*tag"]
+      // if it has an entry point.
       if (typeof tag?.main === "string") {
         const mainName = tag.main
         const mainFi = file[mainName]
