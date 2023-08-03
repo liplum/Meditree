@@ -40,6 +40,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   const jwtExpiration = config.jwtExpiration ?? "7d"
   const register = config.register
   const jwtSecret = config.jwtSecret ?? uuidv4()
+  log.info(`JWT secret: "${jwtSecret}", expration: "${jwtExpiration}".`)
   return {
     onRegisterService(container) {
       storage = container.get(TYPE.UserStorage)
@@ -59,7 +60,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
             res.status(401).send("Token Invalid").end()
             return
           }
-          if (await storage.hasUser(account)) {
+          if (!await storage.hasUser(account)) {
             res.status(401).send("Token Invalid").end()
             return
           }
@@ -84,6 +85,9 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
           res.status(401).send("Wrong Credentials")
           return
         }
+        // Authenticated and update last login time.
+        user.lastLogin = new Date()
+        await storage.updateUser(user)
         // Create JWT token
         const token = jwt.sign({ account }, jwtSecret, {
           expiresIn: jwtExpiration
@@ -142,6 +146,7 @@ function getJwtFromAuthHeader(req: Request): string | null {
 export interface User {
   account: string
   password: string
+  lastLogin?: Date
 }
 
 /**
