@@ -9,8 +9,9 @@ interface JsonDBStatisticsPluginConfig {
   collection?: string
 }
 
-interface StatisticsEntry {
+interface Entry {
   view: number
+  lastView: Date
 }
 /**
  * Default plugin dependencies: `jsondb`.
@@ -25,23 +26,42 @@ export default function JsonDBStatisticsPlugin(config: JsonDBStatisticsPluginCon
         async increment(filePath: string) {
           const path = `/${filePath}`
           if (await statistics.exists(path)) {
-            const entry: StatisticsEntry = await statistics.getData(path)
+            const entry: Entry = await statistics.getData(path)
             entry.view ??= 0
             entry.view += 1
             await statistics.push(path, entry)
           } else {
-            await statistics.push(path, { view: 1 } satisfies StatisticsEntry)
+            await statistics.push(path, { view: 1 })
           }
         },
         async getViewCount(filePath: string) {
           const path = `/${filePath}`
           if (await statistics.exists(`/${path}`)) {
-            const entry: StatisticsEntry = await statistics.getData(path)
+            const entry: Entry = await statistics.getData(path)
             return entry.view
           } else {
             return
           }
-        }
+        },
+        async getLastView(filePath) {
+          const path = `/${filePath}`
+          if (await statistics.exists(`/${path}`)) {
+            const entry: Entry = await statistics.getData(path)
+            return entry.lastView
+          } else {
+            return
+          }
+        },
+        async setLastView(filePath, time) {
+          const path = `/${filePath}`
+          if (await statistics.exists(path)) {
+            const entry: Entry = await statistics.getData(path)
+            entry.lastView = time
+            await statistics.push(path, entry)
+          } else {
+            await statistics.push(path, { lastView: time })
+          }
+        },
       })
     }
   }

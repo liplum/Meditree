@@ -10,6 +10,11 @@ interface MongoDBStatisticsPluginConfig {
   collection?: string
 }
 
+interface Entry {
+  view: number
+  lastView: Date
+}
+
 /**
  * Default plugin dependencies: `mongodb`.
  */
@@ -18,7 +23,7 @@ export default function MongoDBStatisticsPlugin(config: MongoDBStatisticsPluginC
   return {
     onRegisterService(container) {
       const mongodb = container.get(MongoDBType.MongoDB)
-      const statistics = mongodb.db.collection(collection)
+      const statistics = mongodb.db.collection<Entry>(collection)
       container.bind(StatisticsType.StatisticsStorage).toValue({
         async increment(filePath: string) {
           await statistics.updateOne({ filePath }, { $inc: { view: 1 } })
@@ -26,7 +31,14 @@ export default function MongoDBStatisticsPlugin(config: MongoDBStatisticsPluginC
         async getViewCount(filePath: string) {
           const entry = await statistics.findOne({ filePath })
           return entry ? entry.view : undefined
-        }
+        },
+        async getLastView(filePath) {
+          const entry = await statistics.findOne({ filePath })
+          return entry ? entry.lastView : undefined
+        },
+        async setLastView(filePath, time) {
+          await statistics.updateOne({ filePath }, { lastView: time }, { upsert: true })
+        },
       })
     }
   }
