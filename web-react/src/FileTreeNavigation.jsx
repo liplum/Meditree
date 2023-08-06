@@ -3,8 +3,8 @@ import { Tree } from "antd"
 import * as ft from "./FileTree"
 import { FileTreeDeleagteContext } from "./View"
 import { useTheme } from "@mui/material/styles"
-import { FolderOff } from "@mui/icons-material"
 import { useNavigate } from "react-router"
+import { NoFilesIndicator } from "./Component/NoFilesIndicator"
 const { DirectoryTree } = Tree
 
 export function FileTreeNavigation({ selectedFile, searchDelegate }) {
@@ -22,9 +22,7 @@ export function FileTreeNavigation({ selectedFile, searchDelegate }) {
   const theme = useTheme()
   if (!renderTree) return
   if (renderTree.children.length <= 0) {
-    return <div className="no-file-label" >
-      <FolderOff style={{ width: "8rem", height: "8rem" }} />
-    </div>
+    return <NoFilesIndicator/>
   }
   return (
     <DirectoryTree

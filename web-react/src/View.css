@@ -12,11 +12,3 @@ body {
   align-items: center;
   height: 80%;
 }
-
-.no-file-label {
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-}

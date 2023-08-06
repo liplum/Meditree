@@ -16,9 +16,9 @@ import { StarBorder, Star } from "@mui/icons-material"
 
 import { FileDisplayBoard } from "./Playground"
 import { i18n } from "./I18n"
-import { SearchBar } from "./SearchBar"
+import { SearchBar } from "./Component/SearchBar"
 import "./View.css"
-import { Failed, Loading } from "./Loading"
+import { Failed, Loading } from "./Component/Loading"
 import useForceUpdate from "use-force-update"
 import { StarChart } from "./StarChart"
 

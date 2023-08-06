@@ -3,14 +3,15 @@ import React, { useContext, useEffect, useRef, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { StarChartContext, FileNavigationContext, ResponsiveAppBar } from "./View"
 import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
-import { StarBorder, Star, FolderOff } from "@mui/icons-material"
+import { StarBorder, Star } from "@mui/icons-material"
+import { NoFilesIndicator } from "./Component/NoFilesIndicator"
 import useForceUpdate from "use-force-update"
 import { i18n } from "./I18n"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { Failed } from "./Loading"
+import { Failed } from "./Component/Loading"
 import { filesize } from "filesize"
-import { VideoJS } from "./VideoPlayer"
+import { VideoJS } from "./Component/VideoPlayer"
 
 const VideoRenderer = React.memo(VideoRendererImpl)
 
@@ -113,14 +114,6 @@ export function FileDisplayBoard({ file }) {
       {content}
     </ErrorBoundary>
   </>
-}
-
-function NoFilesIndicator() {
-  return (
-    <div>
-      <FolderOff style={{ width: "8rem", height: "8rem" }} />
-    </div>
-  )
 }
 
 const isMobileSafari = /iP(ad|hone|od).+Version\/[\d.]+.*Safari/i.test(navigator.userAgent)
