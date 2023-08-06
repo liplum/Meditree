@@ -43,9 +43,7 @@ export function FileDisplayBoard({ file }) {
   const forceUpdate = useForceUpdate()
   let content = null
   if (!file) {
-    content = <div className="no-file-label" >
-      <FolderOff style={{ width: "8rem", height: "8rem" }} />
-    </div>
+    content = <NoFilesIndicator />
   } else {
     const Renderer = resolveRenderer(file.type)
     // wheel control works so bad when using trackpad.
@@ -116,6 +114,15 @@ export function FileDisplayBoard({ file }) {
     </ErrorBoundary>
   </>
 }
+
+function NoFilesIndicator() {
+  return (
+    <div>
+      <FolderOff style={{ width: "8rem", height: "8rem" }} />
+    </div>
+  )
+}
+
 const isMobileSafari = /iP(ad|hone|od).+Version\/[\d.]+.*Safari/i.test(navigator.userAgent)
 function VideoRendererImpl({ file }) {
   // for HLS support on mobile safari
