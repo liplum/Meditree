@@ -62,6 +62,9 @@ export function LoginDialog() {
         <h1>{i18n.login.title}</h1>
         <form id="login-form" style={{
           flexDirection: "column", display: "flex",
+        }} onSubmit={(e) => {
+          onLogin()
+          e.preventDefault()
         }}>
           <TextField
             variant="outlined"
@@ -87,7 +90,7 @@ export function LoginDialog() {
             }}
           />
           <DialogActions>
-            <Button type="submit" onClick={onLogin}>{i18n.login.loginBtn}</Button>
+            <Button type="submit">{i18n.login.loginBtn}</Button>
           </DialogActions>
         </form>
       </Card>
