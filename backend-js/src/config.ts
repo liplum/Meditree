@@ -48,50 +48,41 @@ export interface AppConfig {
   [key: string]: any
 }
 
-const defaultConfig: AppConfig = {
-  name: "Meditree",
-  port: 8080,
-  cacheMaxAge: 604800,
-  fileType: {
-    "**/*.mp4": "video/mp4",
-    "**/*.svg": "image/svg+xml",
-    "**/*.png": "image/png",
-    "**/*.+(jpeg|jpg)": "image/jpeg",
-    "**/*.mp3": "audio/mpeg",
-    "**/*.md": "text/markdown",
-    "**/*.txt": "text/plain",
-    "**/*.gif": "image/gif",
-    "**/*.webp": "image/webp",
-    "**/*.m3u8": HLSMediaType,
-    "**/*.ts": "video/mpeg", // TODO: conflict with typescript file
-  },
-  ignore: [],
-}
-
-// default to ignore application on macOS
-if (process.platform === "darwin") {
-  defaultConfig.ignore?.push(
-    "**/*.app",
-    "**/*.DS_Store"
-  )
-}
-
 export function setupConfig(config: AppConfig | Partial<AppConfig> = {}): AppConfig {
   const newConfig = config as AppConfig
   if (!newConfig.name) {
     newConfig.name = uuidv4()
   }
   if (!newConfig.fileType) {
-    newConfig.fileType = defaultConfig.fileType as any
+    newConfig.fileType = {
+      "**/*.mp4": "video/mp4",
+      "**/*.svg": "image/svg+xml",
+      "**/*.png": "image/png",
+      "**/*.+(jpeg|jpg)": "image/jpeg",
+      "**/*.mp3": "audio/mpeg",
+      "**/*.md": "text/markdown",
+      "**/*.txt": "text/plain",
+      "**/*.gif": "image/gif",
+      "**/*.webp": "image/webp",
+      "**/*.m3u8": HLSMediaType,
+      "**/*.ts": "video/mpeg", // TODO: conflict with typescript file
+    }
   }
   if (!newConfig.port) {
-    newConfig.port = defaultConfig.port
+    newConfig.port = 8080
   }
   if (!newConfig.ignore) {
-    newConfig.ignore = defaultConfig.ignore
+    newConfig.ignore = []
+    // default to ignore application on macOS
+    if (process.platform === "darwin") {
+      newConfig.ignore.push(
+        "**/*.app",
+        "**/*.DS_Store"
+      )
+    }
   }
   if (newConfig.cacheMaxAge === undefined) {
-    newConfig.cacheMaxAge = defaultConfig.cacheMaxAge
+    newConfig.cacheMaxAge = 604800
   }
   return newConfig
 }
