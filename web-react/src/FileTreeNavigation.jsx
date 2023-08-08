@@ -1,14 +1,14 @@
 import React, { useContext, useEffect, useState } from "react"
 import { Tree } from "antd"
 import * as ft from "./FileTree"
-import { FileTreeDeleagteContext } from "./View"
+import { FileTreeDelegateContext } from "./View"
 import { useTheme } from "@mui/material/styles"
 import { useNavigate } from "react-router"
 import { NoFilesIndicator } from "./Component/NoFilesIndicator"
 const { DirectoryTree } = Tree
 
 export function FileTreeNavigation({ selectedFile, searchDelegate }) {
-  const [delegate] = useContext(FileTreeDeleagteContext)
+  const [delegate] = useContext(FileTreeDelegateContext)
   const [renderTree, setRenderTree] = useState()
   const navigate = useNavigate()
   useEffect(() => {

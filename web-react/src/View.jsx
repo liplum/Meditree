@@ -22,7 +22,7 @@ import { Failed, Loading } from "./Component/Loading"
 import useForceUpdate from "use-force-update"
 import { StarChart } from "./StarChart"
 
-export const FileTreeDeleagteContext = createContext()
+export const FileTreeDelegateContext = createContext()
 export const IsDrawerOpenContext = createContext()
 export const StarChartContext = createContext()
 export const FileNavigationContext = createContext()
@@ -184,13 +184,13 @@ function Body({ fileTreeDelegate }) {
     />
   )
   return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
-    <FileTreeDeleagteContext.Provider value={[fileTreeDelegate]}>
+    <FileTreeDelegateContext.Provider value={[fileTreeDelegate]}>
       <StarChartContext.Provider value={starChartCtx}>
         <FileNavigationContext.Provider value={{ goFile, goNextFile, goPreviousFile }}>
           {main}
         </FileNavigationContext.Provider>
       </StarChartContext.Provider>
-    </FileTreeDeleagteContext.Provider>
+    </FileTreeDelegateContext.Provider>
   </IsDrawerOpenContext.Provider>
 }
 
