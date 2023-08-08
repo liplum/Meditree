@@ -3,10 +3,11 @@ import { uniqueToken } from "../../ioc.js"
 import { createLogger } from "../../logger.js"
 import { JsonDB, Config } from "node-json-db"
 import path from "path"
+import { resolveAppStoragePath } from "../../env.js"
 
 interface JsonDbPluginConfig {
   /**
-   * "meditree-jsondb" by default.
+   * "jsondb" by default.
    */
   dir: string
   /**
@@ -33,7 +34,7 @@ export const TYPE = {
 
 export default function JsonDbPlugin(config: JsonDbPluginConfig): MeditreePlugin {
   const log = createLogger("JsonDB")
-  const dir = config.dir ?? "meditree-jsondb"
+  const dir = resolveAppStoragePath(config.dir ?? "jsondb")
   const name2DB = new Map<string, JsonDB>()
   return {
     async init() {

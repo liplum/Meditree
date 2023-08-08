@@ -86,7 +86,3 @@ Example:
 ### JsonDB
 
 [JsonDB](https://github.com/Belphemur/node-json-db)
-
-## Agenda
-- [ ] Rewrite `hls` to serve .m3u8 file and .ts files in the same folder.
-- [ ] 

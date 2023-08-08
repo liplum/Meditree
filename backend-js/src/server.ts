@@ -42,7 +42,7 @@ export async function startServer(
   // Phrase 3: create logger.
   const log = createLogger("Main")
   const pluginLog = createLogger("Plugin")
-  const fileTreelog = createLogger("FileTree")
+  const fileTreeLog = createLogger("FileTree")
 
   // Phrase 4: register all built-in plugins.
   const builtinPluginTypes: PluginRegistry<MeditreePlugin> = {}
@@ -135,7 +135,7 @@ export async function startServer(
   if (config.root) {
     const common = {
       pattern2FileType: config.fileType,
-      log: fileTreelog,
+      log: fileTreeLog,
       ignorePatterns: config.ignore,
     }
     if (typeof config.root === "string") {
@@ -179,7 +179,7 @@ export async function startServer(
       plugin.onLocalFileTreeRebuilt?.(localTree)
     }
     manager.onLocalFileTreeUpdate(localTree)
-    fileTreelog.info("Local file tree was rebuilt.")
+    fileTreeLog.info("Local file tree was rebuilt.")
   })
 
   // Phrase 17: create file tree cache and listen to updates from local file tree.

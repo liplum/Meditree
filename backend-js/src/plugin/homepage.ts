@@ -12,7 +12,7 @@ interface HomepagePluginConfig {
    */
   root?: string
   /**
-   * Whether the built-in homepage reqiures authentication.
+   * Whether the built-in homepage requires authentication.
    * True by default.
    */
   requireAuth?: boolean

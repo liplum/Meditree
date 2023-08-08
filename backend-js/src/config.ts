@@ -65,7 +65,7 @@ export function setupConfig(config: AppConfig | Partial<AppConfig> = {}): AppCon
       "**/*.gif": "image/gif",
       "**/*.webp": "image/webp",
       "**/*.m3u8": HLSMediaType,
-      "**/*.ts": "video/mpeg", // TODO: conflict with typescript file
+      "**/*.ts": "video/mpeg",
     }
   }
   if (!newConfig.port) {
