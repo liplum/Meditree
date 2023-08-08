@@ -30,7 +30,7 @@ export function LoginDialog() {
   const navigate = useNavigate()
   const [account, setAccount] = useState("")
   const [password, setPassword] = useState("")
-  const [showPasscode, setShowPasscode] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [failedDialogOpen, setFailedDialogOpen] = React.useState(false)
   const onLogin = async () => {
     const loginRes = await fetch("/login", {
@@ -60,7 +60,7 @@ export function LoginDialog() {
     <>
       <Card id="login-dialog">
         <h1>{i18n.login.title}</h1>
-        <div id="login-form" style={{
+        <form id="login-form" style={{
           flexDirection: "column", display: "flex",
         }}>
           <TextField
@@ -71,17 +71,17 @@ export function LoginDialog() {
           />
           <TextField
             variant="outlined"
-            type={showPasscode ? "text" : "password"}
+            type={showPassword ? "text" : "password"}
             label={i18n.login.password}
             onChange={(e) => setPassword(e.target.value)}
             InputProps={{
               endAdornment: <InputAdornment position="end">
                 <IconButton
-                  onClick={() => { setShowPasscode(!showPasscode) }}
-                  onMouseDown={() => { setShowPasscode(!showPasscode) }}
+                  onClick={() => { setShowPassword(!showPassword) }}
+                  onMouseDown={() => { setShowPassword(!showPassword) }}
                   aria-label="toggle-password-visibility"
                 >
-                  {showPasscode ? <Visibility /> : <VisibilityOff />}
+                  {showPassword ? <Visibility /> : <VisibilityOff />}
                 </IconButton>
               </InputAdornment>
             }}
@@ -89,7 +89,7 @@ export function LoginDialog() {
           <DialogActions>
             <Button type="submit" onClick={onLogin}>{i18n.login.loginBtn}</Button>
           </DialogActions>
-        </div>
+        </form>
       </Card>
       <LoginFailedDialog
         open={failedDialogOpen}

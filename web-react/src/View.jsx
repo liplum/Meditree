@@ -278,14 +278,14 @@ export function ResponsiveDrawer({ isDrawerOpen, setIsDrawerOpen, drawer, body }
 function LoadErrorBoundary() {
   const error = useAsyncError()
   const navigate = useNavigate()
-  console.error(error)
   useEffect(() => {
     const type = error.message
+    console.error(type)
     if (type === "Token Invalid" || type === "Token Missing") {
       navigate("/")
     }
   }, [error])
-  return <Failed text={i18n.loading.error[error.message] ?? i18n.loading.failed}>
+  return <Failed text={i18n.loading.failed}>
     <Button variant="outlined" onClick={() => {
       navigate("/")
     }}>
