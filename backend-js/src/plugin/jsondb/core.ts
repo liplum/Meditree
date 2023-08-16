@@ -38,7 +38,7 @@ export default function JsonDbPlugin(config: JsonDbPluginConfig): MeditreePlugin
   const name2DB = new Map<string, JsonDB>()
   return {
     async init() {
-      log.info(`JsonDB will load from ${path.resolve(dir)}.`)
+      log.info(`JsonDB will load from "${path.resolve(dir)}".`)
     },
     onExit() {
       log.info("JsonDB closed.")
