@@ -65,6 +65,7 @@ const i18n = createI18n({
   legacy: false, // you must set `false`, to use Composition API
   fallbackLocale: 'en', // set fallback locale
   silentFallbackWarn: true,
+  warnHtmlInMessage: "off",
   messages: l10nChart, // set locale messages
 })
 
