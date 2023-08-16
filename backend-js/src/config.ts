@@ -28,8 +28,14 @@ export interface AppConfig {
    * If not specified, a uuid v4 will be generated.
    */
   name: string
+  /**
+   * Minimatch pattern to content type.
+   */
   fileType: Record<string, string>
-  plugin?: Record<string, Record<string, any>>
+  /**
+   * Plguin name/url to its configuration.
+   */
+  plugin?: Record<string, Record<string, any> | boolean>
   ignore: string[]
   /**
    * 7 days by default.
@@ -52,6 +58,7 @@ export function setupConfig(config: AppConfig | Partial<AppConfig> = {}): AppCon
     newConfig.fileType = {
       "**/*.mp4": "video/mp4",
       "**/*.svg": "image/svg+xml",
+      "**/*.+(mov|qt)": "video/quicktime",
       "**/*.png": "image/png",
       "**/*.+(jpeg|jpg)": "image/jpeg",
       "**/*.mp3": "audio/mpeg",
