@@ -9,7 +9,13 @@ export class Timer {
     }
   }
 
-  stop(name?: string, log?: (time: string) => void): number {
+  stop(log?: (time: string) => void): number
+  stop(name?: string | ((time: string) => void), log?: (time: string) => void): number
+  stop(name?: string | ((time: string) => void), log?: (time: string) => void): number {
+    if (name instanceof Function) {
+      log = name
+      name = undefined
+    }
     let startTime: number | undefined
     if (name) {
       startTime = this.name2StartTime?.[name]

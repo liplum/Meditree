@@ -7,7 +7,7 @@ import { TYPE } from "../server.js"
 import EventEmitter from "events"
 import { parseTime } from "../utils.js"
 import { type Logger } from "../logger.js"
-import { type LoopTask, createLoopTask } from "../timer.js"
+import { type LoopTask, createLoopTask, Timer } from "../timer.js"
 
 interface WatchPluginConfig {
   /**
@@ -86,6 +86,9 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
 
   async rebuildFileTree(): Promise<void> {
     this.shouldRebuild = false
+    const timer = new Timer()
+    const timerLabel = `Rebuilding cost of "${this.root}"`
+    timer.start(timerLabel)
     const tree = await createFileTreeFrom({
       name: this.name,
       root: this.root,
@@ -93,6 +96,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
       includes: this.fileFilter,
       ignoreEmptyDir: true,
     })
+    timer.stop(timerLabel, this.log?.info)
     this.rebuildCounter = 0
     this.fileTree = tree
     this.emit("rebuild", tree)
