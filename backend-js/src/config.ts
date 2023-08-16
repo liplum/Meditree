@@ -36,16 +36,11 @@ export interface AppConfig {
    */
   cacheMaxAge: number
   /**
-   * The directory where the log files are located.
-   */
-  logDir?: string
-  /**
    * The minimum log level for console logging.
    * Auto-capitalized.
    * "INFO" by default.
    */
   logLevel?: string
-  [key: string]: any
 }
 
 export function setupConfig(config: AppConfig | Partial<AppConfig> = {}): AppConfig {

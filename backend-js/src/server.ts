@@ -15,6 +15,7 @@ import cookieParser from "cookie-parser"
 import { registerBuiltinPlugins } from "./builtin-plugin.js"
 import { EventEmitter } from "events"
 import path from "path"
+import { resolveAppStoragePath } from "./env.js"
 
 export const TYPE = {
   HostTree: uniqueToken<(options: HostTreeOptions) => IHostTree>("HostTree"),
@@ -30,13 +31,11 @@ export async function startServer(
   timer.start("Start Server")
 
   // Phrase 2: try to initialize global logging settings.
-  if (config.logDir) {
-    initGlobalLogFile(config.logDir)
-    if (config.logLevel) {
-      const lv = LogLevels[config.logLevel.toUpperCase()]
-      if (lv) {
-        globalOptions.consoleLevel = lv
-      }
+  initGlobalLogFile(resolveAppStoragePath("log"))
+  if (config.logLevel) {
+    const lv = LogLevels[config.logLevel.toUpperCase()]
+    if (lv) {
+      globalOptions.consoleLevel = lv
     }
   }
   // Phrase 3: create logger.
