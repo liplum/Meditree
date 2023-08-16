@@ -280,7 +280,7 @@ function LoadErrorBoundary() {
   const navigate = useNavigate()
   useEffect(() => {
     const type = error.message
-    console.error(type)
+    console.error(error)
     if (type === "Token Invalid" || type === "Token Missing") {
       navigate("/")
     }

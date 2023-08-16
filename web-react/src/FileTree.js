@@ -34,7 +34,7 @@ export function createDelegate({ name, root, }) {
         curDir.children.push(fileObj)
       } else {
         // otherwise, it presents a directory
-        if (tag?.main) {
+        if (tag?.main && file[tag.main]) {
           const mainName = tag.main
           const mainFile = file[mainName]
           const fileObj = {
