@@ -1,4 +1,4 @@
-import { type PluginMetaclass, type PluginCtor, type PluginRegistry } from "./plugin.js"
+import { PluginMetaclass, type PluginCtor, type PluginRegistry } from "./plugin.js"
 import { type MeditreePlugin } from "./server.js"
 
 import HomepagePlugin from "./plugin/homepage.js"
@@ -36,16 +36,17 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
   registry.jsondb = (config) => JsonDBPlugin(config)
   registry["jsondb-user"] = withDefaultDp(JsonDBUserPlugin, "jsondb")
   registry["jsondb-statistics"] = withDefaultDp(JsonDBStatisticsPlugin, "jsondb")
-
+   
   // has dependencies
-  registry.statistics = mapEngine(StatisticsPlugin, {
-    jsondb: ["jsondb", "jsondb-statistics"],
-    mongodb: ["mongodb", "mongodb-statistics"],
-  })
   registry.auth = mapEngine(AuthPlugin, {
     jsondb: ["jsondb", "jsondb-user"],
     mongodb: ["mongodb", "mongodb-user"],
   })
+
+  registry.statistics = optionalDependsOn(mapEngine((StatisticsPlugin), {
+    jsondb: ["jsondb", "jsondb-statistics"],
+    mongodb: ["mongodb", "mongodb-statistics"],
+  }), "auth")
 }
 
 /**
@@ -54,17 +55,14 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
  * @param defaults the default dependencies
  * @returns a metaclass
  */
-function withDefaultDp(create: Ctor, ...defaults: string[]): Metaclass {
-  return {
-    create,
-    preprocess(name, config, all) {
-      config._depends ??= []
-      for (const dp of defaults) {
-        addUnique(config._depends, dp)
-        all[dp] ??= {}
-      }
-    },
-  }
+function withDefaultDp(create: Ctor | Metaclass, ...defaults: string[]): Metaclass {
+  return PluginMetaclass.mergeFrom(create, (name, config, all) => {
+    config._depends ??= []
+    for (const dp of defaults) {
+      addUnique(config._depends, dp)
+      all[dp] ??= {}
+    }
+  })
 }
 
 /**
@@ -73,18 +71,32 @@ function withDefaultDp(create: Ctor, ...defaults: string[]): Metaclass {
  * @param engines engine name -> all dependencies it requires 
  * @returns a metaclass
  */
-function mapEngine(create: Ctor, engines: Record<string, string[]>): Metaclass {
-  return {
-    create,
-    preprocess(name, config, all) {
-      const dependencies = engines[config.engine]
-      config._depends ??= []
-      for (const dp of dependencies) {
+function mapEngine(create: Ctor | Metaclass, engines: Record<string, string[]>): Metaclass {
+  return PluginMetaclass.mergeFrom(create, (name, config, all) => {
+    const dependencies = engines[config.engine]
+    config._depends ??= []
+    for (const dp of dependencies) {
+      addUnique(config._depends, dp)
+      all[dp] ??= {}
+    }
+  })
+}
+
+/**
+ * Create a mataclass that automatically added optional dependencies if they exist.
+ * @param create the constructor of plugin
+ * @param optionalDps the optional dependencies
+ * @returns a metaclass
+ */
+function optionalDependsOn(create: Ctor | Metaclass, ...optionalDps: string[]): Metaclass {
+  return PluginMetaclass.mergeFrom(create, (name, config, all) => {
+    config._depends ??= []
+    for (const dp of optionalDps) {
+      if (all[dp]) {
         addUnique(config._depends, dp)
-        all[dp] ??= {}
       }
     }
-  }
+  })
 }
 
 function addUnique(list: any[], e: any): void {

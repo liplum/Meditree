@@ -24,20 +24,45 @@ export interface PluginConfig {
 /**
  * [PluginCtor] is a function that directly constructs a plugin object.
  */
-export type PluginCtor<TPlugin, TConfig extends PluginConfig = any> = (config: TConfig) => TPlugin
+export type PluginCtor<TPlugin, TConfig extends PluginConfig = PluginConfig> = (config: TConfig) => TPlugin
+
+export type PluginPreprocessor<TConfig extends PluginConfig = PluginConfig> = (name: string, config: TConfig, all: Record<string, PluginConfig>) => void
 /**
  * [PluginMetaclass] is an object that supports some extra phrases such as preprocessing.
  */
-export interface PluginMetaclass<TPlugin, TConfig extends PluginConfig = any> {
-  preprocess?(name: string, config: TConfig, all: Record<string, PluginConfig>): void
+export class PluginMetaclass<TPlugin, TConfig extends PluginConfig = PluginConfig> {
   create: PluginCtor<TPlugin, TConfig>
+  preprocess?: PluginPreprocessor<TConfig>
+  constructor(create: PluginCtor<TPlugin, TConfig>, preprocess?: PluginPreprocessor<TConfig>) {
+    this.create = create
+    this.preprocess = preprocess
+  }
+
+  static mergeFrom<TPlugin, TConfig extends PluginConfig = PluginConfig>(
+    provider: PluginProvider<TPlugin, TConfig>,
+    preprocess: PluginPreprocessor<TConfig>
+  ): PluginMetaclass<TPlugin, TConfig> {
+    if (provider instanceof PluginMetaclass) {
+      return new PluginMetaclass(
+        provider.create,
+        (name, config, all) => {
+          provider.preprocess?.(name, config, all)
+          preprocess(name, config, all)
+        }
+      )
+    } else {
+      return new PluginMetaclass(
+        provider, preprocess
+      )
+    }
+  }
 }
 /**
  * A [PluginProvider] consists of [PluginCtor] and [PluginMetaclass].
  */
 export type PluginProvider<
   TPlugin,
-  TConfig extends PluginConfig = any
+  TConfig extends PluginConfig = PluginConfig
 > = PluginCtor<TPlugin, TConfig> | PluginMetaclass<TPlugin, TConfig>
 
 async function resolvePluginProvider<TPlugin>(
