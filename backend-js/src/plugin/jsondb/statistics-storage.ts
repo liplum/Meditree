@@ -47,7 +47,7 @@ export default function JsonDBStatisticsPlugin(config: JsonDBStatisticsPluginCon
           const path = `/${filePath}`
           if (await statistics.exists(`/${path}`)) {
             const entry: Entry = await statistics.getData(path)
-            return entry.lastView
+            return new Date(entry.lastView)
           } else {
             return
           }
