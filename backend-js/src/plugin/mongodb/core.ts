@@ -4,7 +4,10 @@ import { uniqueToken } from "../../ioc.js"
 import { createLogger } from "../../logger.js"
 
 interface MongoDbPluginConfig {
-  url: string
+  /**
+   * "mongodb://localhost:27017" by default.
+   */
+  url?: string
   /**
    * "meditree" by default.
    */
@@ -21,14 +24,14 @@ export const TYPE = {
 }
 
 export default function MongoDbPlugin(config: MongoDbPluginConfig): MeditreePlugin {
-  if (!config.url) throw new Error("MongoDB url cannot be empty or null.")
+  const dbUrl = config.url ?? "mongodb://localhost:27017"
   const database = config.database ?? "meditree"
   const log = createLogger("MongoDB")
   let client: MongoClient
   return {
     async init() {
-      client = new MongoClient(config.url, config.options)
-      log.info(`MongoDB Client connected to ${config.url}`)
+      client = new MongoClient(dbUrl, config.options)
+      log.info(`MongoDB Client connected to ${dbUrl}`)
     },
     onExit() {
       client?.close(true)
