@@ -25,10 +25,9 @@ export default function StatisticsPlugin(config: StatisticsPluginConfig): Meditr
     onRegisterService(container) {
       statistics = container.get(TYPE.StatisticsStorage)
       const events = container.get(MeditreeType.Events)
-      events.on("file-requested", (req, res, file) => {
-        // TODO: don't use local path
-        statistics.increment(file.localPath)
-        statistics.setLastView(file.localPath, new Date())
+      events.on("file-requested", (req, res, file, vitrualPath) => {
+        statistics.increment(vitrualPath)
+        statistics.setLastView(vitrualPath, new Date())
       })
     },
   }

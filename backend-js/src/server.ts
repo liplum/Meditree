@@ -239,7 +239,7 @@ export async function startServer(
       res.sendStatus(404).end()
       return
     }
-    events.emit("file-requested", req, res, resolved)
+    events.emit("file-requested", req, res, resolved, pathParts.join("/"))
     res.contentType(resolved.type)
     const expireTime = new Date(Date.now() + config.cacheMaxAge)
     res.setHeader("Expires", expireTime.toUTCString())
@@ -373,7 +373,7 @@ export interface MeditreePlugin {
 }
 
 export interface MeditreeEvents extends EventEmitter {
-  on(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile) => void): this
-  off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile) => void): this
-  emit(event: "file-requested", req: Request, res: Response, file: LocalFile): boolean
+  on(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, vitrualPath: string) => void): this
+  off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, vitrualPath: string) => void): this
+  emit(event: "file-requested", req: Request, res: Response, file: LocalFile, vitrualPath: string): boolean
 }
