@@ -1,6 +1,6 @@
 import { type Db, MongoClient, type MongoClientOptions } from "mongodb"
 import { type MeditreePlugin } from "../../server.js"
-import { uniqueToken } from "../../ioc.js"
+import { token } from "../../ioc.js"
 import { createLogger } from "../../logger.js"
 
 interface MongoDbPluginConfig {
@@ -20,7 +20,7 @@ export interface MongoDbService {
 }
 
 export const TYPE = {
-  MongoDB: uniqueToken<MongoDbService>("MongoDB"),
+  MongoDB: token<MongoDbService>("MongoDB"),
 }
 
 export default function MongoDbPlugin(config: MongoDbPluginConfig): MeditreePlugin {

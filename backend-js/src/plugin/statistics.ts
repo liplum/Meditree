@@ -1,8 +1,11 @@
-import { uniqueToken } from "../ioc.js"
+import { token } from "../ioc.js"
 import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
+import { type WithUser } from "./auth.js"
+import { type Request } from "express"
+import { TYPE as AuthType } from "./auth.js"
 
 export const TYPE = {
-  StatisticsStorage: uniqueToken<StatisticsStorageService>("StatisticsStorage")
+  StatisticsStorage: token<StatisticsStorageService>("Statistics.Storage")
 }
 
 export interface StatisticsStorageService {
@@ -25,9 +28,14 @@ export default function StatisticsPlugin(config: StatisticsPluginConfig): Meditr
     onRegisterService(container) {
       statistics = container.get(TYPE.StatisticsStorage)
       const events = container.get(MeditreeType.Events)
-      events.on("file-requested", (req, res, file, vitrualPath) => {
-        statistics.increment(vitrualPath)
-        statistics.setLastView(vitrualPath, new Date())
+      const users = container.tryGet(AuthType.UserStorage)
+      events.on("file-requested", async (req: Request & Partial< WithUser>, res, file, vitrualPath) => {
+        await statistics.increment(vitrualPath)
+        await statistics.setLastView(vitrualPath, new Date())
+        if (req.user && users) {
+          req.user.viewTimes++
+          await users.updateUser(req.user)
+        }
       })
     },
   }

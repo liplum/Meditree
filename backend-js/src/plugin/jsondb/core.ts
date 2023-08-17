@@ -1,5 +1,5 @@
 import { type MeditreePlugin } from "../../server.js"
-import { uniqueToken } from "../../ioc.js"
+import { token } from "../../ioc.js"
 import { createLogger } from "../../logger.js"
 import { JsonDB, Config } from "node-json-db"
 import path from "path"
@@ -29,7 +29,7 @@ export interface JsonDbService {
 }
 
 export const TYPE = {
-  JsonDB: uniqueToken<JsonDbService>("JsonDB"),
+  JsonDB: token<JsonDbService>("JsonDB"),
 }
 
 export default function JsonDbPlugin(config: JsonDbPluginConfig): MeditreePlugin {

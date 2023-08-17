@@ -4,10 +4,10 @@ import { v4 as uuidv4 } from "uuid"
 import jwt, { type JwtPayload } from "jsonwebtoken"
 import { createLogger } from "../logger.js"
 import { type Request } from "express"
-import { uniqueToken } from "../ioc.js"
+import { token } from "../ioc.js"
 
 export const TYPE = {
-  UserStorage: uniqueToken<UserStorageService>("UserStorage"),
+  UserStorage: token<UserStorageService>("Auth.UserStorage"),
 }
 interface AuthPluginConfig {
   /**
@@ -44,7 +44,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   return {
     onRegisterService(container) {
       storage = container.get(TYPE.UserStorage)
-      container.bind(MeditreeType.Auth).toValue(async (req, res, next) => {
+      container.bind(MeditreeType.Auth).toValue(async (req: Request & WithUser, res, next) => {
         // Get the JWT from the cookie, body or authorization header in a fallback chain.
         const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
         if (!token) {
@@ -60,10 +60,12 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
             res.status(401).send("Token Invalid").end()
             return
           }
-          if (!await storage.hasUser(account)) {
+          const user = await storage.getUser(account)
+          if (!user) {
             res.status(401).send("Token Invalid").end()
             return
           }
+          req.user = user
           next()
         } catch (error) {
           res.status(401).send("Auth Error").end()
@@ -112,13 +114,17 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
             res.status(400).send("Account Exists")
             return
           }
-          await storage.addUser({ account, password })
+          await storage.addUser({ account, password, viewTimes: 0 })
           res.status(200).send("Account Created")
           return
         })
       }
     }
   }
+}
+
+export interface WithUser {
+  user: User
 }
 
 function getJwtFromAuthHeader(req: Request): string | null {
@@ -147,6 +153,7 @@ export interface User {
   account: string
   password: string
   lastLogin?: Date
+  viewTimes: number
 }
 
 /**

@@ -1,3 +1,4 @@
+import { type WithId } from "mongodb"
 import { type MeditreePlugin } from "../../server.js"
 import { TYPE as AuthType, type User } from "../auth.js"
 import { TYPE as MongoDBType } from "./core.js"
@@ -30,12 +31,9 @@ export default function MongoDBUserPlugin(config: MongoDDUserPluginConfig): Medi
         async getUser(account) {
           return await users.findOne({ account }) as User | null
         },
-        async updateUser(user) {
-          if (await users.findOne({ account: user.account })) {
-            await users.updateOne({ account: user.account }, { $set: user })
-            return true
-          }
-          return false
+        async updateUser(user: WithId<User>) {
+          const res = await users.updateOne({ _id: user._id }, { $set: user })
+          return res.matchedCount > 0
         },
         async deleteUser(account) {
           const result = await users.deleteOne({ account })

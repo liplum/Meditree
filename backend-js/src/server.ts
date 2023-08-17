@@ -10,7 +10,7 @@ import { Timer } from "./timer.js"
 import { type PluginRegistry, resolvePluginList } from "./plugin.js"
 import { type Readable } from "stream"
 import http, { type Server } from "http"
-import { Container, uniqueToken } from "./ioc.js"
+import { Container, token } from "./ioc.js"
 import cookieParser from "cookie-parser"
 import { registerBuiltinPlugins } from "./builtin-plugin.js"
 import { EventEmitter } from "events"
@@ -18,9 +18,9 @@ import path from "path"
 import { resolveAppStoragePath } from "./env.js"
 
 export const TYPE = {
-  HostTree: uniqueToken<(options: HostTreeOptions) => IHostTree>("HostTree"),
-  Auth: uniqueToken<RequestHandler>("Auth"),
-  Events: uniqueToken<MeditreeEvents>("Events"),
+  HostTree: token<(options: HostTreeOptions) => IHostTree>("Meditree.HostTree"),
+  Auth: token<RequestHandler>("Meditree.Auth"),
+  Events: token<MeditreeEvents>("Meditree.Events"),
 }
 
 export async function startServer(
@@ -373,7 +373,7 @@ export interface MeditreePlugin {
 }
 
 export interface MeditreeEvents extends EventEmitter {
-  on(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, vitrualPath: string) => void): this
-  off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, vitrualPath: string) => void): this
+  on(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, vitrualPath: string) => void | Promise<void>): this
+  off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, vitrualPath: string) => void | Promise<void>): this
   emit(event: "file-requested", req: Request, res: Response, file: LocalFile, vitrualPath: string): boolean
 }
