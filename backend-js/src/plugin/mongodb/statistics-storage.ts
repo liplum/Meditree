@@ -26,7 +26,7 @@ export default function MongoDBStatisticsPlugin(config: MongoDBStatisticsPluginC
       const statistics = mongodb.db.collection<Entry>(collection)
       container.bind(StatisticsType.StatisticsStorage).toValue({
         async increment(filePath: string) {
-          await statistics.updateOne({ filePath }, { $inc: { view: 1 } })
+          await statistics.updateOne({ filePath }, { $inc: { view: 1 } }, { upsert: true })
         },
         async getViewCount(filePath: string) {
           const entry = await statistics.findOne({ filePath })
@@ -37,7 +37,7 @@ export default function MongoDBStatisticsPlugin(config: MongoDBStatisticsPluginC
           return entry ? entry.lastView : undefined
         },
         async setLastView(filePath, time) {
-          await statistics.updateOne({ filePath }, { lastView: time }, { upsert: true })
+          await statistics.updateOne({ filePath }, { $set: { lastView: time } }, { upsert: true })
         },
       })
     }
