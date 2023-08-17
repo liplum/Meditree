@@ -9,7 +9,7 @@ interface JsonDbPluginConfig {
   /**
    * "jsondb" by default.
    */
-  dir: string
+  dir?: string
   /**
    * true by default.
    */
