@@ -32,7 +32,7 @@ export default function MongoDBUserPlugin(config: MongoDDUserPluginConfig): Medi
         },
         async updateUser(user) {
           if (await users.findOne({ account: user.account })) {
-            users.updateOne({ account: user.account }, user)
+            await users.updateOne({ account: user.account }, { $set: user })
             return true
           }
           return false
