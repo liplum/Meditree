@@ -206,7 +206,7 @@ export function ResponsiveAppBar({ children }) {
       ml: { sm: `${drawerWidth}` },
     }}
   >
-    <Toolbar>
+    <Toolbar variant="dense">
       <IconButton
         color="inherit"
         aria-label="open drawer"
