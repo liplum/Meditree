@@ -268,7 +268,13 @@ export function ResponsiveDrawer({ isDrawerOpen, setIsDrawerOpen, drawer, body }
     </Box>
     <Box // right content
       component="main"
-      sx={{ padding: "1rem", flexGrow: 1, width: { sm: `calc(100% - ${drawerWidth})` } }}
+      sx={{
+        padding: "1rem",
+        flexGrow: 1,
+        width: { sm: `calc(100% - ${drawerWidth})` },
+        display: "flex",
+        flexDirection: "column", 
+      }}
     >
       {body}
     </Box>
