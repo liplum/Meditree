@@ -1,36 +1,18 @@
 module.exports = {
-  env: {
-    browser: true,
-    es2021: true
-  },
+  root: true,
+  env: { browser: true, es2020: true },
   extends: [
-    'plugin:react/recommended',
-    'standard'
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react-hooks/recommended',
   ],
-  overrides: [
-  ],
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module'
-  },
-  plugins: [
-    'react'
-  ],
+  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['react-refresh'],
   rules: {
-    "semi": ["error", "never"],
-    "quotes": ["warn", "double"],
-    "space-before-function-paren": "off",
-    "prefer-const": "warn",
-    "comma-dangle": "off",
-    "no-unused-vars": "warn",
-    "space-before-blocks": "warn",
-    "keyword-spacing": "warn",
-    "lines-between-class-members": "warn",
-    "no-trailing-spaces": "off",
-    "no-return-await": "off",
-    "no-useless-return": "off",
-    "yield-star-spacing": "off",
-    "react/prop-types": "off",
-    "generator-star-spacing": "off",
-  }
+    'react-refresh/only-export-components': [
+      'warn',
+      { allowConstantExport: true },
+    ],
+  },
 }

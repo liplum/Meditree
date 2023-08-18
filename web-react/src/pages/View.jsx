@@ -1,9 +1,9 @@
+import "./View.css"
 import React, { createContext, useContext, useEffect, useState } from "react"
-import { FileTreeNavigation } from "./FileTreeNavigation"
-import { updatePageTitle, storage } from "./Env"
+import { FileTreeNavigation } from "../subviews/FileTreeNavigation"
+import { updatePageTitle, storage } from "../Env"
 import MenuIcon from "@mui/icons-material/Menu"
-
-import * as ft from "./FileTree"
+import * as ft from "../models/FileTree"
 import {
   useLoaderData,
   defer,
@@ -14,13 +14,12 @@ import {
 import { Box, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from "@mui/icons-material"
 
-import { FileDisplayBoard } from "./Playground"
-import { i18n } from "./I18n"
-import { SearchBar } from "./Component/SearchBar"
-import "./View.css"
-import { Failed, Loading } from "./Component/Loading"
+import { FileDisplayBoard } from "../subviews/Playground"
+import { i18n } from "../I18n"
+import { SearchBar } from "../components/SearchBar"
+import { Failed, Loading } from "../components/Loading"
 import useForceUpdate from "use-force-update"
-import { StarChart } from "./StarChart"
+import { StarChart } from "../models/StarChart"
 
 export const FileTreeDelegateContext = createContext()
 export const IsDrawerOpenContext = createContext()
@@ -290,7 +289,7 @@ function LoadErrorBoundary() {
     if (type === "Token Invalid" || type === "Token Missing") {
       navigate("/")
     }
-  }, [error])
+  }, [error, navigate])
   return <Failed text={i18n.loading.failed}>
     <Button variant="outlined" onClick={() => {
       navigate("/")

@@ -1,13 +1,12 @@
-// Import required modules
+import "./Login.css"
 import { Button, DialogActions, Card, InputAdornment, IconButton, TextField, Dialog, DialogTitle } from "@mui/material"
 import React, { useEffect, useState } from "react"
 import {
   redirect,
   useNavigate
 } from "react-router-dom"
-import { storage, updatePageTitle } from "./Env.js"
-import "./Login.css"
-import { i18n } from "./I18n.js"
+import { storage, updatePageTitle } from "../Env.js"
+import { i18n } from "../I18n.js"
 import { Visibility, VisibilityOff } from "@mui/icons-material"
 import Cookies from "js-cookie"
 

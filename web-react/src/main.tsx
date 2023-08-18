@@ -5,13 +5,13 @@ import {
 } from "react-router-dom"
 import { ConfigProvider, theme } from "antd"
 import ReactDOM from "react-dom/client"
-import { App, loader as appLoader } from "./View"
+import { App, loader as appLoader } from "./pages/View"
 import { ThemeProvider, createTheme } from "@mui/material/styles"
 import "./index.css"
 import {
   LoginDialog,
   loader as loginLoader,
-} from "./Login"
+} from "./pages/Login"
 import { CssBaseline } from "@mui/material"
 
 const router = createHashRouter([
@@ -56,7 +56,7 @@ const darkTheme = createTheme({
     }
   },
 })
-const root = ReactDOM.createRoot(document.getElementById("root"))
+const root = ReactDOM.createRoot(document.getElementById("root")!)
 root.render(
   <React.StrictMode>
     <ThemeProvider theme={darkTheme}>
@@ -65,8 +65,8 @@ root.render(
         theme={{
           token: {
             colorPrimary: "#0A0A0A",
-            algorithm: theme.darkAlgorithm,
           },
+          algorithm: theme.darkAlgorithm,
         }}>
         <RouterProvider router={router} />
       </ConfigProvider>

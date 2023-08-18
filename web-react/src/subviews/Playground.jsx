@@ -1,17 +1,17 @@
 import "./Playground.css"
 import React, { useContext, useEffect, useRef, useState } from "react"
 import { isMobile } from "react-device-detect"
-import { StarChartContext, FileNavigationContext, ResponsiveAppBar } from "./View"
+import { StarChartContext, FileNavigationContext, ResponsiveAppBar } from "../pages/View"
 import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
 import { StarBorder, Star } from "@mui/icons-material"
-import { NoFilesIndicator } from "./Component/NoFilesIndicator"
+import { NoFilesIndicator } from "../components/NoFilesIndicator"
 import useForceUpdate from "use-force-update"
-import { i18n } from "./I18n"
+import { i18n } from "../I18n"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { Failed } from "./Component/Loading"
+import { Failed } from "../components/Loading"
 import { filesize } from "filesize"
-import { VideoJS } from "./Component/VideoPlayer"
+import { VideoJS } from "../components/VideoPlayer"
 
 const VideoRenderer = React.memo(VideoRendererImpl)
 
