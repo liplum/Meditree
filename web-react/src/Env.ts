@@ -1,4 +1,4 @@
-export function updatePageTitle(title) {
+export function updatePageTitle(title:string) {
   document.title = `${title} - Meditree`
 }
 

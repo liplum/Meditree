@@ -1,19 +1,19 @@
 export class StarChart {
-  #path2Star = {}
-  star(path) {
+  #path2Star:Record<string, number | boolean> = {}
+  star(path:string) {
     if (this.#path2Star[path]) return
     // `1` instead of `true` to shrink the json size
     this.#path2Star[path] = 1
     this.save()
   }
 
-  unstar(path) {
+  unstar(path:string) {
     if (!this.#path2Star[path]) return
     delete this.#path2Star[path]
     this.save()
   }
 
-  isStarred(path) {
+  isStarred(path:string) {
     return Boolean(this.#path2Star[path])
   }
 

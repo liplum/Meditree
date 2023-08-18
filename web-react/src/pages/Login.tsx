@@ -5,8 +5,8 @@ import {
   redirect,
   useNavigate
 } from "react-router-dom"
-import { storage, updatePageTitle } from "../Env.js"
-import { i18n } from "../I18n.js"
+import { storage, updatePageTitle } from "../Env"
+import { i18n } from "../I18n"
 import { Visibility, VisibilityOff } from "@mui/icons-material"
 import Cookies from "js-cookie"
 
@@ -100,7 +100,7 @@ export function LoginDialog() {
   )
 }
 
-function LoginFailedDialog({ open, setOpen }) {
+function LoginFailedDialog({ open, setOpen } :{open: boolean,setOpen:(v:boolean)=>void} ) {
   const handleClose = () => {
     setOpen(false)
   }
