@@ -56,7 +56,7 @@ export async function startServer(
     try {
       plugins = await resolvePluginList(builtinPluginTypes, config.plugin,
         (name) => {
-          pluginLog.info(`Plugin[${name}] resgisered.`)
+          pluginLog.info(`Plugin[${name}] was registered.`)
         })
     } catch (err) {
       log.error(err)
@@ -86,7 +86,7 @@ export async function startServer(
     process.exit(1)
   })
 
-  // Phrase 8: initilize plugins.
+  // Phrase 8: initialize plugins.
   for (const plugin of plugins) {
     await plugin.init?.()
   }
@@ -289,7 +289,7 @@ export async function startServer(
     stream.pipe(res)
   }
 
-  // Phrase 20: start HostTree and rebuild it manullay.
+  // Phrase 20: start HostTree and rebuild it manually.
   hostTree.start()
   await hostTree.rebuildFileTree()
 
