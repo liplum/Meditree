@@ -11,7 +11,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material"
 import Cookies from "js-cookie"
 
 // Skip login if jwt is still valid.
-export async function loader() {
+export async function loader():Promise<Response|null> {
   // try to verify the jwt, or the backend doesn't require jwt.
   const validationRes = await fetch("/verify")
   if (validationRes.ok) {

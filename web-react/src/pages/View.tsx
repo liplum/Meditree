@@ -23,11 +23,17 @@ import { StarChart } from "../models/StarChart"
 
 export const FileTreeDelegateContext = createContext()
 export const IsDrawerOpenContext = createContext()
-export const StarChartContext = createContext()
+interface StarChartContext{
+  starChart: StarChart
+  isStarred(file: any): any
+  star(file: any): void
+  unstar(file: any): void
+}
+export const StarChartContext = createContext<StarChartContext>({} as StarChartContext)
 export const FileNavigationContext = createContext()
 
-export async function loader({ request }) {
-  let lastPath = decodeURIComponent(new URL(request.url).searchParams.get("file"))
+export async function loader({ request }:{request:Request}) {
+  let lastPath:string |null = decodeURIComponent(new URL(request.url).searchParams.get("file") ?? "null") 
   lastPath = lastPath === "null" || lastPath === "undefined" ? null : lastPath
   storage.lastFilePathFromUrl = lastPath
   const task = async () => {
