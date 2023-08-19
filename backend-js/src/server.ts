@@ -16,6 +16,7 @@ import { registerBuiltinPlugins } from "./builtin-plugin.js"
 import { EventEmitter } from "events"
 import path from "path"
 import { resolveAppStoragePath } from "./env.js"
+import fs from "fs"
 
 export const TYPE = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("Meditree.HostTree"),
@@ -130,6 +131,17 @@ export async function startServer(
 
   // Phrase 13: resolve the HostTree service.
   const hostTreeCtor = container.get(TYPE.HostTree)
+  function createHostTree(options: HostTreeOptions): IHostTree {
+    if (!fs.existsSync(options.root)) {
+      log.warn(`"${options.root}" doesn't exist, so it's ignored.`)
+      return new EmptyHostTree(options.name)
+    } else if (!fs.statSync(options.root).isDirectory()) {
+      log.warn(`"${options.root}" is not a directory, so it's ignored.`)
+      return new EmptyHostTree(options.name)
+    } else {
+      return hostTreeCtor(options)
+    }
+  }
   let hostTree: IHostTree = new EmptyHostTree(config.name)
   if (config.root) {
     const common = {
@@ -138,7 +150,7 @@ export async function startServer(
       ignorePatterns: config.ignore,
     }
     if (typeof config.root === "string") {
-      hostTree = hostTreeCtor({
+      hostTree = createHostTree({
         root: config.root,
         name: config.name,
         ...common,
@@ -148,7 +160,7 @@ export async function startServer(
       hostTree = rootHostTree
       for (const root of config.root) {
         const name = path.basename(root)
-        rootHostTree.addSubtree(hostTreeCtor({
+        rootHostTree.addSubtree(createHostTree({
           root, name, ...common
         }))
       }
@@ -157,7 +169,7 @@ export async function startServer(
       hostTree = rootHostTree
       for (const [name, root] of Object.entries(config.root)) {
         if (!name) throw new Error(`The root[${root}] maps no name.`)
-        rootHostTree.addSubtree(hostTreeCtor({
+        rootHostTree.addSubtree(createHostTree({
           root, name, ...common
         }))
       }
