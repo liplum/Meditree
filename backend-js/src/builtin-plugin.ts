@@ -50,7 +50,7 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
 }
 
 /**
- * Create a mataclass that automatically added default dependencies.
+ * Create a metaclass that automatically added default dependencies.
  * @param create the constructor of plugin
  * @param defaults the default dependencies
  * @returns a metaclass

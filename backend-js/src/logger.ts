@@ -40,10 +40,10 @@ export const globalOptions: {
   consoleLevel: LogLevels.INFO,
 }
 
-export function initGlobalLogFile(direcotry: string): void {
-  fs.mkdirSync(direcotry, { recursive: true })
+export function initGlobalLogFile(directory: string): void {
+  fs.mkdirSync(directory, { recursive: true })
   globalOptions.logFile = path.join(
-    direcotry,
+    directory,
     `${new Date().toISOString().slice(0, 10)}.log`
   )
 }
