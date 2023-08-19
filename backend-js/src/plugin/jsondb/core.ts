@@ -1,6 +1,6 @@
 import { type MeditreePlugin } from "../../server.js"
 import { token } from "../../ioc.js"
-import { createLogger } from "../../logger.js"
+import { createLogger } from "@liplum/log"
 import { JsonDB, Config } from "node-json-db"
 import path from "path"
 import { resolveAppStoragePath } from "../../env.js"

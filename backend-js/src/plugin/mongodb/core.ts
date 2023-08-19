@@ -1,7 +1,7 @@
 import { type Db, MongoClient, type MongoClientOptions } from "mongodb"
 import { type MeditreePlugin } from "../../server.js"
 import { token } from "../../ioc.js"
-import { createLogger } from "../../logger.js"
+import { createLogger } from "@liplum/log"
 
 interface MongoDbPluginConfig {
   /**

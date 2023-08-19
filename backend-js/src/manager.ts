@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { createLogger, type Logger } from "./logger.js"
+import { createLogger, type Logger } from "@liplum/log"
 import { type FileTreeLike, type FileTreeJson, type LocalFile } from "./file.js"
 import EventEmitter from "events"
 import { type Readable } from "stream"

@@ -2,7 +2,7 @@
 import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
 import { v4 as uuidv4 } from "uuid"
 import jwt, { type JwtPayload } from "jsonwebtoken"
-import { createLogger } from "../logger.js"
+import { createLogger } from "@liplum/log"
 import { type Request } from "express"
 import { token } from "../ioc.js"
 

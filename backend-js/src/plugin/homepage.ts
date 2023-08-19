@@ -1,5 +1,5 @@
 import { type FileTreeJson, type FileJson } from "../file.js"
-import { createLogger } from "../logger.js"
+import { createLogger } from "@liplum/log"
 import { type FileTreeManager } from "../manager.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
 import express, { type RequestHandler } from "express"

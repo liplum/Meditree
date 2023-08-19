@@ -5,7 +5,7 @@ import { type FileTreeLike, LocalFile, type FileType, type FileTreeJson } from "
 import { LocalFileTree } from "./file.js"
 import EventEmitter from "events"
 import { promisify } from "util"
-import { type Logger } from "./logger.js"
+import { type Logger } from "@liplum/log"
 
 export interface HostTreeOptions {
   /**

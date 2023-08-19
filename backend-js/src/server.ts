@@ -5,7 +5,7 @@ import express, { type RequestHandler, type Request, type Response } from "expre
 import { cloneFileTreeJson, type FileTreeJson, type LocalFileTree, type LocalFile } from "./file.js"
 import cors from "cors"
 import { FileTreeManager, type ReadStreamOptions } from "./manager.js"
-import { LogLevels, createLogger, globalOptions, initGlobalLogFile } from "./logger.js"
+import { LogLevels, createLogger, globalOptions, initGlobalLogDir } from "@liplum/log"
 import { Timer } from "./timer.js"
 import { type PluginRegistry, resolvePluginList } from "./plugin.js"
 import { type Readable } from "stream"
@@ -32,11 +32,11 @@ export async function startServer(
   timer.start("Start Server")
 
   // Phrase 2: try to initialize global logging settings.
-  initGlobalLogFile(resolveAppStoragePath("log"))
+  initGlobalLogDir(resolveAppStoragePath("log"))
   if (config.logLevel) {
     const lv = LogLevels[config.logLevel.toUpperCase()]
     if (lv) {
-      globalOptions.consoleLevel = lv
+      globalOptions.consoleOutputRequired = lv
     }
   }
   // Phrase 3: create logger.

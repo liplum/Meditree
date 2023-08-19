@@ -16,6 +16,7 @@
   "author": "Liplum",
   "license": "ISC",
   "dependencies": {
+    "@liplum/log": "^0.0.1",
     "bytes": "^3.1.2",
     "chalk": "^5.2.0",
     "chokidar": "^3.5.3",

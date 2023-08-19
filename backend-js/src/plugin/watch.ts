@@ -6,7 +6,7 @@ import type fs from "fs"
 import { TYPE } from "../server.js"
 import EventEmitter from "events"
 import { parseTime } from "../utils.js"
-import { type Logger } from "../logger.js"
+import { type Logger } from "@liplum/log"
 import { type LoopTask, createLoopTask, Timer } from "../timer.js"
 
 interface WatchPluginConfig {

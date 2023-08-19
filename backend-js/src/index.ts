@@ -5,7 +5,7 @@ import path from "path"
 import { pathToFileURL } from "url"
 import commandLineArgs from "command-line-args"
 import { File as FileDelegate } from "./file.js"
-import { createLogger } from "./logger.js"
+import { createLogger } from "@liplum/log"
 import fs from "fs"
 import { resolveAppStoragePath } from "./env.js"
 
