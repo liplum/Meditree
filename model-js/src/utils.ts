@@ -9,3 +9,14 @@ export function parseDirectory(fso: FileInfo | DirectoryInfo): DirectoryInfo | u
   if (fso["*type"] === undefined) return fso as DirectoryInfo
   else return
 }
+
+export function* extractFileDirectory(
+  tree: Iterable<[string, DirectoryInfo[keyof DirectoryInfo]]>
+): Iterable<[string, FileInfo | DirectoryInfo]> {
+  for (const entry of tree) {
+    if (entry[0] === "*hide" || entry[0] === "*tag") {
+      continue
+    }
+    yield entry as [string, FileInfo | DirectoryInfo]
+  }
+}
