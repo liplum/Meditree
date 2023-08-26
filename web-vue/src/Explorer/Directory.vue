@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { DirectoryInfo } from "../FileTree"
+import { DirectoryObject } from "../FileTree"
 import { truncateString } from "../Utils"
 const p = defineProps<{
-  dir: DirectoryInfo
+  dir: DirectoryObject
 }>()
 </script>
 

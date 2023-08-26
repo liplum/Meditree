@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { FileInfo } from "../FileTree";
+import { FileObject } from "../FileTree";
 import { truncateString } from "../Utils"
 const p = defineProps<{
-  file: FileInfo;
+  file: FileObject;
 }>();
 function resolveIcon(type: string): string {
   if (type.startsWith("image")) return "mdi-image"

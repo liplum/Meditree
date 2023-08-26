@@ -1,18 +1,18 @@
-import { FileInfo } from "./FileTree";
+import { FileObject } from "./FileTree";
 
 export class StarChart {
   private path2Star: Record<string, number | boolean> = {}
-  star(file: FileInfo): void {
+  star(file: FileObject): void {
     if (this.path2Star[file.path]) return
     this.path2Star[file.path] = 1
     this.save()
   }
-  unstar(file: FileInfo): void {
+  unstar(file: FileObject): void {
     if (!this.path2Star[file.path]) return
     delete this.path2Star[file.path]
     this.save()
   }
-  isStarred(file: FileInfo): boolean {
+  isStarred(file: FileObject): boolean {
     return Boolean(this.path2Star[file.path])
   }
   save(): void {

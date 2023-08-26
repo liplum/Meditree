@@ -1,16 +1,16 @@
 <script lang="ts" setup>
 import { ref, watch } from "vue";
-import { DirectoryInfo, FileInfo } from "../FileTree";
+import { DirectoryObject, FileObject } from "../FileTree";
 import DirectoryView, { SearchDelegate } from "./DirectoryView.vue";
 import { computed } from "@vue/reactivity";
 const props = defineProps<{
-  modelValue: DirectoryInfo;
+  modelValue: DirectoryObject;
 }>();
 const emit = defineEmits<{
-  (e: "selectFile", file: FileInfo): void
-  (e: "update:modelValue", value: DirectoryInfo): void
+  (e: "selectFile", file: FileObject): void
+  (e: "update:modelValue", value: DirectoryObject): void
 }>()
-function onDirClick(dir: DirectoryInfo) {
+function onDirClick(dir: DirectoryObject) {
   emit('update:modelValue', dir)
 }
 function onNaviBack() {

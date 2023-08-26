@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@liplum/meditree-model": "^1.0.0",
     "filesize": "^10.0.7",
     "js-cookie": "^3.0.1",
     "video.js": "^8.3.0",

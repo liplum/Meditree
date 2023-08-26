@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { FileInfo } from '../FileTree'
+import { FileObject } from '../FileTree'
 
 const props = defineProps<{
-  file: FileInfo
+  file: FileObject
 }>()
 </script>
 

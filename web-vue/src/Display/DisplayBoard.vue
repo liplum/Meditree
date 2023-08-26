@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed } from "@vue/reactivity"
-import { FileInfo } from "../FileTree"
+import { FileObject } from "../FileTree"
 import ImageRenderer from "./Image.vue"
 import VideoRenderer from "./Video.vue"
 import AudioRenderer from "./Audio.vue"
@@ -30,7 +30,7 @@ function resolveRenderer(type: string) {
 }
 
 const props = defineProps<{
-  file?: FileInfo
+  file?: FileObject
 }>()
 const starChart = inject<StarChart>("star-chart")
 const isStarred = ref(false)

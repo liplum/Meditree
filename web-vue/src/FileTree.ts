@@ -1,29 +1,30 @@
+import { FileInfo, DirectoryInfo, extractFromDirectory } from "@liplum/meditree-model";
 export interface FileSystemObject {
-  parent?: DirectoryInfo
+  parent?: DirectoryObject
   name: string;
   hidden: boolean
 }
 
-export class FileInfo implements FileSystemObject {
-  parent?: DirectoryInfo
+export class FileObject implements FileSystemObject {
+  parent?: DirectoryObject
   name: string
   type: string
   hidden: boolean = false
   path: string;
   url: string
-  size?: string;
+  size?: number;
 
   toString(): string {
     return this.name
   }
 }
 
-export class DirectoryInfo implements FileSystemObject {
-  parent?: DirectoryInfo
+export class DirectoryObject implements FileSystemObject {
+  parent?: DirectoryObject
   name: string
   path: string
   hidden: boolean = false
-  files = new Map<string, FileInfo | DirectoryInfo>
+  files = new Map<string, FileObject | DirectoryObject>
 
   toString(): string {
     return this.name
@@ -33,18 +34,18 @@ export class DirectoryInfo implements FileSystemObject {
     return this.parent === undefined
   }
 
-  addChild(file: FileInfo | DirectoryInfo): void {
+  addChild(file: FileObject | DirectoryObject): void {
     this.files.set(file.name, file)
     file.parent = this
   }
 
-  find(path: string): FileInfo | DirectoryInfo | null {
+  find(path: string): FileObject | DirectoryObject | null {
     const parts = path.split("/")
-    let cur: FileInfo | DirectoryInfo = this
+    let cur: FileObject | DirectoryObject = this
 
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i]
-      if (cur instanceof DirectoryInfo) {
+      if (cur instanceof DirectoryObject) {
         const child = cur.files.get(part)
         if (!child) {
           return null
@@ -59,32 +60,8 @@ export class DirectoryInfo implements FileSystemObject {
   }
 }
 
-interface FileEntry {
-  "*tag"?: Record<string, number | string | boolean>
-  "*hide"?: boolean
-}
-
-interface File extends FileEntry {
-  "*type": string
-  "*hide"?: boolean
-  size?: string
-}
-
-interface Directory extends FileEntry {
-  [name: string]: File | Directory | any
-}
-
-function* iterateFiles(tree: Directory): Iterable<[string, File | Directory]> {
-  for (const entry of Object.entries(tree)) {
-    if (entry[0] === "*hide" || entry[0] === "*tag") {
-      continue
-    }
-    yield entry
-  }
-}
-
-function parseFile(name: string, file: File, parent?: DirectoryInfo): FileInfo {
-  const fi = new FileInfo()
+function parseFile(name: string, file: FileInfo, parent?: DirectoryObject): FileObject {
+  const fi = new FileObject()
   fi.parent = parent
   fi.name = name
   fi.type = file["*type"]
@@ -95,16 +72,16 @@ function parseFile(name: string, file: File, parent?: DirectoryInfo): FileInfo {
   return fi
 }
 
-function parseDirectory(name: string, directory: Directory, parent?: DirectoryInfo): DirectoryInfo {
-  const dir = new DirectoryInfo()
+function parseDirectory(name: string, directory: DirectoryInfo, parent?: DirectoryObject): DirectoryObject {
+  const dir = new DirectoryObject()
   dir.name = name
   dir.parent = parent
   dir.path = parent && !parent.isRoot ? `${parent.path}/${name}` : name
   dir.hidden = directory["*hide"] || false
-  for (const [name, file] of iterateFiles(directory)) {
+  for (const [name, file] of extractFromDirectory(Object.entries(directory))) {
     if (file.hasOwnProperty("*type")) {
       // Parse as file
-      dir.addChild(parseFile(name, file as File, dir))
+      dir.addChild(parseFile(name, file as FileInfo, dir))
     } else {
       // Parse as directory
       const tag = file["*tag"]
@@ -112,7 +89,7 @@ function parseDirectory(name: string, directory: Directory, parent?: DirectoryIn
       if (typeof tag?.main === "string") {
         const mainName = tag.main
         const mainFi = file[mainName]
-        const fi = new FileInfo()
+        const fi = new FileObject()
         fi.parent = dir
         fi.name = name
         fi.type = mainFi["*type"]
@@ -122,7 +99,7 @@ function parseDirectory(name: string, directory: Directory, parent?: DirectoryIn
         fi.size = mainFi.size
         dir.addChild(fi)
       } else {
-        const subDir = parseDirectory(name, file as Directory, dir)
+        const subDir = parseDirectory(name, file as DirectoryInfo, dir)
         dir.addChild(subDir)
       }
     }
@@ -130,6 +107,6 @@ function parseDirectory(name: string, directory: Directory, parent?: DirectoryIn
   return dir
 }
 
-export function parseFileTree(tree: { name: string, root: Directory }): DirectoryInfo {
+export function parseFileTree(tree: { name: string, root: DirectoryInfo }): DirectoryObject {
   return parseDirectory(tree.name, tree.root)
 }
