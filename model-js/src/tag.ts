@@ -3,14 +3,17 @@ export type Tags = Record<string, number | string | boolean>
 /**
  * Enum representing tags for files.
  */
-export const enum FileTag {
+export enum FileTag {
 
 }
 
 /**
  * Enum representing tags for directories.
  */
-export const enum DirectoryTag {
+export enum DirectoryTag {
+  /**
+   * The entry point file.
+   */
   main = "main",
 }
 
