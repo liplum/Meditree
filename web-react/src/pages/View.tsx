@@ -1,18 +1,15 @@
 import "./View.css"
-import React, { ReactNode, createContext, useContext, useEffect, useMemo, useState } from "react"
+import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from "react"
 import { FileTreeNavigation } from "../subviews/FileTreeNavigation"
 import { updatePageTitle, storage } from "../Env"
 import MenuIcon from "@mui/icons-material/Menu"
 import { FileNode, FileTreeDelegate, createDelegate, findNextFile, resolveFileFromPath } from "../models/FileTree"
 import {
-  useLoaderData,
-  defer,
-  Await,
-  useNavigate, useAsyncError, useSearchParams
+  useNavigate, useSearchParams
 } from "react-router-dom"
 import { Box, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from "@mui/icons-material"
-
+import { useRequest } from "ahooks"
 import { FileDisplayBoard } from "../subviews/Playground"
 import { i18n } from "../I18n"
 import { SearchBar } from "../components/SearchBar"
@@ -36,50 +33,34 @@ interface FileNavigationContext {
 }
 export const FileNavigationContext = createContext<FileNavigationContext>({} as FileNavigationContext)
 
-export async function loader({ request }: { request: Request }) {
-  let lastPath: string | null = decodeURIComponent(new URL(request.url).searchParams.get("file") ?? "null")
-  lastPath = lastPath === "null" || lastPath === "undefined" ? null : lastPath
-  storage.lastFilePathFromUrl = lastPath
-  const task = async () => {
-    const response = await fetch("/list", {
-      method: "GET",
-    })
-    if (response.ok) {
-      const payload = await response.json()
-      const fileTreeDelegate = createDelegate({
-        name: payload.name,
-        root: payload.root,
-      })
-      return fileTreeDelegate
-    } else {
-      const error = await response.text()
-      throw new Error(error)
-    }
-  }
-  return defer({
-    fileTreeDelegate: task(),
+async function requestFileTree({ file }: { file?: string | null }): Promise<FileTreeDelegate> {
+  const lastPath = decodeURIComponent(file ?? "")
+  storage.lastFilePathFromUrl = lastPath ? lastPath : null
+  const res = await fetch("/list", {
+    method: "GET",
   })
+  if (res.ok) {
+    const payload = await res.json()
+    const fileTreeDelegate = createDelegate({
+      name: payload.name,
+      root: payload.root,
+    })
+    return fileTreeDelegate
+  } else {
+    const error = await res.text()
+    throw new Error(error)
+  }
 }
 
-export function App() {
-  const { fileTreeDelegate } = useLoaderData()
 
-  return (
-    <main>
-      <React.Suspense
-        fallback={<Loading />}
-      >
-        <Await
-          resolve={fileTreeDelegate}
-          errorElement={<LoadErrorBoundary />}
-        >
-          {(delegate) => (
-            <Body fileTreeDelegate={delegate} />
-          )}
-        </Await>
-      </React.Suspense>
-    </main>
+export function App() {
+  const [searchParams] = useSearchParams()
+  const { data: delegate, error, loading } = useRequest(
+    async () => requestFileTree({ file: searchParams.get("file") })
   )
+  if (error) return <LoadErrorBoundary error={error} />
+  if (loading || !delegate) return <Loading />
+  return <Body fileTreeDelegate={delegate} />
 }
 
 function Body({ fileTreeDelegate }: { fileTreeDelegate: FileTreeDelegate }) {
@@ -269,8 +250,7 @@ export function ResponsiveDrawer({ isDrawerOpen, setIsDrawerOpen, drawer, childr
   </Box>
 }
 
-function LoadErrorBoundary() {
-  const error = useAsyncError() as Error
+function LoadErrorBoundary({ error }: { error: Error }) {
   const navigate = useNavigate()
   useEffect(() => {
     const type = error.message

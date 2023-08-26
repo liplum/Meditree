@@ -1,31 +1,30 @@
 import "./Login.css"
 import { Button, DialogActions, Card, InputAdornment, IconButton, TextField, Dialog, DialogTitle } from "@mui/material"
 import React, { useEffect, useState } from "react"
-import {
-  redirect,
-  useNavigate
-} from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { storage, updatePageTitle } from "../Env"
 import { i18n } from "../I18n"
 import { Visibility, VisibilityOff } from "@mui/icons-material"
 import Cookies from "js-cookie"
-
-// Skip login if jwt is still valid.
-export async function loader():Promise<Response|null> {
-  // try to verify the jwt, or the backend doesn't require jwt.
-  const validationRes = await fetch("/verify")
-  if (validationRes.ok) {
-    return redirect("/view")
-  } else {
-    Cookies.remove("jwt")
-    return null
-  }
-}
-
 export function LoginDialog() {
+  const navigate = useNavigate()
+  useEffect(() => {
+    // Skip login if jwt is still valid.
+    // try to verify the jwt, or the backend doesn't require jwt.
+    fetch("/verify").then(res => {
+      if (res.ok) {
+        navigate("/view")
+      } else {
+        Cookies.remove("jwt")
+      }
+    })
+  }, [navigate])
   useEffect(() => {
     updatePageTitle(i18n.login.title)
   }, [])
+  return <LoginDialogImpl />
+}
+function LoginDialogImpl() {
   const navigate = useNavigate()
   const [account, setAccount] = useState("")
   const [password, setPassword] = useState("")
@@ -100,7 +99,7 @@ export function LoginDialog() {
   )
 }
 
-function LoginFailedDialog({ open, setOpen } :{open: boolean,setOpen:(v:boolean)=>void} ) {
+function LoginFailedDialog({ open, setOpen }: { open: boolean, setOpen: (v: boolean) => void }) {
   const handleClose = () => {
     setOpen(false)
   }
