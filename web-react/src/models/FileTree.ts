@@ -187,3 +187,26 @@ function reorder(array: [string, unknown][]) {
     return fileNameA.localeCompare(fileNameB)
   })
 }
+
+export function resolveFileFromPath(path: string, delegate: FileTreeDelegate): FileNode | undefined {
+  if (!path) return
+  for (const file of delegate.path2File.values()) {
+    if (file.path === path) {
+      return file
+    }
+  }
+  return
+}
+
+export function findNextFile(delegate: FileTreeDelegate, curFile: FileNode, delta: number): FileNode | undefined {
+  if (!(curFile && "key" in curFile)) return curFile
+  let nextKey = curFile.key + delta
+  while (nextKey >= 0 && nextKey < delegate.maxKey) {
+    const next = delegate.key2File.get(nextKey)
+    if (!next) {
+      nextKey += delta
+    } else {
+      return next
+    }
+  }
+}

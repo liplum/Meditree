@@ -38,7 +38,7 @@ function resolveRenderer(type: string) {
   }
 }
 
-export function FileDisplayBoard({ file }: { file: FileNode }) {
+export function FileDisplayBoard({ file }: { file?: FileNode }) {
   const { isStarred, star, unstar } = useContext(StarChartContext)
   const { goNextFile, goPreviousFile } = useContext(FileNavigationContext)
   const boardRef = useRef()
@@ -87,7 +87,7 @@ export function FileDisplayBoard({ file }: { file: FileNode }) {
     <ResponsiveAppBar>
       <Tooltip title={file?.path}>
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          {file ? file.name : null}
+          {file ? file.name : undefined}
         </Typography>
       </Tooltip>
       {file && // only display if any file is selected

@@ -1,15 +1,14 @@
 import "./View.css"
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { ReactNode, createContext, useContext, useEffect, useMemo, useState } from "react"
 import { FileTreeNavigation } from "../subviews/FileTreeNavigation"
 import { updatePageTitle, storage } from "../Env"
 import MenuIcon from "@mui/icons-material/Menu"
-import * as ft from "../models/FileTree"
+import { FileNode, FileTreeDelegate, createDelegate, findNextFile, resolveFileFromPath } from "../models/FileTree"
 import {
   useLoaderData,
   defer,
   Await,
-  useLocation,
-  useNavigate, useAsyncError
+  useNavigate, useAsyncError, useSearchParams
 } from "react-router-dom"
 import { Box, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
 import { StarBorder, Star } from "@mui/icons-material"
@@ -27,12 +26,15 @@ export const IsDrawerOpenContext = createContext<IsDrawerOpenContext>([false, ()
 
 interface StarChartContext {
   starChart: StarChart
-  isStarred(file: any): any
-  star(file: any): void
-  unstar(file: any): void
+  isStarred(file: FileNode): boolean
+  star(file: FileNode): void
+  unstar(file: FileNode): void
 }
 export const StarChartContext = createContext<StarChartContext>({} as StarChartContext)
-export const FileNavigationContext = createContext()
+interface FileNavigationContext {
+  goFile(curFile: FileNode, delta: number): void
+}
+export const FileNavigationContext = createContext<FileNavigationContext>({} as FileNavigationContext)
 
 export async function loader({ request }: { request: Request }) {
   let lastPath: string | null = decodeURIComponent(new URL(request.url).searchParams.get("file") ?? "null")
@@ -44,7 +46,7 @@ export async function loader({ request }: { request: Request }) {
     })
     if (response.ok) {
       const payload = await response.json()
-      const fileTreeDelegate = ft.createDelegate({
+      const fileTreeDelegate = createDelegate({
         name: payload.name,
         root: payload.root,
       })
@@ -80,37 +82,13 @@ export function App() {
   )
 }
 
-function resolveFileFromPath(path, fileTreeDelegate) {
-  if (path) {
-    for (const file of fileTreeDelegate.path2File.values()) {
-      if (file.path === path) {
-        return file
-      }
-    }
-  }
-  return null
-}
-
-function findNextFile(fileTreeDelegate, curFile, delta) {
-  if (!(curFile && "key" in curFile)) return curFile
-  let nextKey = curFile.key + delta
-  while (nextKey >= 0 && nextKey < fileTreeDelegate.maxKey) {
-    const next = fileTreeDelegate.key2File.get(nextKey)
-    if (!next) {
-      nextKey += delta
-    } else {
-      return next
-    }
-  }
-}
-
-function Body({ fileTreeDelegate }) {
-  const [isDrawerOpen, setIsDrawerOpen] = useState()
-  const location = useLocation()
-  const [searchPrompt, setSearchPrompt] = useState()
-  const [onlyShowStarred, setOnlyShowStarred] = useState()
+function Body({ fileTreeDelegate }: { fileTreeDelegate: FileTreeDelegate }) {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [searchPrompt, setSearchPrompt] = useState("")
+  const [onlyShowStarred, setOnlyShowStarred] = useState(false)
   const navigate = useNavigate()
-  const selectedFile = resolveFileFromPath(decodeURIComponent(new URLSearchParams(location.search).get("file")), fileTreeDelegate)
+  const [searchParams] = useSearchParams()
+  const selectedFile = resolveFileFromPath(decodeURIComponent(searchParams.get("file") ?? ""), fileTreeDelegate)
 
   useEffect(() => {
     if (selectedFile) {
@@ -118,43 +96,12 @@ function Body({ fileTreeDelegate }) {
     }
   }, [selectedFile])
 
-  const goFile = (curFile, delta) => {
-    const file = findNextFile(fileTreeDelegate, curFile, delta)
-    navigate(`/view?file=${encodeURIComponent(file.path)}`)
-  }
-  const goNextFile = (curFile) => goFile(curFile, +1)
-  const goPreviousFile = (curFile) => goFile(curFile, -1)
   const forceUpdate = useForceUpdate()
-  const starChart = new StarChart()
-  starChart.load()
-  const starChartCtx = {
-    starChart,
-    isStarred(file) {
-      return file && starChart.isStarred(file.path)
-    },
-    star(file) {
-      const path = file?.path
-      if (!path) return
-      starChart.star(path)
-      // rebuild for prompt filter
-      forceUpdate()
-    },
-    unstar(file) {
-      const path = file?.path
-      if (!path) return
-      starChart.unstar(path)
-      // rebuild for prompt filter
-      forceUpdate()
-    }
-  }
-
-  const filterByPrompt = (file) => {
-    if (onlyShowStarred && !starChart.isStarred(file.path)) {
-      return false
-    }
-    if (!searchPrompt) return true
-    return file.path.toLowerCase().includes(searchPrompt.trim().toLocaleLowerCase())
-  }
+  const starChart = useMemo(() => {
+    const starChart = new StarChart()
+    starChart.load()
+    return starChart
+  }, [])
 
   const main = (
     <ResponsiveDrawer
@@ -180,32 +127,60 @@ function Body({ fileTreeDelegate }) {
         <div style={{ flex: 1, overflow: "auto" }}>
           <FileTreeNavigation
             selectedFile={selectedFile}
-            searchDelegate={filterByPrompt}
+            searchDelegate={(file) => {
+              if (onlyShowStarred && !starChart.isStarred(file.path)) {
+                return false
+              }
+              if (!searchPrompt) return true
+              return file.path.toLowerCase().includes(searchPrompt.trim().toLocaleLowerCase())
+            }}
             delegate={fileTreeDelegate}
           />
         </div>
       </>}
-      body={<>
-        <Toolbar />
-        <FileDisplayBoard file={selectedFile} />
-      </>}
-    />
+    >
+      <Toolbar />
+      <FileDisplayBoard file={selectedFile} />
+    </ResponsiveDrawer>
   )
   return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
-    <FileTreeDelegateContext.Provider value={[fileTreeDelegate]}>
-      <StarChartContext.Provider value={starChartCtx}>
-        <FileNavigationContext.Provider value={{ goFile, goNextFile, goPreviousFile }}>
-          {main}
-        </FileNavigationContext.Provider>
-      </StarChartContext.Provider>
-    </FileTreeDelegateContext.Provider>
+    <StarChartContext.Provider value={{
+      starChart,
+      isStarred(file) {
+        return file && starChart.isStarred(file.path)
+      },
+      star(file) {
+        const path = file?.path
+        if (!path) return
+        starChart.star(path)
+        // rebuild for prompt filter
+        forceUpdate()
+      },
+      unstar(file) {
+        const path = file?.path
+        if (!path) return
+        starChart.unstar(path)
+        // rebuild for prompt filter
+        forceUpdate()
+      }
+    }}>
+      <FileNavigationContext.Provider value={{
+        goFile: (curFile: FileNode, delta: number) => {
+          const file = findNextFile(fileTreeDelegate, curFile, delta)
+          if (!file) return
+          navigate(`/view?file=${encodeURIComponent(file.path)}`)
+        }
+      }}>
+        {main}
+      </FileNavigationContext.Provider>
+    </StarChartContext.Provider>
   </IsDrawerOpenContext.Provider>
 }
 
 /// TODO: Drawer looks bad on tablet portrait mode.
 const drawerWidth = "min(max(30%,20rem),30rem)"
 
-export function ResponsiveAppBar({ children }) {
+export function ResponsiveAppBar({ children }: { children: ReactNode }) {
   const [isDrawerOpen, setIsDrawerOpen] = useContext(IsDrawerOpenContext)
   return <AppBar
     position="fixed"
@@ -231,7 +206,12 @@ export function ResponsiveAppBar({ children }) {
   </AppBar>
 }
 
-export function ResponsiveDrawer({ isDrawerOpen, setIsDrawerOpen, drawer, body }) {
+export function ResponsiveDrawer({ isDrawerOpen, setIsDrawerOpen, drawer, children }: {
+  isDrawerOpen: boolean
+  setIsDrawerOpen: (open: boolean) => void
+  drawer: ReactNode
+  children: ReactNode
+}) {
   drawer = <div
     style={{
       display: "flex",
@@ -284,13 +264,13 @@ export function ResponsiveDrawer({ isDrawerOpen, setIsDrawerOpen, drawer, body }
         flexDirection: "column",
       }}
     >
-      {body}
+      {children}
     </Box>
   </Box>
 }
 
 function LoadErrorBoundary() {
-  const error = useAsyncError()
+  const error = useAsyncError() as Error
   const navigate = useNavigate()
   useEffect(() => {
     const type = error.message

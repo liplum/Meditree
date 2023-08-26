@@ -7,7 +7,7 @@ import { NoFilesIndicator } from "../components/NoFilesIndicator"
 const { DirectoryTree } = Tree
 
 export function FileTreeNavigation({ selectedFile, searchDelegate, delegate }: {
-  selectedFile: FileNode
+  selectedFile?: FileNode
   searchDelegate: (file: FileNode) => boolean
   delegate: FileTreeDelegate
 }) {
