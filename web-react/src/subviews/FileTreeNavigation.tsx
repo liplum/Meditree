@@ -36,7 +36,7 @@ export function FileTreeNavigation({ selectedFile, searchDelegate, delegate }: {
       showLine={true}
       showIcon={true}
       treeData={renderTree.children}
-      defaultSelectedKeys={[selectedFile?.key]}
+      defaultSelectedKeys={selectedFile ? [selectedFile.key] : []}
       defaultExpandedKeys={selectedFile?.tracking}
       onSelect={(_keys, info) => {
         if (info.node.isLeaf) {
