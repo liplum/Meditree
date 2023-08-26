@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "noEmitOnError": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "skipLibCheck": false,
+    "outDir": "dist",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "strictNullChecks": true
+  },
+  "include": [
+    "src/**/*.ts",
+  ]
+}

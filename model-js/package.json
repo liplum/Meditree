@@ -1,0 +1,34 @@
+{
+  "name": "meditree-model",
+  "version": "1.0.0",
+  "description": "The model of Meditree.",
+  "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "module": "src/index.ts",
+  "files": [
+    "src/**/*.ts",
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
+  "scripts": {
+    "test": "tsc && ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liplum/Meditree.git"
+  },
+  "keywords": [
+    "meditree"
+  ],
+  "author": "Liplum",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/liplum/Meditree/issues"
+  },
+  "homepage": "https://github.com/liplum/Meditree#readme",
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "ava": "^5.3.1"
+  }
+}
