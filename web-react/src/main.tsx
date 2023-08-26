@@ -1,27 +1,21 @@
+import "./index.css"
 import React from "react"
-import {
-  createHashRouter,
-  RouterProvider,
-} from "react-router-dom"
+import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import { ConfigProvider, theme } from "antd"
 import ReactDOM from "react-dom/client"
 import { App } from "./pages/View"
 import { ThemeProvider, createTheme } from "@mui/material/styles"
-import "./index.css"
 import { LoginDialog } from "./pages/Login"
 import { CssBaseline } from "@mui/material"
 
-const router = createHashRouter([
-  {
-    index: true,
-    element: <LoginDialog />,
-  },
-  {
-    path: "/view",
-    element: <App />,
-    shouldRevalidate: () => false,
-  }
-])
+const router = createBrowserRouter([{
+  index: true,
+  element: <LoginDialog />,
+}, {
+  path: "/view",
+  element: <App />,
+  shouldRevalidate: () => false,
+}])
 
 const darkTheme = createTheme({
   palette: {

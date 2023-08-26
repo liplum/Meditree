@@ -5,6 +5,7 @@ import { updatePageTitle, storage } from "../Env"
 import MenuIcon from "@mui/icons-material/Menu"
 import { FileNode, FileTreeDelegate, createDelegate, findNextFile, resolveFileFromPath } from "../models/FileTree"
 import {
+  Navigate,
   useNavigate, useSearchParams
 } from "react-router-dom"
 import { Box, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
@@ -52,13 +53,15 @@ async function requestFileTree({ file }: { file?: string | null }): Promise<File
   }
 }
 
-
 export function App() {
   const [searchParams] = useSearchParams()
   const { data: delegate, error, loading } = useRequest(
     async () => requestFileTree({ file: searchParams.get("file") })
   )
-  if (error) return <LoadErrorBoundary error={error} />
+  if (error) {
+    if(error.message === "Auth Error") return <Navigate to="/" />
+    return <LoadErrorBoundary error={error} />
+  }
   if (loading || !delegate) return <Loading />
   return <Body fileTreeDelegate={delegate} />
 }
