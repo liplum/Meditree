@@ -108,7 +108,7 @@ interface File {
 interface Directory {
   "*tag"?: Record<string, number | string | boolean>
   "*hide"?: boolean
-  [name: string]: File | Directory | any
+  [name: string]: File | Directory | Directory["*tag"] | Directory["*hide"]
 }
 ```
 
