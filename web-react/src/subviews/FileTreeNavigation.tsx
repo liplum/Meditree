@@ -1,20 +1,22 @@
-import React, { useContext, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Tree } from "antd"
-import * as ft from "../models/FileTree"
-import { FileTreeDelegateContext } from "../pages/View"
+import { filterDirectory, DirectoryNode, FileNode, FileTreeDelegate } from "../models/FileTree"
 import { useTheme } from "@mui/material/styles"
 import { useNavigate } from "react-router-dom"
 import { NoFilesIndicator } from "../components/NoFilesIndicator"
 const { DirectoryTree } = Tree
 
-export function FileTreeNavigation({ selectedFile, searchDelegate }) {
-  const [delegate] = useContext(FileTreeDelegateContext)
-  const [renderTree, setRenderTree] = useState()
+export function FileTreeNavigation({ selectedFile, searchDelegate, delegate }: {
+  selectedFile: FileNode
+  searchDelegate: (file: FileNode) => boolean
+  delegate: FileTreeDelegate
+}) {
+  const [renderTree, setRenderTree] = useState<DirectoryNode>()
   const navigate = useNavigate()
   useEffect(() => {
     if (!delegate) return
     if (searchDelegate) {
-      const newRenderTree = ft.filter(delegate.renderTree, searchDelegate)
+      const newRenderTree = filterDirectory(delegate.renderTree, searchDelegate)
       setRenderTree(newRenderTree)
     }
   }, [searchDelegate, delegate])
@@ -22,7 +24,7 @@ export function FileTreeNavigation({ selectedFile, searchDelegate }) {
   const theme = useTheme()
   if (!renderTree) return
   if (renderTree.children.length <= 0) {
-    return <NoFilesIndicator/>
+    return <NoFilesIndicator />
   }
   return (
     <DirectoryTree
@@ -34,12 +36,12 @@ export function FileTreeNavigation({ selectedFile, searchDelegate }) {
       showLine={true}
       showIcon={true}
       treeData={renderTree.children}
-      defaultSelectedKeys={[selectedFile?.nodeId]}
+      defaultSelectedKeys={[selectedFile?.key]}
       defaultExpandedKeys={selectedFile?.tracking}
       onSelect={(_keys, info) => {
         if (info.node.isLeaf) {
-          const selected = info.node
-          navigate(`/view?file=${encodeURIComponent(selected.path)}`)
+          const newlySelected = info.node
+          navigate(`/view?file=${encodeURIComponent(newlySelected.path)}`)
         }
       }}
     />

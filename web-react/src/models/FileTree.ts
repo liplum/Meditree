@@ -115,7 +115,7 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
  *  @author chatGPT
  *  @returns the render tree
  */
-export function filter(renderTree: DirectoryNode, searchDelegate: (file: FileNode) => boolean): DirectoryNode {
+export function filterDirectory(renderTree: DirectoryNode, searchDelegate: (file: FileNode) => boolean): DirectoryNode {
   function filterTree(tree: DirectoryNode | FileNode): DirectoryNode | FileNode | null {
     // base case: leaf node
     if (!("children" in tree)) {

@@ -1,4 +1,3 @@
-import * as React from "react"
 import { styled, alpha } from "@mui/material/styles"
 import InputBase from "@mui/material/InputBase"
 import SearchIcon from "@mui/icons-material/Search"
@@ -36,7 +35,10 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }))
 
-export function SearchBar({ placeholder, onSearch, }) {
+export function SearchBar({ placeholder, onSearch }: {
+  placeholder: string,
+  onSearch: (query: string) => Promise<void> | void
+}) {
   return <Search>
     <SearchIconWrapper>
       <SearchIcon />

@@ -21,9 +21,11 @@ import { Failed, Loading } from "../components/Loading"
 import useForceUpdate from "use-force-update"
 import { StarChart } from "../models/StarChart"
 
-export const FileTreeDelegateContext = createContext()
-export const IsDrawerOpenContext = createContext()
-interface StarChartContext{
+type IsDrawerOpenContext = [boolean, (open: boolean) => void]
+
+export const IsDrawerOpenContext = createContext<IsDrawerOpenContext>([false, () => undefined])
+
+interface StarChartContext {
   starChart: StarChart
   isStarred(file: any): any
   star(file: any): void
@@ -32,8 +34,8 @@ interface StarChartContext{
 export const StarChartContext = createContext<StarChartContext>({} as StarChartContext)
 export const FileNavigationContext = createContext()
 
-export async function loader({ request }:{request:Request}) {
-  let lastPath:string |null = decodeURIComponent(new URL(request.url).searchParams.get("file") ?? "null") 
+export async function loader({ request }: { request: Request }) {
+  let lastPath: string | null = decodeURIComponent(new URL(request.url).searchParams.get("file") ?? "null")
   lastPath = lastPath === "null" || lastPath === "undefined" ? null : lastPath
   storage.lastFilePathFromUrl = lastPath
   const task = async () => {
@@ -179,6 +181,7 @@ function Body({ fileTreeDelegate }) {
           <FileTreeNavigation
             selectedFile={selectedFile}
             searchDelegate={filterByPrompt}
+            delegate={fileTreeDelegate}
           />
         </div>
       </>}
@@ -278,7 +281,7 @@ export function ResponsiveDrawer({ isDrawerOpen, setIsDrawerOpen, drawer, body }
         flexGrow: 1,
         width: { sm: `calc(100% - ${drawerWidth})` },
         display: "flex",
-        flexDirection: "column", 
+        flexDirection: "column",
       }}
     >
       {body}

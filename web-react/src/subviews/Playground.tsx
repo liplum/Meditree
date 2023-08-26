@@ -12,10 +12,11 @@ import remarkGfm from "remark-gfm"
 import { Failed } from "../components/Loading"
 import { filesize } from "filesize"
 import { VideoJS } from "../components/VideoPlayer"
+import { FileNode } from "../models/FileTree"
 
 const VideoRenderer = React.memo(VideoRendererImpl)
 
-function resolveRenderer(type:string) {
+function resolveRenderer(type: string) {
   if (typeof type !== "string") return
   if (type.startsWith("image")) {
     return ImageRenderer
@@ -37,7 +38,7 @@ function resolveRenderer(type:string) {
   }
 }
 
-export function FileDisplayBoard({ file }) {
+export function FileDisplayBoard({ file }: { file: FileNode }) {
   const { isStarred, star, unstar } = useContext(StarChartContext)
   const { goNextFile, goPreviousFile } = useContext(FileNavigationContext)
   const boardRef = useRef()
@@ -117,7 +118,7 @@ export function FileDisplayBoard({ file }) {
 }
 
 const isMobileSafari = /iP(ad|hone|od).+Version\/[\d.]+.*Safari/i.test(navigator.userAgent)
-function VideoRendererImpl({ file }) {
+function VideoRendererImpl({ file }: { file: FileNode }) {
   // for HLS support on mobile safari
   // ref: http://jsfiddle.net/fxfktztx/1, https://stackoverflow.com/a/47632587/13691173
   const overrideNative = !isMobileSafari
@@ -146,14 +147,14 @@ function VideoRendererImpl({ file }) {
   />
 }
 
-function ImageRenderer({ file }) {
+function ImageRenderer({ file }: { file: FileNode }) {
   return <img
     src={file.url}
     alt={file.path}
     className={"img-view"} />
 }
 
-function AudioRenderer({ file }) {
+function AudioRenderer({ file }: { file: FileNode }) {
   return <audio
     controls
     src={file.url}
@@ -164,7 +165,7 @@ function AudioRenderer({ file }) {
     className={"video-view"} />
 }
 
-function MarkdownRenderer({ file }) {
+function MarkdownRenderer({ file }: { file: FileNode }) {
   const pathParts = file.path.split("/")
   pathParts.pop()
   return <Markdown
@@ -203,7 +204,7 @@ function Markdown({ src, alt, parentDir }) {
   }
 }
 
-function PlainTextRenderer(file) {
+function PlainTextRenderer({ file }: { file: FileNode }) {
   const [text, setText] = useState()
 
   useEffect(() => {
