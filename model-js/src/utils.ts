@@ -10,7 +10,7 @@ export function parseDirectory(fso: FileInfo | DirectoryInfo): DirectoryInfo | u
   else return
 }
 
-export function* extractFileDirectory(
+export function* extractFromDirectory(
   tree: Iterable<[string, DirectoryInfo[keyof DirectoryInfo]]>
 ): Iterable<[string, FileInfo | DirectoryInfo]> {
   for (const entry of tree) {
