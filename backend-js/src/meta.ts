@@ -1,21 +1,30 @@
+/**
+ * Represents the authentication configuration for Meditree metadata.
+ */
 export interface MeditreeMetaAuth {
   /**
-   * The path for verification of auth token.
+   * The endpoint path for verifying authentication tokens.
    */
   verify: string
+
   /**
-   * The path for login.
+   * The endpoint path for user login.
    */
   login: string
 }
 
+/**
+ * Represents metadata for Meditree backend services.
+ */
 export interface MeditreeMeta {
   /**
-   * The name of backend server.
+   * The name of the Meditree backend server.
    */
   name: string
+
   /**
-   * Omitted means auth is not required.
+   * Authentication configuration for the Meditree backend (optional).
+   * If omitted, authentication is not required for this backend.
    */
   auth?: MeditreeMetaAuth
 }

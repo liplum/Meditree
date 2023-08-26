@@ -74,7 +74,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.fileWatcher = chokidar.watch(this.root, {
       ignoreInitial: true,
     }).on("all", (event, filePath) => {
-      this.log?.verbose(`[${event}]${filePath}`)
+      this.log?.verbose(`[${event}] "${filePath}"`)
       // const relative = path.relative(this.root, filePath)
       if (event === "add" || event === "unlink") {
         if (this.filePathClassifier(filePath) == null) return
