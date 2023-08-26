@@ -1,19 +1,8 @@
-interface File {
-  "*type": string
-  "*tag"?: Record<string, number | string | boolean>
-  "*hide"?: boolean
-  size?: number
-}
-
-interface Directory {
-  "*tag"?: Record<string, number | string | boolean>
-  "*hide"?: boolean
-  [name: string]: File | Directory | Directory["*tag"] | Directory["*hide"]
-}
+import { DirectoryInfo, FileInfo, extractFromDirectory } from "@liplum/meditree-model"
 
 export interface FileTreePayload {
   name: string
-  root: Directory
+  root: DirectoryInfo
 }
 
 export interface RenderTreeNode {
@@ -55,15 +44,15 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
   }
   const key2File = new Map<number, FileNode>()
   const path2File = new Map<string, FileNode>()
-  function createNode(parentNode: DirectoryNode, curDir: Directory) {
+  function createNode(parentNode: DirectoryNode, curDir: DirectoryInfo) {
     const entries = Object.entries(curDir)
     reorder(entries)
-    for (const [name, fso] of getFSO(entries)) {
+    for (const [name, fso] of extractFromDirectory(entries)) {
       const tag = fso["*tag"]
       const curKey = key++
       // if file has a type, it presents a file
       if (typeof fso["*type"] === "string") {
-        const file = fso as File
+        const file = fso as FileInfo
         // fileObj is for both TreeView component and actual FileTree.
         const fileObj: FileNode = {
           name,
@@ -80,10 +69,10 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
         key2File.set(curKey, fileObj)
         parentNode.children.push(fileObj)
       } else {
-        const dir = fso as Directory
+        const dir = fso as DirectoryInfo
         // otherwise, it presents a directory
         if (typeof tag?.main === "string" && dir[tag.main]) {
-          const mainFile = dir[tag.main] as File
+          const mainFile = dir[tag.main] as FileInfo
           const fileObj: FileNode = {
             name,
             isLeaf: true,
@@ -119,15 +108,6 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
     path2File,
     maxKey: key,
     name,
-  }
-}
-
-function* getFSO(tree: [string, Directory[keyof Directory]][]): Iterable<[string, File | Directory]> {
-  for (const entry of tree) {
-    if (entry[0] === "*hide" || entry[0] === "*tag") {
-      continue
-    }
-    yield entry as [string, File | Directory]
   }
 }
 
