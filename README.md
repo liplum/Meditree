@@ -102,7 +102,7 @@ interface File {
   "*type": string
   "*tag"?: Record<string, number | string | boolean>
   "*hide"?: boolean
-  size?: string
+  size?: number
 }
 
 interface Directory {
