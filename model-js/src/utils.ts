@@ -6,8 +6,10 @@ import type { FileInfo, DirectoryInfo } from "./model.js"
  * @param fso The object to parse as a file.
  * @returns The parsed file information or undefined.
  */
-export function parseFile(fso: FileInfo | DirectoryInfo): FileInfo | undefined {
-  if (typeof fso["*type"] === "string") return fso as FileInfo
+export function parseFile(
+  fso: FileInfo | DirectoryInfo | undefined | null
+): FileInfo | undefined {
+  if (isFile(fso)) return fso
   else return
 }
 
@@ -17,8 +19,10 @@ export function parseFile(fso: FileInfo | DirectoryInfo): FileInfo | undefined {
  * @param fso The object to parse as a directory.
  * @returns The parsed directory information or undefined.
  */
-export function parseDirectory(fso: FileInfo | DirectoryInfo): DirectoryInfo | undefined {
-  if (fso["*type"] === undefined) return fso as DirectoryInfo
+export function parseDirectory(
+  fso: FileInfo | DirectoryInfo | any
+): DirectoryInfo | undefined {
+  if (isDirectory(fso)) return fso
   else return
 }
 
@@ -28,7 +32,11 @@ export function parseDirectory(fso: FileInfo | DirectoryInfo): DirectoryInfo | u
  * @param fso The object to check.
  * @returns True if the object is a file, false otherwise.
  */
-export function isFile(fso: FileInfo | DirectoryInfo): fso is FileInfo {
+export function isFile(
+  fso: FileInfo | DirectoryInfo | any
+): fso is FileInfo {
+  if (!fso) return false
+  if (typeof fso !== "object") return false
   if (typeof fso["*type"] === "string") return true
   else return false
 }
@@ -39,7 +47,11 @@ export function isFile(fso: FileInfo | DirectoryInfo): fso is FileInfo {
  * @param fso The object to check.
  * @returns True if the object is a directory, false otherwise.
  */
-export function isDirectory(fso: FileInfo | DirectoryInfo): fso is DirectoryInfo {
+export function isDirectory(
+  fso: FileInfo | DirectoryInfo | any
+): fso is DirectoryInfo {
+  if (!fso) return false
+  if (typeof fso !== "object") return false
   if (fso["*type"] === undefined) return true
   else return false
 }
@@ -83,4 +95,45 @@ export function* extractFromDirectory(
     }
     yield entry as [string, FileInfo | DirectoryInfo]
   }
+}
+
+/**
+ * Retrieves a subentry (file or directory) from the specified directory.
+ * @param dir The directory from which to retrieve the subentry.
+ * @param name The name of the subentry to retrieve.
+ * @returns The retrieved subentry (FileInfo or DirectoryInfo) or undefined if not found.
+ */
+export function getSubentry(
+  dir: DirectoryInfo, name: string | undefined | null
+): FileInfo | DirectoryInfo | undefined {
+  if (!name || name === "*tag" || name === "*hide") return
+  return dir[name] as FileInfo | DirectoryInfo | undefined
+}
+
+/**
+ * Retrieves a sub-file from the specified directory.
+ * @param dir The directory from which to retrieve the sub-file.
+ * @param name The name of the sub-file to retrieve.
+ * @returns The retrieved sub-file (FileInfo) or undefined if not found or not a file.
+ */
+export function getSubfile(
+  dir: DirectoryInfo, name: string | undefined | null
+): FileInfo | undefined {
+  const sub = getSubentry(dir, name)
+  if (isFile(sub)) return sub
+  else return
+}
+
+/**
+ * Retrieves a sub-directory from the specified directory.
+ * @param dir The directory from which to retrieve the sub-directory.
+ * @param name The name of the sub-directory to retrieve.
+ * @returns The retrieved sub-directory (DirectoryInfo) or undefined if not found or not a directory.
+ */
+export function getSubdir(
+  dir: DirectoryInfo, name: string | undefined | null
+): DirectoryInfo | undefined {
+  const sub = getSubentry(dir, name)
+  if (isDirectory(sub)) return sub
+  else return
 }
