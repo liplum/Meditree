@@ -3,7 +3,7 @@ import { type MeditreePlugin } from "../server.js"
 
 interface MinifyPluginConfig {
   /**
-   * Remove hiden files and folders from entire tree.
+   * Remove hidden files and folders from entire tree.
    * True by default.
    */
   removeHidden?: boolean

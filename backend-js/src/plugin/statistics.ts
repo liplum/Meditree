@@ -29,9 +29,9 @@ export default function StatisticsPlugin(config: StatisticsPluginConfig): Meditr
       statistics = container.get(TYPE.StatisticsStorage)
       const events = container.get(MeditreeType.Events)
       const users = container.tryGet(AuthType.UserStorage)
-      events.on("file-requested", async (req: Request & Partial< WithUser>, res, file, vitrualPath) => {
-        await statistics.increment(vitrualPath)
-        await statistics.setLastView(vitrualPath, new Date())
+      events.on("file-requested", async (req: Request & Partial< WithUser>, res, file, virtualPath) => {
+        await statistics.increment(virtualPath)
+        await statistics.setLastView(virtualPath, new Date())
         if (req.user && users) {
           req.user.viewTimes++
           await users.updateUser(req.user)

@@ -33,7 +33,7 @@ export interface AppConfig {
    */
   fileType: Record<string, string>
   /**
-   * Plguin name/url to its configuration.
+   * Plugin name/url to its configuration.
    */
   plugin?: Record<string, Record<string, any> | boolean>
   ignore: string[]

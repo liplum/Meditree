@@ -40,7 +40,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   const jwtExpiration = config.jwtExpiration ?? "7d"
   const register = config.register
   const jwtSecret = config.jwtSecret ?? uuidv4()
-  log.info(`JWT secret: "${jwtSecret}", expration: "${jwtExpiration}".`)
+  log.info(`JWT secret: "${jwtSecret}", expiration: "${jwtExpiration}".`)
   return {
     onRegisterService(container) {
       storage = container.get(TYPE.UserStorage)

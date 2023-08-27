@@ -58,7 +58,7 @@ export class LocalFileTree implements FileTreeLike {
   hidden?: boolean
   private readonly name2File = new Map<string, LocalFile | LocalFileTree>()
   /**
-   * If `path` is undefined, it indicates this file tree is vitrual.
+   * If `path` is undefined, it indicates this file tree is virtual.
    */
   readonly path?: string
   readonly name: string

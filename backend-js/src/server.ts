@@ -385,7 +385,7 @@ export interface MeditreePlugin {
 }
 
 export interface MeditreeEvents extends EventEmitter {
-  on(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, vitrualPath: string) => void | Promise<void>): this
-  off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, vitrualPath: string) => void | Promise<void>): this
-  emit(event: "file-requested", req: Request, res: Response, file: LocalFile, vitrualPath: string): boolean
+  on(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, virtualPath: string) => void | Promise<void>): this
+  off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, virtualPath: string) => void | Promise<void>): this
+  emit(event: "file-requested", req: Request, res: Response, file: LocalFile, virtualPath: string): boolean
 }
