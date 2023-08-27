@@ -15,8 +15,8 @@ dependencies:
     specifier: ^11.10.6
     version: 11.10.6(@emotion/react@11.10.6)(@types/react@18.2.15)(react@18.2.0)
   '@liplum/meditree-model':
-    specifier: ^1.0.0
-    version: 1.0.0
+    specifier: ^1.2.0
+    version: 1.2.0
   '@mui/icons-material':
     specifier: ^5.11.11
     version: 5.11.11(@mui/material@5.11.13)(@types/react@18.2.15)(react@18.2.0)
@@ -863,8 +863,8 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
-  /@liplum/meditree-model@1.0.0:
-    resolution: {integrity: sha512-Ropue/4k2wtgCFr3laHO5Ic7CUqT7I2O4/6eAR5UMdBkSb3xc4nUYp6L5p6k3LFdcHAvOKmrkbcAvndUNOsDNg==}
+  /@liplum/meditree-model@1.2.0:
+    resolution: {integrity: sha512-P9gAgic3x4G07e5MetXNTCaJw+sX3tnkpgDvPdVo945KiAx4VtlQEITxsp1kiL8oWED9J/+tqe7w5SACZ0k4xA==}
     dev: false
 
   /@mapbox/hast-util-table-cell-style@0.2.0:

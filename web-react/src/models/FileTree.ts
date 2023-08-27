@@ -1,4 +1,4 @@
-import { DirectoryInfo, FileInfo, extractFromDirectory } from "@liplum/meditree-model"
+import { DirectoryInfo, DirectoryTag, extractFromDirectory, getSubfile, isDirectory, isFile } from "@liplum/meditree-model"
 
 export interface FileTreePayload {
   name: string
@@ -44,15 +44,22 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
   }
   const key2File = new Map<number, FileNode>()
   const path2File = new Map<string, FileNode>()
+  createNode(rootRenderTree, root)
+  return {
+    renderTree: rootRenderTree,
+    key2File,
+    path2File,
+    maxKey: key,
+    name,
+  }
+  
   function createNode(parentNode: DirectoryNode, curDir: DirectoryInfo) {
     const entries = Object.entries(curDir)
     reorder(entries)
-    for (const [name, fso] of extractFromDirectory(entries)) {
-      const tag = fso["*tag"]
+    for (const [name, file] of extractFromDirectory(entries)) {
       const curKey = key++
       // if file has a type, it presents a file
-      if (typeof fso["*type"] === "string") {
-        const file = fso as FileInfo
+      if (isFile(file)) {
         // fileObj is for both TreeView component and actual FileTree.
         const fileObj: FileNode = {
           name,
@@ -68,20 +75,20 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
         path2File.set(fileObj.path, fileObj)
         key2File.set(curKey, fileObj)
         parentNode.children.push(fileObj)
-      } else {
-        const dir = fso as DirectoryInfo
+      } else if (isDirectory(file)) {
         // otherwise, it presents a directory
-        if (typeof tag?.main === "string" && dir[tag.main]) {
-          const mainFile = dir[tag.main] as FileInfo
+        const mainName = file["*tag"]?.[DirectoryTag.main]
+        const mainFi = getSubfile(file, mainName)
+        if (mainName && mainFi) {
           const fileObj: FileNode = {
             name,
             isLeaf: true,
             title: name,
             key: curKey,
             path: `${parentNode.path}/${name}`,
-            url: `file/${parentNode.path}/${name}/${tag.main}`,
-            type: mainFile["*type"],
-            size: mainFile.size,
+            url: `file/${parentNode.path}/${name}/${mainName}`,
+            type: mainFi["*type"],
+            size: mainFi.size,
             tracking: [...parentNode.tracking, curKey],
           }
           path2File.set(fileObj.path, fileObj)
@@ -96,18 +103,10 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
             tracking: [...parentNode.tracking, curKey],
           }
           parentNode.children.push(dirObj)
-          createNode(dirObj, dir)
+          createNode(dirObj, file)
         }
       }
     }
-  }
-  createNode(rootRenderTree, root)
-  return {
-    renderTree: rootRenderTree,
-    key2File,
-    path2File,
-    maxKey: key,
-    name,
   }
 }
 
