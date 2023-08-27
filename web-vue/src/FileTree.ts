@@ -1,4 +1,4 @@
-import { FileInfo, DirectoryInfo, extractFromDirectory } from "@liplum/meditree-model";
+import { FileInfo, DirectoryInfo, extractFromDirectory, isFile, isDirectory, DirectoryTag, getSubfile } from "@liplum/meditree-model";
 export interface FileSystemObject {
   parent?: DirectoryObject
   name: string;
@@ -79,16 +79,15 @@ function parseDirectory(name: string, directory: DirectoryInfo, parent?: Directo
   dir.path = parent && !parent.isRoot ? `${parent.path}/${name}` : name
   dir.hidden = directory["*hide"] || false
   for (const [name, file] of extractFromDirectory(Object.entries(directory))) {
-    if (file.hasOwnProperty("*type")) {
+    if (isFile(file)) {
       // Parse as file
-      dir.addChild(parseFile(name, file as FileInfo, dir))
-    } else {
+      dir.addChild(parseFile(name, file, dir))
+    } else if (isDirectory(file)) {
       // Parse as directory
-      const tag = file["*tag"]
       // if it has an entry point.
-      if (typeof tag?.main === "string") {
-        const mainName = tag.main
-        const mainFi = file[mainName]
+      const mainName = file["*tag"]?.[DirectoryTag.main]
+      const mainFi = getSubfile(file, mainName)
+      if (mainName && mainFi) {
         const fi = new FileObject()
         fi.parent = dir
         fi.name = name
@@ -99,7 +98,7 @@ function parseDirectory(name: string, directory: DirectoryInfo, parent?: Directo
         fi.size = mainFi.size
         dir.addChild(fi)
       } else {
-        const subDir = parseDirectory(name, file as DirectoryInfo, dir)
+        const subDir = parseDirectory(name, file, dir)
         dir.addChild(subDir)
       }
     }
