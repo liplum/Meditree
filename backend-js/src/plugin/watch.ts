@@ -87,8 +87,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   async rebuildFileTree(): Promise<void> {
     this.shouldRebuild = false
     const timer = new Timer()
-    const timerLabel = `Rebuilding cost of "${this.root}"`
-    timer.start(timerLabel)
+    timer.start()
     const tree = await createFileTreeFrom({
       name: this.name,
       root: this.root,
@@ -96,7 +95,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
       includes: this.fileFilter,
       ignoreEmptyDir: true,
     })
-    timer.stop(timerLabel, this.log?.info)
+    this.log?.info(`Spent ${timer.stop()} ms to rebuild "${this.root}"`)
     this.rebuildCounter = 0
     this.fileTree = tree
     this.emit("rebuild", tree)
