@@ -15,27 +15,61 @@ const mainDef = [
 const mainCmd = commandLineArgs(mainDef, { stopAtFirstUnknown: true })
 let argv = mainCmd._unknown || []
 
-if (mainCmd.cmd === "get") {
-  const randomFileName = `${(new Date).getTime()}.m3u8`
+switch (mainCmd.cmd) {
+  case "get":
+    await get(argv)
+    break
+  case "gen":
+    await gen(argv)
+    break
+}
+
+async function get(argv) {
   const getDef = [
-    { name: "url", defaultOption: true },
-    { name: "output", defaultValue: randomFileName, alias: "o" },
-    { name: "abs", defaultValue: true, type: Boolean }
+    { name: "cmd", defaultOption: true }
   ]
-  const opt = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
-  const url = opt.url
-  const converted = opt.abs
-    ? await convertRelativeUrlsToAbsolute(url)
-    : await fetchTextFile(url)
-  let outputPath = opt.output
-  if (fs.statSync(outputPath).isDirectory()) {
-    outputPath = join(outputPath, randomFileName)
+  const getCmd = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
+  switch (getCmd.cmd) {
+    case "m3u8":
+      await getM3u8(argv)
+      break
+    case "ts":
+      await getTs(argv)
+      break
   }
-  if (extname(outputPath) !== ".m3u8") {
-    outputPath = `${outputPath}.m3u8`
+  async function getM3u8(argv) {
+    const randomFileName = `${(new Date).getTime()}.m3u8`
+    const getDef = [
+      { name: "url", defaultOption: true },
+      { name: "output", defaultValue: randomFileName, alias: "o" },
+      { name: "abs", defaultValue: true, type: Boolean }
+    ]
+    const opt = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
+    const url = opt.url
+    const converted = opt.abs
+      ? await convertRelativeUrlsToAbsolute(url)
+      : await fetchTextFile(url)
+    let outputPath = opt.output
+    if (fs.statSync(outputPath).isDirectory()) {
+      outputPath = join(outputPath, randomFileName)
+    }
+    if (extname(outputPath) !== ".m3u8") {
+      outputPath = `${outputPath}.m3u8`
+    }
+    await writeFile(outputPath, converted)
   }
-  await writeFile(outputPath, converted)
-} else if (mainCmd.cmd === "gen") {
+  async function getTs(argv) {
+    const getDef = [
+      { name: "url", defaultOption: true },
+      { name: "output", defaultValue: randomFileName, alias: "o" },
+      { name: "abs", defaultValue: true, type: Boolean }
+    ]
+    // TODO: finish this
+    console.log(argv)
+  }
+}
+
+async function gen(argv) {
   const genDef = [
     { name: "path", defaultOption: true, alias: "p" },
     { name: "time", type: Number, defaultValue: 5, alias: "t" },
@@ -145,8 +179,8 @@ async function fetchTextFile(url) {
       let data = ""
       response.on("data", (chunk) => { data += chunk })
       response.on("end", () => { resolve(data) })
-    }).on("error", (error) => { reject(error) });
-  });
+    }).on("error", (error) => { reject(error) })
+  })
 }
 
 async function convertRelativeUrlsToAbsolute(playlistUrl) {
