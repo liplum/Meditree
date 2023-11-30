@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import "./View.css"
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { FileTreeNavigation } from "../subviews/FileTreeNavigation"

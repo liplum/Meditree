@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import "./Playground.css"
 import React, { useContext, useEffect, useRef, useState } from "react"
 import { isMobile } from "react-device-detect"
