@@ -36,7 +36,7 @@ async function getM3u8(argv) {
   const opt = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
   const content = await fetchTextFile(opt.url)
   const convertedContent = opt.abs
-    ? await convertRelativeUrlsToAbsolute({ playlistUrl: opt.url, content })
+    ? convertRelativeUrlsToAbsolute({ playlistUrl: opt.url, content })
     : content
   let outputPath = opt.output
   if (fs.statSync(outputPath).isDirectory()) {
@@ -71,8 +71,9 @@ async function getTs(argv) {
       { name: "abs", defaultValue: true, type: Boolean }
     ]
     const opt = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
-    console.log(opt)
-    readFile(opt.path)
+    const content = await readFile(opt.path, { encoding: "utf-8" })
+    const tsFileList = extractTsFileUrlListFromText(content)
+    console.log(tsFileList)
     
   }
 
@@ -106,15 +107,6 @@ async function gen(argv) {
         destDir: opt.dest,
       })
     })
-}
-
-async function getTextFromUrlOrFilePath(urlString) {
-  const url = new URL(urlString)
-  if (url.protocol === "file") {
-
-  } else {
-
-  }
 }
 
 async function processOnFileTree(fileOrDirPath, filter, task) {
@@ -209,7 +201,7 @@ async function fetchTextFile(url) {
   })
 }
 
-async function convertRelativeUrlsToAbsolute({ playlistUrl, content }) {
+function convertRelativeUrlsToAbsolute({ playlistUrl, content }) {
   const baseUrl = new URL(playlistUrl)
   const lines = content.trim().split("\n")
   const result = []
@@ -223,4 +215,16 @@ async function convertRelativeUrlsToAbsolute({ playlistUrl, content }) {
     }
   }
   return result.join("\n")
+}
+
+function extractTsFileUrlListFromText(content) {
+  const lines = content.trim().split("\n")
+  const result = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line.startsWith("#")) {
+      result.push(line)
+    }
+  }
+  return result
 }
