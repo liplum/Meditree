@@ -1,5 +1,5 @@
 import https from "https"
-import fs from "fs"
+import fs, { read } from "fs"
 import commandLineArgs from "command-line-args"
 import { extname, dirname, basename, join } from "path"
 import Ffmpeg from "fluent-ffmpeg"
@@ -14,58 +14,75 @@ const mainDef = [
 ]
 const mainCmd = commandLineArgs(mainDef, { stopAtFirstUnknown: true })
 let argv = mainCmd._unknown || []
-
 switch (mainCmd.cmd) {
-  case "get":
-    await get(argv)
+  case "get-index":
+    await getM3u8(argv)
+    break
+  case "get-ts":
+    await getTs(argv)
     break
   case "gen":
     await gen(argv)
     break
 }
 
-async function get(argv) {
+async function getM3u8(argv) {
+  const defaultFile = `${(new Date).getTime()}.m3u8`
   const getDef = [
-    { name: "cmd", defaultOption: true }
+    { name: "url", defaultOption: true },
+    { name: "output", defaultValue: defaultFile, alias: "o" },
+    { name: "abs", defaultValue: true, type: Boolean }
   ]
-  const getCmd = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
-  switch (getCmd.cmd) {
-    case "m3u8":
-      await getM3u8(argv)
+  const opt = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
+  const content = await fetchTextFile(opt.url)
+  const convertedContent = opt.abs
+    ? await convertRelativeUrlsToAbsolute({ playlistUrl: opt.url, content })
+    : content
+  let outputPath = opt.output
+  if (fs.statSync(outputPath).isDirectory()) {
+    outputPath = join(outputPath, defaultFile)
+  }
+  if (extname(outputPath) !== ".m3u8") {
+    outputPath = `${outputPath}.m3u8`
+  }
+  await writeFile(outputPath, convertedContent)
+}
+
+async function getTs(argv) {
+  const defaultFolder = `${(new Date).getTime()}`
+  const getDef = [
+    { name: "cmd", defaultOption: true, defaultValue: "url" }
+  ]
+  const getTsCmd = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
+  let argv2 = getTsCmd._unknown || []
+  switch (getTsCmd.cmd) {
+    case "path":
+      await getTsPath(argv2)
       break
-    case "ts":
-      await getTs(argv)
+    case "url":
+      await getTsUrl(argv2)
       break
   }
-  async function getM3u8(argv) {
-    const randomFileName = `${(new Date).getTime()}.m3u8`
+
+  async function getTsPath(argv) {
     const getDef = [
-      { name: "url", defaultOption: true },
-      { name: "output", defaultValue: randomFileName, alias: "o" },
+      { name: "path", defaultOption: true },
+      { name: "output", defaultValue: defaultFolder, alias: "o" },
       { name: "abs", defaultValue: true, type: Boolean }
     ]
     const opt = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
-    const url = opt.url
-    const converted = opt.abs
-      ? await convertRelativeUrlsToAbsolute(url)
-      : await fetchTextFile(url)
-    let outputPath = opt.output
-    if (fs.statSync(outputPath).isDirectory()) {
-      outputPath = join(outputPath, randomFileName)
-    }
-    if (extname(outputPath) !== ".m3u8") {
-      outputPath = `${outputPath}.m3u8`
-    }
-    await writeFile(outputPath, converted)
+    console.log(opt)
+    readFile(opt.path)
+    
   }
-  async function getTs(argv) {
+
+  async function getTsUrl(argv) {
     const getDef = [
       { name: "url", defaultOption: true },
-      { name: "output", defaultValue: randomFileName, alias: "o" },
+      { name: "output", defaultValue: defaultFolder, alias: "o" },
       { name: "abs", defaultValue: true, type: Boolean }
     ]
-    // TODO: finish this
-    console.log(argv)
+    const opt = commandLineArgs(getDef, { argv, stopAtFirstUnknown: true })
   }
 }
 
@@ -89,6 +106,15 @@ async function gen(argv) {
         destDir: opt.dest,
       })
     })
+}
+
+async function getTextFromUrlOrFilePath(urlString) {
+  const url = new URL(urlString)
+  if (url.protocol === "file") {
+
+  } else {
+
+  }
 }
 
 async function processOnFileTree(fileOrDirPath, filter, task) {
@@ -183,10 +209,9 @@ async function fetchTextFile(url) {
   })
 }
 
-async function convertRelativeUrlsToAbsolute(playlistUrl) {
-  const text = await fetchTextFile(playlistUrl)
+async function convertRelativeUrlsToAbsolute({ playlistUrl, content }) {
   const baseUrl = new URL(playlistUrl)
-  const lines = text.trim().split("\n")
+  const lines = content.trim().split("\n")
   const result = []
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
