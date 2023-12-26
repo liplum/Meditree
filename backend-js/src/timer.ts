@@ -46,7 +46,7 @@ export interface LoopTask {
 export function createLoopTask(callback: (duration: number) => void): LoopTask {
   let lastTime = new Date()
 
-  let timer: NodeJS.Timer | null = setInterval(() => {
+  let timer: NodeJS.Timeout | null = setInterval(() => {
     const cur = new Date()
     const duration = cur.getTime() - lastTime.getTime()
     lastTime = cur

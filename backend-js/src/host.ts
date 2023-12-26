@@ -1,6 +1,6 @@
 import fs from "fs"
 import path from "path"
-import minimatch, { type MinimatchOptions } from "minimatch"
+import { minimatch, type MinimatchOptions } from "minimatch"
 import { type FileTreeLike, LocalFile, type FileType, type FileTreeJson } from "./file.js"
 import { LocalFileTree } from "./file.js"
 import EventEmitter from "events"
