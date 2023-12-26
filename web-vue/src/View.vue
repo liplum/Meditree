@@ -15,7 +15,7 @@ _root.name = "Root"
 const root = ref(_root)
 // for testing
 onMounted(async () => {
-  const res = await fetch(`/list`)
+  const res = await fetch(`/api/list`)
   if (res.ok) {
     const json = await res.json()
     const fileTree = parseFileTree(json)

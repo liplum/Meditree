@@ -67,7 +67,7 @@ function parseFile(name: string, file: FileInfo, parent?: DirectoryObject): File
   fi.type = file["*type"]
   fi.hidden = file["*hide"] || false
   fi.path = parent ? `${parent.path}/${name}` : name
-  fi.url = `file/${fi.path}`
+  fi.url = `/api/file/${fi.path}`
   fi.size = file.size
   return fi
 }
@@ -94,7 +94,7 @@ function parseDirectory(name: string, directory: DirectoryInfo, parent?: Directo
         fi.type = mainFi["*type"]
         fi.hidden = file["*hide"] || false
         fi.path = `${dir.path}/${name}`
-        fi.url = `file/${dir.path}/${name}/${mainName}`
+        fi.url = `/api/file/${dir.path}/${name}/${mainName}`
         fi.size = mainFi.size
         dir.addChild(fi)
       } else {

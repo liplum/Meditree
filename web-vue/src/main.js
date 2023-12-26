@@ -45,7 +45,7 @@ const router = createRouter({
     {
       path: '/', component: Login, beforeEnter: async (to, from, next) => {
         // try to verify the jwt, or the backend doesn't require jwt.
-        const validationRes = await fetch("/verify")
+        const validationRes = await fetch("/api/verify")
         if (validationRes.ok) {
           next("/view")
         } else {

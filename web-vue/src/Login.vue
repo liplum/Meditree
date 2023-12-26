@@ -25,7 +25,7 @@ async function login(event) {
   }
   isLogingIn.value = true
   try {
-    const loginRes = await fetch("/login", {
+    const loginRes = await fetch("/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
