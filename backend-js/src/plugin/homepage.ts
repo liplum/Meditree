@@ -1,5 +1,5 @@
 import { type FileTreeJson, type FileJson } from "../file.js"
-import { createLogger } from "@liplum/log"
+import pino from "pino"
 import { type FileTreeManager } from "../manager.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
 import express, { type RequestHandler } from "express"
@@ -19,7 +19,7 @@ interface HomepagePluginConfig {
 }
 
 export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
-  const log = createLogger("Homepage")
+  const log = pino({ name: "Homepage" })
   const root = config.root
   const requireAuth = config.requireAuth ?? true
   if (root) {

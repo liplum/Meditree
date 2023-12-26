@@ -16,7 +16,6 @@
   "author": "Liplum",
   "license": "ISC",
   "dependencies": {
-    "@liplum/log": "^0.0.1",
     "@liplum/meditree-model": "^1.2.0",
     "bytes": "^3.1.2",
     "chalk": "^5.2.0",
@@ -31,6 +30,7 @@
     "mongodb": "^6.3.0",
     "ms": "^2.1.3",
     "node-json-db": "^2.3.0",
+    "pino": "^8.17.2",
     "source-map-support": "^0.5.21",
     "uuid": "^9.0.1",
     "ws": "^8.14.2"

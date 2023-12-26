@@ -2,7 +2,7 @@
 import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
 import { v4 as uuidv4 } from "uuid"
 import jwt, { type JwtPayload } from "jsonwebtoken"
-import { createLogger } from "@liplum/log"
+import pino from "pino"
 import { type Request } from "express"
 import { token } from "../ioc.js"
 
@@ -28,7 +28,7 @@ interface AuthPluginConfig {
 
 export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
   let storage: UserStorageService
-  const log = createLogger("Auth")
+  const log = pino({ name: "Auth" })
   const jwtExpiration = config.jwtExpiration ?? "7d"
   const register = config.register
   const jwtSecret = config.jwtSecret ?? uuidv4()

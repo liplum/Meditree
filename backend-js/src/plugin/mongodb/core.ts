@@ -1,7 +1,7 @@
 import { type Db, MongoClient, type MongoClientOptions } from "mongodb"
 import { type MeditreePlugin } from "../../server.js"
 import { token } from "../../ioc.js"
-import { createLogger } from "@liplum/log"
+import pino from "pino"
 
 interface MongoDbPluginConfig {
   /**
@@ -26,7 +26,7 @@ export const TYPE = {
 export default function MongoDbPlugin(config: MongoDbPluginConfig): MeditreePlugin {
   const dbUrl = config.url ?? "mongodb://localhost:27017"
   const database = config.database ?? "meditree"
-  const log = createLogger("MongoDB")
+  const log = pino({ name: "MongoDB" })
   let client: MongoClient
   return {
     async init() {

@@ -5,7 +5,7 @@ import path from "path"
 import { pathToFileURL } from "url"
 import commandLineArgs from "command-line-args"
 import { File as FileDelegate } from "./file.js"
-import { createLogger } from "@liplum/log"
+import pino from "pino"
 import fs from "fs"
 import { resolveAppStoragePath } from "./env.js"
 
@@ -14,7 +14,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const options = commandLineArgs([
     { name: "config", alias: "i", type: String, defaultOption: true },
   ])
-  const log = createLogger("Bootstrap")
+  const log = pino({ name: "Bootstrap" })
   // To try finding the config file in following locations:
   // 1. the specific path passed by command line arguments.
   // 2. the default path in user home: "~/.meditree/config.json"

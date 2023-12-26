@@ -6,7 +6,7 @@ import type fs from "fs"
 import { TYPE } from "../server.js"
 import EventEmitter from "events"
 import { parseTime } from "../utils.js"
-import { type Logger } from "@liplum/log"
+import { type Logger } from "pino"
 import { type LoopTask, createLoopTask, Timer } from "../timer.js"
 
 interface WatchPluginConfig {
@@ -74,7 +74,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.fileWatcher = chokidar.watch(this.root, {
       ignoreInitial: true,
     }).on("all", (event, filePath) => {
-      this.log?.verbose(`[${event}] "${filePath}"`)
+      this.log?.trace(`[${event}] "${filePath}"`)
       // const relative = path.relative(this.root, filePath)
       if (event === "add" || event === "unlink") {
         if (this.filePathClassifier(filePath) == null) return

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { createLogger, type Logger } from "@liplum/log"
+import pino from "pino"
 import { type FileTreeLike, type FileTreeJson, type LocalFile } from "./file.js"
 import EventEmitter from "events"
 import { type Readable } from "stream"
@@ -21,7 +21,7 @@ export declare interface FileTreeManager {
 
 export class FileTreeManager extends EventEmitter implements FileTreeLike {
   localTree?: { tree: FileTreeLike, json: FileTreeJson }
-  log: Logger = createLogger("Meditree")
+  log = pino({ name: "Meditree" })
 
   resolveFile(pathParts: string[]): LocalFile | null {
     if (this.localTree) {
