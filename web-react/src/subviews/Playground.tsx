@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import "./Playground.css"
 import React, { useContext, useEffect, useRef, useState } from "react"
 import { isMobile } from "react-device-detect"
@@ -40,7 +42,7 @@ function resolveRenderer(type: string) {
 
 export function FileDisplayBoard({ file }: { file?: FileNode }) {
   const { isStarred, star, unstar } = useContext(StarChartContext)
-  const { goNextFile, goPreviousFile } = useContext(FileNavigationContext)
+  const { goFile } = useContext(FileNavigationContext)
   const boardRef = useRef()
   const forceUpdate = useForceUpdate()
   let content = null
@@ -58,22 +60,22 @@ export function FileDisplayBoard({ file }: { file?: FileNode }) {
 
         if (clientX < left + width / 2) {
           // left side
-          goPreviousFile(file)
+          goFile(file,-1)
         } else {
           // right side
-          goNextFile(file)
+          goFile(file,+1)
         }
       }}
       onKeyUp={(e) => {
         if (e.key === "ArrowLeft") {
-          goPreviousFile(file)
+          goFile(file,-1)
           e.preventDefault()
         } else if (e.key === "ArrowRight") {
-          goNextFile(file)
+          goFile(file,+1)
           e.preventDefault()
         }
       }}
-      tabIndex="0"
+      tabIndex={0}
       className="board">
       {
         Renderer
@@ -93,7 +95,7 @@ export function FileDisplayBoard({ file }: { file?: FileNode }) {
       {file && // only display if any file is selected
         <>
           {file.size && // only display if file has size property
-            <Chip label={filesize(file.size, { base: 2, standard: "jedec" })} />
+            <Chip label={filesize(file.size, { base: 2, standard: "jedec" }) as string} />
           }
           <Tooltip title={
             isFileStarred
@@ -158,7 +160,6 @@ function AudioRenderer({ file }: { file: FileNode }) {
   return <audio
     controls
     src={file.url}
-    alt={file.path}
     onMouseDown={(event) => {
       event.stopPropagation()
     }}

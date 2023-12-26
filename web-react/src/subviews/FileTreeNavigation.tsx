@@ -22,28 +22,26 @@ export function FileTreeNavigation({ selectedFile, searchDelegate, delegate }: {
   }, [searchDelegate, delegate])
 
   const theme = useTheme()
-  if (!renderTree) return
+  if (!renderTree) return null
   if (renderTree.children.length <= 0) {
     return <NoFilesIndicator />
   }
-  return (
-    <DirectoryTree
-      style={{
-        backgroundColor: theme.palette.background.paper,
-        color: theme.palette.text.primary,
-        fontSize: "1.2rem",
-      }}
-      showLine={true}
-      showIcon={true}
-      treeData={renderTree.children}
-      defaultSelectedKeys={selectedFile ? [selectedFile.key] : []}
-      defaultExpandedKeys={selectedFile?.tracking}
-      onSelect={(_keys, info) => {
-        if (info.node.isLeaf) {
-          const newlySelected = info.node
-          navigate(`/view?file=${encodeURIComponent(newlySelected.path)}`)
-        }
-      }}
-    />
-  )
+  return <DirectoryTree
+    style={{
+      backgroundColor: theme.palette.background.paper,
+      color: theme.palette.text.primary,
+      fontSize: "1.2rem",
+    }}
+    showLine={true}
+    showIcon={true}
+    treeData={renderTree.children}
+    defaultSelectedKeys={selectedFile ? [selectedFile.key] : []}
+    defaultExpandedKeys={selectedFile?.tracking}
+    onSelect={(_keys, info) => {
+      if (info.node.isLeaf) {
+        const newlySelected = info.node
+        navigate(`/view?file=${encodeURIComponent(newlySelected.path)}`)
+      }
+    }}
+  />
 }
