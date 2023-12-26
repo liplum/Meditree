@@ -222,19 +222,19 @@ export async function startServer(
   }
 
   // For authentication verification
-  app.get("/verify", authMiddleware, (req, res) => {
+  app.get(`/api/verify`, authMiddleware, (req, res) => {
     res.sendStatus(200).end()
   })
 
   // Phrase 19: express app setup.
-  app.get("/list", authMiddleware, (req, res) => {
+  app.get("/api/list", authMiddleware, (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
     res.send(treeJsonCache)
     res.end()
   })
 
-  app.get("/file(/*)", authMiddleware, async (req, res) => {
+  app.get("/api/file(/*)", authMiddleware, async (req, res) => {
     let path: string = removePrefix(req.baseUrl + req.path, "/file/")
     try {
       path = decodeURIComponent(path)

@@ -20,18 +20,10 @@ interface AuthPluginConfig {
   jwtSecret?: string
   /**
    * No register by default.
-   * If given, the register will be used.
    * 
    * Without the built-in registration, an external server for user management can be used.
    */
-  register?: RegisterConfig
-}
-
-interface RegisterConfig {
-  /**
-   * "/register" by default.
-   */
-  path?: string
+  register?: boolean
 }
 
 export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
@@ -75,7 +67,7 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
       )
     },
     async onRegisterExpressHandler(app) {
-      app.post("/login", async (req, res) => {
+      app.post("/api/login", async (req, res) => {
         const { account, password } = req.body
         if (typeof account !== "string" || typeof password !== "string") {
           res.status(400).send("Invalid Credentials")
@@ -101,9 +93,8 @@ export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
       })
 
       if (register) {
-        const registerPath = register.path ?? "/register"
-        log.info(`User registration hosts on "${registerPath}".`)
-        app.post(registerPath, async (req, res) => {
+        log.info("User registration hosts on \"/api/register\".")
+        app.post("/api/register", async (req, res) => {
           const { account, password } = req.body
           if (!(typeof account === "string" && typeof password === "string")) {
             res.status(400).send("Credentials Invalid")
