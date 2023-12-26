@@ -13,7 +13,7 @@ export class StarChart {
     this.save()
   }
 
-  isStarred(path: string) {
+  isStarred(path: string): boolean {
     return Boolean(this.path2Star[path])
   }
 

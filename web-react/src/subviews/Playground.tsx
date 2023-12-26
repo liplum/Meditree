@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import "./Playground.css"
 import React, { useContext, useEffect, useRef, useState } from "react"
 import { isMobile } from "react-device-detect"
@@ -15,6 +13,7 @@ import { Failed } from "../components/Loading"
 import { filesize } from "filesize"
 import { VideoJS } from "../components/VideoPlayer"
 import { FileNode } from "../models/FileTree"
+import { ErrorBoundary } from "react-error-boundary"
 
 const VideoRenderer = React.memo(VideoRendererImpl)
 
@@ -43,7 +42,7 @@ function resolveRenderer(type: string) {
 export function FileDisplayBoard({ file }: { file?: FileNode }) {
   const { isStarred, star, unstar } = useContext(StarChartContext)
   const { goFile } = useContext(FileNavigationContext)
-  const boardRef = useRef()
+  const boardRef = useRef<HTMLDivElement>(null)
   const forceUpdate = useForceUpdate()
   let content = null
   if (!file) {
@@ -56,22 +55,23 @@ export function FileDisplayBoard({ file }: { file?: FileNode }) {
       onMouseDown={(e) => {
         if (!isMobile) return
         const { clientX } = e
+        if (!boardRef.current) return
         const { left, width } = boardRef.current.getBoundingClientRect()
 
         if (clientX < left + width / 2) {
           // left side
-          goFile(file,-1)
+          goFile(file, -1)
         } else {
           // right side
-          goFile(file,+1)
+          goFile(file, +1)
         }
       }}
       onKeyUp={(e) => {
         if (e.key === "ArrowLeft") {
-          goFile(file,-1)
+          goFile(file, -1)
           e.preventDefault()
         } else if (e.key === "ArrowRight") {
-          goFile(file,+1)
+          goFile(file, +1)
           e.preventDefault()
         }
       }}
@@ -175,15 +175,15 @@ function MarkdownRenderer({ file }: { file: FileNode }) {
     parentDir={pathParts.join("/")}
   />
 }
-function Markdown({ src, alt, parentDir }) {
-  const [markdown, setMarkdown] = useState()
+function Markdown({ src, alt, parentDir }: { src: string, alt: string, parentDir: string }) {
+  const [markdown, setMarkdown] = useState<string>()
 
   useEffect(() => {
     fetch(src)
       .then(response => response.text())
       .then(text => setMarkdown(text))
       .catch(() => setMarkdown(alt))
-  }, [src])
+  }, [alt, src])
   if (!markdown) {
     return <CircularProgress />
   } else {
@@ -206,19 +206,19 @@ function Markdown({ src, alt, parentDir }) {
 }
 
 function PlainTextRenderer({ file }: { file: FileNode }) {
-  const [text, setText] = useState()
+  const [text, setText] = useState<string>("")
 
   useEffect(() => {
     fetch(file.url)
       .then(response => response.text())
       .then(text => setText(text))
-      .catch(() => setText(null))
+      .catch(() => setText(""))
   }, [file.url])
 
   if (!text) {
     return <CircularProgress />
   } else {
-    return <Typography variant="p" component="div"
+    return <Typography component="div"
       style={{
         whiteSpace: "pre-wrap",
         overflowWrap: "break-word",
@@ -227,30 +227,5 @@ function PlainTextRenderer({ file }: { file: FileNode }) {
       }}>
       {text ?? file.path}
     </Typography>
-  }
-}
-
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = { hasError: false }
-  }
-
-  static getDerivedStateFromError(_error) {
-    // Update state so the next render will show the fallback UI.
-    return { hasError: true }
-  }
-
-  componentDidCatch(error, _info) {
-    console.error(error)
-  }
-
-  render() {
-    if (this.state.hasError) {
-      // You can render any custom fallback UI
-      return this.props.fallback
-    }
-
-    return this.props.children
   }
 }

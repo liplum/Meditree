@@ -24,7 +24,7 @@ export const IsDrawerOpenContext = createContext<IsDrawerOpenContext>([false, ()
 
 interface StarChartContext {
   starChart: StarChart
-  isStarred(file: FileNode): boolean
+  isStarred(file?: FileNode): boolean
   star(file: FileNode): void
   unstar(file: FileNode): void
 }
@@ -59,7 +59,7 @@ export function App() {
     async () => requestFileTree({ file: searchParams.get("file") })
   )
   if (error) {
-    if(error.message === "Auth Error") return <Navigate to="/" />
+    if (error.message === "Auth Error") return <Navigate to="/" />
     return <LoadErrorBoundary error={error} />
   }
   if (loading || !delegate) return <Loading />
@@ -131,7 +131,8 @@ function Body({ fileTreeDelegate }: { fileTreeDelegate: FileTreeDelegate }) {
     <StarChartContext.Provider value={{
       starChart,
       isStarred(file) {
-        return file && starChart.isStarred(file.path)
+        if (!file) return false
+        return starChart.isStarred(file.path)
       },
       star(file) {
         const path = file?.path

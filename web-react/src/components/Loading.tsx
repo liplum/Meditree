@@ -26,7 +26,7 @@ export function Failed({ size, color, textSize, text, children }: {
   color?: string
   textSize?: number
   text: string
-  children: React.ReactNode
+  children?: React.ReactNode
 }) {
   const circleSize = size || 100
   const circleColor = color || "#FA0000" // default color is red
