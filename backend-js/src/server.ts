@@ -17,6 +17,7 @@ import { EventEmitter } from "events"
 import path from "path"
 import { resolveAppStoragePath } from "./env.js"
 import fs from "fs"
+import { type MeditreeMeta } from "./meta.js"
 
 export const TYPE = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("Meditree.HostTree"),
@@ -220,6 +221,16 @@ export async function startServer(
   for (const plugin of plugins) {
     await plugin.onRegisterExpressHandler?.(app)
   }
+
+  app.get("/api/meta", (req, res) => {
+    res.status(200)
+    const meta: MeditreeMeta = {
+      name: config.name,
+      capabilities: []
+    }
+    res.json(meta)
+    res.end()
+  })
 
   // For authentication verification
   app.get("/api/verify", authMiddleware, (req, res) => {
