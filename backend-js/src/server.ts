@@ -222,7 +222,7 @@ export async function startServer(
   }
 
   // For authentication verification
-  app.get(`/api/verify`, authMiddleware, (req, res) => {
+  app.get("/api/verify", authMiddleware, (req, res) => {
     res.sendStatus(200).end()
   })
 
@@ -235,7 +235,7 @@ export async function startServer(
   })
 
   app.get("/api/file(/*)", authMiddleware, async (req, res) => {
-    let path: string = removePrefix(req.baseUrl + req.path, "/file/")
+    let path: string = removePrefix(req.baseUrl + req.path, "/api/file/")
     try {
       path = decodeURIComponent(path)
     } catch (e) {

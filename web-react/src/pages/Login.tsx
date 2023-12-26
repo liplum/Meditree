@@ -11,7 +11,7 @@ export function LoginDialog() {
   useEffect(() => {
     // Skip login if jwt is still valid.
     // try to verify the jwt, or the backend doesn't require jwt.
-    fetch("/verify").then(res => {
+    fetch("/api/verify").then(res => {
       if (res.ok) {
         navigate("/view")
       } else {
@@ -31,7 +31,7 @@ function LoginDialogImpl() {
   const [showPassword, setShowPassword] = useState(false)
   const [failedDialogOpen, setFailedDialogOpen] = React.useState(false)
   const onLogin = async () => {
-    const loginRes = await fetch("/login", {
+    const loginRes = await fetch("/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

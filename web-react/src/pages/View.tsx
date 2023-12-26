@@ -37,7 +37,7 @@ export const FileNavigationContext = createContext<FileNavigationContext>({} as 
 async function requestFileTree({ file }: { file?: string | null }): Promise<FileTreeDelegate> {
   const lastPath = decodeURIComponent(file ?? "")
   storage.lastFilePathFromUrl = lastPath ? lastPath : null
-  const res = await fetch("/list", {
+  const res = await fetch("/api/list", {
     method: "GET",
   })
   if (res.ok) {
