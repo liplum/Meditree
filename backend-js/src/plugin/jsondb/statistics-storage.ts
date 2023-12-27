@@ -16,53 +16,58 @@ interface Entry {
 /**
  * Default plugin dependencies: `jsondb`.
  */
-export default function JsonDBStatisticsPlugin(config: JsonDBStatisticsPluginConfig): MeditreePlugin {
-  const collection = config.collection ?? "statistics"
-  return {
-    onRegisterService(container) {
-      const jsondb = container.get(JsonDBType.JsonDB)
-      const statistics = jsondb.loadDB(collection)
-      container.bind(StatisticsType.StatisticsStorage).toValue({
-        async increment(filePath: string) {
-          const path = `/${filePath}`
-          if (await statistics.exists(path)) {
-            const entry: Entry = await statistics.getData(path)
-            entry.view ??= 0
-            entry.view += 1
-            await statistics.push(path, entry)
-          } else {
-            await statistics.push(path, { view: 1 })
-          }
-        },
-        async getViewCount(filePath: string) {
-          const path = `/${filePath}`
-          if (await statistics.exists(`/${path}`)) {
-            const entry: Entry = await statistics.getData(path)
-            return entry.view
-          } else {
-            return
-          }
-        },
-        async getLastView(filePath) {
-          const path = `/${filePath}`
-          if (await statistics.exists(`/${path}`)) {
-            const entry: Entry = await statistics.getData(path)
-            return new Date(entry.lastView)
-          } else {
-            return
-          }
-        },
-        async setLastView(filePath, time) {
-          const path = `/${filePath}`
-          if (await statistics.exists(path)) {
-            const entry: Entry = await statistics.getData(path)
-            entry.lastView = time
-            await statistics.push(path, entry)
-          } else {
-            await statistics.push(path, { lastView: time })
-          }
-        },
-      })
+const JsonDBStatisticsPlugin = {
+  implement: ["statistics-storage"],
+  dependsOn: ["jsondb"],
+  create(config: JsonDBStatisticsPluginConfig): MeditreePlugin {
+    const collection = config.collection ?? "statistics"
+    return {
+      onRegisterService(container) {
+        const jsondb = container.get(JsonDBType.JsonDB)
+        const statistics = jsondb.loadDB(collection)
+        container.bind(StatisticsType.StatisticsStorage).toValue({
+          async increment(filePath: string) {
+            const path = `/${filePath}`
+            if (await statistics.exists(path)) {
+              const entry: Entry = await statistics.getData(path)
+              entry.view ??= 0
+              entry.view += 1
+              await statistics.push(path, entry)
+            } else {
+              await statistics.push(path, { view: 1 })
+            }
+          },
+          async getViewCount(filePath: string) {
+            const path = `/${filePath}`
+            if (await statistics.exists(`/${path}`)) {
+              const entry: Entry = await statistics.getData(path)
+              return entry.view
+            } else {
+              return
+            }
+          },
+          async getLastView(filePath) {
+            const path = `/${filePath}`
+            if (await statistics.exists(`/${path}`)) {
+              const entry: Entry = await statistics.getData(path)
+              return new Date(entry.lastView)
+            } else {
+              return
+            }
+          },
+          async setLastView(filePath, time) {
+            const path = `/${filePath}`
+            if (await statistics.exists(path)) {
+              const entry: Entry = await statistics.getData(path)
+              entry.lastView = time
+              await statistics.push(path, entry)
+            } else {
+              await statistics.push(path, { lastView: time })
+            }
+          },
+        })
+      }
     }
   }
 }
+export default JsonDBStatisticsPlugin

@@ -22,21 +22,25 @@ interface StatisticsPluginConfig {
   statisticsPath?: string
 }
 
-export default function StatisticsPlugin(config: StatisticsPluginConfig): MeditreePlugin {
-  let statistics: StatisticsStorageService
-  return {
-    onRegisterService(container) {
-      statistics = container.get(TYPE.StatisticsStorage)
-      const events = container.get(MeditreeType.Events)
-      const users = container.tryGet(AuthType.UserStorage)
-      events.on("file-requested", async (req: Request & Partial< WithUser>, res, file, virtualPath) => {
-        await statistics.increment(virtualPath)
-        await statistics.setLastView(virtualPath, new Date())
-        if (req.user && users) {
-          req.user.viewTimes++
-          await users.updateUser(req.user)
-        }
-      })
-    },
+const StatisticsPlugin = {
+  dependsOn: ["statistics-storage"],
+  create(config: StatisticsPluginConfig): MeditreePlugin {
+    let statistics: StatisticsStorageService
+    return {
+      onRegisterService(container) {
+        statistics = container.get(TYPE.StatisticsStorage)
+        const events = container.get(MeditreeType.Events)
+        const users = container.tryGet(AuthType.UserStorage)
+        events.on("file-requested", async (req: Request & Partial<WithUser>, res, file, virtualPath) => {
+          await statistics.increment(virtualPath)
+          await statistics.setLastView(virtualPath, new Date())
+          if (req.user && users) {
+            req.user.viewTimes++
+            await users.updateUser(req.user)
+          }
+        })
+      },
+    }
   }
 }
+export default StatisticsPlugin

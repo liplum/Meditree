@@ -32,35 +32,39 @@ export const TYPE = {
   JsonDB: token<JsonDbService>("JsonDB"),
 }
 
-export default function JsonDbPlugin(config: JsonDbPluginConfig): MeditreePlugin {
-  const log = createLogger("JsonDB")
-  const dir = resolveAppStoragePath(config.dir ?? "jsondb")
-  const name2DB = new Map<string, JsonDB>()
-  return {
-    async init() {
-      log.info(`JsonDB will load from "${path.resolve(dir)}".`)
-    },
-    onExit() {
-      log.info("JsonDB closed.")
-    },
-    onRegisterService(container) {
-      container.bind(TYPE.JsonDB).toValue({
-        loadDB(name) {
-          let db = name2DB.get(name)
-          if (db === undefined) {
-            db = new JsonDB(new Config(
-              `${dir}/${name}`,
-              config.saveOnPush,
-              config.humanReadable,
-              "/",
-              config.syncOnSave,
-            ))
-            name2DB.set(name, db)
-            log.info(`"${name}" collection is loaded.`)
+const JsonDbPlugin = {
+  implement: ["jsondb"],
+  create(config: JsonDbPluginConfig): MeditreePlugin {
+    const log = createLogger("JsonDB")
+    const dir = resolveAppStoragePath(config.dir ?? "jsondb")
+    const name2DB = new Map<string, JsonDB>()
+    return {
+      async init() {
+        log.info(`JsonDB will load from "${path.resolve(dir)}".`)
+      },
+      onExit() {
+        log.info("JsonDB closed.")
+      },
+      onRegisterService(container) {
+        container.bind(TYPE.JsonDB).toValue({
+          loadDB(name) {
+            let db = name2DB.get(name)
+            if (db === undefined) {
+              db = new JsonDB(new Config(
+                `${dir}/${name}`,
+                config.saveOnPush,
+                config.humanReadable,
+                "/",
+                config.syncOnSave,
+              ))
+              name2DB.set(name, db)
+              log.info(`"${name}" collection is loaded.`)
+            }
+            return db
           }
-          return db
-        }
-      })
-    },
+        })
+      },
+    }
   }
 }
+export default JsonDbPlugin

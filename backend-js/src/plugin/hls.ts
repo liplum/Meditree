@@ -9,23 +9,26 @@ interface HLSPluginConfig {
   hideTsFile?: boolean
 }
 
-export default function HLSPlugin(config: HLSPluginConfig): MeditreePlugin {
-  const hideTsFile = config.hideTsFile ?? false
-  return {
-    onLocalFileTreeRebuilt(tree) {
-      for (const m3u8Fi of tree.visitFile({
-        fileFilter: (f) => f.type === HLSMediaType,
-        dirFilter: (d) => d.tag?.main === undefined,
-      })) {
-        const dir = m3u8Fi.parent
-        dir.tag ??= {}
-        dir.tag.main = m3u8Fi.name
-        if (hideTsFile) {
-          for (const tsFi of dir.visitFile({ fileFilter: (f) => f !== m3u8Fi })) {
-            tsFi.hidden = true
+const HLSPlugin = {
+  create(config: HLSPluginConfig): MeditreePlugin {
+    const hideTsFile = config.hideTsFile ?? false
+    return {
+      onLocalFileTreeRebuilt(tree) {
+        for (const m3u8Fi of tree.visitFile({
+          fileFilter: (f) => f.type === HLSMediaType,
+          dirFilter: (d) => d.tag?.main === undefined,
+        })) {
+          const dir = m3u8Fi.parent
+          dir.tag ??= {}
+          dir.tag.main = m3u8Fi.name
+          if (hideTsFile) {
+            for (const tsFi of dir.visitFile({ fileFilter: (f) => f !== m3u8Fi })) {
+              tsFi.hidden = true
+            }
           }
         }
       }
     }
   }
 }
+export default HLSPlugin

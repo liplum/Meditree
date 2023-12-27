@@ -18,21 +18,19 @@ import JsonDBUserPlugin from "./plugin/jsondb/user-storage.js"
 import JsonDBStatisticsPlugin from "./plugin/jsondb/statistics-storage.js"
 
 export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>): void {
-  registry.homepage = (config) => HomepagePlugin(config)
-  registry.hls = (config) => HLSPlugin(config)
-  registry.minify = (config) => MinifyPlugin(config)
-  registry.watch = (config) => WatchPlugin(config)
-  registry.limiter = (config) => LimiterPlugin(config)
-
+  registry.homepage = HomepagePlugin
+  registry.hls = HLSPlugin
+  registry.minify = MinifyPlugin
+  registry.watch = WatchPlugin
+  registry.limiter = LimiterPlugin
   // mongoDB
-  registry.mongodb = (config) => MongoDBPlugin(config)
+  registry.mongodb = MongoDBPlugin
   registry["mongodb-user"] = MongoDBUserPlugin
   registry["mongodb-statistics"] = MongoDBStatisticsPlugin
   // JsonDB
-  registry.jsondb = (config) => JsonDBPlugin(config)
+  registry.jsondb = JsonDBPlugin
   registry["jsondb-user"] = JsonDBUserPlugin
   registry["jsondb-statistics"] = JsonDBStatisticsPlugin
-   
   // has dependencies
   registry.auth = AuthPlugin
   registry.statistics = StatisticsPlugin

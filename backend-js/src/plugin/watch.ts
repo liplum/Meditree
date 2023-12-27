@@ -18,17 +18,20 @@ interface WatchPluginConfig {
 /**
  * Watch plugin will watch the root directory changing and frequently rebuild the local file tree.
  */
-export default function WatchPlugin(config: WatchPluginConfig): MeditreePlugin {
-  const rebuildInterval = parseTime(config.rebuildInterval, "10s")
-  return {
-    onRegisterService(container) {
-      container.bind(TYPE.HostTree)
-        .toValue((options) =>
-          new WatchTree(options, rebuildInterval)
-        )
+const WatchPlugin = {
+  create(config: WatchPluginConfig): MeditreePlugin {
+    const rebuildInterval = parseTime(config.rebuildInterval, "10s")
+    return {
+      onRegisterService(container) {
+        container.bind(TYPE.HostTree)
+          .toValue((options) =>
+            new WatchTree(options, rebuildInterval)
+          )
+      }
     }
   }
 }
+export default WatchPlugin
 
 export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   readonly name: string

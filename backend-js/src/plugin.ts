@@ -4,7 +4,7 @@ import { pathToFileURL } from "url"
 export type PluginRegistry<
   TPlugin,
   TConfig extends PluginConfig = any
-> = Record<string, PluginProvider<TPlugin, TConfig>>
+> = Record<string, PluginMeta<TPlugin, TConfig>>
 export interface PluginConfig {
   /**
    * An array of the names of plugins that this plugin depends on.
@@ -20,6 +20,14 @@ export interface PluginConfig {
    */
   [key: string]: any
 }
+export interface PluginMeta<
+  TPlugin,
+  TConfig extends PluginConfig = PluginConfig
+> {
+  implement?: string[]
+  dependsOn?: string[]
+  create: PluginCtor<TPlugin, TConfig>
+}
 /**
  * [PluginCtor] is a function that directly constructs a plugin object.
  */
@@ -28,18 +36,10 @@ export type PluginCtor<
   TConfig extends PluginConfig = PluginConfig
 > = (config: TConfig) => TPlugin
 
-/**
- * A [PluginProvider] consists of [PluginCtor] and [PluginMetaclass].
- */
-export type PluginProvider<
-  TPlugin,
-  TConfig extends PluginConfig = PluginConfig
-> = PluginCtor<TPlugin, TConfig>
-
 async function resolvePluginProvider<TPlugin>(
   builtin: PluginRegistry<TPlugin>,
   name: string
-): Promise<PluginProvider<TPlugin> | undefined> {
+): Promise<PluginMeta<TPlugin> | undefined> {
   const ctor = builtin[name]
   if (ctor) {
     // for built-in plugins
@@ -88,7 +88,7 @@ export async function resolvePluginList<TPlugin>(
     }
   }
 
-  const name2Provider = new Map<string, PluginProvider<TPlugin>>()
+  const name2Meta = new Map<string, PluginMeta<TPlugin>>()
   /**
    * PluginProvider resolution has 3 phrases:
    * Phrase 1: To resolve all PluginProviders. Resolved plugins should be cached.
@@ -103,13 +103,13 @@ export async function resolvePluginList<TPlugin>(
       if (config._depends?.length) {
         config._depends = [...new Set(config._depends)]
       }
-      let provider = name2Provider.get(name)
+      let provider = name2Meta.get(name)
       if (!provider) {
         provider = await resolvePluginProvider(builtin, name)
         if (!provider) {
           throw new Error(`Provider for plugin[${name}] not found.`)
         }
-        name2Provider.set(name, provider)
+        name2Meta.set(name, provider)
       }
     }
   }
@@ -118,7 +118,7 @@ export async function resolvePluginList<TPlugin>(
   for (const [name, config] of Object.entries(name2Conf)) {
     if (config._depends?.length) {
       for (const dp of config._depends) {
-        if (!name2Provider.has(dp)) {
+        if (!name2Meta.has(dp)) {
           const dpConfBody = name2ConfBody[dp]
           if (dpConfBody !== undefined && isPluginDisabled(dpConfBody)) {
             throw new Error(`The dependency[${dp}] of plugin[${name}] was disabled.`)
@@ -158,10 +158,10 @@ export async function resolvePluginList<TPlugin>(
       }
     }
 
-    const provider = name2Provider.get(pluginName)
+    const meta = name2Meta.get(pluginName)
     let plugin: TPlugin
-    if (provider) {
-      plugin = provider(conf)
+    if (meta) {
+      plugin = meta.create(conf)
     } else {
       throw new Error(`Provider for plugin[${pluginName}] not found.`)
     }
