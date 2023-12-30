@@ -49,7 +49,7 @@ export async function startServer(
   const builtinPluginTypes: PluginRegistry<MeditreePlugin> = {}
   registerBuiltinPlugins(builtinPluginTypes)
 
-  // Phrase 5: create IOC container.
+  // Phrase 5: create IoC container.
   const container = new Container()
 
   // Phrase 6: instantiate plugins and respect dependencies.
