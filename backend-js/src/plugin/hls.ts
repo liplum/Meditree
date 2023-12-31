@@ -1,3 +1,4 @@
+import { type PluginMeta } from "../plugin.js"
 import { type MeditreePlugin } from "../server.js"
 
 export const HLSMediaType = "application/x-mpegURL"
@@ -9,8 +10,8 @@ interface HLSPluginConfig {
   hideTsFile?: boolean
 }
 
-const HLSPlugin = {
-  create(config: HLSPluginConfig): MeditreePlugin {
+const HLSPlugin: PluginMeta<MeditreePlugin, HLSPluginConfig> = {
+  create(config) {
     const hideTsFile = config.hideTsFile ?? false
     return {
       onLocalFileTreeRebuilt(tree) {

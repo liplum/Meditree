@@ -4,6 +4,7 @@ import { type FileTreeManager } from "../manager.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
 import express, { type RequestHandler } from "express"
 import fs from "fs"
+import { type PluginMeta } from "../plugin.js"
 
 interface HomepagePluginConfig {
   /**
@@ -18,8 +19,8 @@ interface HomepagePluginConfig {
   requireAuth?: boolean
 }
 
-const HomepagePlugin = {
-  create(config: HomepagePluginConfig): MeditreePlugin {
+const HomepagePlugin: PluginMeta<MeditreePlugin, HomepagePluginConfig> = {
+  create(config) {
     const log = createLogger("Homepage")
     const root = config.root
     const requireAuth = config.requireAuth ?? true

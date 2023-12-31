@@ -4,6 +4,7 @@ import { createLogger } from "@liplum/log"
 import { JsonDB, Config } from "node-json-db"
 import path from "path"
 import { resolveAppStoragePath } from "../../env.js"
+import { type PluginMeta } from "../../plugin.js"
 
 interface JsonDbPluginConfig {
   /**
@@ -32,9 +33,9 @@ export const TYPE = {
   JsonDB: token<JsonDbService>("JsonDB"),
 }
 
-const JsonDbPlugin = {
-  implement: ["jsondb"],
-  create(config: JsonDbPluginConfig): MeditreePlugin {
+const JsonDbPlugin: PluginMeta<MeditreePlugin, JsonDbPluginConfig> = {
+  implements: ["jsondb"],
+  create(config) {
     const log = createLogger("JsonDB")
     const dir = resolveAppStoragePath(config.dir ?? "jsondb")
     const name2DB = new Map<string, JsonDB>()

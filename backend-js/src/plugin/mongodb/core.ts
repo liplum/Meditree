@@ -25,7 +25,7 @@ export const TYPE = {
 }
 
 const MongoDbPlugin: PluginMeta<MeditreePlugin, MongoDbPluginConfig> = {
-  implement: ["mongodb"],
+  implements: ["mongodb"],
   create: (config) => {
     const dbUrl = config.url ?? "mongodb://localhost:27017"
     const database = config.database ?? "meditree"

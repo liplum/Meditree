@@ -8,6 +8,7 @@ import EventEmitter from "events"
 import { parseTime } from "../utils.js"
 import { type Logger } from "@liplum/log"
 import { type LoopTask, createLoopTask, Timer } from "../timer.js"
+import { type PluginMeta } from "../plugin.js"
 
 interface WatchPluginConfig {
   /**
@@ -18,8 +19,8 @@ interface WatchPluginConfig {
 /**
  * Watch plugin will watch the root directory changing and frequently rebuild the local file tree.
  */
-const WatchPlugin = {
-  create(config: WatchPluginConfig): MeditreePlugin {
+const WatchPlugin: PluginMeta<MeditreePlugin, WatchPluginConfig> = {
+  create(config) {
     const rebuildInterval = parseTime(config.rebuildInterval, "10s")
     return {
       onRegisterService(container) {

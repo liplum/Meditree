@@ -3,6 +3,7 @@ import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
 import { type WithUser } from "./auth.js"
 import { type Request } from "express"
 import { TYPE as AuthType } from "./auth.js"
+import { type PluginMeta } from "../plugin.js"
 
 export const TYPE = {
   StatisticsStorage: token<StatisticsStorageService>("Statistics.Storage")
@@ -22,9 +23,9 @@ interface StatisticsPluginConfig {
   statisticsPath?: string
 }
 
-const StatisticsPlugin = {
-  dependsOn: ["statistics-storage"],
-  create(config: StatisticsPluginConfig): MeditreePlugin {
+const StatisticsPlugin: PluginMeta<MeditreePlugin, StatisticsPluginConfig> = {
+  depends: ["statistics-storage"],
+  create(config) {
     let statistics: StatisticsStorageService
     return {
       onRegisterService(container) {

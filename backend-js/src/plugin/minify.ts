@@ -1,4 +1,5 @@
 import { type FileTreeJson, iterateFiles, type FileJson } from "../file.js"
+import { type PluginMeta } from "../plugin.js"
 import { type MeditreePlugin } from "../server.js"
 
 interface MinifyPluginConfig {
@@ -15,8 +16,8 @@ interface MinifyPluginConfig {
 /**
  * Minify plugin affects only file tree json for client side.
  */
-const MinifyPlugin = {
-  create(config: MinifyPluginConfig): MeditreePlugin {
+const MinifyPlugin: PluginMeta<MeditreePlugin, MinifyPluginConfig> = {
+  create(config) {
     const removeHidden = config.removeHidden ?? true
     const removeSize = config.removeSize ?? true
     return {

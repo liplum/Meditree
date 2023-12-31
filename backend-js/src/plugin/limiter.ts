@@ -1,4 +1,5 @@
 import { filterFileTreeJson } from "../file.js"
+import { type PluginMeta } from "../plugin.js"
 import { type MeditreePlugin } from "../server.js"
 import { parseBytes } from "../utils.js"
 import { Transform, type TransformCallback } from "stream"
@@ -19,8 +20,8 @@ interface LimiterPluginConfig {
   throttle?: number | string
 }
 
-const LimiterPlugin = {
-  create(config: LimiterPluginConfig): MeditreePlugin {
+const LimiterPlugin: PluginMeta<MeditreePlugin, LimiterPluginConfig> = {
+  create(config) {
     const maxFileSize = parseBytes(config.maxFileSize, -1)
     const plugin: MeditreePlugin = {}
     if (maxFileSize > 0) {

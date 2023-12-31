@@ -1,3 +1,4 @@
+import { type PluginMeta } from "../../plugin.js"
 import { type MeditreePlugin } from "../../server.js"
 import { TYPE as AuthType, type User } from "../auth.js"
 import { TYPE as JsonDBType } from "./core.js"
@@ -12,10 +13,10 @@ interface JsonDBUserPluginConfig {
 /**
  * Default plugin dependencies: `jsondb`.
  */
-const JsonDbUserPlugin = {
-  implement: ["user-storage"],
-  dependsOn: ["jsondb", "user"],
-  create(config: JsonDBUserPluginConfig): MeditreePlugin {
+const JsonDbUserPlugin: PluginMeta<MeditreePlugin, JsonDBUserPluginConfig> = {
+  implements: ["user-storage"],
+  depends: ["jsondb", "user"],
+  create(config) {
     const collection = config.collection ?? "users"
     function getUserPath(user: User | string): string {
       return typeof user === "string" ? `/${user}` : `/${user.account}`

@@ -24,8 +24,17 @@ export interface PluginMeta<
   TPlugin,
   TConfig extends PluginConfig = PluginConfig
 > {
-  implement?: string[]
-  dependsOn?: string[]
+  /**
+   * The interfaces which this plugin implements
+   */
+  implements?: string[]
+  /**
+   * The interfaces which this plugin depends on
+   */
+  depends?: string[]
+  /**
+   * Create a plugin instance.
+   */
   create: PluginCtor<TPlugin, TConfig>
 }
 /**
@@ -36,14 +45,14 @@ export type PluginCtor<
   TConfig extends PluginConfig = PluginConfig
 > = (config: TConfig) => TPlugin
 
-async function resolvePluginProvider<TPlugin>(
+async function resolvePluginMeta<TPlugin>(
   builtin: PluginRegistry<TPlugin>,
   name: string
 ): Promise<PluginMeta<TPlugin> | undefined> {
-  const ctor = builtin[name]
-  if (ctor) {
+  const meta = builtin[name]
+  if (meta) {
     // for built-in plugins
-    return ctor
+    return meta
   }
   if (fs.existsSync(name)) {
     // for external plugins
@@ -57,6 +66,20 @@ function isPluginDisabled(confBody: PluginConfig | boolean): boolean {
   } else {
     return confBody._disabled === true
   }
+}
+
+/**
+ * If two or more plugins implement the same interface,
+ * @param origin An unordered list of plugin configs
+ * @returns An list of plugin configs in dependency-resolved order
+ */
+function resolvePluginInDependencyOrder<
+TPlugin,
+TConfig extends PluginConfig = any
+>(
+  origin: PluginMeta<TPlugin, TConfig>[]
+): PluginMeta<TPlugin, TConfig>[]{
+  return []
 }
 
 /**
@@ -105,7 +128,7 @@ export async function resolvePluginList<TPlugin>(
       }
       let provider = name2Meta.get(name)
       if (!provider) {
-        provider = await resolvePluginProvider(builtin, name)
+        provider = await resolvePluginMeta(builtin, name)
         if (!provider) {
           throw new Error(`Provider for plugin[${name}] not found.`)
         }

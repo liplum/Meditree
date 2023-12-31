@@ -5,6 +5,7 @@ import jwt, { type JwtPayload } from "jsonwebtoken"
 import { createLogger } from "@liplum/log"
 import { type Request } from "express"
 import { token } from "../ioc.js"
+import { type PluginMeta } from "../plugin.js"
 
 export const TYPE = {
   UserStorage: token<UserStorageService>("Auth.UserStorage"),
@@ -26,9 +27,9 @@ interface AuthPluginConfig {
   register?: boolean
 }
 
-const AuthPlugin = {
-  dependsOn: ["user-storage"],
-  create(config: AuthPluginConfig): MeditreePlugin {
+const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
+  depends: ["user-storage"],
+  create(config) {
     let storage: UserStorageService
     const log = createLogger("Auth")
     const jwtExpiration = config.jwtExpiration ?? "7d"

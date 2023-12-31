@@ -2,6 +2,7 @@ import { type WithId } from "mongodb"
 import { type MeditreePlugin } from "../../server.js"
 import { TYPE as AuthType, type User } from "../auth.js"
 import { TYPE as MongoDBType } from "./core.js"
+import { type PluginMeta } from "../../plugin.js"
 export const HLSMediaType = "application/x-mpegURL"
 interface MongoDDUserPluginConfig {
   /**
@@ -13,10 +14,10 @@ interface MongoDDUserPluginConfig {
 /**
  * Default plugin dependencies: `mongodb`.
  */
-const MongoDBUserPlugin = {
-  implement: ["user-storage"],
-  dependsOn: ["mongodb"],
-  create(config: MongoDDUserPluginConfig): MeditreePlugin {
+const MongoDBUserPlugin: PluginMeta<MeditreePlugin, MongoDDUserPluginConfig> = {
+  implements: ["user-storage"],
+  depends: ["mongodb"],
+  create(config) {
     const collection = config.collection ?? "users"
     return {
       onRegisterService(container) {

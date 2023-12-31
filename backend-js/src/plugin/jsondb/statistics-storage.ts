@@ -1,3 +1,4 @@
+import { type PluginMeta } from "../../plugin.js"
 import { type MeditreePlugin } from "../../server.js"
 import { TYPE as StatisticsType } from "../statistics.js"
 import { TYPE as JsonDBType } from "./core.js"
@@ -16,10 +17,10 @@ interface Entry {
 /**
  * Default plugin dependencies: `jsondb`.
  */
-const JsonDBStatisticsPlugin = {
-  implement: ["statistics-storage"],
-  dependsOn: ["jsondb"],
-  create(config: JsonDBStatisticsPluginConfig): MeditreePlugin {
+const JsonDBStatisticsPlugin: PluginMeta<MeditreePlugin, JsonDBStatisticsPluginConfig> = {
+  implements: ["statistics-storage"],
+  depends: ["jsondb"],
+  create(config) {
     const collection = config.collection ?? "statistics"
     return {
       onRegisterService(container) {
