@@ -126,14 +126,15 @@ export async function resolvePluginList<TPlugin>(
       if (config._depends?.length) {
         config._depends = [...new Set(config._depends)]
       }
-      let provider = name2Meta.get(name)
-      if (!provider) {
-        provider = await resolvePluginMeta(builtin, name)
-        if (!provider) {
+      let meta = name2Meta.get(name)
+      if (!meta) {
+        meta = await resolvePluginMeta(builtin, name)
+        if (!meta) {
           throw new Error(`Provider for plugin[${name}] not found.`)
         }
-        name2Meta.set(name, provider)
+        name2Meta.set(name, meta)
       }
+      name2Meta.set(name, meta)
     }
   }
 
