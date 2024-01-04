@@ -82,12 +82,27 @@ export class Bind<R, TArgs extends any[] = any[]> {
 export class Container {
   private registry = new Map<symbol, Item<any>>()
   private readonly snapshots: typeof this.registry[] = []
+  private _frozen = false
+
+  froze(): void {
+    this._frozen = true
+  }
+
+  public get frozen(): boolean {
+    return this._frozen
+  }
 
   bind<R, TArgs extends any[] = any[]>(token: Token<R, TArgs> | symbol): Bind<R, TArgs> {
+    if (this.frozen) {
+      throw new Error("Container is frozen")
+    }
     return new Bind<R, TArgs>(this.createItem<R, TArgs>(token))
   }
 
   remove(token: Token<any, any> | symbol): this {
+    if (this.frozen) {
+      throw new Error("Container is frozen")
+    }
     if (this.registry.get(getType(token)) === undefined) {
       return this
     }

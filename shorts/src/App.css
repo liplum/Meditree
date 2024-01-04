@@ -1,0 +1,132 @@
+html {
+  scroll-snap-type: y mandatory;
+  font-family: 'Montserrat', sans-serif;
+  background-color: #000;
+}
+
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+.app {
+  height: 100vh;
+  background-color: #000;
+  display: grid;
+  place-items: center;
+}
+
+.container {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
+}
+
+.container::-webkit-scrollbar {
+  display: none;
+}
+
+.container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.top-navbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1;
+}
+
+.top-navbar h2 {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  padding: 0 40px;
+}
+
+.top-navbar h2 span {
+  font-weight: 700;
+  position: relative;
+}
+
+.top-navbar h2 span::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 50%;
+  height: 1px;
+  background-color: #fff;
+  transform: translateX(50%);
+}
+
+
+.top-navbar .icon {
+  font-size: 16px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.bottom-navbar {
+  position: sticky;
+  background-color: #161616;
+  bottom: 0;
+  width: 100%;
+  height: 45px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 100;
+  overflow-y: hidden;
+}
+
+.bottom-navbar .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bottom-navbar .icon {
+  font-size: 18px;
+  color: #d4d3d3;
+}
+
+.bottom-navbar .plus {
+  background-color: #fff;
+  color: #161616;
+  padding: 5px 10px;
+  border-radius: 25%;
+  border-right: 5px solid red;
+  border-left: 5px solid turquoise;
+  font-size: 12px;
+}
+
+.bottom-navbar .item-name {
+  color: #d4d3d3;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.bottom-navbar .active {
+  color: #fff;
+}
+
+.bottom-navbar .notification {
+  position: absolute;
+  top: 0;
+  left: 260px;
+  background-color: red;
+  color: #fff;
+  font-size: 7px;
+  padding: 5px;
+  border-radius: 50%;
+}

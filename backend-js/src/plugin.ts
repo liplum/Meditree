@@ -4,8 +4,7 @@ import { pathToFileURL } from "url"
 export type PluginRegistry<
   TPlugin,
   TConfig extends PluginConfig = any
-> = Record<string, PluginProvider<TPlugin, TConfig>>
-
+> = Record<string, PluginMeta<TPlugin, TConfig>>
 export interface PluginConfig {
   /**
    * An array of the names of plugins that this plugin depends on.
@@ -22,57 +21,56 @@ export interface PluginConfig {
   [key: string]: any
 }
 /**
- * [PluginCtor] is a function that directly constructs a plugin object.
+ * ## Code example
+ * ```ts
+ * const a = PluginMeta{
+ *   implemets: "my-service",
+ * }
+ * const b = PluginMeta{
+ *   depends: "my-service",
+ * }
+ * 
+ * const ordered = resolvePluginsInOrder([b,a])
+ * console.log(ordered) // it's equal to [a, b]
+ * ```
  */
-export type PluginCtor<TPlugin, TConfig extends PluginConfig = PluginConfig> = (config: TConfig) => TPlugin
-
-export type PluginPreprocessor<TConfig extends PluginConfig = PluginConfig> = (name: string, config: TConfig, all: Record<string, PluginConfig>) => void
-/**
- * [PluginMetaclass] is an object that supports some extra phrases such as preprocessing.
- */
-export class PluginMetaclass<TPlugin, TConfig extends PluginConfig = PluginConfig> {
-  create: PluginCtor<TPlugin, TConfig>
-  preprocess?: PluginPreprocessor<TConfig>
-  constructor(create: PluginCtor<TPlugin, TConfig>, preprocess?: PluginPreprocessor<TConfig>) {
-    this.create = create
-    this.preprocess = preprocess
-  }
-
-  static mergeFrom<TPlugin, TConfig extends PluginConfig = PluginConfig>(
-    provider: PluginProvider<TPlugin, TConfig>,
-    preprocess: PluginPreprocessor<TConfig>
-  ): PluginMetaclass<TPlugin, TConfig> {
-    if (provider instanceof PluginMetaclass) {
-      return new PluginMetaclass(
-        provider.create,
-        (name, config, all) => {
-          provider.preprocess?.(name, config, all)
-          preprocess(name, config, all)
-        }
-      )
-    } else {
-      return new PluginMetaclass(
-        provider, preprocess
-      )
-    }
-  }
-}
-/**
- * A [PluginProvider] consists of [PluginCtor] and [PluginMetaclass].
- */
-export type PluginProvider<
+export interface PluginMeta<
   TPlugin,
   TConfig extends PluginConfig = PluginConfig
-> = PluginCtor<TPlugin, TConfig> | PluginMetaclass<TPlugin, TConfig>
+> {
+  /**
+   * The interfaces which this plugin implements.
+   */
+  implements?: string[]
+  /**
+   * The interfaces which this plugin depends on.
+   */
+  depends?: string[]
+  /**
+   * The interfaces which this plugin could optionally depend on.
+   */
+  softDepends?: string[]
+  /**
+   * Create a plugin instance.
+   */
+  create: PluginCtor<TPlugin, TConfig>
+}
+/**
+ * [PluginCtor] is a function that directly constructs a plugin object.
+ */
+export type PluginCtor<
+  TPlugin,
+  TConfig extends PluginConfig = PluginConfig
+> = (config: TConfig) => TPlugin
 
-async function resolvePluginProvider<TPlugin>(
+async function resolvePluginMeta<TPlugin>(
   builtin: PluginRegistry<TPlugin>,
   name: string
-): Promise<PluginProvider<TPlugin> | undefined> {
-  const ctor = builtin[name]
-  if (ctor) {
+): Promise<PluginMeta<TPlugin> | undefined> {
+  const meta = builtin[name]
+  if (meta) {
     // for built-in plugins
-    return ctor
+    return meta
   }
   if (fs.existsSync(name)) {
     // for external plugins
@@ -86,6 +84,20 @@ function isPluginDisabled(confBody: PluginConfig | boolean): boolean {
   } else {
     return confBody._disabled === true
   }
+}
+
+/**
+ * If two or more plugins implement the same interface,
+ * @param origin An unordered list of plugin configs
+ * @returns An list of plugin configs in dependency-resolved order
+ */
+function resolvePluginInDependencyOrder<
+  TPlugin,
+  TConfig extends PluginConfig = any
+>(
+  origin: PluginMeta<TPlugin, TConfig>[]
+): PluginMeta<TPlugin, TConfig>[] {
+  return []
 }
 
 /**
@@ -117,7 +129,7 @@ export async function resolvePluginList<TPlugin>(
     }
   }
 
-  const name2Provider = new Map<string, PluginProvider<TPlugin>>()
+  const name2Meta = new Map<string, PluginMeta<TPlugin>>()
   /**
    * PluginProvider resolution has 3 phrases:
    * Phrase 1: To resolve all PluginProviders. Resolved plugins should be cached.
@@ -132,18 +144,15 @@ export async function resolvePluginList<TPlugin>(
       if (config._depends?.length) {
         config._depends = [...new Set(config._depends)]
       }
-      let provider = name2Provider.get(name)
-      if (!provider) {
-        provider = await resolvePluginProvider(builtin, name)
-        if (!provider) {
+      let meta = name2Meta.get(name)
+      if (!meta) {
+        meta = await resolvePluginMeta(builtin, name)
+        if (!meta) {
           throw new Error(`Provider for plugin[${name}] not found.`)
         }
-        // preprocess if it's the first time that plugin provider is resolved.
-        if (typeof provider === "object") {
-          provider.preprocess?.(name, config, name2Conf)
-        }
-        name2Provider.set(name, provider)
+        name2Meta.set(name, meta)
       }
+      name2Meta.set(name, meta)
     }
   }
 
@@ -151,7 +160,7 @@ export async function resolvePluginList<TPlugin>(
   for (const [name, config] of Object.entries(name2Conf)) {
     if (config._depends?.length) {
       for (const dp of config._depends) {
-        if (!name2Provider.has(dp)) {
+        if (!name2Meta.has(dp)) {
           const dpConfBody = name2ConfBody[dp]
           if (dpConfBody !== undefined && isPluginDisabled(dpConfBody)) {
             throw new Error(`The dependency[${dp}] of plugin[${name}] was disabled.`)
@@ -191,12 +200,10 @@ export async function resolvePluginList<TPlugin>(
       }
     }
 
-    const provider = name2Provider.get(pluginName)
+    const meta = name2Meta.get(pluginName)
     let plugin: TPlugin
-    if (typeof provider === "object") {
-      plugin = provider.create(conf)
-    } else if (typeof provider === "function") {
-      plugin = provider(conf)
+    if (meta) {
+      plugin = meta.create(conf)
     } else {
       throw new Error(`Provider for plugin[${pluginName}] not found.`)
     }

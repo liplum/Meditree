@@ -5,6 +5,7 @@ import jwt, { type JwtPayload } from "jsonwebtoken"
 import { createLogger } from "@liplum/log"
 import { type Request } from "express"
 import { token } from "../ioc.js"
+import { type PluginMeta } from "../plugin.js"
 
 export const TYPE = {
   UserStorage: token<UserStorageService>("Auth.UserStorage"),
@@ -26,93 +27,97 @@ interface AuthPluginConfig {
   register?: boolean
 }
 
-export default function AuthPlugin(config: AuthPluginConfig): MeditreePlugin {
-  let storage: UserStorageService
-  const log = createLogger("Auth")
-  const jwtExpiration = config.jwtExpiration ?? "7d"
-  const register = config.register
-  const jwtSecret = config.jwtSecret ?? uuidv4()
-  log.info(`JWT secret: "${jwtSecret}", expiration: "${jwtExpiration}".`)
-  return {
-    onRegisterService(container) {
-      storage = container.get(TYPE.UserStorage)
-      container.bind(MeditreeType.Auth).toValue(async (req: Request & WithUser, res, next) => {
-        // Get the JWT from the cookie, body or authorization header in a fallback chain.
-        const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
-        if (!token) {
-          res.status(401).send("Token Missing").end()
-          return
-        }
-        // Handle missing token error
-        // Verify the JWT using the secret key
-        try {
-          const jwtPayload = jwt.verify(token, jwtSecret) as JwtPayload
-          const account = jwtPayload.account
-          if (typeof account !== "string") {
-            res.status(401).send("Token Invalid").end()
+const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
+  depends: ["user-storage"],
+  create(config) {
+    let storage: UserStorageService
+    const log = createLogger("Auth")
+    const jwtExpiration = config.jwtExpiration ?? "7d"
+    const register = config.register
+    const jwtSecret = config.jwtSecret ?? uuidv4()
+    log.info(`JWT secret: "${jwtSecret}", expiration: "${jwtExpiration}".`)
+    return {
+      setupService(container) {
+        storage = container.get(TYPE.UserStorage)
+        container.bind(MeditreeType.Auth).toValue(async (req: Request & WithUser, res, next) => {
+          // Get the JWT from the cookie, body or authorization header in a fallback chain.
+          const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
+          if (!token) {
+            res.status(401).send("Token Missing").end()
             return
           }
-          const user = await storage.getUser(account)
-          if (!user) {
-            res.status(401).send("Token Invalid").end()
+          // Handle missing token error
+          // Verify the JWT using the secret key
+          try {
+            const jwtPayload = jwt.verify(token, jwtSecret) as JwtPayload
+            const account = jwtPayload.account
+            if (typeof account !== "string") {
+              res.status(401).send("Token Invalid").end()
+              return
+            }
+            const user = await storage.getUser(account)
+            if (!user) {
+              res.status(401).send("Token Invalid").end()
+              return
+            }
+            req.user = user
+            next()
+          } catch (error) {
+            res.status(401).send("Auth Error").end()
             return
           }
-          req.user = user
-          next()
-        } catch (error) {
-          res.status(401).send("Auth Error").end()
-          return
         }
-      }
-      )
-    },
-    async onRegisterExpressHandler(app) {
-      app.post("/api/login", async (req, res) => {
-        const { account, password } = req.body
-        if (typeof account !== "string" || typeof password !== "string") {
-          res.status(400).send("Invalid Credentials")
-          return
-        }
-        // only finding active staffs
-        const user = await storage.getUser(account)
-        if (!user || user.password !== password) {
-          res.status(401).send("Wrong Credentials")
-          return
-        }
-        // Authenticated and update last login time.
-        user.lastLogin = new Date()
-        await storage.updateUser(user)
-        // Create JWT token
-        const token = jwt.sign({ account }, jwtSecret, {
-          expiresIn: jwtExpiration
-        })
-        // Send token in response and staff info
-        return res.json({
-          jwt: token,
-        })
-      })
-
-      if (register) {
-        log.info("User registration hosts on \"/api/register\".")
-        app.post("/api/register", async (req, res) => {
+        )
+      },
+      async setupMeditree({ app, manager, container }) {
+        app.post("/api/login", async (req, res) => {
           const { account, password } = req.body
-          if (!(typeof account === "string" && typeof password === "string")) {
-            res.status(400).send("Credentials Invalid")
+          if (typeof account !== "string" || typeof password !== "string") {
+            res.status(400).send("Invalid Credentials")
             return
           }
+          // only finding active staffs
           const user = await storage.getUser(account)
-          if (user !== null) {
-            res.status(400).send("Account Exists")
+          if (!user || user.password !== password) {
+            res.status(401).send("Wrong Credentials")
             return
           }
-          await storage.addUser({ account, password, viewTimes: 0 })
-          res.status(200).send("Account Created")
-          return
+          // Authenticated and update last login time.
+          user.lastLogin = new Date()
+          await storage.updateUser(user)
+          // Create JWT token
+          const token = jwt.sign({ account }, jwtSecret, {
+            expiresIn: jwtExpiration
+          })
+          // Send token in response and staff info
+          return res.json({
+            jwt: token,
+          })
         })
+
+        if (register) {
+          log.info("User registration hosts on \"/api/register\".")
+          app.post("/api/register", async (req, res) => {
+            const { account, password } = req.body
+            if (!(typeof account === "string" && typeof password === "string")) {
+              res.status(400).send("Credentials Invalid")
+              return
+            }
+            const user = await storage.getUser(account)
+            if (user !== null) {
+              res.status(400).send("Account Exists")
+              return
+            }
+            await storage.addUser({ account, password, viewTimes: 0 })
+            res.status(200).send("Account Created")
+            return
+          })
+        }
       }
     }
   }
 }
+export default AuthPlugin
 
 export interface WithUser {
   user: User

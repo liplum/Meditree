@@ -1,6 +1,6 @@
 import chokidar from "chokidar"
 import { type LocalFileTree, type FileTreeLike, type FileTreeJson, type LocalFile } from "../file.js"
-import { type IHostTree, type HostTreeOptions, makeFilePathClassifier, makeFSOFilter, type FSOFilter, type FileClassifier, createFileTreeFrom } from "../host.js"
+import { type IHostTree, type HostTreeOptions, makeFilePathClassifier, makeFSOFilter as makePathFilter, type PathFilter, type FileClassifier, createFileTreeFrom, type FileFilter } from "../host.js"
 import { type MeditreePlugin } from "../server.js"
 import type fs from "fs"
 import { TYPE } from "../server.js"
@@ -8,6 +8,7 @@ import EventEmitter from "events"
 import { parseTime } from "../utils.js"
 import { type Logger } from "@liplum/log"
 import { type LoopTask, createLoopTask, Timer } from "../timer.js"
+import { type PluginMeta } from "../plugin.js"
 
 interface WatchPluginConfig {
   /**
@@ -18,17 +19,20 @@ interface WatchPluginConfig {
 /**
  * Watch plugin will watch the root directory changing and frequently rebuild the local file tree.
  */
-export default function WatchPlugin(config: WatchPluginConfig): MeditreePlugin {
-  const rebuildInterval = parseTime(config.rebuildInterval, "10s")
-  return {
-    onRegisterService(container) {
-      container.bind(TYPE.HostTree)
-        .toValue((options) =>
-          new WatchTree(options, rebuildInterval)
-        )
+const WatchPlugin: PluginMeta<MeditreePlugin, WatchPluginConfig> = {
+  create(config) {
+    const rebuildInterval = parseTime(config.rebuildInterval, "10s")
+    return {
+      setupService(container) {
+        container.bind(TYPE.HostTree)
+          .toValue((options) =>
+            new WatchTree(options, rebuildInterval)
+          )
+      }
     }
   }
 }
+export default WatchPlugin
 
 export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   readonly name: string
@@ -38,16 +42,22 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   private fileWatcher: fs.FSWatcher | null = null
   private readonly rebuildInterval: number
   private readonly filePathClassifier: FileClassifier
-  private readonly fileFilter: FSOFilter
+  private readonly pathFilter: PathFilter
+  private readonly fileFilter: FileFilter
   private rebuildCounter = 0
-  constructor({ root, log, name, pattern2FileType, ignorePatterns }: HostTreeOptions, rebuildInterval: number) {
+  constructor({ root, log, name, pattern2FileType, ignorePatterns, fileFilter }: HostTreeOptions, rebuildInterval: number) {
     super()
     this.rebuildInterval = rebuildInterval
     this.root = root
     this.log = log
     this.name = name
     this.filePathClassifier = makeFilePathClassifier(pattern2FileType)
-    this.fileFilter = makeFSOFilter(ignorePatterns)
+    this.pathFilter = makePathFilter(ignorePatterns)
+    this.fileFilter = fileFilter
+  }
+
+  children(): (LocalFile | FileTreeLike)[] {
+    return this.fileTree.children()
   }
 
   toJSON(): FileTreeJson {
@@ -92,7 +102,8 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
       name: this.name,
       root: this.root,
       classifier: this.filePathClassifier,
-      includes: this.fileFilter,
+      includes: this.pathFilter,
+      fileFilter: this.fileFilter,
       ignoreEmptyDir: true,
     })
     this.log?.info(`Spent ${timer.stop()} ms to rebuild "${this.root}"`)

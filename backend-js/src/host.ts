@@ -15,10 +15,11 @@ export interface HostTreeOptions {
   name: string
   pattern2FileType: Record<string, string>
   ignorePatterns: string[]
+  fileFilter: FileFilter
   log?: Logger
 }
 
-export declare interface IHostTree {
+export declare interface IHostTree extends FileTreeLike {
   readonly name: string
   on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this
   off(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this
@@ -34,14 +35,20 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
   private readonly log?: Logger
   private fileTree: LocalFileTree
   private readonly filePathClassifier: FileClassifier
-  private readonly fileFilter: FSOFilter
-  constructor(options: HostTreeOptions) {
+  private readonly pathFilter: PathFilter
+  private readonly fileFilter: FileFilter
+  constructor({ root, log, name, pattern2FileType, ignorePatterns, fileFilter }: HostTreeOptions) {
     super()
-    this.root = options.root
-    this.log = options.log
-    this.name = options.name
-    this.filePathClassifier = makeFilePathClassifier(options.pattern2FileType)
-    this.fileFilter = makeFSOFilter(options.ignorePatterns)
+    this.root = root
+    this.log = log
+    this.name = name
+    this.filePathClassifier = makeFilePathClassifier(pattern2FileType)
+    this.pathFilter = makeFSOFilter(ignorePatterns)
+    this.fileFilter = fileFilter
+  }
+
+  children(): (FileTreeLike | LocalFile)[] {
+    return this.fileTree.children()
   }
 
   toJSON(): FileTreeJson {
@@ -59,7 +66,8 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
       name: this.name,
       root: this.root,
       classifier: this.filePathClassifier,
-      includes: this.fileFilter,
+      includes: this.pathFilter,
+      fileFilter: this.fileFilter,
       ignoreEmptyDir: true,
     })
     this.fileTree = tree
@@ -75,8 +83,9 @@ const minimatchOptions: MinimatchOptions = {
   nocase: true,
 }
 
-export type FSOFilter = (path: string) => boolean
-export function makeFSOFilter(ignorePatterns: string[]): FSOFilter {
+export type PathFilter = (path: string) => boolean
+export type FileFilter = (file: LocalFile) => boolean
+export function makeFSOFilter(ignorePatterns: string[]): PathFilter {
   return (path) => {
     for (const pattern of ignorePatterns) {
       if (minimatch(path, pattern, minimatchOptions)) {
@@ -103,11 +112,14 @@ export function makeFilePathClassifier(fileTypePattern: Record<string, string>):
 export const statAsync = promisify(fs.stat)
 export const readdirAsync = promisify(fs.readdir)
 
-export async function createFileTreeFrom({ name: rootName, root, ignoreEmptyDir, classifier, includes, log }: {
+export async function createFileTreeFrom({
+  name: rootName, root, ignoreEmptyDir, classifier, includes, log, fileFilter
+}: {
   name?: string
   root: string
   classifier: FileClassifier
   includes: (path: string) => boolean
+  fileFilter: (file: LocalFile) => boolean
   /**
    * whether to ignore the empty file tree.
    */
@@ -141,7 +153,9 @@ export async function createFileTreeFrom({ name: rootName, root, ignoreEmptyDir,
             const localFile = new LocalFile(
               tree, fileType, stat.size, fileName, filePath,
             )
-            tree.addFile(localFile)
+            if (fileFilter(localFile)) {
+              tree.addFile(localFile)
+            }
           }
         } else if (stat.isDirectory()) {
           const subtree = tree.createSubtree(fileName, filePath)
@@ -173,6 +187,10 @@ export class EmptyHostTree implements FileTreeLike, IHostTree {
 
   toJSON(): FileTreeJson {
     return {}
+  }
+
+  children(): (FileTreeLike | LocalFile)[] {
+    return []
   }
 
   on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this {
@@ -219,6 +237,10 @@ export class CompoundHostTree extends EventEmitter implements FileTreeLike, IHos
 
   toJSON(): FileTreeJson {
     return this.builtFileTree.toJSON()
+  }
+
+  children(): (FileTreeLike | LocalFile)[] {
+    return Array.from(this.name2Subtree.values()).map(subtree => subtree.hostTree)
   }
 
   addSubtree(subtree: IHostTree): void {

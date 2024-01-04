@@ -1,4 +1,5 @@
 import { filterFileTreeJson } from "../file.js"
+import { type PluginMeta } from "../plugin.js"
 import { type MeditreePlugin } from "../server.js"
 import { parseBytes } from "../utils.js"
 import { Transform, type TransformCallback } from "stream"
@@ -19,25 +20,26 @@ interface LimiterPluginConfig {
   throttle?: number | string
 }
 
-export default function LimiterPlugin(config: LimiterPluginConfig): MeditreePlugin {
-  const maxFileSize = parseBytes(config.maxFileSize, -1)
-  const plugin: MeditreePlugin = {}
-  if (maxFileSize > 0) {
-    plugin.onClientFileTreeUpdated = (fileTree) => {
-      return filterFileTreeJson(fileTree, (file) => {
-        return file.size < maxFileSize
-      })
+const LimiterPlugin: PluginMeta<MeditreePlugin, LimiterPluginConfig> = {
+  create(config) {
+    const maxFileSize = parseBytes(config.maxFileSize, -1)
+    const plugin: MeditreePlugin = {}
+    if (maxFileSize > 0) {
+      plugin.setupHooks = (hooks) => {
+        hooks.includeLocalFile.push((file) => file.size < maxFileSize)
+      }
     }
-  }
-  const throttleRate = parseBytes(config.throttle, -1)
-  if (throttleRate > 0) {
-    plugin.onPostCreateFileStream = async (manager, file, stream) => {
-      const throttle = new ThrottleTransform(throttleRate)
-      return stream.pipe(throttle)
+    const throttleRate = parseBytes(config.throttle, -1)
+    if (throttleRate > 0) {
+      plugin.onPostCreateFileStream = async (manager, file, stream) => {
+        const throttle = new ThrottleTransform(throttleRate)
+        return stream.pipe(throttle)
+      }
     }
+    return plugin
   }
-  return plugin
 }
+export default LimiterPlugin
 
 /**
  * A custom Transform stream that throttles the data passing through it to limit the bandwidth.

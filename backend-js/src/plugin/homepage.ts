@@ -1,9 +1,9 @@
 import { type FileTreeJson, type FileJson } from "../file.js"
 import { createLogger } from "@liplum/log"
-import { type FileTreeManager } from "../manager.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
 import express, { type RequestHandler } from "express"
 import fs from "fs"
+import { type PluginMeta } from "../plugin.js"
 
 interface HomepagePluginConfig {
   /**
@@ -13,61 +13,57 @@ interface HomepagePluginConfig {
   root?: string
   /**
    * Whether the built-in homepage requires authentication.
-   * True by default.
+   * False by default.
    */
   requireAuth?: boolean
 }
 
-export default function HomepagePlugin(config: HomepagePluginConfig): MeditreePlugin {
-  const log = createLogger("Homepage")
-  const root = config.root
-  const requireAuth = config.requireAuth ?? true
-  if (root) {
-    if (fs.existsSync(root)) {
-      log.info(`The ${root} is being served.`)
-    } else {
-      log.warn(`The ${root} doesn't exists, please check if it's wrong.`)
-    }
-  }
-
-  // lazy-build the html
-  let html: string | undefined
-  let manager: FileTreeManager
-  let authMiddleware: RequestHandler
-  return {
-    async setupManager(_manager) {
-      if (!root) {
-        manager = _manager
-        manager.on("file-tree-update", () => {
-          // clear the built html
-          html = undefined
-        })
-      }
-    },
-    onRegisterService(container) {
-      authMiddleware = container.get(TYPE.Auth)
-    },
-    async onRegisterExpressHandler(app) {
-      if (root) {
-        app.use(express.static(root))
+const HomepagePlugin: PluginMeta<MeditreePlugin, HomepagePluginConfig> = {
+  create(config) {
+    const log = createLogger("Homepage")
+    const root = config.root
+    const requireAuth = config.requireAuth ?? false
+    if (root) {
+      if (fs.existsSync(root)) {
+        log.info(`The ${root} is being served.`)
       } else {
-        const handlers: RequestHandler[] = [(req, res) => {
-          res.status(200)
-          res.contentType("text/html")
-          if (html === undefined) {
-            html = buildIndexHtml(manager.toJSON())
-          }
-          res.send(html)
-        }]
-        if (requireAuth) {
-          handlers.unshift(authMiddleware)
+        log.warn(`The ${root} doesn't exists, please check if it's wrong.`)
+      }
+    }
+
+    // lazy-build the html
+    let html: string | undefined
+    return {
+      async setupMeditree({ app, manager, container }) {
+        if (!root) {
+          manager.on("file-tree-update", () => {
+            // clear the built html
+            html = undefined
+          })
         }
-        app.get("/index.html", ...handlers)
-        app.get("/", ...handlers)
+        const authMiddleware = container.get(TYPE.Auth)
+        if (root) {
+          app.use(express.static(root))
+        } else {
+          const handlers: RequestHandler[] = [(req, res) => {
+            res.status(200)
+            res.contentType("text/html")
+            if (html === undefined) {
+              html = buildIndexHtml(manager.toJSON())
+            }
+            res.send(html)
+          }]
+          if (requireAuth) {
+            handlers.unshift(authMiddleware)
+          }
+          app.get("/index.html", ...handlers)
+          app.get("/", ...handlers)
+        }
       }
     }
   }
 }
+export default HomepagePlugin
 
 function buildIndexHtml(
   fileTree: FileTreeJson,

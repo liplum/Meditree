@@ -49,10 +49,25 @@ export class LocalFile {
 
 export type PathFilter = (path: string) => boolean
 export interface FileTreeLike {
-  resolveFile: (pathParts: string[]) => LocalFile | null
-  toJSON: () => FileTreeJson
+  resolveFile(pathParts: string[]): LocalFile | null
+  toJSON(): FileTreeJson
+  children(): (LocalFile | FileTreeLike)[]
 }
-
+export function* iterateAllFilesInTree(
+  root: FileTreeLike
+): Iterable<LocalFile> {
+  function* iterateSubFiles(tree: FileTreeLike): Iterable<LocalFile> {
+    for (const fileOrSubtree of tree.children()) {
+      if (fileOrSubtree instanceof LocalFile) {
+        yield fileOrSubtree
+      } else {
+        // it's a folder
+        yield* iterateSubFiles(fileOrSubtree)
+      }
+    }
+  }
+  yield* iterateSubFiles(root)
+}
 export class LocalFileTree implements FileTreeLike {
   readonly parent?: LocalFileTree
   hidden?: boolean
@@ -67,6 +82,10 @@ export class LocalFileTree implements FileTreeLike {
     this.path = path
     this.name = name
     this.parent = parent
+  }
+
+  children(): (LocalFile | FileTreeLike)[] {
+    return Array.from(this.name2File.values())
   }
 
   /**
@@ -192,10 +211,10 @@ export function filterFileTreeJson(
   if (tree["*hide"]) {
     filteredTree["*hide"] = true
   }
-  for (const [name, fileOrSubtree] of Object.entries(tree)) {
+  for (const [name, fileOrSubtree] of iterateFilesInDir(tree)) {
     // it's a file
     if (fileOrSubtree["*type"]) {
-      if (fileFilter(fileOrSubtree satisfies FileJson)) {
+      if (fileFilter(fileOrSubtree as FileJson)) {
         filteredTree[name] = fileOrSubtree
       }
     } else {
@@ -211,13 +230,37 @@ export function filterFileTreeJson(
   return filteredTree
 }
 
-export function* iterateFiles(tree: FileTreeJson): Iterable<[string, FileJson | FileTreeJson]> {
+export function* iterateFilesInDir(
+  tree: FileTreeJson
+): Iterable<[string, FileJson | FileTreeJson]> {
   for (const entry of Object.entries(tree)) {
     if (entry[0] === "*hide" || entry[0] === "*tag") {
       continue
     }
     yield entry
   }
+}
+
+export interface PathedFile extends FileJson {
+  fullPath: string
+}
+
+export function* iterateAllFilesInTreeJson(
+  root: FileTreeJson
+): Iterable<PathedFile> {
+  function* iterateSubFiles(parentPath: string, tree: FileTreeJson): Iterable<PathedFile> {
+    for (const [name, fileOrSubtree] of iterateFilesInDir(tree)) {
+      const path = parentPath ? `${parentPath}/${name}` : name
+      // it's a file
+      if (fileOrSubtree["*type"]) {
+        yield { ...fileOrSubtree as FileJson, fullPath: path }
+      } else {
+        // it's a folder
+        yield* iterateSubFiles(path, fileOrSubtree satisfies FileTreeJson)
+      }
+    }
+  }
+  yield* iterateSubFiles("", root)
 }
 
 /**
@@ -232,7 +275,7 @@ export function cloneFileTreeJson(tree: FileTreeJson): FileTreeJson {
   if (tree["*tag"]) {
     newTree["*tag"] = { ...tree["*tag"] }
   }
-  for (const [name, fileOrSubtree] of iterateFiles(tree)) {
+  for (const [name, fileOrSubtree] of iterateFilesInDir(tree)) {
     // it's a file
     if (fileOrSubtree["*type"]) {
       newTree[name] = { ...fileOrSubtree }
