@@ -20,7 +20,7 @@ const MongoDBUserPlugin: PluginMeta<MeditreePlugin, MongoDDUserPluginConfig> = {
   create(config) {
     const collection = config.collection ?? "users"
     return {
-      onRegisterService(container) {
+      setupService(container) {
         const mongodb = container.get(MongoDBType.MongoDB)
         const users = mongodb.db.collection(collection)
         container.bind(AuthType.UserStorage).toValue({

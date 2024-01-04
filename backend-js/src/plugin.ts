@@ -20,18 +20,36 @@ export interface PluginConfig {
    */
   [key: string]: any
 }
+/**
+ * ## Code example
+ * ```ts
+ * const a = PluginMeta{
+ *   implemets: "my-service",
+ * }
+ * const b = PluginMeta{
+ *   depends: "my-service",
+ * }
+ * 
+ * const ordered = resolvePluginsInOrder([b,a])
+ * console.log(ordered) // it's equal to [a, b]
+ * ```
+ */
 export interface PluginMeta<
   TPlugin,
   TConfig extends PluginConfig = PluginConfig
 > {
   /**
-   * The interfaces which this plugin implements
+   * The interfaces which this plugin implements.
    */
   implements?: string[]
   /**
-   * The interfaces which this plugin depends on
+   * The interfaces which this plugin depends on.
    */
   depends?: string[]
+  /**
+   * The interfaces which this plugin could optionally depend on.
+   */
+  softDepends?: string[]
   /**
    * Create a plugin instance.
    */
@@ -74,11 +92,11 @@ function isPluginDisabled(confBody: PluginConfig | boolean): boolean {
  * @returns An list of plugin configs in dependency-resolved order
  */
 function resolvePluginInDependencyOrder<
-TPlugin,
-TConfig extends PluginConfig = any
+  TPlugin,
+  TConfig extends PluginConfig = any
 >(
   origin: PluginMeta<TPlugin, TConfig>[]
-): PluginMeta<TPlugin, TConfig>[]{
+): PluginMeta<TPlugin, TConfig>[] {
   return []
 }
 

@@ -211,10 +211,10 @@ export function filterFileTreeJson(
   if (tree["*hide"]) {
     filteredTree["*hide"] = true
   }
-  for (const [name, fileOrSubtree] of Object.entries(tree)) {
+  for (const [name, fileOrSubtree] of iterateFilesInDir(tree)) {
     // it's a file
     if (fileOrSubtree["*type"]) {
-      if (fileFilter(fileOrSubtree satisfies FileJson)) {
+      if (fileFilter(fileOrSubtree as FileJson)) {
         filteredTree[name] = fileOrSubtree
       }
     } else {

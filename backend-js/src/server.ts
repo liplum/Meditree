@@ -106,7 +106,7 @@ export async function startServer(
 
   // Phrase 10: plugins register or override services.
   for (const plugin of plugins) {
-    plugin.onRegisterService?.(container)
+    plugin.setupService?.(container)
   }
   // Then forze the container
   container.froze()
@@ -131,6 +131,13 @@ export async function startServer(
   for (const plugin of plugins) {
     await plugin.setupServer?.(app, server)
   }
+  const hooks: MeditreeHooks = {
+    includeLocalFile: [],
+  }
+  // Phrase 12: plugins patch the server setup.
+  for (const plugin of plugins) {
+    plugin.setupHooks?.(hooks)
+  }
 
   // Phrase 13: resolve the HostTree service.
   const hostTreeCtor = container.get(TYPE.HostTree)
@@ -151,6 +158,12 @@ export async function startServer(
       pattern2FileType: config.fileType,
       log: fileTreeLog,
       ignorePatterns: config.ignore,
+      fileFilter(file: LocalFile): boolean {
+        for (const hook of hooks.includeLocalFile) {
+          if (!hook(file)) return false
+        }
+        return true
+      }
     }
     if (typeof config.root === "string") {
       hostTree = createHostTree({
@@ -365,9 +378,11 @@ function resolveRange(range?: string): { start?: number, end?: number } {
 export interface MeditreePlugin {
   init?(): Promise<void>
 
-  onRegisterService?(container: Container): void
+  setupService?(container: Container): void
 
   setupServer?(app: Express.Application, server: Server): Promise<void>
+
+  setupHooks?(hooks: MeditreeHooks): void
 
   setupMeditree?({
     app, manager, container, service
@@ -396,6 +411,10 @@ export interface MeditreePlugin {
 
 export interface MeditreeService {
   pipeFile(req: Request, res: Response, file: LocalFile): Promise<void>
+}
+export type HookOf<T> = T[]
+export interface MeditreeHooks {
+  includeLocalFile: HookOf<(file: LocalFile) => boolean>
 }
 
 export interface MeditreeEvents extends EventEmitter {

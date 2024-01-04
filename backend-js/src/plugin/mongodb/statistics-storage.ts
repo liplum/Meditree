@@ -25,7 +25,7 @@ const MongoDBStatisticsPlugin: PluginMeta<MeditreePlugin, MongoDBStatisticsPlugi
   create(config) {
     const collection = config.collection ?? "statistics"
     return {
-      onRegisterService(container) {
+      setupService(container) {
         const mongodb = container.get(MongoDBType.MongoDB)
         const statistics = mongodb.db.collection<Entry>(collection)
         container.bind(StatisticsType.StatisticsStorage).toValue({

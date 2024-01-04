@@ -23,7 +23,7 @@ const JsonDBStatisticsPlugin: PluginMeta<MeditreePlugin, JsonDBStatisticsPluginC
   create(config) {
     const collection = config.collection ?? "statistics"
     return {
-      onRegisterService(container) {
+      setupService(container) {
         const jsondb = container.get(JsonDBType.JsonDB)
         const statistics = jsondb.loadDB(collection)
         container.bind(StatisticsType.StatisticsStorage).toValue({

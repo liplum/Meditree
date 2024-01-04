@@ -46,7 +46,7 @@ const JsonDbPlugin: PluginMeta<MeditreePlugin, JsonDbPluginConfig> = {
       onExit() {
         log.info("JsonDB closed.")
       },
-      onRegisterService(container) {
+      setupService(container) {
         container.bind(TYPE.JsonDB).toValue({
           loadDB(name) {
             let db = name2DB.get(name)

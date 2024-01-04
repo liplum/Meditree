@@ -40,7 +40,7 @@ const MongoDbPlugin: PluginMeta<MeditreePlugin, MongoDbPluginConfig> = {
         client?.close(true)
         log.info("MongoDB Client closed.")
       },
-      onRegisterService(container) {
+      setupService(container) {
         if (client === undefined) throw new Error("MongoDB Client is not initialized.")
         const db = client.db(database)
         container.bind(TYPE.MongoDB).toValue({

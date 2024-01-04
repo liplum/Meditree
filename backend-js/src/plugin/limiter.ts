@@ -25,10 +25,8 @@ const LimiterPlugin: PluginMeta<MeditreePlugin, LimiterPluginConfig> = {
     const maxFileSize = parseBytes(config.maxFileSize, -1)
     const plugin: MeditreePlugin = {}
     if (maxFileSize > 0) {
-      plugin.onClientFileTreeUpdated = (fileTree) => {
-        return filterFileTreeJson(fileTree, (file) => {
-          return file.size < maxFileSize
-        })
+      plugin.setupHooks = (hooks) => {
+        hooks.includeLocalFile.push((file) => file.size < maxFileSize)
       }
     }
     const throttleRate = parseBytes(config.throttle, -1)

@@ -22,7 +22,7 @@ const JsonDbUserPlugin: PluginMeta<MeditreePlugin, JsonDBUserPluginConfig> = {
       return typeof user === "string" ? `/${user}` : `/${user.account}`
     }
     return {
-      onRegisterService(container) {
+      setupService(container) {
         const jsonDB = container.get(JsonDBType.JsonDB)
         const db = jsonDB.loadDB(collection)
         container.bind(AuthType.UserStorage).toValue({
