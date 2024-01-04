@@ -27,22 +27,38 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
       video: "redirect",
       image: "pipe"
     }
+    function getMode(fileType: string): "redirect" | "pipe" {
+      for (const [type, mode] of Object.entries(types)) {
+        if (fileType.includes(type)) {
+          return mode
+        }
+      }
+      return "pipe"
+    }
     const rand = new Random()
     let indexedTree: IndexedTree
     return {
       async setupMeditree({ app, manager, container, service }) {
         const authMiddleware = container.get(TYPE.Auth)
-        manager.on("file-tree-update", () => {
-          indexedTree = IndexedTree.from(manager)
+        manager.on("file-tree-update", (tree) => {
+          indexedTree = IndexedTree.from(tree)
         })
         app.get("/api/random", authMiddleware, async (req, res) => {
           const randomFi = indexedTree.files[rand.integer(0, indexedTree.files.length)]
-          res.contentType(randomFi.type)
-          await service.pipeFile(req, res, randomFi)
-          // const path = randomFi.fullPath
-          // console.log(path)
-          // pipeFile({req,res,file:randomFi, plugins})
-          // res.redirect(`/api/file/${encodeURIComponent(path)}`)
+          const pathParts = randomFi.fullPath.split("/")
+          const file = manager.resolveFile(pathParts)
+          if (!file) {
+            return res.sendStatus(404).end()
+          }
+          res.contentType(file.type)
+          switch (getMode(file.type)) {
+            case "redirect":
+              res.redirect(`/api/file/${encodeURIComponent(randomFi.fullPath)}`)
+              break
+            case "pipe":
+              await service.pipeFile(req, res, file)
+              break
+          }
         })
       },
     }
@@ -51,21 +67,21 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
 export default RandomPlugin
 
 class IndexedTree {
-  files: LocalFile[]
-  type2Files: Map<string, LocalFile[]>
-  constructor(files: LocalFile[], type2Files: Map<string, LocalFile[]>) {
+  files: PathedFile[]
+  type2Files: Map<string, PathedFile[]>
+  constructor(files: PathedFile[], type2Files: Map<string, PathedFile[]>) {
     this.files = files
     this.type2Files = type2Files
   }
 
-  static from(tree: FileTreeLike): IndexedTree {
-    const allFiles = Array.from(iterateAllFilesInTree(tree)).filter(f => !f.hidden)
-    const type2Files = new Map<string, LocalFile[]>()
+  static from(tree: FileTreeJson): IndexedTree {
+    const allFiles = Array.from(iterateAllFilesInTreeJson(tree)).filter(f => !f["*hide"])
+    const type2Files = new Map<string, PathedFile[]>()
     for (const file of allFiles) {
-      const type = file.type
+      const type = file["*type"]
       let filesInType = type2Files.get(type)
       if (!filesInType) {
-        filesInType = [] as LocalFile[]
+        filesInType = [] as PathedFile[]
         type2Files.set(type, filesInType)
       }
       filesInType.push(file)
