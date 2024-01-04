@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { type RequestHandler } from "express"
-import { type FileTreeJson, iterateAllFilesInTreeJson, type PathedFile, type FileTreeLike, iterateAllFilesInTree, type LocalFile } from "../file.js"
-import { type FileTreeManager } from "../manager.js"
+import { type FileTreeJson, iterateAllFilesInTreeJson, type PathedFile } from "../file.js"
 import { type PluginMeta } from "../plugin.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
 import { Random } from "random-js"
+
+type ServeMode = "redirect" | "pipe"
 
 interface RandomPluginConfig {
   /**
@@ -16,7 +16,7 @@ interface RandomPluginConfig {
    *  - rediret: redirect to a new url
    *  - pipe: directly pipe file
    */
-  types?: Record<string, "redirect" | "pipe">
+  types?: Record<string, ServeMode> | ServeMode
 }
 /**
  * Minify plugin affects only file tree json for client side.
@@ -27,9 +27,12 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
       video: "redirect",
       image: "pipe"
     }
-    function getMode(fileType: string): "redirect" | "pipe" {
-      for (const [type, mode] of Object.entries(types)) {
-        if (fileType.includes(type)) {
+    function getMode(fileType: string): ServeMode {
+      if (typeof types === "string") {
+        return types
+      }
+      for (const [typeTest, mode] of Object.entries(types)) {
+        if (fileType.includes(typeTest)) {
           return mode
         }
       }
@@ -44,7 +47,17 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
           indexedTree = IndexedTree.from(tree)
         })
         app.get("/api/random", authMiddleware, async (req, res) => {
-          const randomFi = indexedTree.files[rand.integer(0, indexedTree.files.length)]
+          const targetType = req.query.type
+          let types: string[] = []
+          if (typeof targetType === "string") {
+            types.push(targetType)
+          } else if (Array.isArray(targetType)) {
+            types = types.concat(targetType as string[])
+          }
+          const randomFi = indexedTree.random(rand, types)
+          if (!randomFi) {
+            return res.sendStatus(404).end()
+          }
           const pathParts = randomFi.fullPath.split("/")
           const file = manager.resolveFile(pathParts)
           if (!file) {
@@ -58,6 +71,8 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
             case "pipe":
               await service.pipeFile(req, res, file)
               break
+            default:
+              return res.sendStatus(400).end()
           }
         })
       },
@@ -87,5 +102,20 @@ class IndexedTree {
       filesInType.push(file)
     }
     return new IndexedTree(allFiles, type2Files)
+  }
+
+  random(rand: Random, types?: string[]): PathedFile | undefined {
+    if (!types?.length) {
+      return this.files[rand.integer(0, this.files.length)]
+    }
+    let all: PathedFile[] = []
+    for (const [type, file] of this.type2Files.entries()) {
+      for (const typeTest of types) {
+        if (type.includes(typeTest)) {
+          all = all.concat(file)
+        }
+      }
+    }
+    return all[rand.integer(0, all.length)]
   }
 }
