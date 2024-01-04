@@ -1,6 +1,5 @@
 import { type FileTreeJson, type FileJson } from "../file.js"
 import { createLogger } from "@liplum/log"
-import { type FileTreeManager } from "../manager.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
 import express, { type RequestHandler } from "express"
 import fs from "fs"
@@ -14,7 +13,7 @@ interface HomepagePluginConfig {
   root?: string
   /**
    * Whether the built-in homepage requires authentication.
-   * True by default.
+   * False by default.
    */
   requireAuth?: boolean
 }
@@ -23,7 +22,7 @@ const HomepagePlugin: PluginMeta<MeditreePlugin, HomepagePluginConfig> = {
   create(config) {
     const log = createLogger("Homepage")
     const root = config.root
-    const requireAuth = config.requireAuth ?? true
+    const requireAuth = config.requireAuth ?? false
     if (root) {
       if (fs.existsSync(root)) {
         log.info(`The ${root} is being served.`)
@@ -34,22 +33,15 @@ const HomepagePlugin: PluginMeta<MeditreePlugin, HomepagePluginConfig> = {
 
     // lazy-build the html
     let html: string | undefined
-    let manager: FileTreeManager
-    let authMiddleware: RequestHandler
     return {
-      async setupManager(_manager) {
+      async setupMeditree({ app, manager, container }) {
         if (!root) {
-          manager = _manager
           manager.on("file-tree-update", () => {
             // clear the built html
             html = undefined
           })
         }
-      },
-      onRegisterService(container) {
-        authMiddleware = container.get(TYPE.Auth)
-      },
-      async onRegisterExpressHandler(app) {
+        const authMiddleware = container.get(TYPE.Auth)
         if (root) {
           app.use(express.static(root))
         } else {

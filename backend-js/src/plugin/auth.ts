@@ -69,7 +69,7 @@ const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
         }
         )
       },
-      async onRegisterExpressHandler(app) {
+      async setupMeditree({ app, manager, container }) {
         app.post("/api/login", async (req, res) => {
           const { account, password } = req.body
           if (typeof account !== "string" || typeof password !== "string") {

@@ -28,7 +28,7 @@ const StatisticsPlugin: PluginMeta<MeditreePlugin, StatisticsPluginConfig> = {
   create(config) {
     let statistics: StatisticsStorageService
     return {
-      onRegisterService(container) {
+      async setupMeditree({ app, manager, container }) {
         statistics = container.get(TYPE.StatisticsStorage)
         const events = container.get(MeditreeType.Events)
         const users = container.tryGet(AuthType.UserStorage)

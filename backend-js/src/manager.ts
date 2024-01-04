@@ -22,7 +22,6 @@ export declare interface FileTreeManager {
 export class FileTreeManager extends EventEmitter implements FileTreeLike {
   localTree?: { tree: FileTreeLike, json: FileTreeJson }
   log: Logger = createLogger("Meditree")
-
   resolveFile(pathParts: string[]): LocalFile | null {
     if (this.localTree) {
       return this.localTree.tree.resolveFile(pathParts)
@@ -48,6 +47,10 @@ export class FileTreeManager extends EventEmitter implements FileTreeLike {
     const json = tree.toJSON()
     this.localTree = { tree, json }
     this.emit("file-tree-update", json)
+  }
+
+  children(): (LocalFile | FileTreeLike)[] {
+    return this.localTree?.tree.children() ?? []
   }
 
   toJSON(): FileTreeJson {

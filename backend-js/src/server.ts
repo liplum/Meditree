@@ -108,6 +108,8 @@ export async function startServer(
   for (const plugin of plugins) {
     plugin.onRegisterService?.(container)
   }
+  // Then forze the container
+  container.froze()
 
   // Phrase 11: create express app with essential middlewares.
   const app = express()
@@ -180,12 +182,7 @@ export async function startServer(
   // Phrase 14: create FileTree Manager and set it up.
   const manager = new FileTreeManager()
 
-  // Phrase 15: plugins patch the FileTree manager setup.
-  for (const plugin of plugins) {
-    await plugin.setupManager?.(manager)
-  }
-
-  // Phrase 16: listen to HostTree "rebuild" event, and update the local file tree.
+  // Phrase 15: listen to HostTree "rebuild" event, and update the local file tree.
   hostTree.on("rebuild", (localTree) => {
     for (const plugin of plugins) {
       plugin.onLocalFileTreeRebuilt?.(localTree)
@@ -194,7 +191,7 @@ export async function startServer(
     fileTreeLog.info("Local file tree was rebuilt.")
   })
 
-  // Phrase 17: create file tree cache and listen to updates from local file tree.
+  // Phrase 16: create file tree cache and listen to updates from local file tree.
   let treeJsonCache: string = JSON.stringify({
     name: config.name,
     root: {},
@@ -215,12 +212,58 @@ export async function startServer(
     }, null, 1)
   })
 
-  const authMiddleware = container.get(TYPE.Auth)
+  /**
+   * Ranged is for videos and audios. On Safari mobile, range headers is used.
+  */
+  async function pipeFile(req: Request, res: Response, file: LocalFile): Promise<void> {
+    let { start, end } = resolveRange(req.headers.range)
+    start ??= 0
+    end ??= file.size - 1
+    const retrievedLength = (end + 1) - start
 
-  // Phrase 18: plugins patch the express app registering.
-  for (const plugin of plugins) {
-    await plugin.onRegisterExpressHandler?.(app)
+    res.statusCode = req.headers.range ? 206 : 200
+
+    res.setHeader("content-length", retrievedLength)
+    if (req.headers.range) {
+      res.setHeader("content-range", `bytes ${start}-${end}/${file.size}`)
+      res.setHeader("accept-ranges", "bytes")
+    }
+    let stream: Readable | null | undefined
+    const options = { start, end, }
+    for (const plugin of plugins) {
+      // break the loop if any plugin has hooked creation.
+      if (stream !== undefined) break
+      if (plugin.onPreCreateFileStream) {
+        stream = await plugin.onPreCreateFileStream(manager, file, options)
+      }
+    }
+    if (stream === undefined) {
+      stream = await manager.createReadStream(file, options)
+    }
+    if (!stream) {
+      res.sendStatus(404).end()
+      return
+    }
+    for (const plugin of plugins) {
+      if (plugin.onPostCreateFileStream) {
+        stream = await plugin.onPostCreateFileStream(manager, file, stream)
+      }
+    }
+    stream.on("error", (_) => {
+      res.sendStatus(500).end()
+    })
+    stream.pipe(res)
   }
+  const service: MeditreeService = {
+    pipeFile,
+  }
+  // Phrase 17: plugins patch the express app registering and FileTree manager setup.
+  for (const plugin of plugins) {
+    await plugin.setupMeditree?.({ app, manager, container, service })
+  }
+
+  // Phrase 18: express app setup.
+  const authMiddleware = container.get(TYPE.Auth)
 
   app.get("/api/meta", (req, res) => {
     res.status(200)
@@ -237,7 +280,6 @@ export async function startServer(
     res.sendStatus(200).end()
   })
 
-  // Phrase 19: express app setup.
   app.get("/api/list", authMiddleware, (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
@@ -267,25 +309,23 @@ export async function startServer(
     const expireTime = new Date(Date.now() + config.cacheMaxAge)
     res.setHeader("Expires", expireTime.toUTCString())
     res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)
-    await pipeFile({ req, res, file: resolved, plugins, manager })
+    await pipeFile(req, res, resolved)
   })
 
-  // Phrase 20: start HostTree and rebuild it manually.
+  // Phrase 19: start HostTree and rebuild it manually.
   hostTree.start()
   await hostTree.rebuildFileTree()
 
-  // Phrase 21: listen to dedicated port.
+  // Phrase 20: listen to dedicated port.
   const hostname = config.hostname
   if (hostname) {
     server.listen(config.port, config.hostname, (): void => {
       log.info(`Server running at http://${hostname}:${config.port}/.`)
-      // Phrase 22: stop the starting timer.
       timer.stop("Start Server", log.info)
     })
   } else {
     server.listen(config.port, (): void => {
       log.info(`Server running at http://localhost:${config.port}/.`)
-      // Phrase 22: stop the starting timer.
       timer.stop("Start Server", log.info)
     })
   }
@@ -323,15 +363,16 @@ function resolveRange(range?: string): { start?: number, end?: number } {
 }
 
 export interface MeditreePlugin {
-  onRegisterService?(container: Container): void
-
   init?(): Promise<void>
+
+  onRegisterService?(container: Container): void
 
   setupServer?(app: Express.Application, server: Server): Promise<void>
 
-  setupManager?(manager: FileTreeManager): Promise<void>
-
-  onRegisterExpressHandler?(app: express.Express): Promise<void>
+  setupMeditree?({
+    app, manager, container, service
+  }: { app: express.Express, manager: FileTreeManager, container: Container, service: MeditreeService }
+  ): Promise<void>
 
   onLocalFileTreeRebuilt?(tree: LocalFileTree): void
 
@@ -353,59 +394,12 @@ export interface MeditreePlugin {
   onExit?(): void
 }
 
+export interface MeditreeService {
+  pipeFile(req: Request, res: Response, file: LocalFile): Promise<void>
+}
+
 export interface MeditreeEvents extends EventEmitter {
   on(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, virtualPath: string) => void | Promise<void>): this
   off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, virtualPath: string) => void | Promise<void>): this
   emit(event: "file-requested", req: Request, res: Response, file: LocalFile, virtualPath: string): boolean
-}
-
-/**
-   * Ranged is for videos and audios. On Safari mobile, range headers is used.
-   */
-export async function pipeFile({
-  req, res, file, plugins, manager,
-}: {
-  req: Request
-  res: Response
-  file: LocalFile
-  plugins: MeditreePlugin[]
-  manager: FileTreeManager
-}): Promise<void> {
-  let { start, end } = resolveRange(req.headers.range)
-  start ??= 0
-  end ??= file.size - 1
-  const retrievedLength = (end + 1) - start
-
-  res.statusCode = req.headers.range ? 206 : 200
-
-  res.setHeader("content-length", retrievedLength)
-  if (req.headers.range) {
-    res.setHeader("content-range", `bytes ${start}-${end}/${file.size}`)
-    res.setHeader("accept-ranges", "bytes")
-  }
-  let stream: Readable | null | undefined
-  const options = { start, end, }
-  for (const plugin of plugins) {
-    // break the loop if any plugin has hooked creation.
-    if (stream !== undefined) break
-    if (plugin.onPreCreateFileStream) {
-      stream = await plugin.onPreCreateFileStream(manager, file, options)
-    }
-  }
-  if (stream === undefined) {
-    stream = await manager.createReadStream(file, options)
-  }
-  if (!stream) {
-    res.sendStatus(404).end()
-    return
-  }
-  for (const plugin of plugins) {
-    if (plugin.onPostCreateFileStream) {
-      stream = await plugin.onPostCreateFileStream(manager, file, stream)
-    }
-  }
-  stream.on("error", (_) => {
-    res.sendStatus(500).end()
-  })
-  stream.pipe(res)
 }

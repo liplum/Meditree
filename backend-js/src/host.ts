@@ -18,7 +18,7 @@ export interface HostTreeOptions {
   log?: Logger
 }
 
-export declare interface IHostTree {
+export declare interface IHostTree extends FileTreeLike {
   readonly name: string
   on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this
   off(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this
@@ -42,6 +42,10 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.name = options.name
     this.filePathClassifier = makeFilePathClassifier(options.pattern2FileType)
     this.fileFilter = makeFSOFilter(options.ignorePatterns)
+  }
+
+  children(): (FileTreeLike | LocalFile)[] {
+    return this.fileTree.children()
   }
 
   toJSON(): FileTreeJson {
@@ -175,6 +179,10 @@ export class EmptyHostTree implements FileTreeLike, IHostTree {
     return {}
   }
 
+  children(): (FileTreeLike | LocalFile)[] {
+    return []
+  }
+
   on(event: "rebuild", listener: (fileTree: LocalFileTree) => void): this {
     return this
   }
@@ -219,6 +227,10 @@ export class CompoundHostTree extends EventEmitter implements FileTreeLike, IHos
 
   toJSON(): FileTreeJson {
     return this.builtFileTree.toJSON()
+  }
+
+  children(): (FileTreeLike | LocalFile)[] {
+    return Array.from(this.name2Subtree.values()).map(subtree => subtree.hostTree)
   }
 
   addSubtree(subtree: IHostTree): void {

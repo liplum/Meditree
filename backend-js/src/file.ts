@@ -49,10 +49,25 @@ export class LocalFile {
 
 export type PathFilter = (path: string) => boolean
 export interface FileTreeLike {
-  resolveFile: (pathParts: string[]) => LocalFile | null
-  toJSON: () => FileTreeJson
+  resolveFile(pathParts: string[]): LocalFile | null
+  toJSON(): FileTreeJson
+  children(): (LocalFile | FileTreeLike)[]
 }
-
+export function* iterateAllFilesInTree(
+  root: FileTreeLike
+): Iterable<LocalFile> {
+  function* iterateSubFiles(tree: FileTreeLike): Iterable<LocalFile> {
+    for (const fileOrSubtree of tree.children()) {
+      if (fileOrSubtree instanceof LocalFile) {
+        yield fileOrSubtree
+      } else {
+        // it's a folder
+        yield* iterateSubFiles(fileOrSubtree)
+      }
+    }
+  }
+  yield* iterateSubFiles(root)
+}
 export class LocalFileTree implements FileTreeLike {
   readonly parent?: LocalFileTree
   hidden?: boolean
@@ -67,6 +82,10 @@ export class LocalFileTree implements FileTreeLike {
     this.path = path
     this.name = name
     this.parent = parent
+  }
+
+  children(): (LocalFile | FileTreeLike)[] {
+    return Array.from(this.name2File.values())
   }
 
   /**
@@ -226,7 +245,7 @@ export interface PathedFile extends FileJson {
   fullPath: string
 }
 
-export function* iterateAllFiles(
+export function* iterateAllFilesInTreeJson(
   root: FileTreeJson
 ): Iterable<PathedFile> {
   function* iterateSubFiles(parentPath: string, tree: FileTreeJson): Iterable<PathedFile> {

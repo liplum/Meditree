@@ -53,6 +53,10 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.filePathClassifier = makeFilePathClassifier(pattern2FileType)
     this.fileFilter = makeFSOFilter(ignorePatterns)
   }
+  
+  children(): (LocalFile | FileTreeLike)[] {
+    return this.fileTree.children()
+  }
 
   toJSON(): FileTreeJson {
     return this.fileTree.toJSON()
