@@ -267,50 +267,8 @@ export async function startServer(
     const expireTime = new Date(Date.now() + config.cacheMaxAge)
     res.setHeader("Expires", expireTime.toUTCString())
     res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)
-    await pipeFile(req, res, resolved)
+    await pipeFile({ req, res, file: resolved, plugins, manager })
   })
-  /**
-   * Ranged is for videos and audios. On Safari mobile, range headers is used.
-   */
-  async function pipeFile(req: Request, res: Response, file: LocalFile): Promise<void> {
-    let { start, end } = resolveRange(req.headers.range)
-    start ??= 0
-    end ??= file.size - 1
-    const retrievedLength = (end + 1) - start
-
-    res.statusCode = req.headers.range ? 206 : 200
-
-    res.setHeader("content-length", retrievedLength)
-    if (req.headers.range) {
-      res.setHeader("content-range", `bytes ${start}-${end}/${file.size}`)
-      res.setHeader("accept-ranges", "bytes")
-    }
-    let stream: Readable | null | undefined
-    const options = { start, end, }
-    for (const plugin of plugins) {
-      // break the loop if any plugin has hooked creation.
-      if (stream !== undefined) break
-      if (plugin.onPreCreateFileStream) {
-        stream = await plugin.onPreCreateFileStream(manager, file, options)
-      }
-    }
-    if (stream === undefined) {
-      stream = await manager.createReadStream(file, options)
-    }
-    if (!stream) {
-      res.sendStatus(404).end()
-      return
-    }
-    for (const plugin of plugins) {
-      if (plugin.onPostCreateFileStream) {
-        stream = await plugin.onPostCreateFileStream(manager, file, stream)
-      }
-    }
-    stream.on("error", (_) => {
-      res.sendStatus(500).end()
-    })
-    stream.pipe(res)
-  }
 
   // Phrase 20: start HostTree and rebuild it manually.
   hostTree.start()
@@ -399,4 +357,55 @@ export interface MeditreeEvents extends EventEmitter {
   on(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, virtualPath: string) => void | Promise<void>): this
   off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, virtualPath: string) => void | Promise<void>): this
   emit(event: "file-requested", req: Request, res: Response, file: LocalFile, virtualPath: string): boolean
+}
+
+/**
+   * Ranged is for videos and audios. On Safari mobile, range headers is used.
+   */
+export async function pipeFile({
+  req, res, file, plugins, manager,
+}: {
+  req: Request
+  res: Response
+  file: LocalFile
+  plugins: MeditreePlugin[]
+  manager: FileTreeManager
+}): Promise<void> {
+  let { start, end } = resolveRange(req.headers.range)
+  start ??= 0
+  end ??= file.size - 1
+  const retrievedLength = (end + 1) - start
+
+  res.statusCode = req.headers.range ? 206 : 200
+
+  res.setHeader("content-length", retrievedLength)
+  if (req.headers.range) {
+    res.setHeader("content-range", `bytes ${start}-${end}/${file.size}`)
+    res.setHeader("accept-ranges", "bytes")
+  }
+  let stream: Readable | null | undefined
+  const options = { start, end, }
+  for (const plugin of plugins) {
+    // break the loop if any plugin has hooked creation.
+    if (stream !== undefined) break
+    if (plugin.onPreCreateFileStream) {
+      stream = await plugin.onPreCreateFileStream(manager, file, options)
+    }
+  }
+  if (stream === undefined) {
+    stream = await manager.createReadStream(file, options)
+  }
+  if (!stream) {
+    res.sendStatus(404).end()
+    return
+  }
+  for (const plugin of plugins) {
+    if (plugin.onPostCreateFileStream) {
+      stream = await plugin.onPostCreateFileStream(manager, file, stream)
+    }
+  }
+  stream.on("error", (_) => {
+    res.sendStatus(500).end()
+  })
+  stream.pipe(res)
 }

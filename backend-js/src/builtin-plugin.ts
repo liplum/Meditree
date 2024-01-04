@@ -7,6 +7,7 @@ import MinifyPlugin from "./plugin/minify.js"
 import StatisticsPlugin from "./plugin/statistics.js"
 import WatchPlugin from "./plugin/watch.js"
 import AuthPlugin from "./plugin/auth.js"
+import RandomPlugin from "./plugin/random.js"
 import LimiterPlugin from "./plugin/limiter.js"
 // mongoDB
 import MongoDBPlugin from "./plugin/mongodb/core.js"
@@ -34,4 +35,5 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
   // has dependencies
   registry.auth = AuthPlugin
   registry.statistics = StatisticsPlugin
+  registry.random = RandomPlugin
 }
