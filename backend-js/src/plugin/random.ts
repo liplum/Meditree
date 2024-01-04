@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
+import { type Request } from "express"
 import { type FileTreeJson, iterateAllFilesInTreeJson, type PathedFile } from "../file.js"
 import { type PluginMeta } from "../plugin.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
@@ -46,7 +47,7 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
         manager.on("file-tree-update", (tree) => {
           indexedTree = IndexedTree.from(tree)
         })
-        app.get("/api/random", authMiddleware, async (req, res) => {
+        function resolveTypes(req: Request): string[] {
           const targetType = req.query.type
           let types: string[] = []
           if (typeof targetType === "string") {
@@ -54,7 +55,10 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
           } else if (Array.isArray(targetType)) {
             types = types.concat(targetType as string[])
           }
-          const randomFi = indexedTree.random(rand, types)
+          return types
+        }
+        app.get("/api/random-file", authMiddleware, async (req, res) => {
+          const randomFi = indexedTree.random(rand, resolveTypes(req))
           if (!randomFi) {
             return res.sendStatus(404).end()
           }
@@ -74,6 +78,15 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
             default:
               return res.sendStatus(400).end()
           }
+        })
+
+        app.get("/api/random-info", (req, res) => {
+          const randomFi = indexedTree.random(rand, resolveTypes(req))
+          if (!randomFi) {
+            return res.sendStatus(404).end()
+          }
+          res.json(randomFi)
+          res.end()
         })
       },
     }
