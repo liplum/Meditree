@@ -71,8 +71,6 @@ function App() {
         {videos.map((video, index) => (
           <VideoCard
             key={index}
-            autoplay
-            loop
             username={video.username}
             description={video.description}
             song={video.song}
