@@ -133,6 +133,8 @@ export async function startServer(
   }
   const hooks: MeditreeHooks = {
     includeLocalFile: [],
+    onClientFileTreeUpdated: [],
+    onPostCreateFileStream: [],
   }
   // Phrase 12: plugins patch the server setup.
   for (const plugin of plugins) {
@@ -211,13 +213,9 @@ export async function startServer(
   }, null, 1)
 
   manager.on("file-tree-update", (entireTree) => {
-    if (plugins) {
-      entireTree = cloneFileTreeJson(entireTree)
-      for (const plugin of plugins) {
-        if (plugin.onClientFileTreeUpdated) {
-          entireTree = plugin.onClientFileTreeUpdated(entireTree)
-        }
-      }
+    entireTree = cloneFileTreeJson(entireTree)
+    for (const hook of hooks.onClientFileTreeUpdated) {
+      entireTree = hook(entireTree)
     }
     treeJsonCache = JSON.stringify({
       name: config.name,
@@ -243,12 +241,8 @@ export async function startServer(
     }
     let stream: Readable | null | undefined
     const options = { start, end, }
-    for (const plugin of plugins) {
-      // break the loop if any plugin has hooked creation.
-      if (stream !== undefined) break
-      if (plugin.onPreCreateFileStream) {
-        stream = await plugin.onPreCreateFileStream(manager, file, options)
-      }
+    if (stream !== undefined && hooks.onPreCreateFileStream) {
+      stream = await hooks.onPreCreateFileStream(manager, file, options)
     }
     if (stream === undefined) {
       stream = await manager.createReadStream(file, options)
@@ -257,10 +251,8 @@ export async function startServer(
       res.sendStatus(404).end()
       return
     }
-    for (const plugin of plugins) {
-      if (plugin.onPostCreateFileStream) {
-        stream = await plugin.onPostCreateFileStream(manager, file, stream)
-      }
+    for (const hook of hooks.onPostCreateFileStream) {
+      stream = await hook(manager, file, stream)
     }
     stream.on("error", (_) => {
       res.sendStatus(500).end()
@@ -391,21 +383,6 @@ export interface MeditreePlugin {
 
   onLocalFileTreeRebuilt?(tree: LocalFileTree): void
 
-  /**
-   * @param tree the entire file tree will be sent to clients soon.
-   * @returns a new file tree or the same instance.
-   */
-  onClientFileTreeUpdated?(tree: FileTreeJson): FileTreeJson
-  /**
-   * A non-undefined value which is returned by any plugin will be taken and the hook will be stopped.
-   * @returns undefined if not handled by this plugin.
-   */
-  onPreCreateFileStream?(manager: FileTreeManager, file: LocalFile, options?: ReadStreamOptions): Promise<Readable | null | undefined>
-  /**
-   * @param stream the former readable stream.
-   * @returns a new stream or the original stream
-   */
-  onPostCreateFileStream?(manager: FileTreeManager, file: LocalFile, stream: Readable): Promise<Readable>
   onExit?(): void
 }
 
@@ -413,8 +390,26 @@ export interface MeditreeService {
   pipeFile(req: Request, res: Response, file: LocalFile): Promise<void>
 }
 export type HookOf<T> = T[]
+
 export interface MeditreeHooks {
   includeLocalFile: HookOf<(file: LocalFile) => boolean>
+
+  /**
+   * @param tree the entire file tree will be sent to clients soon.
+   * @returns a new file tree or the same instance.
+   */
+  onClientFileTreeUpdated: HookOf<(tree: FileTreeJson) => FileTreeJson>
+
+  /**
+   * A non-undefined value which is returned by any plugin will be taken and the hook will be stopped.
+   * @returns undefined if not handled by this plugin.
+   */
+  onPreCreateFileStream?: (manager: FileTreeManager, file: LocalFile, options?: ReadStreamOptions) => Promise<Readable | null | undefined>
+  /**
+   * @param stream the former readable stream.
+   * @returns a new stream or the original stream
+   */
+  onPostCreateFileStream: HookOf<(manager: FileTreeManager, file: LocalFile, stream: Readable) => Promise<Readable>>
 }
 
 export interface MeditreeEvents extends EventEmitter {

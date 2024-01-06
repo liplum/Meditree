@@ -23,20 +23,21 @@ interface LimiterPluginConfig {
 const LimiterPlugin: PluginMeta<MeditreePlugin, LimiterPluginConfig> = {
   create(config) {
     const maxFileSize = parseBytes(config.maxFileSize, -1)
-    const plugin: MeditreePlugin = {}
-    if (maxFileSize > 0) {
-      plugin.setupHooks = (hooks) => {
-        hooks.includeLocalFile.push((file) => file.size < maxFileSize)
-      }
-    }
     const throttleRate = parseBytes(config.throttle, -1)
-    if (throttleRate > 0) {
-      plugin.onPostCreateFileStream = async (manager, file, stream) => {
-        const throttle = new ThrottleTransform(throttleRate)
-        return stream.pipe(throttle)
+
+    return {
+      setupHooks(hooks) {
+        if (maxFileSize > 0) {
+          hooks.includeLocalFile.push((file) => file.size < maxFileSize)
+        }
+        if (throttleRate > 0) {
+          hooks.onPostCreateFileStream.push(async (manager, file, stream) => {
+            const throttle = new ThrottleTransform(throttleRate)
+            return stream.pipe(throttle)
+          })
+        }
       }
     }
-    return plugin
   }
 }
 export default LimiterPlugin
