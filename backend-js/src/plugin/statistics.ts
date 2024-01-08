@@ -2,7 +2,7 @@ import { token } from "../ioc.js"
 import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
 import { type WithUser } from "./auth.js"
 import { type Request } from "express"
-import { TYPE as AuthType } from "./auth.js"
+import { TYPE as UserType } from "./user-storage.js"
 import { type PluginMeta } from "../plugin.js"
 
 export const TYPE = {
@@ -31,7 +31,7 @@ const StatisticsPlugin: PluginMeta<MeditreePlugin, StatisticsPluginConfig> = {
       async setupMeditree({ app, manager, container }) {
         statistics = container.get(TYPE.StatisticsStorage)
         const events = container.get(MeditreeType.Events)
-        const users = container.tryGet(AuthType.UserStorage)
+        const users = container.tryGet(UserType.UserStorage)
         events.on("file-requested", async (req: Request & Partial<WithUser>, res, file, virtualPath) => {
           await statistics.increment(virtualPath)
           await statistics.setLastView(virtualPath, new Date())

@@ -1,8 +1,8 @@
 import { type WithId } from "mongodb"
 import { type MeditreePlugin } from "../../server.js"
-import { TYPE as AuthType, type User } from "../auth.js"
 import { TYPE as MongoDBType } from "./core.js"
 import { type PluginMeta } from "../../plugin.js"
+import { TYPE as UserType, type User } from "../user-storage.js"
 export const HLSMediaType = "application/x-mpegURL"
 interface MongoDDUserPluginConfig {
   /**
@@ -23,7 +23,7 @@ const MongoDBUserPlugin: PluginMeta<MeditreePlugin, MongoDDUserPluginConfig> = {
       setupService(container) {
         const mongodb = container.get(MongoDBType.MongoDB)
         const users = mongodb.db.collection(collection)
-        container.bind(AuthType.UserStorage).toValue({
+        container.bind(UserType.UserStorage).toValue({
           async addUser(user) {
             if (await users.findOne({ account: user.account })) {
               // already existing
