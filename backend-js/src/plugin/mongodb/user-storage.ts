@@ -3,6 +3,7 @@ import { type MeditreePlugin } from "../../server.js"
 import { TYPE as AuthType, type User } from "../auth.js"
 import { TYPE as MongoDBType } from "./core.js"
 import { type PluginMeta } from "../../plugin.js"
+import { Schema } from "mongoose"
 export const HLSMediaType = "application/x-mpegURL"
 interface MongoDDUserPluginConfig {
   /**
@@ -10,6 +11,14 @@ interface MongoDDUserPluginConfig {
    */
   collection?: string
 }
+
+const UserSchema = new Schema({
+  uid: Schema.ObjectId,
+  account: String,
+  password: String,
+  lastLogin: { type: Date, require: false },
+  viewTimes: { type: Number, default: 0 },
+})
 
 /**
  * Default plugin dependencies: `mongodb`.

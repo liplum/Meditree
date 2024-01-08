@@ -1,8 +1,9 @@
-import { type Db, MongoClient, type MongoClientOptions } from "mongodb"
+import { type Db, type MongoClient, type MongoClientOptions } from "mongodb"
 import { type MeditreePlugin } from "../../server.js"
 import { token } from "../../ioc.js"
 import { createLogger } from "@liplum/log"
 import { type PluginMeta } from "../../plugin.js"
+import mongoose, { type ConnectOptions } from "mongoose"
 
 interface MongoDbPluginConfig {
   /**
@@ -13,7 +14,7 @@ interface MongoDbPluginConfig {
    * "meditree" by default.
    */
   database?: string
-  options?: MongoClientOptions
+  options?: ConnectOptions
 }
 
 export interface MongoDbService {
@@ -33,7 +34,7 @@ const MongoDbPlugin: PluginMeta<MeditreePlugin, MongoDbPluginConfig> = {
     let client: MongoClient
     return {
       async init() {
-        client = new MongoClient(dbUrl, config.options)
+        await mongoose.connect(dbUrl, config.options)
         log.info(`MongoDB Client connected to ${dbUrl}`)
       },
       onExit() {
