@@ -370,6 +370,8 @@ function resolveRange(range?: string): { start?: number, end?: number } {
 export interface MeditreePlugin {
   init?(): Promise<void>
 
+  setupMeta?(meta: MeditreeMeta): void
+
   setupService?(container: Container): void
 
   setupServer?(app: Express.Application, server: Server): Promise<void>
@@ -378,8 +380,12 @@ export interface MeditreePlugin {
 
   setupMeditree?({
     app, manager, container, service
-  }: { app: express.Express, manager: FileTreeManager, container: Container, service: MeditreeService }
-  ): Promise<void>
+  }: {
+    app: express.Express
+    manager: FileTreeManager
+    container: Container
+    service: MeditreeService
+  }): Promise<void>
 
   onLocalFileTreeRebuilt?(tree: LocalFileTree): void
 

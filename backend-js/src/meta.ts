@@ -30,4 +30,5 @@ export interface MeditreeMetaAuth {
 export interface MeditreeCapability {
   name: string
   version: string
+  [key: string]: string
 }
