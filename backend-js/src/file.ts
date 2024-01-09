@@ -22,6 +22,7 @@ export class LocalFile {
   readonly type: FileType
   readonly size: number
   readonly localPath: string
+  virtualPath: string
   tag?: Record<string, any>
   hidden?: boolean
   constructor(parent: LocalFileTree, type: FileType, size: number, name: string, localPath: string) {
@@ -49,6 +50,7 @@ export class LocalFile {
 
 export type PathFilter = (path: string) => boolean
 export interface FileTreeLike {
+  readonly name: string
   resolveFile(pathParts: string[]): LocalFile | null
   toJSON(): FileTreeJson
   children(): (LocalFile | FileTreeLike)[]
@@ -286,6 +288,19 @@ export function cloneFileTreeJson(tree: FileTreeJson): FileTreeJson {
     }
   }
   return newTree
+}
+
+export function attachVirtualPath(root: FileTreeLike): void {
+  function iterateSubtree(parentPath: string, tree: FileTreeLike): void {
+    for (const file of tree.children()) {
+      if (file instanceof LocalFile) {
+        file.virtualPath = parentPath ? `${parentPath}/${file.name}` : file.name
+      } else {
+        iterateSubtree(parentPath ? `${parentPath}/${file.name}` : file.name, file)
+      }
+    }
+  }
+  iterateSubtree("", root)
 }
 
 export class File {

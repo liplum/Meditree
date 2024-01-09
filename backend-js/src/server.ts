@@ -212,14 +212,14 @@ export async function startServer(
     root: {},
   }, null, 1)
 
-  manager.on("file-tree-update", (entireTree) => {
-    entireTree = cloneFileTreeJson(entireTree)
+  manager.on("file-tree-update", ({ tree, json }) => {
+    json = cloneFileTreeJson(json)
     for (const hook of hooks.onClientFileTreeUpdated) {
-      entireTree = hook(entireTree)
+      json = hook(json)
     }
     treeJsonCache = JSON.stringify({
       name: config.name,
-      root: entireTree,
+      root: json,
     }, null, 1)
   })
 
