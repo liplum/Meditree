@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { type Request } from "express"
-import { type FileTreeJson, iterateAllFilesInTreeJson, type PathedFile } from "../file.js"
+import { type FileTreeLike, iterateAllFilesInTree, type LocalFile } from "../file.js"
 import { type PluginMeta } from "../plugin.js"
 import { TYPE, type MeditreePlugin } from "../server.js"
 import { Random } from "random-js"
@@ -14,7 +14,7 @@ interface RandomPluginConfig {
    * type: object
    * key: file type name. It will be checked by `string.includes` under the hood.
    * value: the serve mode
-   *  - rediret: redirect to a new url
+   *  - redirect: redirect to a new url
    *  - pipe: directly pipe file
    */
   types?: Record<string, ServeMode> | ServeMode
@@ -44,7 +44,7 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
     return {
       async setupMeditree({ app, manager, container, service }) {
         const authMiddleware = container.get(TYPE.Auth)
-        manager.on("file-tree-update", ({ tree }) => {
+        manager.on("file-tree-update", ({ tree, json }) => {
           indexedTree = IndexedTree.from(tree)
         })
         function resolveTypes(req: Request): string[] {
@@ -62,18 +62,13 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
           if (!randomFi) {
             return res.sendStatus(404).end()
           }
-          const pathParts = randomFi.fullPath.split("/")
-          const file = manager.resolveFile(pathParts)
-          if (!file) {
-            return res.sendStatus(404).end()
-          }
-          res.contentType(file.type)
-          switch (getMode(file.type)) {
+          res.contentType(randomFi.type)
+          switch (getMode(randomFi.type)) {
             case "redirect":
-              res.redirect(`/api/file/${encodeURIComponent(randomFi.fullPath)}`)
+              res.redirect(`/api/file/${encodeURIComponent(randomFi.virtualPath)}`)
               break
             case "pipe":
-              await service.pipeFile(req, res, file)
+              await service.pipeFile(req, res, randomFi)
               break
             default:
               return res.sendStatus(400).end()
@@ -95,21 +90,21 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
 export default RandomPlugin
 
 class IndexedTree {
-  files: PathedFile[]
-  type2Files: Map<string, PathedFile[]>
-  constructor(files: PathedFile[], type2Files: Map<string, PathedFile[]>) {
+  files: LocalFile[]
+  type2Files: Map<string, LocalFile[]>
+  constructor(files: LocalFile[], type2Files: Map<string, LocalFile[]>) {
     this.files = files
     this.type2Files = type2Files
   }
 
-  static from(tree: FileTreeJson): IndexedTree {
-    const allFiles = Array.from(iterateAllFilesInTreeJson(tree)).filter(f => !f["*hide"])
-    const type2Files = new Map<string, PathedFile[]>()
+  static from(tree: FileTreeLike): IndexedTree {
+    const allFiles = Array.from(iterateAllFilesInTree(tree)).filter(f => !f.hidden)
+    const type2Files = new Map<string, LocalFile[]>()
     for (const file of allFiles) {
-      const type = file["*type"]
+      const type = file.type
       let filesInType = type2Files.get(type)
       if (!filesInType) {
-        filesInType = [] as PathedFile[]
+        filesInType = [] as LocalFile[]
         type2Files.set(type, filesInType)
       }
       filesInType.push(file)
@@ -117,11 +112,11 @@ class IndexedTree {
     return new IndexedTree(allFiles, type2Files)
   }
 
-  random(rand: Random, types?: string[]): PathedFile | undefined {
+  random(rand: Random, types?: string[]): LocalFile | undefined {
     if (!types?.length) {
       return this.files[rand.integer(0, this.files.length)]
     }
-    let all: PathedFile[] = []
+    let all: LocalFile[] = []
     for (const [type, file] of this.type2Files.entries()) {
       for (const typeTest of types) {
         if (type.includes(typeTest)) {
