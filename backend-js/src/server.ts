@@ -309,7 +309,7 @@ export async function startServer(
       res.sendStatus(404).end()
       return
     }
-    events.emit("file-requested", req, res, resolved, pathParts.join("/"))
+    events.emit("file-requested", req, res, resolved)
     res.contentType(resolved.type)
     const expireTime = new Date(Date.now() + config.cacheMaxAge)
     res.setHeader("Expires", expireTime.toUTCString())
@@ -419,7 +419,7 @@ export interface MeditreeHooks {
 }
 
 export interface MeditreeEvents extends EventEmitter {
-  on(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, virtualPath: string) => void | Promise<void>): this
-  off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile, virtualPath: string) => void | Promise<void>): this
-  emit(event: "file-requested", req: Request, res: Response, file: LocalFile, virtualPath: string): boolean
+  on(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile) => void | Promise<void>): this
+  off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile) => void | Promise<void>): this
+  emit(event: "file-requested", req: Request, res: Response, file: LocalFile): boolean
 }

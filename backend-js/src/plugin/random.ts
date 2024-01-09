@@ -42,9 +42,15 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
     const rand = new Random()
     let indexedTree: IndexedTree
     return {
+      setupMeta(meta) {
+        meta.capabilities.push({
+          name: "random",
+          version: "v1",
+        })
+      },
       async setupMeditree({ app, manager, container, service }) {
         const authMiddleware = container.get(TYPE.Auth)
-        manager.on("file-tree-update", ({ tree, json }) => {
+        manager.on("file-tree-update", ({ tree }) => {
           indexedTree = IndexedTree.from(tree)
         })
         function resolveTypes(req: Request): string[] {
