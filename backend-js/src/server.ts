@@ -108,7 +108,7 @@ export async function startServer(
   for (const plugin of plugins) {
     plugin.setupService?.(container)
   }
-  // Then forze the container
+  // Then froze the container
   container.froze()
 
   // Phrase 11: create express app with essential middlewares.

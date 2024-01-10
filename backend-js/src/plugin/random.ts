@@ -86,7 +86,10 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
           if (!randomFi) {
             return res.sendStatus(404).end()
           }
-          res.json(randomFi)
+          res.json({
+            ...randomFi.toJSON(),
+            path: randomFi.virtualPath,
+          })
           res.end()
         })
       },
