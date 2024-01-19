@@ -46,6 +46,8 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
         meta.capabilities.push({
           name: "random",
           version: "v1",
+          fileUrl: "/api/random-file",
+          infoUrl: "/api/random-info",
         })
       },
       async setupMeditree({ app, manager, container, service }) {

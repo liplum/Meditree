@@ -17,14 +17,6 @@ export interface MeditreeMeta {
  * Represents the authentication configuration for Meditree metadata.
  */
 export interface MeditreeMetaAuth {
-  /**
-   * The endpoint path for verifying authentication tokens.
-   */
-  verify: string
-  /**
-   * The endpoint path for user login.
-   */
-  login: string
 }
 
 export interface MeditreeCapability {

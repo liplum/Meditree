@@ -34,6 +34,10 @@ const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
     const jwtSecret = config.jwtSecret ?? uuidv4()
     log.info(`JWT secret: "${jwtSecret}", expiration: "${jwtExpiration}".`)
     return {
+      setupMeta(meta) {
+        meta.auth = {
+        }
+      },
       setupService(container) {
         storage = container.get(TYPE.UserStorage)
         container.bind(MeditreeType.Auth).toValue(async (req: Request & WithUser, res, next) => {

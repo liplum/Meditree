@@ -9,6 +9,12 @@ const UserPlugin: PluginMeta<MeditreePlugin, UserPluginConfig> = {
   depends: ["user-storage"],
   create() {
     return {
+      setupMeta(meta) {
+        meta.capabilities.push({
+          name: "user",
+          version: "v1",
+        })
+      },
       async setupMeditree({ app, manager, container, service }) {
         app.get("/api/user/profile", (req, res) => {
 
