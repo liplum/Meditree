@@ -1,16 +1,11 @@
 import "./Playground.css"
-import React, { useContext, useEffect, useRef, useState } from "react"
-import { isMobile } from "react-device-detect"
-import { StarChartContext, FileNavigationContext, ResponsiveAppBar } from "../pages/View"
-import { Tooltip, IconButton, Typography, CircularProgress, Chip, Fab } from "@mui/material"
-import { StarBorder, Star } from "@mui/icons-material"
+import React, { useEffect, useState } from "react"
+import { Typography, CircularProgress } from "@mui/material"
 import { NoFilesIndicator } from "../components/NoFilesIndicator"
-import useForceUpdate from "use-force-update"
 import { i18n } from "../I18n"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Failed } from "../components/Loading"
-import { filesize } from "filesize"
 import { VideoJS } from "../components/VideoPlayer"
 import { FileNode } from "../models/FileTree"
 import { ErrorBoundary } from "react-error-boundary"
@@ -40,8 +35,6 @@ function resolveRenderer(type: string) {
 }
 
 export function FileDisplayBoard({ file }: { file?: FileNode }) {
-  const { isStarred, star, unstar } = useContext(StarChartContext)
-  const forceUpdate = useForceUpdate()
   let content = null
   if (!file) {
     content = <NoFilesIndicator />
@@ -58,35 +51,7 @@ export function FileDisplayBoard({ file }: { file?: FileNode }) {
       }
     </div>
   }
-  const isFileStarred = isStarred(file)
   return <>
-    <ResponsiveAppBar>
-      <Tooltip title={file?.path}>
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          {file ? file.name : undefined}
-        </Typography>
-      </Tooltip>
-      {file && // only display if any file is selected
-        <>
-          {file.size && // only display if file has size property
-            <Chip label={filesize(file.size, { base: 2, standard: "jedec" }) as string} />
-          }
-          <Tooltip title={
-            isFileStarred
-              ? i18n.playground.unstarBtn
-              : i18n.playground.starBtn
-          }>
-            <IconButton onClick={() => {
-              if (isFileStarred) unstar(file)
-              else star(file)
-              forceUpdate()
-            }}>
-              {isFileStarred ? <Star /> : <StarBorder />}
-            </IconButton>
-          </Tooltip>
-        </>
-      }
-    </ResponsiveAppBar>
     <ErrorBoundary fallback={<Failed text={i18n.playground.unsupportedFileType} />}>
       {content}
     </ErrorBoundary>

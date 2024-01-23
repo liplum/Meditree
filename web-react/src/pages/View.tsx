@@ -1,5 +1,5 @@
 import "./View.css"
-import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from "react"
+import { ReactNode, useEffect, useMemo, useState } from "react"
 import { FileTreeNavigation } from "../subviews/FileTreeNavigation"
 import { updatePageTitle, storage } from "../Env"
 import MenuIcon from "@mui/icons-material/Menu"
@@ -8,7 +8,7 @@ import {
   Navigate,
   useNavigate, useSearchParams
 } from "react-router-dom"
-import { Box, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip, Fab } from "@mui/material"
+import { Typography, Chip, Box, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip, Fab } from "@mui/material"
 import { StarBorder, Star, NavigateBefore, NavigateNext } from "@mui/icons-material"
 import { useRequest } from "ahooks"
 import { FileDisplayBoard } from "../subviews/Playground"
@@ -17,19 +17,8 @@ import { SearchBar } from "../components/SearchBar"
 import { Failed, Loading } from "../components/Loading"
 import useForceUpdate from "use-force-update"
 import { StarChart } from "../models/StarChart"
+import { filesize } from "filesize"
 
-type IsDrawerOpenContext = [boolean, (open: boolean) => void]
-
-export const IsDrawerOpenContext = createContext<IsDrawerOpenContext>([false, () => undefined])
-
-interface StarChartContext {
-  starChart: StarChart
-  isStarred(file?: FileNode): boolean
-  star(file: FileNode): void
-  unstar(file: FileNode): void
-}
-export const StarChartContext = createContext<StarChartContext>({} as StarChartContext)
-export const FileNavigationContext = createContext<FileNavigationContext>({} as FileNavigationContext)
 
 async function requestFileTree({ file }: { file?: string | null }): Promise<FileTreeDelegate> {
   const lastPath = decodeURIComponent(file ?? "")
@@ -89,106 +78,108 @@ function Body({ fileTreeDelegate }: { fileTreeDelegate: FileTreeDelegate }) {
     if (!file) return
     navigate(`/view?file=${encodeURIComponent(file.path)}`)
   }
+  const isFileStarred = selectedFile && starChart.isStarred(selectedFile.path)
 
-  const main = (
-    <ResponsiveDrawer
-      isDrawerOpen={isDrawerOpen}
-      setIsDrawerOpen={setIsDrawerOpen}
-      drawer={<>
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          padding: "10px 0px 10px 0px",
-          justifyContent: "space-evenly",
-        }}>
-          <Tooltip title={i18n.search.starFilter}>
-            <IconButton onClick={() => setOnlyShowStarred(!onlyShowStarred)}>
-              {onlyShowStarred ? <Star /> : <StarBorder />}
+  return <ResponsiveDrawer
+    isDrawerOpen={isDrawerOpen}
+    setIsDrawerOpen={setIsDrawerOpen}
+    drawer={<>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        padding: "10px 0px 10px 0px",
+        justifyContent: "space-evenly",
+      }}>
+        <Tooltip title={i18n.search.starFilter}>
+          <IconButton onClick={() => setOnlyShowStarred(!onlyShowStarred)}>
+            {onlyShowStarred ? <Star /> : <StarBorder />}
+          </IconButton>
+        </Tooltip>
+        <SearchBar
+          placeholder={i18n.search.placeholder}
+          onSearch={(prompt) => setSearchPrompt(prompt)}
+        />
+      </div>
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <FileTreeNavigation
+          selectedFile={selectedFile}
+          searchDelegate={(file) => {
+            if (onlyShowStarred && !starChart.isStarred(file.path)) {
+              return false
+            }
+            if (!searchPrompt) return true
+            return file.path.toLowerCase().includes(searchPrompt.trim().toLocaleLowerCase())
+          }}
+          delegate={fileTreeDelegate}
+        />
+      </div>
+    </>}
+  >
+    <Toolbar />
+    <ResponsiveAppBar isDrawerOpen={isDrawerOpen} setIsDrawerOpen={setIsDrawerOpen}>
+      <Tooltip title={selectedFile?.path}>
+        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          {selectedFile ? selectedFile.name : undefined}
+        </Typography>
+      </Tooltip>
+      {selectedFile && // only display if any file is selected
+        <>
+          {selectedFile.size && // only display if file has size property
+            <Chip label={filesize(selectedFile.size, { base: 2, standard: "jedec" }) as string} />
+          }
+          <Tooltip title={
+            isFileStarred
+              ? i18n.playground.unstarBtn
+              : i18n.playground.starBtn
+          }>
+            <IconButton onClick={() => {
+              if (isFileStarred) {
+                starChart.unstar(selectedFile.path)
+              } else {
+                starChart.star(selectedFile.path)
+              }
+              forceUpdate()
+            }}>
+              {isFileStarred ? <Star /> : <StarBorder />}
             </IconButton>
           </Tooltip>
-          <SearchBar
-            placeholder={i18n.search.placeholder}
-            onSearch={(prompt) => setSearchPrompt(prompt)}
-          />
-        </div>
-        <div style={{ flex: 1, overflow: "auto" }}>
-          <FileTreeNavigation
-            selectedFile={selectedFile}
-            searchDelegate={(file) => {
-              if (onlyShowStarred && !starChart.isStarred(file.path)) {
-                return false
-              }
-              if (!searchPrompt) return true
-              return file.path.toLowerCase().includes(searchPrompt.trim().toLocaleLowerCase())
-            }}
-            delegate={fileTreeDelegate}
-          />
-        </div>
-      </>}
-    >
-      <Toolbar />
-
-      <FileDisplayBoard file={selectedFile} />
-      <Fab
-        sx={{
-          position: 'absolute',
-          bottom: 16,
-          right: 82,
-        }}
-        disabled={!selectedFile} color="primary" aria-label="nav-before" onClick={() => {
-          if (selectedFile) {
-            goFile(selectedFile, -1)
-          }
-        }}>
-        <NavigateBefore />
-      </Fab>
-      <Fab
-        sx={{
-          position: 'absolute',
-          bottom: 16,
-          right: 16,
-        }}
-        disabled={!selectedFile} color="primary" aria-label="nav-next" onClick={() => {
-          if (selectedFile) {
-            goFile(selectedFile, +1)
-          }
-        }}>
-        <NavigateNext />
-      </Fab>
-    </ResponsiveDrawer>
-  )
-  return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
-    <StarChartContext.Provider value={{
-      starChart,
-      isStarred(file) {
-        if (!file) return false
-        return starChart.isStarred(file.path)
-      },
-      star(file) {
-        const path = file?.path
-        if (!path) return
-        starChart.star(path)
-        // rebuild for prompt filter
-        forceUpdate()
-      },
-      unstar(file) {
-        const path = file?.path
-        if (!path) return
-        starChart.unstar(path)
-        // rebuild for prompt filter
-        forceUpdate()
+        </>
       }
-    }}>
-      {main}
-    </StarChartContext.Provider>
-  </IsDrawerOpenContext.Provider>
+    </ResponsiveAppBar>
+    <FileDisplayBoard file={selectedFile} />
+    <Fab
+      sx={{
+        position: 'absolute',
+        bottom: 16,
+        right: 82,
+      }}
+      disabled={!selectedFile} color="primary" aria-label="nav-before" onClick={() => {
+        if (selectedFile) {
+          goFile(selectedFile, -1)
+        }
+      }}>
+      <NavigateBefore />
+    </Fab>
+    <Fab
+      sx={{
+        position: 'absolute',
+        bottom: 16,
+        right: 16,
+      }}
+      disabled={!selectedFile} color="primary" aria-label="nav-next" onClick={() => {
+        if (selectedFile) {
+          goFile(selectedFile, +1)
+        }
+      }}>
+      <NavigateNext />
+    </Fab>
+  </ResponsiveDrawer>
 }
 
 /// TODO: Drawer looks bad on tablet portrait mode.
 const drawerWidth = "min(max(30%,20rem),30rem)"
 
-export function ResponsiveAppBar({ children }: { children: ReactNode }) {
-  const [isDrawerOpen, setIsDrawerOpen] = useContext(IsDrawerOpenContext)
+export function ResponsiveAppBar({ isDrawerOpen, setIsDrawerOpen, children }: { isDrawerOpen: boolean, setIsDrawerOpen: (open: boolean) => void, children: ReactNode }) {
   return <AppBar
     position="fixed"
     sx={{
