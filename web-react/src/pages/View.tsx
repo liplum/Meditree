@@ -8,8 +8,8 @@ import {
   Navigate,
   useNavigate, useSearchParams
 } from "react-router-dom"
-import { Box, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip } from "@mui/material"
-import { StarBorder, Star } from "@mui/icons-material"
+import { Box, Button, Drawer, Toolbar, AppBar, IconButton, Tooltip, Fab } from "@mui/material"
+import { StarBorder, Star, NavigateBefore, NavigateNext } from "@mui/icons-material"
 import { useRequest } from "ahooks"
 import { FileDisplayBoard } from "../subviews/Playground"
 import { i18n } from "../I18n"
@@ -29,9 +29,6 @@ interface StarChartContext {
   unstar(file: FileNode): void
 }
 export const StarChartContext = createContext<StarChartContext>({} as StarChartContext)
-interface FileNavigationContext {
-  goFile(curFile: FileNode, delta: number): void
-}
 export const FileNavigationContext = createContext<FileNavigationContext>({} as FileNavigationContext)
 
 async function requestFileTree({ file }: { file?: string | null }): Promise<FileTreeDelegate> {
@@ -87,6 +84,12 @@ function Body({ fileTreeDelegate }: { fileTreeDelegate: FileTreeDelegate }) {
     return starChart
   }, [])
 
+  function goFile(curFile: FileNode, delta: number) {
+    const file = findNextFile(fileTreeDelegate, curFile, delta)
+    if (!file) return
+    navigate(`/view?file=${encodeURIComponent(file.path)}`)
+  }
+
   const main = (
     <ResponsiveDrawer
       isDrawerOpen={isDrawerOpen}
@@ -124,7 +127,34 @@ function Body({ fileTreeDelegate }: { fileTreeDelegate: FileTreeDelegate }) {
       </>}
     >
       <Toolbar />
+
       <FileDisplayBoard file={selectedFile} />
+      <Fab
+        sx={{
+          position: 'absolute',
+          bottom: 16,
+          right: 82,
+        }}
+        disabled={!selectedFile} color="primary" aria-label="nav-before" onClick={() => {
+          if (selectedFile) {
+            goFile(selectedFile, -1)
+          }
+        }}>
+        <NavigateBefore />
+      </Fab>
+      <Fab
+        sx={{
+          position: 'absolute',
+          bottom: 16,
+          right: 16,
+        }}
+        disabled={!selectedFile} color="primary" aria-label="nav-next" onClick={() => {
+          if (selectedFile) {
+            goFile(selectedFile, +1)
+          }
+        }}>
+        <NavigateNext />
+      </Fab>
     </ResponsiveDrawer>
   )
   return <IsDrawerOpenContext.Provider value={[isDrawerOpen, setIsDrawerOpen]}>
@@ -149,15 +179,7 @@ function Body({ fileTreeDelegate }: { fileTreeDelegate: FileTreeDelegate }) {
         forceUpdate()
       }
     }}>
-      <FileNavigationContext.Provider value={{
-        goFile: (curFile: FileNode, delta: number) => {
-          const file = findNextFile(fileTreeDelegate, curFile, delta)
-          if (!file) return
-          navigate(`/view?file=${encodeURIComponent(file.path)}`)
-        }
-      }}>
-        {main}
-      </FileNavigationContext.Provider>
+      {main}
     </StarChartContext.Provider>
   </IsDrawerOpenContext.Provider>
 }

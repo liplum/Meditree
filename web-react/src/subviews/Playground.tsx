@@ -2,7 +2,7 @@ import "./Playground.css"
 import React, { useContext, useEffect, useRef, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { StarChartContext, FileNavigationContext, ResponsiveAppBar } from "../pages/View"
-import { Tooltip, IconButton, Typography, CircularProgress, Chip } from "@mui/material"
+import { Tooltip, IconButton, Typography, CircularProgress, Chip, Fab } from "@mui/material"
 import { StarBorder, Star } from "@mui/icons-material"
 import { NoFilesIndicator } from "../components/NoFilesIndicator"
 import useForceUpdate from "use-force-update"
@@ -41,8 +41,6 @@ function resolveRenderer(type: string) {
 
 export function FileDisplayBoard({ file }: { file?: FileNode }) {
   const { isStarred, star, unstar } = useContext(StarChartContext)
-  const { goFile } = useContext(FileNavigationContext)
-  const boardRef = useRef<HTMLDivElement>(null)
   const forceUpdate = useForceUpdate()
   let content = null
   if (!file) {
@@ -51,30 +49,6 @@ export function FileDisplayBoard({ file }: { file?: FileNode }) {
     const Renderer = resolveRenderer(file.type)
     // wheel control works so bad when using trackpad.
     content = <div
-      ref={boardRef}
-      onMouseDown={(e) => {
-        if (!isMobile) return
-        const { clientX } = e
-        if (!boardRef.current) return
-        const { left, width } = boardRef.current.getBoundingClientRect()
-
-        if (clientX < left + width / 2) {
-          // left side
-          goFile(file, -1)
-        } else {
-          // right side
-          goFile(file, +1)
-        }
-      }}
-      onKeyUp={(e) => {
-        if (e.key === "ArrowLeft") {
-          goFile(file, -1)
-          e.preventDefault()
-        } else if (e.key === "ArrowRight") {
-          goFile(file, +1)
-          e.preventDefault()
-        }
-      }}
       tabIndex={0}
       className="board">
       {
