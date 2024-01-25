@@ -43,7 +43,8 @@ export function FileDisplayBoard({ file }: { file?: FileNode }) {
     // wheel control works so bad when using trackpad.
     content = <div
       tabIndex={0}
-      className="board">
+      className="board"
+    >
       {
         Renderer
           ? <Renderer file={file} />

@@ -149,9 +149,12 @@ function Body({ fileTreeDelegate }: { fileTreeDelegate: FileTreeDelegate }) {
     <FileDisplayBoard file={selectedFile} />
     <Fab
       sx={{
-        position: 'absolute',
-        bottom: 16,
-        right: 82,
+        position: 'fixed',
+        margin: 0,
+        top: 'auto',
+        right: 84,
+        bottom: 20,
+        left: 'auto',
       }}
       disabled={!selectedFile} color="primary" aria-label="nav-before" onClick={() => {
         if (selectedFile) {
@@ -162,9 +165,12 @@ function Body({ fileTreeDelegate }: { fileTreeDelegate: FileTreeDelegate }) {
     </Fab>
     <Fab
       sx={{
-        position: 'absolute',
-        bottom: 16,
-        right: 16,
+        position: 'fixed',
+        margin: 0,
+        top: 'auto',
+        right: 20,
+        bottom: 20,
+        left: 'auto',
       }}
       disabled={!selectedFile} color="primary" aria-label="nav-next" onClick={() => {
         if (selectedFile) {
