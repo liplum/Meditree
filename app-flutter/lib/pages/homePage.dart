@@ -1,5 +1,4 @@
 import 'package:meditree/mock/video.dart';
-import 'package:meditree/pages/followPage.dart';
 import 'package:meditree/pages/searchPage.dart';
 import 'package:meditree/pages/userPage.dart';
 import 'package:meditree/style/physics.dart';
@@ -109,9 +108,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     switch (tabBarType) {
       case TikTokPageTag.home:
-        break;
-      case TikTokPageTag.follow:
-        currentPage = FollowPage();
         break;
       case TikTokPageTag.msg:
         currentPage = MsgPage();

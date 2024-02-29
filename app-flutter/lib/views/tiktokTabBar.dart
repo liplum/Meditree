@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 enum TikTokPageTag {
   home,
-  follow,
   msg,
   me,
 }
