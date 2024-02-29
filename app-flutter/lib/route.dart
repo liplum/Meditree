@@ -3,8 +3,8 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import 'index.dart';
-import 'pages/homePage.dart';
-import 'pages/userPage.dart';
+import 'home/page/index.dart';
+import 'me/page/index.dart';
 
 final $Key = GlobalKey<NavigatorState>();
 final $HomeShellKey = GlobalKey<NavigatorState>();

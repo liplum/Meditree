@@ -1,6 +1,6 @@
 import 'package:meditree/mock/video.dart';
 import 'package:meditree/pages/searchPage.dart';
-import 'package:meditree/pages/userPage.dart';
+import 'package:meditree/me/page/index.dart';
 import 'package:meditree/style/physics.dart';
 import 'package:meditree/views/tikTokCommentBottomSheet.dart';
 import 'package:meditree/views/tikTokHeader.dart';

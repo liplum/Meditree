@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:meditree/pages/userDetailPage.dart';
+import 'details.dart';
 import 'package:meditree/style/style.dart';
 import 'package:meditree/views/topToolRow.dart';
 import 'package:flutter/material.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meditree/route.dart';
 
-import 'pages/homePage.dart';
+import 'home/page/index.dart';
 
 class MeditreeApp extends StatefulWidget {
   const MeditreeApp({super.key});
