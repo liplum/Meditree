@@ -1,5 +1,5 @@
 import 'package:meditree/style/style.dart';
-import 'package:meditree/views/tikTokVideoGesture.dart';
+import 'package:meditree/home/widget/gesture.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 

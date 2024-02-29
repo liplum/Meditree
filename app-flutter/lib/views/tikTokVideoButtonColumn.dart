@@ -7,14 +7,12 @@ class TikTokButtonColumn extends StatelessWidget {
   final double? bottomPadding;
   final bool isFavorite;
   final VoidCallback? onFavorite;
-  final VoidCallback? onComment;
   final VoidCallback? onShare;
   final VoidCallback? onAvatar;
   const TikTokButtonColumn({
     Key? key,
     this.bottomPadding,
     this.onFavorite,
-    this.onComment,
     this.onShare,
     this.isFavorite= false,
     this.onAvatar,
@@ -39,11 +37,6 @@ class TikTokButtonColumn extends StatelessWidget {
           FavoriteIcon(
             onFavorite: onFavorite,
             isFavorite: isFavorite,
-          ),
-          _IconButton(
-            icon: IconToText(Icons.mode_comment, size: SysSize.iconBig - 4),
-            text: '4213',
-            onTap: onComment,
           ),
           _IconButton(
             icon: IconToText(Icons.share, size: SysSize.iconBig),

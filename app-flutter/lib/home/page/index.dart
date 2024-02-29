@@ -2,9 +2,8 @@ import 'package:meditree/mock/video.dart';
 import 'package:meditree/pages/searchPage.dart';
 import 'package:meditree/me/page/index.dart';
 import 'package:meditree/style/physics.dart';
-import 'package:meditree/views/tikTokCommentBottomSheet.dart';
 import 'package:meditree/views/tikTokScaffold.dart';
-import 'package:meditree/views/tikTokVideo.dart';
+import 'package:meditree/home/widget/video.dart';
 import 'package:meditree/views/tikTokVideoButtonColumn.dart';
 import 'package:meditree/controller/tikTokVideoListController.dart';
 import 'package:flutter/material.dart';
@@ -146,15 +145,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     favoriteMap[i] = !isF;
                   });
                   // showAboutDialog(context: context);
-                },
-                onComment: () {
-                  showModalBottomSheet(
-                    isScrollControlled: true,
-                    useSafeArea: true,
-                    backgroundColor: Colors.white.withOpacity(0),
-                    context: context,
-                    builder: (BuildContext context) => const TikTokCommentBottomSheet(),
-                  );
                 },
                 onShare: () {},
               );
