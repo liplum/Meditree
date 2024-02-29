@@ -1,10 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:meditree/style/style.dart';
-import 'package:meditree/views/tilTokAppBar.dart';
 import 'package:flutter/material.dart';
-
-
-
+import 'package:rettulf/rettulf.dart';
 
 class UserDetailPage extends StatefulWidget {
   @override
@@ -14,107 +11,87 @@ class UserDetailPage extends StatefulWidget {
 class _UserDetailPageState extends State<UserDetailPage> {
   @override
   Widget build(BuildContext context) {
-    Widget head = TikTokAppbar(
-      title: '用户',
-    );
-    var userHead = Row(
-      children: <Widget>[
-        Expanded(
-          child: Container(
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-            child: Text(
-              '个人信息',
-              style: StandardTextStyle.smallWithOpacity,
-            ),
-          ),
-        ),
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-          child: Text(
-            '修改',
-            style: StandardTextStyle.smallWithOpacity.apply(
-              color: ColorPlate.orange,
-            ),
-          ),
-        )
-      ],
-    );
-    Widget body = ListView(
-      padding: EdgeInsets.only(
-        bottom: 80 + MediaQuery.of(context).padding.bottom,
-      ),
-      children: <Widget>[
-        userHead,
-        _UserInfoRow(
-          title: '昵称',
-          rightIcon: Text(
-            '朱二蛋的枯燥生活',
-            style: StandardTextStyle.small,
-          ),
-        ),
-        _UserInfoRow(
-          title: '头像',
-          rightIcon: Text(
-            '上传',
-            style: StandardTextStyle.small,
-          ),
-        ),
-        _UserInfoRow(
-          title: '手机绑定',
-          rightIcon: Text(
-            '186****7767',
-            style: StandardTextStyle.small,
-          ),
-        ),
-        _UserInfoRow(
-          title: '地址',
-          rightIcon: Text(
-            '深圳市南山区南海大道',
-            style: StandardTextStyle.small,
-          ),
-        ),
-        _UserInfoRow(
-          title: '年龄',
-          rightIcon: Text(
-            '18',
-            style: StandardTextStyle.small,
-          ),
-        ),
-        _UserInfoRow(
-          title: '用户性别',
-          rightIcon: Text(
-            '男',
-            style: StandardTextStyle.small,
-          ),
-        ),
-        _UserInfoRow(
-          title: '职业',
-          rightIcon: Text(
-            '总裁',
-            style: StandardTextStyle.small,
-          ),
-        ),
-      ],
-    );
-    body = Center(
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: body,
-      ),
-    );
     return Scaffold(
-      body: Container(
-        color: ColorPlate.back1,
-        height: double.infinity,
-        width: double.infinity,
-        child: Column(
-          children: <Widget>[
-            head,
-            Expanded(child: body),
-          ],
+      appBar: AppBar(
+        title: "User".text(),
+      ),
+      body: ListView(
+        padding: EdgeInsets.only(
+          bottom: 80 + MediaQuery.of(context).padding.bottom,
         ),
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  child: Text(
+                    '个人信息',
+                    style: StandardTextStyle.smallWithOpacity,
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                child: Text(
+                  '修改',
+                  style: StandardTextStyle.smallWithOpacity.apply(
+                    color: ColorPlate.orange,
+                  ),
+                ),
+              )
+            ],
+          ),
+          _UserInfoRow(
+            title: '昵称',
+            rightIcon: Text(
+              '朱二蛋的枯燥生活',
+              style: StandardTextStyle.small,
+            ),
+          ),
+          _UserInfoRow(
+            title: '头像',
+            rightIcon: Text(
+              '上传',
+              style: StandardTextStyle.small,
+            ),
+          ),
+          _UserInfoRow(
+            title: '手机绑定',
+            rightIcon: Text(
+              '186****7767',
+              style: StandardTextStyle.small,
+            ),
+          ),
+          _UserInfoRow(
+            title: '地址',
+            rightIcon: Text(
+              '深圳市南山区南海大道',
+              style: StandardTextStyle.small,
+            ),
+          ),
+          _UserInfoRow(
+            title: '年龄',
+            rightIcon: Text(
+              '18',
+              style: StandardTextStyle.small,
+            ),
+          ),
+          _UserInfoRow(
+            title: '用户性别',
+            rightIcon: Text(
+              '男',
+              style: StandardTextStyle.small,
+            ),
+          ),
+          _UserInfoRow(
+            title: '职业',
+            rightIcon: Text(
+              '总裁',
+              style: StandardTextStyle.small,
+            ),
+          ),
+        ],
       ),
     );
   }
