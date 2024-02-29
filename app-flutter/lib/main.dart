@@ -26,16 +26,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Tiktok',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        hintColor: Colors.white,
-        primaryColor: ColorPlate.orange,
-        scaffoldBackgroundColor: ColorPlate.back1,
-        dialogBackgroundColor: ColorPlate.back2,
-        textTheme: TextTheme(
-          bodyLarge: StandardTextStyle.normal,
-        ),
-      ),
+      theme: ThemeData.dark(),
       home: HomePage(),
     );
   }

@@ -61,7 +61,7 @@ class TikTokScaffold extends StatefulWidget {
   final Function()? onPullDownRefresh;
 
   const TikTokScaffold({
-    Key? key,
+    super.key,
     this.header,
     this.tabBar,
     this.leftPage,
@@ -72,10 +72,10 @@ class TikTokScaffold extends StatefulWidget {
     this.enableGesture,
     this.onPullDownRefresh,
     this.controller,
-  }) : super(key: key);
+  });
 
   @override
-  _TikTokScaffoldState createState() => _TikTokScaffoldState();
+  State<TikTokScaffold> createState() => _TikTokScaffoldState();
 }
 
 class _TikTokScaffoldState extends State<TikTokScaffold>

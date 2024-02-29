@@ -1,4 +1,3 @@
-
 import 'package:meditree/style/style.dart';
 import 'package:meditree/views/selectText.dart';
 import 'package:flutter/material.dart';
@@ -22,68 +21,24 @@ class TikTokTabBar extends StatelessWidget {
     this.onTabSwitch,
     this.current,
     this.onAddButton,
-    this.hasBackground= false,
+    this.hasBackground = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final EdgeInsets padding = MediaQuery.of(context).padding;
-    Widget row = Row(
-      children: <Widget>[
-        Expanded(
-          child: GestureDetector(
-            child: SelectText(
-              isSelect: current == TikTokPageTag.home,
-              title: '首页',
-            ),
-            onTap: () => onTabSwitch?.call(TikTokPageTag.home),
-          ),
-        ),
-        Expanded(
-          child: GestureDetector(
-            child: SelectText(
-              isSelect: current == TikTokPageTag.follow,
-              title: '关注',
-            ),
-            onTap: () => onTabSwitch?.call(TikTokPageTag.follow),
-          ),
-        ),
-        Expanded(
-          child: GestureDetector(
-            child: Icon(
-              Icons.add_box,
-              size: 32,
-            ),
-            onTap: () => onAddButton?.call(),
-          ),
-        ),
-        Expanded(
-          child: GestureDetector(
-            child: SelectText(
-              isSelect: current == TikTokPageTag.msg,
-              title: '消息',
-            ),
-            onTap: () => onTabSwitch?.call(TikTokPageTag.msg),
-          ),
-        ),
-        Expanded(
-          child: GestureDetector(
-            child: SelectText(
-              isSelect: current == TikTokPageTag.me,
-              title: '我',
-            ),
-            onTap: () => onTabSwitch?.call(TikTokPageTag.me),
-          ),
-        ),
+    return BottomNavigationBar(
+      items: [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+        BottomNavigationBarItem(icon: Icon(Icons.message), label: "Message"),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Me"),
       ],
-    );
-    return Container(
-      color: hasBackground ? ColorPlate.back2 : ColorPlate.back2.withOpacity(0),
-      child: Container(
-        padding: EdgeInsets.only(bottom: padding.bottom),
-        height: 50 + padding.bottom,
-        child: row,
-      ),
+      onTap: (i){
+        switch(i){
+          case 0: onTabSwitch?.call(TikTokPageTag.home);
+          case 1: onTabSwitch?.call(TikTokPageTag.msg);
+          case 2: onTabSwitch?.call(TikTokPageTag.me);
+        }
+      },
     );
   }
 }
