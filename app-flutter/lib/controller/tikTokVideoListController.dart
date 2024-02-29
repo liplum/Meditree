@@ -132,6 +132,7 @@ class TikTokVideoListController extends ChangeNotifier {
   VPVideoController get currentPlayer => playerList[index.value];
 
   /// 销毁全部
+  @override
   void dispose() {
     // 销毁全部
     for (var player in playerList) {

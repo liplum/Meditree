@@ -19,9 +19,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   TikTokScaffoldController tkController = TikTokScaffoldController();
 
-  PageController _pageController = PageController();
+  final _pageController = PageController();
 
-  TikTokVideoListController _videoListController = TikTokVideoListController();
+  final _videoListController = TikTokVideoListController();
 
   /// 记录点赞
   Map<int, bool> favoriteMap = {};
@@ -38,7 +38,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _videoListController.currentPlayer.pause();
+    _pageController.dispose();
+    _videoListController.dispose();
     super.dispose();
   }
 
