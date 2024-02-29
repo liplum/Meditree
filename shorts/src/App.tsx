@@ -2,12 +2,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import VideoCard from './components/VideoCard';
 import BottomNavbar from './components/BottomNavbar';
 import TopNavbar from './components/TopNavbar';
+import { NextUIProvider } from "@nextui-org/react";
 import './App.css';
 
 // This array holds information about different videos
 const videoUrls = Array(20).fill({
   url: '/api/random-file?type=video',
-  profilePic: 'https://p16-sign-useast2a.tiktokcdn.com/tos-useast2a-avt-0068-giso/9d429ac49d6d18de6ebd2a3fb1f39269~c5_100x100.jpeg?x-expires=1688479200&x-signature=pjH5pwSS8Sg1dJqbB1GdCLXH6ew%3D',
+  profilePic: '/api/random-file?type=image',
   username: 'csjackie',
   description: 'Lol nvm #compsci #chatgpt #ai #openai #techtok',
   song: 'Original sound - Famed Flames',
@@ -17,7 +18,7 @@ const videoUrls = Array(20).fill({
   shares: 1,
 });
 
-function App() {
+function Main() {
   const [videos, setVideos] = useState([]);
   const videoRefs = useRef([]);
 
@@ -88,6 +89,12 @@ function App() {
     </div>
   );
 
+}
+
+function App() {
+  return <NextUIProvider>
+    <Main />
+  </NextUIProvider>
 }
 
 export default App;
