@@ -1,7 +1,5 @@
-import 'package:meditree/style/style.dart';
 import 'package:meditree/home/widget/gesture.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 ///
 /// TikTok风格的一个视频页组件，覆盖在video上，提供以下功能：
@@ -27,16 +25,17 @@ class TikTokVideoPage extends StatelessWidget {
 
   const TikTokVideoPage({
     Key? key,
-    this.bottomPadding= 16,
+    this.bottomPadding = 16,
     this.tag,
     this.rightButtonColumn,
     this.userInfoWidget,
     this.onAddFavorite,
     this.onTap,
     this.video,
-    this.aspectRatio= 9 / 16.0,
-    this.hidePauseIcon= false,
+    this.aspectRatio = 9 / 16.0,
+    this.hidePauseIcon = false,
   }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     // 右边的按钮列表
@@ -132,10 +131,7 @@ class VideoLoadingPlaceHolder extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          SpinKitWave(
-            size: 36,
-            color: Colors.white.withOpacity(0.3),
-          ),
+          CircularProgressIndicator(),
           Container(
             padding: EdgeInsets.all(50),
             child: Text(
@@ -150,6 +146,7 @@ class VideoLoadingPlaceHolder extends StatelessWidget {
 
 class VideoUserInfo extends StatelessWidget {
   final String? desc;
+
   // final Function onGoodGift;
   const VideoUserInfo({
     Key? key,
