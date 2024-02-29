@@ -29,7 +29,7 @@ class UserVideo {
     //     20,
     //     (index) => UserVideo(
     //           image: "",
-    //           url: "http://192.168.3.2/api/random-file?type=video",
+    //           url: "http://192.168.3.2/api/random-file?type=video/mp4",
     //         ));
     List<UserVideo> list =
         videoList.map((e) => UserVideo(image: '', url: 'https://static.ybhospital.net/$e', desc: '$e')).toList();

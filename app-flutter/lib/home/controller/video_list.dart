@@ -165,7 +165,7 @@ abstract class TikTokVideoController<T> {
   Future<void> play();
 
   /// 暂停
-  Future<void> pause({bool showPauseIcon= false});
+  Future<void> pause({bool showPauseIcon = false});
 }
 
 /// 异步方法并发锁
@@ -179,6 +179,7 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
 
   final ControllerBuilder<VideoPlayerController> _builder;
   final ControllerSetter<VideoPlayerController>? _afterInit;
+
   VPVideoController({
     this.videoInfo,
     required ControllerBuilder<VideoPlayerController> builder,
@@ -195,6 +196,7 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
   }
 
   bool get isDispose => _disposeLock != null;
+
   bool get prepared => _prepared;
   bool _prepared = false;
 
@@ -248,7 +250,7 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
   }
 
   @override
-  Future<void> pause({bool showPauseIcon= false}) async {
+  Future<void> pause({bool showPauseIcon = false}) async {
     await init();
     if (!prepared) return;
     if (_disposeLock != null) {

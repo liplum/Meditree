@@ -231,6 +231,7 @@ export async function startServer(
     start ??= 0
     end ??= file.size - 1
     const retrievedLength = (end + 1) - start
+    start = Math.min(start, end)
 
     res.statusCode = req.headers.range ? 206 : 200
 

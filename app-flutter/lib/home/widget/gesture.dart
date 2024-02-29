@@ -8,22 +8,22 @@ import 'package:flutter/material.dart';
 /// 双击：点赞，双击后再次单击也是增加点赞爱心
 class TikTokVideoGesture extends StatefulWidget {
   const TikTokVideoGesture({
-    Key? key,
+    super.key,
     required this.child,
     this.onAddFavorite,
     this.onSingleTap,
-  }) : super(key: key);
+  });
 
   final VoidCallback? onAddFavorite;
   final VoidCallback? onSingleTap;
   final Widget child;
 
   @override
-  _TikTokVideoGestureState createState() => _TikTokVideoGestureState();
+  State<TikTokVideoGesture> createState() => _TikTokVideoGestureState();
 }
 
 class _TikTokVideoGestureState extends State<TikTokVideoGesture> {
-  GlobalKey _key = GlobalKey();
+  final _key = GlobalKey();
 
   // 内部转换坐标点
   Offset _p(Offset p) {
@@ -97,14 +97,14 @@ class TikTokFavoriteAnimationIcon extends StatefulWidget {
   final Function? onAnimationComplete;
 
   const TikTokFavoriteAnimationIcon({
-    Key? key,
+    super.key,
     this.onAnimationComplete,
     this.position,
     this.size= 100,
-  }) : super(key: key);
+  });
 
   @override
-  _TikTokFavoriteAnimationIconState createState() =>
+  State<TikTokFavoriteAnimationIcon> createState() =>
       _TikTokFavoriteAnimationIconState();
 }
 
@@ -128,7 +128,7 @@ class _TikTokFavoriteAnimationIconState
     _animationController = AnimationController(
       lowerBound: 0,
       upperBound: 1,
-      duration: Duration(milliseconds: 1600),
+      duration: const Duration(milliseconds: 1600),
       vsync: this,
     );
 

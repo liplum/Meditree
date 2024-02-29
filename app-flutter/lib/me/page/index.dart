@@ -22,59 +22,54 @@ class UserPage extends StatefulWidget {
 class _UserPageState extends State<UserPage> {
   @override
   Widget build(BuildContext context) {
-    Widget likeButton = Container(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: <Widget>[
-          CupertinoButton(
-            onPressed: () {},
-            child: _UserRightButton(
-              title: widget.isSelfPage ? '钱包' : '关注',
-            ),
-          ),
-        ],
-      ),
-    );
-    Widget avatar = Container(
-      height: 120 + MediaQuery.of(context).padding.top,
-      padding: EdgeInsets.only(left: 18),
-      alignment: Alignment.bottomLeft,
-      child: OverflowBox(
-        alignment: Alignment.bottomLeft,
-        minHeight: 20,
-        maxHeight: 300,
-        child: Container(
-          height: 74,
-          width: 74,
-          margin: EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(44),
-            color: Colors.orange,
-            border: Border.all(
-              color: Colors.white,
-              width: 1,
-            ),
-          ),
-          child: ClipOval(
-            child: Image.network(
-              "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-      ),
-    );
     Widget body = ListView(
-      physics: BouncingScrollPhysics(
-        parent: AlwaysScrollableScrollPhysics(),
-      ),
+      physics: const BouncingScrollPhysics(),
       children: <Widget>[
-        Container(height: 20),
-        // 头像与关注
         Stack(
           alignment: Alignment.bottomLeft,
-          children: <Widget>[likeButton, avatar],
+          children: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                CupertinoButton(
+                  onPressed: () {},
+                  child: _UserRightButton(
+                    title: widget.isSelfPage ? '钱包' : '关注',
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              height: 120 + MediaQuery.of(context).padding.top,
+              padding: EdgeInsets.only(left: 18),
+              alignment: Alignment.bottomLeft,
+              child: OverflowBox(
+                alignment: Alignment.bottomLeft,
+                minHeight: 20,
+                maxHeight: 300,
+                child: Container(
+                  height: 74,
+                  width: 74,
+                  margin: EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(44),
+                    color: Colors.orange,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 1,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: Image.network(
+                      "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         Container(
           child: Column(
