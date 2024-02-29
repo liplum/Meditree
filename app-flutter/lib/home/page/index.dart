@@ -4,7 +4,7 @@ import 'package:meditree/me/page/index.dart';
 import 'package:meditree/home/widget/scaffold.dart';
 import 'package:meditree/home/widget/video.dart';
 import 'package:meditree/home/widget/side.dart';
-import 'package:meditree/controller/tikTokVideoListController.dart';
+import 'package:meditree/home/controller/video_list.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
