@@ -1,21 +1,13 @@
 import 'package:meditree/home/widget/gesture.dart';
 import 'package:flutter/material.dart';
 
-///
-/// TikTok风格的一个视频页组件，覆盖在video上，提供以下功能：
-/// 播放按钮的遮罩
-/// 单击事件
-/// 点赞事件回调（每次）
-/// 长宽比控制
-/// 底部padding（用于适配有沉浸式底部状态栏时）
-///
 class TikTokVideoPage extends StatelessWidget {
   final Widget? video;
   final double aspectRatio;
   final String? tag;
   final double bottomPadding;
 
-  final Widget? rightButtonColumn;
+  final Widget? sidebar;
   final Widget? userInfoWidget;
 
   final bool hidePauseIcon;
@@ -24,41 +16,33 @@ class TikTokVideoPage extends StatelessWidget {
   final VoidCallback? onTap;
 
   const TikTokVideoPage({
-    Key? key,
+    super.key,
     this.bottomPadding = 16,
     this.tag,
-    this.rightButtonColumn,
+    this.sidebar,
     this.userInfoWidget,
     this.onAddFavorite,
     this.onTap,
     this.video,
     this.aspectRatio = 9 / 16.0,
     this.hidePauseIcon = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    // 右边的按钮列表
-    Widget rightButtons = rightButtonColumn ?? Container();
     // 用户信息
-    Widget userInfo = userInfoWidget ??
-        VideoUserInfo(
-        );
+    Widget userInfo = userInfoWidget ?? const VideoUserInfo();
     // 视频加载的动画
     // Widget videoLoading = VideoLoadingPlaceHolder(tag: tag);
-    // 视频播放页
-    Widget videoContainer = Stack(
+    return Stack(
       children: <Widget>[
         Container(
           height: double.infinity,
           width: double.infinity,
-          color: Colors.black,
           alignment: Alignment.center,
-          child: Container(
-            child: AspectRatio(
-              aspectRatio: aspectRatio,
-              child: video,
-            ),
+          child: AspectRatio(
+            aspectRatio: aspectRatio,
+            child: video,
           ),
         ),
         TikTokVideoGesture(
@@ -82,63 +66,19 @@ class TikTokVideoPage extends StatelessWidget {
                   color: Colors.white.withOpacity(0.4),
                 ),
               ),
-      ],
-    );
-    Widget body = Container(
-      child: Stack(
-        children: <Widget>[
-          videoContainer,
-          Container(
-            height: double.infinity,
-            width: double.infinity,
-            alignment: Alignment.bottomRight,
-            child: rightButtons,
-          ),
-          Container(
-            height: double.infinity,
-            width: double.infinity,
-            alignment: Alignment.bottomLeft,
-            child: userInfo,
-          ),
-        ],
-      ),
-    );
-    return body;
-  }
-}
-
-class VideoLoadingPlaceHolder extends StatelessWidget {
-  const VideoLoadingPlaceHolder({
-    Key? key,
-    required this.tag,
-  }) : super(key: key);
-
-  final String tag;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          colors: <Color>[
-            Colors.blue,
-            Colors.green,
-          ],
+        Container(
+          height: double.infinity,
+          width: double.infinity,
+          alignment: Alignment.bottomRight,
+          child: sidebar,
         ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          CircularProgressIndicator(),
-          Container(
-            padding: EdgeInsets.all(50),
-            child: Text(
-              tag,
-            ),
-          ),
-        ],
-      ),
+        Container(
+          height: double.infinity,
+          width: double.infinity,
+          alignment: Alignment.bottomLeft,
+          child: userInfo,
+        ),
+      ],
     );
   }
 }
@@ -148,10 +88,10 @@ class VideoUserInfo extends StatelessWidget {
 
   // final Function onGoodGift;
   const VideoUserInfo({
-    Key? key,
+    super.key,
     // @required this.onGoodGift,
     this.desc,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

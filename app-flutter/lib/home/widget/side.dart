@@ -1,13 +1,12 @@
 import 'package:flutter/cupertino.dart';
-import 'package:meditree/style/style.dart';
 import 'package:flutter/material.dart';
 
-class TikTokButtonColumn extends StatelessWidget {
+class SideActionBar extends StatelessWidget {
   final double? bottomPadding;
   final bool isFavorite;
   final VoidCallback? onFavorite;
   final VoidCallback? onShare;
-  const TikTokButtonColumn({
+  const SideActionBar({
     super.key,
     this.bottomPadding,
     this.onFavorite,
@@ -17,36 +16,20 @@ class TikTokButtonColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: SysSize.avatar,
-      margin: EdgeInsets.only(
-        bottom: bottomPadding ?? 50,
-        right: 12,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: <Widget>[
-          FavoriteIcon(
-            onFavorite: onFavorite,
-            isFavorite: isFavorite,
-          ),
-          _IconButton(
-            icon: IconToText(Icons.share),
-            text: '346',
-            onTap: onShare,
-          ),
-          Container(
-            width: SysSize.avatar,
-            height: SysSize.avatar,
-            margin: EdgeInsets.only(top: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(SysSize.avatar / 2.0),
-              // color: Colors.black.withOpacity(0.8),
-            ),
-          )
-        ],
-      ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: <Widget>[
+        FavoriteIcon(
+          onFavorite: onFavorite,
+          isFavorite: isFavorite,
+        ),
+        _IconButton(
+          icon: IconToText(Icons.share),
+          text: '346',
+          onTap: onShare,
+        ),
+      ],
     );
   }
 }

@@ -118,17 +118,6 @@ class _VideoPageState extends State<VideoPage> {
   Widget build(BuildContext context) {
     var player = widget.controller;
     var data = player.videoInfo!;
-    // 右侧按钮列
-    Widget buttons = TikTokButtonColumn(
-      isFavorite: favorite,
-      onFavorite: () {
-        setState(() {
-          favorite = !favorite;
-        });
-        // showAboutDialog(context: context);
-      },
-      onShare: () {},
-    );
     // video
     return TikTokVideoPage(
       // 手势播放与自然播放都会产生暂停按钮状态变化，待处理
@@ -151,7 +140,16 @@ class _VideoPageState extends State<VideoPage> {
           favorite = true;
         });
       },
-      rightButtonColumn: buttons,
+      sidebar: SideActionBar(
+        isFavorite: favorite,
+        onFavorite: () {
+          setState(() {
+            favorite = !favorite;
+          });
+          // showAboutDialog(context: context);
+        },
+        onShare: () {},
+      ),
       video: Center(
         child: AspectRatio(
           aspectRatio: player.controller.value.aspectRatio,
