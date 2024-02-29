@@ -51,7 +51,6 @@ class TikTokScaffold extends StatefulWidget {
   final int currentIndex;
 
   final bool hasBottomPadding;
-  final bool? enableGesture;
 
   final Widget? page;
 
@@ -65,7 +64,6 @@ class TikTokScaffold extends StatefulWidget {
     this.hasBottomPadding= false,
     this.page,
     this.currentIndex= 0,
-    this.enableGesture,
     this.onPullDownRefresh,
     this.controller,
   });
@@ -144,7 +142,6 @@ class _TikTokScaffoldState extends State<TikTokScaffold>
     body = GestureDetector(
       onVerticalDragUpdate: calculateOffsetY,
       onVerticalDragEnd: (_) async {
-        if (!widget.enableGesture!) return;
         absorbing = false;
         if (offsetY != 0) {
           await animateToTop();
@@ -158,7 +155,6 @@ class _TikTokScaffoldState extends State<TikTokScaffold>
       ),
       // 水平方向滑动开始
       onHorizontalDragStart: (_) {
-        if (!widget.enableGesture!) return;
         animationControllerX?.stop();
         animationControllerY?.stop();
       },
@@ -170,7 +166,6 @@ class _TikTokScaffoldState extends State<TikTokScaffold>
     );
     body = WillPopScope(
       onWillPop: () async {
-        if (!widget.enableGesture!) return true;
         if (inMiddle == 0) {
           return true;
         }
@@ -188,7 +183,6 @@ class _TikTokScaffoldState extends State<TikTokScaffold>
 
   // 水平方向滑动中
   void onHorizontalDragUpdate(details, screenWidth) {
-    if (!widget.enableGesture!) return;
     // 控制 offsetX 的值在 -screenWidth 到 screenWidth 之间
     if (offsetX + details.delta.dx >= screenWidth) {
       setState(() {
@@ -207,7 +201,6 @@ class _TikTokScaffoldState extends State<TikTokScaffold>
 
   // 水平方向滑动结束
   onHorizontalDragEnd(details, screenWidth) {
-    if (!widget.enableGesture!) return;
     print('velocity:${details.velocity}');
     var vOffset = details.velocity.pixelsPerSecond.dx;
 
@@ -282,7 +275,6 @@ class _TikTokScaffoldState extends State<TikTokScaffold>
   /// 手指上滑,[absorbing]为false，不阻止事件，事件交给底层PageView处理
   /// 处于第一页且是下拉，则拦截滑动���件
   void calculateOffsetY(DragUpdateDetails details) {
-    if (!widget.enableGesture!) return;
     if (inMiddle != 0) {
       setState(() => absorbing = false);
       return;

@@ -8,12 +8,9 @@ import 'package:meditree/views/tikTokScaffold.dart';
 import 'package:meditree/views/tikTokVideo.dart';
 import 'package:meditree/views/tikTokVideoButtonColumn.dart';
 import 'package:meditree/controller/tikTokVideoListController.dart';
-import 'package:meditree/views/tiktokTabBar.dart';
 import 'package:flutter/material.dart';
 import 'package:safemap/safemap.dart';
 import 'package:video_player/video_player.dart';
-
-import 'msgPage.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,8 +20,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  TikTokPageTag tabBarType = TikTokPageTag.home;
-
   TikTokScaffoldController tkController = TikTokScaffoldController();
 
   PageController _pageController = PageController();
@@ -92,32 +87,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   void onNavigate() {
-    if (tabBarType == TikTokPageTag.home) {
-      _videoListController.currentPlayer.play();
-    } else {
-      _videoListController.currentPlayer.pause();
-    }
+    // if (tabBarType == TikTokPageTag.home) {
+    //   _videoListController.currentPlayer.play();
+    // } else {
+    //   _videoListController.currentPlayer.pause();
+    // }
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget? currentPage;
-
-    switch (tabBarType) {
-      case TikTokPageTag.home:
-        break;
-      case TikTokPageTag.msg:
-        currentPage = MsgPage();
-        break;
-      case TikTokPageTag.me:
-        currentPage = UserPage(isSelfPage: true);
-        break;
-    }
     double a = MediaQuery.of(context).size.aspectRatio;
     bool hasBottomPadding = a < 0.55;
 
     bool hasBackground = hasBottomPadding;
-    hasBackground = tabBarType != TikTokPageTag.home;
     if (hasBottomPadding) {
       hasBackground = true;
     }
@@ -133,13 +115,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       onPop: tkController.animateToMiddle,
     );
 
-    var header = tabBarType == TikTokPageTag.home
-        ? TikTokHeader(
-            onSearch: () {
-              tkController.animateToLeft();
-            },
-          )
-        : Container();
+    var header = TikTokHeader(
+      onSearch: () {
+        tkController.animateToLeft();
+      },
+    );
 
     // 组合
     return TikTokScaffold(
@@ -148,7 +128,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       header: header,
       leftPage: searchPage,
       rightPage: userPage,
-      enableGesture: tabBarType == TikTokPageTag.home,
       // onPullDownRefresh: _fetchData,
       page: Stack(
         // index: currentPage == null ? 0 : 1,
@@ -225,7 +204,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               return currentVideo;
             },
           ),
-          currentPage ?? Container(),
         ],
       ),
     );
