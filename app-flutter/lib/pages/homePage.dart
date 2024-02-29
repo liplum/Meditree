@@ -15,9 +15,6 @@ import 'package:video_player/video_player.dart';
 
 import 'msgPage.dart';
 
-/// 单独修改了bottomSheet组件的高度
-import 'package:meditree/other/bottomSheet.dart' as CustomBottomSheet;
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -63,7 +60,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           .map(
             (e) => VPVideoController(
               videoInfo: e,
-              builder: () => VideoPlayerController.network(e.url),
+              builder: () => VideoPlayerController.networkUrl(Uri.parse(e.url)),
             ),
           )
           .toList(),
@@ -72,7 +69,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             .map(
               (e) => VPVideoController(
                 videoInfo: e,
-                builder: () => VideoPlayerController.network(e.url),
+                builder: () => VideoPlayerController.networkUrl(Uri.parse(e.url)),
               ),
             )
             .toList();
@@ -94,7 +91,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.initState();
   }
 
-  void onNavigate(){
+  void onNavigate() {
     if (tabBarType == TikTokPageTag.home) {
       _videoListController.currentPlayer.play();
     } else {
@@ -180,11 +177,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   // showAboutDialog(context: context);
                 },
                 onComment: () {
-                  CustomBottomSheet.showModalBottomSheet(
+                  showModalBottomSheet(
+                    isScrollControlled: true,
+                    useSafeArea: true,
                     backgroundColor: Colors.white.withOpacity(0),
                     context: context,
-                    builder: (BuildContext context) =>
-                        TikTokCommentBottomSheet(),
+                    builder: (BuildContext context) => const TikTokCommentBottomSheet(),
                   );
                 },
                 onShare: () {},
