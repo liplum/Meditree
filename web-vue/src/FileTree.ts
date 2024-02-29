@@ -1,4 +1,4 @@
-import { FileInfo, DirectoryInfo, extractFromDirectory, isFile, isDirectory, DirectoryTag, getSubfile } from "@liplum/meditree-model";
+import { FileInfo, DirectoryInfo, extractFromDirectory, isFile, isDirectory, DirectoryTag, getSubfile } from "@meditree/model";
 export interface FileSystemObject {
   parent?: DirectoryObject
   name: string;

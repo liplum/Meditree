@@ -1,4 +1,4 @@
-import { DirectoryInfo, DirectoryTag, extractFromDirectory, getSubfile, isDirectory, isFile } from "@liplum/meditree-model"
+import { DirectoryInfo, DirectoryTag, extractFromDirectory, getSubfile, isDirectory, isFile } from "@meditree/model"
 
 export interface FileTreePayload {
   name: string
@@ -52,7 +52,7 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
     maxKey: key,
     name,
   }
-  
+
   function createNode(parentNode: DirectoryNode, curDir: DirectoryInfo) {
     const entries = Object.entries(curDir)
     reorder(entries)
