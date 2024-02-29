@@ -17,12 +17,12 @@ class TikTokTabBar extends StatelessWidget {
   final TikTokPageTag? current;
 
   const TikTokTabBar({
-    Key? key,
+    super.key,
     this.onTabSwitch,
     this.current,
     this.onAddButton,
     this.hasBackground = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

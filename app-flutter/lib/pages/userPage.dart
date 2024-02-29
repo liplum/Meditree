@@ -11,12 +11,12 @@ class UserPage extends StatefulWidget {
   final VoidCallback? onSwitch;
 
   const UserPage({
-    Key? key,
+    super.key,
     this.canPop = false,
     this.onPop,
     required this.isSelfPage,
     this.onSwitch,
-  }) : super(key: key);
+  });
 
   @override
   _UserPageState createState() => _UserPageState();
