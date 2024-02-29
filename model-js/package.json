@@ -1,5 +1,5 @@
 {
-  "name": "@liplum/meditree-model",
+  "name": "@meditree/model",
   "version": "1.2.0",
   "description": "The model of Meditree.",
   "main": "dist/index.js",

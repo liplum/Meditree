@@ -2,8 +2,6 @@
   "compilerOptions": {
     "noImplicitAny": false,
     "noEmitOnError": true,
-    "declaration": true,
-    "declarationMap": true,
     "sourceMap": true,
     "skipLibCheck": false,
     "target": "ES2022",
