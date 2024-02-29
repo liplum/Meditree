@@ -38,9 +38,6 @@ class TikTokScaffoldController extends ValueNotifier<TikTokPagePositon> {
 class TikTokScaffold extends StatefulWidget {
   final TikTokScaffoldController? controller;
 
-  /// 首页的顶部
-  final Widget? header;
-
   /// 左滑页面
   final Widget? leftPage;
 
@@ -58,7 +55,6 @@ class TikTokScaffold extends StatefulWidget {
 
   const TikTokScaffold({
     super.key,
-    this.header,
     this.leftPage,
     this.rightPage,
     this.hasBottomPadding= false,
@@ -127,7 +123,6 @@ class _TikTokScaffoldState extends State<TikTokScaffold>
           },
           offsetX: offsetX,
           offsetY: offsetY,
-          header: widget.header,
           isStack: !widget.hasBottomPadding,
           page: widget.page,
         ),
@@ -318,8 +313,6 @@ class _MiddlePage extends StatelessWidget {
   final double? offsetY;
   final Function? onTopDrag;
 
-  final Widget? header;
-
   const _MiddlePage({
     Key? key,
     this.absorbing,
@@ -327,7 +320,6 @@ class _MiddlePage extends StatelessWidget {
     this.offsetX,
     this.offsetY,
     this.isStack= false,
-    required this.header,
     this.page,
   }) : super(key: key);
   @override
@@ -368,7 +360,6 @@ class _MiddlePage extends StatelessWidget {
           child: SafeArea(
             child: Container(
               height: 44,
-              child: header ?? Placeholder(color: Colors.green),
             ),
           ),
         ),

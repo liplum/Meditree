@@ -3,7 +3,6 @@ import 'package:meditree/pages/searchPage.dart';
 import 'package:meditree/me/page/index.dart';
 import 'package:meditree/style/physics.dart';
 import 'package:meditree/views/tikTokCommentBottomSheet.dart';
-import 'package:meditree/views/tikTokHeader.dart';
 import 'package:meditree/views/tikTokScaffold.dart';
 import 'package:meditree/views/tikTokVideo.dart';
 import 'package:meditree/views/tikTokVideoButtonColumn.dart';
@@ -115,17 +114,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       onPop: tkController.animateToMiddle,
     );
 
-    var header = TikTokHeader(
-      onSearch: () {
-        tkController.animateToLeft();
-      },
-    );
-
     // 组合
     return TikTokScaffold(
       controller: tkController,
       hasBottomPadding: hasBackground,
-      header: header,
       leftPage: searchPage,
       rightPage: userPage,
       // onPullDownRefresh: _fetchData,
