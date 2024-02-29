@@ -1,10 +1,11 @@
 
+import 'package:flutter/cupertino.dart';
 import 'package:meditree/style/style.dart';
 import 'package:flutter/material.dart';
-import 'package:tapped/tapped.dart';
+
 
 class SearchPage extends StatefulWidget {
-  final Function? onPop;
+  final VoidCallback? onPop;
 
   const SearchPage({
     Key? key,
@@ -59,12 +60,12 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
             ),
-            Tapped(
+            CupertinoButton(
               child: Text(
                 '取消',
                 style: StandardTextStyle.normal.apply(color: ColorPlate.orange),
               ),
-              onTap: widget.onPop,
+              onPressed: widget.onPop,
             ),
           ],
         ),

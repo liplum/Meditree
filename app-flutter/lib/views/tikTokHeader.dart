@@ -1,10 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:tapped/tapped.dart';
 
 import 'selectText.dart';
 
 class TikTokHeader extends StatefulWidget {
-  final Function? onSearch;
+  final VoidCallback? onSearch;
+
   const TikTokHeader({
     Key? key,
     this.onSearch,
@@ -16,6 +17,7 @@ class TikTokHeader extends StatefulWidget {
 
 class _TikTokHeaderState extends State<TikTokHeader> {
   int currentSelect = 0;
+
   @override
   Widget build(BuildContext context) {
     List<String> list = ['推荐', '本地'];
@@ -47,7 +49,7 @@ class _TikTokHeaderState extends State<TikTokHeader> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Expanded(
-            child: Tapped(
+            child: CupertinoButton(
               child: Container(
                 color: Colors.black.withOpacity(0),
                 padding: EdgeInsets.all(4),
@@ -57,7 +59,7 @@ class _TikTokHeaderState extends State<TikTokHeader> {
                   color: Colors.white.withOpacity(0.66),
                 ),
               ),
-              onTap: widget.onSearch,
+              onPressed: widget.onSearch,
             ),
           ),
           Expanded(
@@ -69,7 +71,8 @@ class _TikTokHeaderState extends State<TikTokHeader> {
             ),
           ),
           Expanded(
-            child: Tapped(
+            child: CupertinoButton(
+              onPressed: () {},
               child: Container(
                 color: Colors.black.withOpacity(0),
                 padding: EdgeInsets.all(4),

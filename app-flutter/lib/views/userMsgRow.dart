@@ -1,6 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:meditree/style/style.dart';
 import 'package:flutter/material.dart';
-import 'package:tapped/tapped.dart';
+
 
 class UserMsgRow extends StatelessWidget {
   final Widget? lead;
@@ -54,7 +55,8 @@ class UserMsgRow extends StatelessWidget {
             ),
       ),
     );
-    return Tapped(
+    return CupertinoButton(
+      onPressed: () {  },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         child: Row(

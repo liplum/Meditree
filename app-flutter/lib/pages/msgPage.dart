@@ -1,9 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:meditree/pages/msgDetailListPage.dart';
 import 'package:meditree/style/style.dart';
 import 'package:meditree/views/tilTokAppBar.dart';
 import 'package:meditree/views/userMsgRow.dart';
 import 'package:flutter/material.dart';
-import 'package:tapped/tapped.dart';
+
 
 class MsgPage extends StatefulWidget {
   @override
@@ -209,7 +210,7 @@ class _TopIconTextButton extends StatelessWidget {
   final Color? color;
   final Color color2;
   final String? title;
-  final Function? onTap;
+  final VoidCallback? onTap;
 
   const _TopIconTextButton({
     Key? key,
@@ -252,9 +253,9 @@ class _TopIconTextButton extends StatelessWidget {
         )
       ],
     );
-    body = Tapped(
+    body = CupertinoButton(
       child: body,
-      onTap: onTap,
+      onPressed: onTap,
     );
     return Expanded(
       child: Container(

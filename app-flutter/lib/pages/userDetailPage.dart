@@ -1,7 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:meditree/style/style.dart';
 import 'package:meditree/views/tilTokAppBar.dart';
 import 'package:flutter/material.dart';
-import 'package:tapped/tapped.dart';
+
 
 
 
@@ -129,7 +130,7 @@ class _UserInfoRow extends StatelessWidget {
   final Widget? icon;
   final Widget? rightIcon;
   final String? title;
-  final Function? onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -171,8 +172,8 @@ class _UserInfoRow extends StatelessWidget {
         ],
       ),
     );
-    row = Tapped(
-      onTap: onTap,
+    row = CupertinoButton(
+      onPressed: onTap,
       child: row,
     );
 

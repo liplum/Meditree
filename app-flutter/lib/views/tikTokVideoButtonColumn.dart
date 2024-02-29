@@ -1,14 +1,15 @@
+import 'package:flutter/cupertino.dart';
 import 'package:meditree/style/style.dart';
 import 'package:flutter/material.dart';
-import 'package:tapped/tapped.dart';
+
 
 class TikTokButtonColumn extends StatelessWidget {
   final double? bottomPadding;
   final bool isFavorite;
-  final Function? onFavorite;
-  final Function? onComment;
-  final Function? onShare;
-  final Function? onAvatar;
+  final VoidCallback? onFavorite;
+  final VoidCallback? onComment;
+  final VoidCallback? onShare;
+  final VoidCallback? onAvatar;
   const TikTokButtonColumn({
     Key? key,
     this.bottomPadding,
@@ -31,9 +32,9 @@ class TikTokButtonColumn extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
-          Tapped(
+          CupertinoButton(
             child: TikTokAvatar(),
-            onTap: onAvatar,
+            onPressed: onAvatar,
           ),
           FavoriteIcon(
             onFavorite: onFavorite,
@@ -71,7 +72,7 @@ class FavoriteIcon extends StatelessWidget {
     this.isFavorite,
   }) : super(key: key);
   final bool? isFavorite;
-  final Function? onFavorite;
+  final VoidCallback? onFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +170,7 @@ class IconToText extends StatelessWidget {
 class _IconButton extends StatelessWidget {
   final Widget? icon;
   final String? text;
-  final Function? onTap;
+  final VoidCallback? onTap;
   const _IconButton({
     Key? key,
     this.icon,
@@ -190,9 +191,9 @@ class _IconButton extends StatelessWidget {
     );
     Widget body = Column(
       children: <Widget>[
-        Tapped(
+        CupertinoButton(
           child: icon ?? Container(),
-          onTap: onTap,
+          onPressed: onTap,
         ),
         Container(height: 2),
         Text(

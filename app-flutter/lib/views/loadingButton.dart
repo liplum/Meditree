@@ -1,7 +1,7 @@
 import 'package:meditree/style/text.dart';
 import 'package:meditree/style/style.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:tapped/tapped.dart';
+
 
 class AdMusicLoadingButton extends StatelessWidget {
   const AdMusicLoadingButton({
@@ -66,8 +66,8 @@ class AdMusicLoadingButton extends StatelessWidget {
           )),
     );
     return Container(
-      child: Tapped(
-        onTap: () {
+      child: CupertinoButton(
+        onPressed: () {
           if (!isLoading) {
             onTap?.call();
           }

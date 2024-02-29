@@ -1,10 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:tapped/tapped.dart';
+
 
 class IosBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Tapped(
+    return CupertinoButton(
       child: Container(
         color: Colors.white.withOpacity(0),
         padding: EdgeInsets.symmetric(horizontal: 6, vertical: 16),
@@ -13,7 +14,7 @@ class IosBackButton extends StatelessWidget {
           size: 18,
         ),
       ),
-      onTap: () {
+      onPressed: () {
         Navigator.of(context).pop();
       },
     );

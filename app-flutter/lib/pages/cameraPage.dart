@@ -1,7 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:meditree/style/style.dart';
 import 'package:meditree/views/tikTokVideoButtonColumn.dart';
 import 'package:flutter/material.dart';
-import 'package:tapped/tapped.dart';
 
 class CameraPage extends StatefulWidget {
   @override
@@ -74,7 +74,7 @@ class _CameraPageState extends State<CameraPage> {
       ),
     );
 
-    var closeButton = Tapped(
+    var closeButton = CupertinoButton(
       child: Container(
         padding: EdgeInsets.only(left: 20, top: 20),
         alignment: Alignment.topLeft,
@@ -82,7 +82,9 @@ class _CameraPageState extends State<CameraPage> {
           child: Icon(Icons.clear),
         ),
       ),
-      onTap: Navigator.of(context).pop,
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
     );
 
     var cameraButton = Container(
@@ -139,6 +141,7 @@ class _CameraPageState extends State<CameraPage> {
 
 class _SidePhotoButton extends StatelessWidget {
   final String? title;
+
   const _SidePhotoButton({
     Key? key,
     this.title,
@@ -175,6 +178,7 @@ class _SidePhotoButton extends StatelessWidget {
 class _CameraIconButton extends StatelessWidget {
   final IconData? icon;
   final String? title;
+
   const _CameraIconButton({
     Key? key,
     this.icon,

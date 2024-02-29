@@ -30,8 +30,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # 基础的点击
-  tapped: ^2.0.0-nullsafety.0
   # map取值
   safemap: ^2.0.0-nullsafety.0
   # 加载动画库

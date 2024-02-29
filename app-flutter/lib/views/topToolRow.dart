@@ -1,20 +1,22 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:tapped/tapped.dart';
 
 class TopToolRow extends StatelessWidget {
   final Widget? right;
   final bool? canPop;
   final Function? onPop;
+
   const TopToolRow({
     Key? key,
     this.right,
     this.canPop,
     this.onPop,
   }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     var popButton = canPop == true
-        ? Tapped(
+        ? CupertinoButton(
             child: Container(
               width: 30,
               height: 30,
@@ -29,7 +31,7 @@ class TopToolRow extends StatelessWidget {
                 size: 16,
               ),
             ),
-            onTap: () {
+            onPressed: () {
               if (onPop == null) {
                 Navigator.of(context).pop();
               } else {

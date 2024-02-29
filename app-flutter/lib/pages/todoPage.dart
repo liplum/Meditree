@@ -1,6 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:meditree/style/style.dart';
 import 'package:flutter/material.dart';
-import 'package:tapped/tapped.dart';
+
 
 class TodoPage extends StatelessWidget {
   final String? title;
@@ -46,13 +47,13 @@ class TodoPage extends StatelessWidget {
           Expanded(
             child: Center(
               child: canpop
-                  ? Tapped(
+                  ? CupertinoButton(
                       child: Icon(
                         Icons.clear,
                         size: 30,
                         color: Colors.red,
                       ),
-                      onTap: () {
+                      onPressed: () {
                         Navigator.of(context).pop();
                       },
                     )

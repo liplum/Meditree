@@ -1,10 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:meditree/style/style.dart';
 import 'package:meditree/views/tikTokCommentBottomSheet.dart';
 import 'package:meditree/views/tikTokVideo.dart';
 import 'package:meditree/views/tilTokAppBar.dart';
 import 'package:flutter/material.dart';
 import 'package:safemap/safemap.dart';
-import 'package:tapped/tapped.dart';
+
 
 /// 单独修改了bottomSheet组件的高度
 import 'package:meditree/other/bottomSheet.dart' as CustomBottomSheet;
@@ -70,10 +71,10 @@ class _FollowPageState extends State<FollowPage> {
 
 class FollowRow extends StatelessWidget {
   final bool? isFavorite;
-  final Function? onFavorite;
-  final Function? onComment;
-  final Function? onShare;
-  final Function? onAddFavorite;
+  final VoidCallback? onFavorite;
+  final VoidCallback? onComment;
+  final VoidCallback? onShare;
+  final VoidCallback? onAddFavorite;
 
   const FollowRow({
     Key? key,
@@ -190,7 +191,7 @@ class _RowButton extends StatelessWidget {
   final Color? color;
   final double? size;
   final String? title;
-  final Function? onTap;
+  final VoidCallback? onTap;
 
   const _RowButton({
     Key? key,
@@ -203,7 +204,7 @@ class _RowButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tapped(
+    return CupertinoButton(
       child: Padding(
         padding: const EdgeInsets.only(left: 10),
         child: Row(
@@ -223,7 +224,7 @@ class _RowButton extends StatelessWidget {
           ],
         ),
       ),
-      onTap: onTap,
+      onPressed: onTap,
     );
   }
 }

@@ -1,18 +1,18 @@
+import 'package:flutter/cupertino.dart';
 import 'package:meditree/pages/userDetailPage.dart';
 import 'package:meditree/style/style.dart';
 import 'package:meditree/views/topToolRow.dart';
 import 'package:flutter/material.dart';
-import 'package:tapped/tapped.dart';
 
 class UserPage extends StatefulWidget {
   final bool canPop;
   final bool isSelfPage;
-  final Function? onPop;
-  final Function? onSwitch;
+  final VoidCallback? onPop;
+  final VoidCallback? onSwitch;
 
   const UserPage({
     Key? key,
-    this.canPop= false,
+    this.canPop = false,
     this.onPop,
     required this.isSelfPage,
     this.onSwitch,
@@ -31,7 +31,8 @@ class _UserPageState extends State<UserPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.end,
         children: <Widget>[
-          Tapped(
+          CupertinoButton(
+            onPressed: () {},
             child: _UserRightButton(
               title: widget.isSelfPage ? '钱包' : '关注',
             ),
@@ -172,7 +173,7 @@ class _UserPageState extends State<UserPage> {
             child: TopToolRow(
               canPop: widget.canPop,
               onPop: widget.onPop,
-              right: Tapped(
+              right: CupertinoButton(
                 child: Container(
                   width: 30,
                   height: 30,
@@ -187,7 +188,7 @@ class _UserPageState extends State<UserPage> {
                     size: 24,
                   ),
                 ),
-                onTap: () {
+                onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (ctx) => UserDetailPage(),
                   ));
@@ -232,6 +233,7 @@ class _UserRightButton extends StatelessWidget {
 
 class _UserTag extends StatelessWidget {
   final String? tag;
+
   const _UserTag({
     Key? key,
     this.tag,
@@ -394,6 +396,7 @@ class _PointSelectTextButton extends StatelessWidget {
   final bool isSelect;
   final String title;
   final Function? onTap;
+
   const _PointSelectTextButton(
     this.isSelect,
     this.title, {
@@ -421,9 +424,7 @@ class _PointSelectTextButton extends StatelessWidget {
             padding: EdgeInsets.only(left: 2),
             child: Text(
               title,
-              style: isSelect
-                  ? StandardTextStyle.small
-                  : StandardTextStyle.smallWithOpacity,
+              style: isSelect ? StandardTextStyle.small : StandardTextStyle.smallWithOpacity,
             ),
           )
         ],
