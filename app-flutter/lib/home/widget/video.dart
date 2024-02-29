@@ -22,8 +22,8 @@ class TikTokVideoPage extends StatelessWidget {
 
   final bool hidePauseIcon;
 
-  final Function? onAddFavorite;
-  final Function? onSingleTap;
+  final VoidCallback? onAddFavorite;
+  final VoidCallback? onTap;
 
   const TikTokVideoPage({
     Key? key,
@@ -32,7 +32,7 @@ class TikTokVideoPage extends StatelessWidget {
     this.rightButtonColumn,
     this.userInfoWidget,
     this.onAddFavorite,
-    this.onSingleTap,
+    this.onTap,
     this.video,
     this.aspectRatio= 9 / 16.0,
     this.hidePauseIcon= false,
@@ -65,9 +65,9 @@ class TikTokVideoPage extends StatelessWidget {
         ),
         TikTokVideoGesture(
           onAddFavorite: onAddFavorite,
-          onSingleTap: onSingleTap,
+          onSingleTap: onTap,
           child: Container(
-            color: ColorPlate.clear,
+            color: Colors.transparent,
             height: double.infinity,
             width: double.infinity,
           ),
@@ -140,7 +140,6 @@ class VideoLoadingPlaceHolder extends StatelessWidget {
             padding: EdgeInsets.all(50),
             child: Text(
               tag,
-              style: StandardTextStyle.normalWithOpacity,
             ),
           ),
         ],
@@ -175,12 +174,10 @@ class VideoUserInfo extends StatelessWidget {
         children: <Widget>[
           Text(
             '@朱二旦的枯燥生活',
-            style: StandardTextStyle.big,
           ),
           Container(height: 6),
           Text(
             desc ?? '#原创 有钱人的生活就是这么朴实无华，且枯燥 #短视频',
-            style: StandardTextStyle.normal,
           ),
           Container(height: 6),
           Row(
@@ -190,7 +187,6 @@ class VideoUserInfo extends StatelessWidget {
                 child: Text(
                   '朱二旦的枯燥生活创作的原声',
                   maxLines: 9,
-                  style: StandardTextStyle.normal,
                 ),
               )
             ],

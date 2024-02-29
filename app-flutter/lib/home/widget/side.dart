@@ -39,7 +39,7 @@ class TikTokButtonColumn extends StatelessWidget {
             isFavorite: isFavorite,
           ),
           _IconButton(
-            icon: IconToText(Icons.share, size: SysSize.iconBig),
+            icon: IconToText(Icons.share),
             text: '346',
             onTap: onShare,
           ),
@@ -72,8 +72,7 @@ class FavoriteIcon extends StatelessWidget {
     return _IconButton(
       icon: IconToText(
         Icons.favorite,
-        size: SysSize.iconBig,
-        color: isFavorite! ? ColorPlate.red : null,
+        color: isFavorite! ? Colors.red : null,
       ),
       text: '1.0w',
       onTap: onFavorite,
@@ -112,7 +111,6 @@ class TikTokAvatar extends StatelessWidget {
       height: 20,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: ColorPlate.orange,
       ),
       child: Icon(
         Icons.add,
@@ -154,7 +152,7 @@ class IconToText extends StatelessWidget {
             fontFamily: 'MaterialIcons',
             fontSize: size ?? 30,
             inherit: true,
-            color: color ?? ColorPlate.white,
+            color: color ,
           ),
     );
   }
@@ -193,8 +191,6 @@ class _IconButton extends StatelessWidget {
           text ?? '??',
           style: TextStyle(
             fontWeight: FontWeight.normal,
-            fontSize: SysSize.small,
-            color: ColorPlate.white,
           ),
         ),
       ],

@@ -325,7 +325,6 @@ class _MiddlePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget mainVideoList = Container(
-      color: ColorPlate.back1,
       padding: EdgeInsets.only(
         bottom: isStack ? 0 : 44 + MediaQuery.of(context).padding.bottom,
       ),
@@ -345,7 +344,6 @@ class _MiddlePage extends StatelessWidget {
                 "下拉刷新内容",
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: SysSize.normal,
                 ),
               ),
             ),

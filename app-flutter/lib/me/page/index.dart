@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:meditree/style/style.dart';
 import 'package:flutter/material.dart';
 
 class UserPage extends StatefulWidget {
@@ -24,7 +23,6 @@ class _UserPageState extends State<UserPage> {
   @override
   Widget build(BuildContext context) {
     Widget likeButton = Container(
-      color: ColorPlate.back1,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.end,
@@ -79,25 +77,19 @@ class _UserPageState extends State<UserPage> {
           children: <Widget>[likeButton, avatar],
         ),
         Container(
-          color: ColorPlate.back1,
           child: Column(
             children: <Widget>[
               Container(
                 padding: EdgeInsets.only(left: 18),
-                color: ColorPlate.back1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
                       '@用户名',
-                      style: StandardTextStyle.big,
                     ),
                     Container(height: 8),
                     Text(
                       '朴实无华，且枯燥',
-                      style: StandardTextStyle.smallWithOpacity.apply(
-                        color: Colors.white,
-                      ),
                     ),
                     Container(height: 10),
                     Row(
@@ -113,7 +105,6 @@ class _UserPageState extends State<UserPage> {
                 ),
               ),
               Container(
-                color: ColorPlate.back1,
                 padding: EdgeInsets.symmetric(
                   horizontal: 8,
                   vertical: 2,
@@ -145,28 +136,16 @@ class _UserPageState extends State<UserPage> {
         ),
       ],
     );
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          colors: <Color>[
-            Colors.orange,
-            Colors.red,
-          ],
+    return Stack(
+      alignment: Alignment.topCenter,
+      children: <Widget>[
+        Container(
+          margin: EdgeInsets.only(top: 400),
+          height: double.infinity,
+          width: double.infinity,
         ),
-      ),
-      child: Stack(
-        alignment: Alignment.topCenter,
-        children: <Widget>[
-          Container(
-            margin: EdgeInsets.only(top: 400),
-            height: double.infinity,
-            width: double.infinity,
-            color: ColorPlate.back1,
-          ),
-          body,
-        ],
-      ),
+        body,
+      ],
     );
   }
 }
@@ -190,10 +169,8 @@ class _UserRightButton extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         title,
-        style: TextStyle(color: ColorPlate.orange),
       ),
       decoration: BoxDecoration(
-        border: Border.all(color: ColorPlate.orange),
         borderRadius: BorderRadius.circular(4),
       ),
     );
@@ -224,7 +201,6 @@ class _UserTag extends StatelessWidget {
       ),
       child: Text(
         tag ?? '标签',
-        style: StandardTextStyle.smallWithOpacity,
       ),
     );
   }
@@ -240,7 +216,6 @@ class _UserVideoTable extends StatelessWidget {
     return Column(
       children: <Widget>[
         Container(
-          color: ColorPlate.back1,
           padding: EdgeInsets.symmetric(
             vertical: 12,
           ),
@@ -343,7 +318,6 @@ class _SmallVideo extends StatelessWidget {
         aspectRatio: 3 / 4.0,
         child: Container(
           decoration: BoxDecoration(
-            color: ColorPlate.darkGray,
             border: Border.all(color: Colors.black),
           ),
           alignment: Alignment.center,
@@ -384,7 +358,6 @@ class _PointSelectTextButton extends StatelessWidget {
                   width: 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: ColorPlate.orange,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 )
@@ -393,7 +366,6 @@ class _PointSelectTextButton extends StatelessWidget {
             padding: EdgeInsets.only(left: 2),
             child: Text(
               title,
-              style: isSelect ? StandardTextStyle.small : StandardTextStyle.smallWithOpacity,
             ),
           )
         ],
@@ -454,14 +426,10 @@ class TextGroup extends StatelessWidget {
         children: <Widget>[
           Text(
             title,
-            style: StandardTextStyle.big.apply(color: color),
           ),
           Container(width: 4),
           Text(
             tag,
-            style: StandardTextStyle.smallWithOpacity.apply(
-              color: color?.withOpacity(0.6),
-            ),
           ),
         ],
       ),

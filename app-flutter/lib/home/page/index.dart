@@ -1,7 +1,6 @@
 import 'package:meditree/mock/video.dart';
 import 'package:meditree/home/page/search.dart';
 import 'package:meditree/me/page/index.dart';
-import 'package:meditree/style/physics.dart';
 import 'package:meditree/home/widget/scaffold.dart';
 import 'package:meditree/home/widget/video.dart';
 import 'package:meditree/home/widget/side.dart';
@@ -125,7 +124,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         children: <Widget>[
           PageView.builder(
             key: Key('home'),
-            physics: QuickerScrollPhysics(),
+            physics: BouncingScrollPhysics(),
             controller: _pageController,
             scrollDirection: Axis.vertical,
             itemCount: _videoListController.videoCount,
@@ -167,7 +166,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   desc: data.desc,
                   bottomPadding: hasBottomPadding ? 16.0 : 50.0,
                 ),
-                onSingleTap: () async {
+                onTap: () async {
                   if (player.controller.value.isPlaying) {
                     await player.pause();
                   } else {

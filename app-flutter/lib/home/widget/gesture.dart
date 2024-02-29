@@ -14,8 +14,8 @@ class TikTokVideoGesture extends StatefulWidget {
     this.onSingleTap,
   }) : super(key: key);
 
-  final Function? onAddFavorite;
-  final Function? onSingleTap;
+  final VoidCallback? onAddFavorite;
+  final VoidCallback? onSingleTap;
   final Widget child;
 
   @override

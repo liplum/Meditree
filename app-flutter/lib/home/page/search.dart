@@ -20,7 +20,6 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     Widget head = Container(
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-      color: ColorPlate.back2,
       width: double.infinity,
       alignment: Alignment.center,
       child: Container(
@@ -52,7 +51,6 @@ class _SearchPageState extends State<SearchPage> {
                         padding: EdgeInsets.only(left: 2, bottom: 2),
                         child: Text(
                           '搜索内容',
-                          style: StandardTextStyle.normal,
                         ),
                       )
                     ],
@@ -63,7 +61,6 @@ class _SearchPageState extends State<SearchPage> {
             CupertinoButton(
               child: Text(
                 '取消',
-                style: StandardTextStyle.normal.apply(color: ColorPlate.orange),
               ),
               onPressed: widget.onPop,
             ),
@@ -92,7 +89,6 @@ class _SearchPageState extends State<SearchPage> {
             aspectRatio: 4.0,
             child: Container(
               decoration: BoxDecoration(
-                color: ColorPlate.darkGray,
                 border: Border.all(color: Colors.black),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -112,7 +108,6 @@ class _SearchPageState extends State<SearchPage> {
     );
     return Scaffold(
       body: Container(
-        color: ColorPlate.back1,
         height: double.infinity,
         width: double.infinity,
         child: Column(
@@ -146,7 +141,6 @@ class _SearchSelectRow extends StatelessWidget {
               padding: EdgeInsets.only(left: 8, bottom: 1),
               child: Text(
                 '搜索热点',
-                style: StandardTextStyle.normal,
               ),
             ),
           ),
