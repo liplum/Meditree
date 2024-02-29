@@ -1,10 +1,10 @@
 import 'package:meditree/mock/video.dart';
-import 'package:meditree/pages/searchPage.dart';
+import 'package:meditree/home/page/search.dart';
 import 'package:meditree/me/page/index.dart';
 import 'package:meditree/style/physics.dart';
-import 'package:meditree/views/tikTokScaffold.dart';
+import 'package:meditree/home/widget/scaffold.dart';
 import 'package:meditree/home/widget/video.dart';
-import 'package:meditree/views/tikTokVideoButtonColumn.dart';
+import 'package:meditree/home/widget/side.dart';
 import 'package:meditree/controller/tikTokVideoListController.dart';
 import 'package:flutter/material.dart';
 import 'package:safemap/safemap.dart';

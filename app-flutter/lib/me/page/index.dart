@@ -1,7 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'details.dart';
 import 'package:meditree/style/style.dart';
-import 'package:meditree/views/topToolRow.dart';
 import 'package:flutter/material.dart';
 
 class UserPage extends StatefulWidget {
@@ -167,35 +165,6 @@ class _UserPageState extends State<UserPage> {
             color: ColorPlate.back1,
           ),
           body,
-          Container(
-            margin: EdgeInsets.only(top: 20),
-            height: 62,
-            child: TopToolRow(
-              canPop: widget.canPop,
-              onPop: widget.onPop,
-              right: CupertinoButton(
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  margin: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.36),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.more_horiz,
-                    size: 24,
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (ctx) => UserDetailPage(),
-                  ));
-                },
-              ),
-            ),
-          ),
         ],
       ),
     );
