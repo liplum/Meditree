@@ -13,6 +13,7 @@ export interface RenderTreeNode {
 }
 
 export interface FileNode extends RenderTreeNode {
+  parent: RenderTreeNode
   name: string
   isLeaf: true
   url: string
@@ -21,6 +22,7 @@ export interface FileNode extends RenderTreeNode {
 }
 
 export interface DirectoryNode extends RenderTreeNode {
+  parent?: RenderTreeNode
   children: (DirectoryNode | FileNode)[]
   isLeaf?: false
 }
@@ -62,6 +64,7 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
       if (isFile(file)) {
         // fileObj is for both TreeView component and actual FileTree.
         const fileObj: FileNode = {
+          parent: parentNode,
           name,
           isLeaf: true,
           title: name,
@@ -81,6 +84,7 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
         const mainFi = getSubfile(file, mainName)
         if (mainName && mainFi) {
           const fileObj: FileNode = {
+            parent: parentNode,
             name,
             isLeaf: true,
             title: name,
@@ -96,6 +100,7 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
           parentNode.children.push(fileObj)
         } else {
           const dirObj: DirectoryNode = {
+            parent: parentNode,
             key: curKey,
             title: name,
             path: parentNode !== rootRenderTree ? `${parentNode.path}/${name}` : name,
