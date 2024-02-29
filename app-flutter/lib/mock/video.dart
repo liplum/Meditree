@@ -25,10 +25,14 @@ class UserVideo {
   });
 
   static List<UserVideo> fetchVideo() {
-    List<UserVideo> list = videoList
-        .map((e) => UserVideo(
-            image: '', url: 'https://static.ybhospital.net/$e', desc: '$e'))
-        .toList();
+    // return List.generate(
+    //     20,
+    //     (index) => UserVideo(
+    //           image: "",
+    //           url: "http://192.168.3.2/api/random-file?type=video",
+    //         ));
+    List<UserVideo> list =
+        videoList.map((e) => UserVideo(image: '', url: 'https://static.ybhospital.net/$e', desc: '$e')).toList();
     return list;
   }
 
