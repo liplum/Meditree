@@ -1,5 +1,5 @@
 {
-  "name": "meditree",
+  "name": "@meditree/backend",
   "version": "1.0.0",
   "description": "The Meditree backend server.",
   "main": "dist/index.js",

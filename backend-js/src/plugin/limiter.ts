@@ -1,4 +1,3 @@
-import { filterFileTreeJson } from "../file.js"
 import { type PluginMeta } from "../plugin.js"
 import { type MeditreePlugin } from "../server.js"
 import { parseBytes } from "../utils.js"
@@ -28,7 +27,7 @@ const LimiterPlugin: PluginMeta<MeditreePlugin, LimiterPluginConfig> = {
     return {
       setupHooks(hooks) {
         if (maxFileSize > 0) {
-          hooks.includeLocalFile.push((file) => file.size < maxFileSize)
+          hooks.includeLocalFile.push((file) => file.size <= maxFileSize)
         }
         if (throttleRate > 0) {
           hooks.onPostCreateFileStream.push(async (manager, file, stream) => {
