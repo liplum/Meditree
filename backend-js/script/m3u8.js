@@ -5,6 +5,7 @@ import { extname, dirname, basename, join } from "path"
 import Ffmpeg from "fluent-ffmpeg"
 import ProgressBar from "progress"
 import { promisify } from "util"
+import { removePrefix, processOnFileTree } from "./utils.js"
 
 const readFile = promisify(fs.readFile)
 const writeFile = promisify(fs.writeFile)
@@ -74,7 +75,7 @@ async function getTs(argv) {
     const content = await readFile(opt.path, { encoding: "utf-8" })
     const tsFileList = extractTsFileUrlListFromText(content)
     console.log(tsFileList)
-    
+
   }
 
   async function getTsUrl(argv) {
@@ -100,7 +101,7 @@ async function gen(argv) {
   await processOnFileTree(opt.path,
     (filepath) => ext.includes(removePrefix(extname(filepath).toLocaleLowerCase(), ".")),
     async (filepath) => {
-      await convertVideo({
+      await convertVideo2M3u8({
         videoPath: filepath,
         time: opt.time,
         overwrite: opt.overwrite,
@@ -109,26 +110,8 @@ async function gen(argv) {
     })
 }
 
-async function processOnFileTree(fileOrDirPath, filter, task) {
-  filter ??= () => true
-  const fileStat = fs.statSync(fileOrDirPath)
-  if (fileStat.isFile()) {
-    await task(fileOrDirPath)
-  } else if (fileStat.isDirectory()) {
-    for (const filepath of visitFiles(fileOrDirPath, filter)) {
-      await task(filepath)
-    }
-  }
-}
 
-function removePrefix(str, prefix) {
-  if (str.startsWith(prefix)) {
-    return str.slice(prefix.length)
-  }
-  return str
-}
-
-async function convertVideo({ videoPath, time, overwrite, destDir }) {
+async function convertVideo2M3u8({ videoPath, time, overwrite, destDir }) {
   if (!destDir) {
     destDir = dirname(videoPath)
   }
@@ -177,18 +160,6 @@ async function convertVideo({ videoPath, time, overwrite, destDir }) {
       })
       .run()
   })
-}
-
-function* visitFiles(parentDir, predicate) {
-  for (const file of fs.readdirSync(parentDir, { withFileTypes: true })) {
-    if (file.isFile()) {
-      if (predicate(file.name)) {
-        yield join(parentDir, file.name)
-      }
-    } else if (file.isDirectory()) {
-      yield* visitFiles(join(parentDir, file.name), predicate)
-    }
-  }
 }
 
 async function fetchTextFile(url) {
