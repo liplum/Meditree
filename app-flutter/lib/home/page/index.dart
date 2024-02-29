@@ -121,9 +121,6 @@ class _VideoPageState extends State<VideoPage> {
     // 右侧按钮列
     Widget buttons = TikTokButtonColumn(
       isFavorite: favorite,
-      onAvatar: () {
-        // tkController.animateToPage(TikTokPagePositon.right);
-      },
       onFavorite: () {
         setState(() {
           favorite = !favorite;

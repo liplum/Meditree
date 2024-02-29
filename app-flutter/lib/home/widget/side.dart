@@ -2,21 +2,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:meditree/style/style.dart';
 import 'package:flutter/material.dart';
 
-
 class TikTokButtonColumn extends StatelessWidget {
   final double? bottomPadding;
   final bool isFavorite;
   final VoidCallback? onFavorite;
   final VoidCallback? onShare;
-  final VoidCallback? onAvatar;
   const TikTokButtonColumn({
-    Key? key,
+    super.key,
     this.bottomPadding,
     this.onFavorite,
     this.onShare,
     this.isFavorite= false,
-    this.onAvatar,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,10 +27,6 @@ class TikTokButtonColumn extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
-          CupertinoButton(
-            child: TikTokAvatar(),
-            onPressed: onAvatar,
-          ),
           FavoriteIcon(
             onFavorite: onFavorite,
             isFavorite: isFavorite,
@@ -60,10 +53,10 @@ class TikTokButtonColumn extends StatelessWidget {
 
 class FavoriteIcon extends StatelessWidget {
   const FavoriteIcon({
-    Key? key,
+    super.key,
     required this.onFavorite,
     this.isFavorite,
-  }) : super(key: key);
+  });
   final bool? isFavorite;
   final VoidCallback? onFavorite;
 
@@ -80,55 +73,6 @@ class FavoriteIcon extends StatelessWidget {
   }
 }
 
-class TikTokAvatar extends StatelessWidget {
-  const TikTokAvatar({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    Widget avatar = Container(
-      width: SysSize.avatar,
-      height: SysSize.avatar,
-      margin: EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.white,
-          width: 1,
-        ),
-        borderRadius: BorderRadius.circular(SysSize.avatar / 2.0),
-        color: Colors.orange,
-      ),
-      child: ClipOval(
-        child: Image.network(
-          "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
-          fit: BoxFit.cover,
-        ),
-      ),
-    );
-    Widget addButton = Container(
-      width: 20,
-      height: 20,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(
-        Icons.add,
-        size: 16,
-      ),
-    );
-    return Container(
-      width: SysSize.avatar,
-      height: 66,
-      margin: EdgeInsets.only(bottom: 6),
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: <Widget>[avatar, addButton],
-      ),
-    );
-  }
-}
-
 /// 把IconData转换为文字，使其可以使用文字样式
 class IconToText extends StatelessWidget {
   final IconData? icon;
@@ -138,11 +82,11 @@ class IconToText extends StatelessWidget {
 
   const IconToText(
     this.icon, {
-    Key? key,
+    super.key,
     this.style,
     this.size,
     this.color,
-  }) : super(key: key);
+  });
   @override
   Widget build(BuildContext context) {
     return Text(
@@ -163,11 +107,11 @@ class _IconButton extends StatelessWidget {
   final String? text;
   final VoidCallback? onTap;
   const _IconButton({
-    Key? key,
+    super.key,
     this.icon,
     this.text,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
