@@ -1,5 +1,4 @@
 import 'package:meditree/mock/video.dart';
-import 'package:meditree/pages/cameraPage.dart';
 import 'package:meditree/pages/followPage.dart';
 import 'package:meditree/pages/searchPage.dart';
 import 'package:meditree/pages/userPage.dart';
@@ -96,6 +95,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.initState();
   }
 
+  void onNavigate(){
+    if (tabBarType == TikTokPageTag.home) {
+      _videoListController.currentPlayer.play();
+    } else {
+      _videoListController.currentPlayer.pause();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget? currentPage;
@@ -121,28 +128,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (hasBottomPadding) {
       hasBackground = true;
     }
-    Widget tikTokTabBar = TikTokTabBar(
-      hasBackground: hasBackground,
-      current: tabBarType,
-      onTabSwitch: (type) async {
-        setState(() {
-          tabBarType = type;
-          if (type == TikTokPageTag.home) {
-            _videoListController.currentPlayer.play();
-          } else {
-            _videoListController.currentPlayer.pause();
-          }
-        });
-      },
-      onAddButton: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            fullscreenDialog: true,
-            builder: (context) => CameraPage(),
-          ),
-        );
-      },
-    );
 
     var userPage = UserPage(
       isSelfPage: false,
@@ -167,7 +152,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return TikTokScaffold(
       controller: tkController,
       hasBottomPadding: hasBackground,
-      tabBar: tikTokTabBar,
       header: header,
       leftPage: searchPage,
       rightPage: userPage,

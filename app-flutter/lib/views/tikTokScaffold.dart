@@ -41,9 +41,6 @@ class TikTokScaffold extends StatefulWidget {
   /// 首页的顶部
   final Widget? header;
 
-  /// 底部导航
-  final Widget? tabBar;
-
   /// 左滑页面
   final Widget? leftPage;
 
@@ -63,7 +60,6 @@ class TikTokScaffold extends StatefulWidget {
   const TikTokScaffold({
     super.key,
     this.header,
-    this.tabBar,
     this.leftPage,
     this.rightPage,
     this.hasBottomPadding= false,
@@ -134,7 +130,6 @@ class _TikTokScaffoldState extends State<TikTokScaffold>
           offsetX: offsetX,
           offsetY: offsetY,
           header: widget.header,
-          tabBar: widget.tabBar,
           isStack: !widget.hasBottomPadding,
           page: widget.page,
         ),
@@ -332,7 +327,6 @@ class _MiddlePage extends StatelessWidget {
   final Function? onTopDrag;
 
   final Widget? header;
-  final Widget? tabBar;
 
   const _MiddlePage({
     Key? key,
@@ -342,18 +336,10 @@ class _MiddlePage extends StatelessWidget {
     this.offsetY,
     this.isStack= false,
     required this.header,
-    required this.tabBar,
     this.page,
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    Widget tabBarContainer = tabBar ??
-        Container(
-          height: 44,
-          child: Placeholder(
-            color: Colors.red,
-          ),
-        );
     Widget mainVideoList = Container(
       color: ColorPlate.back1,
       padding: EdgeInsets.only(
@@ -406,7 +392,6 @@ class _MiddlePage extends StatelessWidget {
               alignment: Alignment.bottomCenter,
               children: <Widget>[
                 mainVideoList,
-                tabBarContainer,
               ],
             ),
           ),
