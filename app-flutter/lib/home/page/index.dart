@@ -1,6 +1,4 @@
 import 'package:meditree/mock/video.dart';
-import 'package:meditree/home/page/search.dart';
-import 'package:meditree/me/page/index.dart';
 import 'package:meditree/home/widget/scaffold.dart';
 import 'package:meditree/home/widget/video.dart';
 import 'package:meditree/home/widget/side.dart';
@@ -16,14 +14,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  final tkController = TikTokScaffoldController();
-
   final _pageController = PageController();
 
   final _videoListController = TikTokVideoListController();
-
-  /// 记录点赞
-  Map<int, bool> favoriteMap = {};
 
   List<UserVideo> videoDataList = [];
 
@@ -70,16 +63,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _videoListController.addListener(() {
       setState(() {});
     });
-    tkController.addListener(
-      () {
-        if (tkController.value == TikTokPagePositon.middle) {
-          _videoListController.currentPlayer.play();
-        } else {
-          _videoListController.currentPlayer.pause();
-        }
-      },
-    );
-
     super.initState();
   }
 
@@ -93,22 +76,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    var userPage = UserPage(
-      isSelfPage: false,
-      canPop: true,
-      onPop: () {
-        tkController.animateToMiddle();
-      },
-    );
-    var searchPage = SearchPage(
-      onPop: tkController.animateToMiddle,
-    );
-
-    // 组合
     return TikTokScaffold(
-      controller: tkController,
-      leftPage: searchPage,
-      rightPage: userPage,
       // onPullDownRefresh: _fetchData,
       page: Stack(
         children: <Widget>[
