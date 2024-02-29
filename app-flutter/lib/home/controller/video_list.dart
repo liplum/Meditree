@@ -173,7 +173,7 @@ Completer<void>? _syncLock;
 
 class VPVideoController extends TikTokVideoController<VideoPlayerController> {
   VideoPlayerController? _controller;
-  ValueNotifier<bool> _showPauseIcon = ValueNotifier<bool>(false);
+  final _showPauseIcon = ValueNotifier<bool>(false);
 
   final UserVideo? videoInfo;
 

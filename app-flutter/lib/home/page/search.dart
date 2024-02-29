@@ -1,6 +1,4 @@
-
 import 'package:flutter/cupertino.dart';
-import 'package:meditree/style/style.dart';
 import 'package:flutter/material.dart';
 
 

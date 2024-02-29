@@ -16,7 +16,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  TikTokScaffoldController tkController = TikTokScaffoldController();
+  final tkController = TikTokScaffoldController();
 
   final _pageController = PageController();
 
@@ -93,14 +93,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    double a = MediaQuery.of(context).size.aspectRatio;
-    bool hasBottomPadding = a < 0.55;
-
-    bool hasBackground = hasBottomPadding;
-    if (hasBottomPadding) {
-      hasBackground = true;
-    }
-
     var userPage = UserPage(
       isSelfPage: false,
       canPop: true,
@@ -115,77 +107,91 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // 组合
     return TikTokScaffold(
       controller: tkController,
-      hasBottomPadding: hasBackground,
       leftPage: searchPage,
       rightPage: userPage,
       // onPullDownRefresh: _fetchData,
       page: Stack(
-        // index: currentPage == null ? 0 : 1,
         children: <Widget>[
           PageView.builder(
-            key: Key('home'),
-            physics: BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(),
             controller: _pageController,
             scrollDirection: Axis.vertical,
             itemCount: _videoListController.videoCount,
             itemBuilder: (context, i) {
-              // 拼一个视频组件出来
-              bool isF = favoriteMap[i] ?? false;
-              var player = _videoListController.playerOfIndex(i)!;
-              var data = player.videoInfo!;
-              // 右侧按钮列
-              Widget buttons = TikTokButtonColumn(
-                isFavorite: isF,
-                onAvatar: () {
-                  tkController.animateToPage(TikTokPagePositon.right);
-                },
-                onFavorite: () {
-                  setState(() {
-                    favoriteMap[i] = !isF;
-                  });
-                  // showAboutDialog(context: context);
-                },
-                onShare: () {},
+              final controller = _videoListController.playerOfIndex(i)!;
+              return VideoPage(
+                key: ValueKey("${controller.videoInfo?.url} $i"),
+                controller: _videoListController.playerOfIndex(i)!,
               );
-              // video
-              Widget currentVideo = Center(
-                child: AspectRatio(
-                  aspectRatio: player.controller.value.aspectRatio,
-                  child: VideoPlayer(player.controller),
-                ),
-              );
-
-              currentVideo = TikTokVideoPage(
-                // 手势播放与自然播放都会产生暂停按钮状态变化，待处理
-                hidePauseIcon: !player.showPauseIcon.value,
-                aspectRatio: 9 / 16.0,
-                key: Key(data.url + '$i'),
-                tag: data.url,
-                bottomPadding: hasBottomPadding ? 16.0 : 16.0,
-                userInfoWidget: VideoUserInfo(
-                  desc: data.desc,
-                  bottomPadding: hasBottomPadding ? 16.0 : 50.0,
-                ),
-                onTap: () async {
-                  if (player.controller.value.isPlaying) {
-                    await player.pause();
-                  } else {
-                    await player.play();
-                  }
-                  setState(() {});
-                },
-                onAddFavorite: () {
-                  setState(() {
-                    favoriteMap[i] = true;
-                  });
-                },
-                rightButtonColumn: buttons,
-                video: currentVideo,
-              );
-              return currentVideo;
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class VideoPage extends StatefulWidget {
+  final VPVideoController controller;
+
+  const VideoPage({
+    super.key,
+    required this.controller,
+  });
+
+  @override
+  State<VideoPage> createState() => _VideoPageState();
+}
+
+class _VideoPageState extends State<VideoPage> {
+  bool favorite = false;
+
+  @override
+  Widget build(BuildContext context) {
+    var player = widget.controller;
+    var data = player.videoInfo!;
+    // 右侧按钮列
+    Widget buttons = TikTokButtonColumn(
+      isFavorite: favorite,
+      onAvatar: () {
+        // tkController.animateToPage(TikTokPagePositon.right);
+      },
+      onFavorite: () {
+        setState(() {
+          favorite = !favorite;
+        });
+        // showAboutDialog(context: context);
+      },
+      onShare: () {},
+    );
+    // video
+    return TikTokVideoPage(
+      // 手势播放与自然播放都会产生暂停按钮状态变化，待处理
+      hidePauseIcon: !player.showPauseIcon.value,
+      aspectRatio: 9 / 16.0,
+      tag: data.url,
+      userInfoWidget: VideoUserInfo(
+        desc: data.desc,
+      ),
+      onTap: () async {
+        if (player.controller.value.isPlaying) {
+          await player.pause();
+        } else {
+          await player.play();
+        }
+        setState(() {});
+      },
+      onAddFavorite: () {
+        setState(() {
+          favorite = true;
+        });
+      },
+      rightButtonColumn: buttons,
+      video: Center(
+        child: AspectRatio(
+          aspectRatio: player.controller.value.aspectRatio,
+          child: VideoPlayer(player.controller),
+        ),
       ),
     );
   }

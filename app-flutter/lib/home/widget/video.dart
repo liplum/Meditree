@@ -43,7 +43,6 @@ class TikTokVideoPage extends StatelessWidget {
     // 用户信息
     Widget userInfo = userInfoWidget ??
         VideoUserInfo(
-          bottomPadding: bottomPadding,
         );
     // 视频加载的动画
     // Widget videoLoading = VideoLoadingPlaceHolder(tag: tag);
@@ -150,20 +149,13 @@ class VideoUserInfo extends StatelessWidget {
   // final Function onGoodGift;
   const VideoUserInfo({
     Key? key,
-    required this.bottomPadding,
     // @required this.onGoodGift,
     this.desc,
   }) : super(key: key);
 
-  final double bottomPadding;
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(
-        left: 12,
-        bottom: bottomPadding,
-      ),
       margin: EdgeInsets.only(right: 80),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
