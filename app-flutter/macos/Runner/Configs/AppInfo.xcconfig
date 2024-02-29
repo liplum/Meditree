@@ -11,4 +11,4 @@ PRODUCT_NAME = meditree
 PRODUCT_BUNDLE_IDENTIFIER = net.liplum.meditree
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2023 net.liplum. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2024 net.liplum. All rights reserved.
