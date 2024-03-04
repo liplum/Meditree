@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meditree/explorer/page/index.dart';
 
 import 'index.dart';
 import 'home/page/index.dart';
@@ -19,7 +20,7 @@ final _homeShellRoute = GoRoute(
 final _explorerShellRoute = GoRoute(
   path: "/explorer",
 // Timetable is the home page.
-  builder: (ctx, state) => const Placeholder(),
+  builder: (ctx, state) => const ExplorerPage(),
 );
 final _meShellRoute = GoRoute(
   path: "/me",
