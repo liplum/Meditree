@@ -1,6 +1,5 @@
 import fs from "fs"
 import { v4 as uuidv4 } from "uuid"
-import { HLSMediaType } from "./plugin/hls.js"
 import { type File } from "./file.js"
 
 export interface AppConfig {
@@ -32,6 +31,11 @@ export interface AppConfig {
    * Minimatch pattern to content type.
    */
   fileType: Record<string, string>
+  /**
+   * The included content type.
+   * Including all files by default.
+   */
+  includes?: string[]
   /**
    * Plugin name/url to its configuration.
    */
@@ -66,7 +70,7 @@ export function setupConfig(config: AppConfig | Partial<AppConfig> = {}): AppCon
       "**/*.txt": "text/plain",
       "**/*.gif": "image/gif",
       "**/*.webp": "image/webp",
-      "**/*.m3u8": HLSMediaType,
+      "**/*.m3u8": "application/x-mpegURL",
       "**/*.ts": "video/mpeg",
     }
   }

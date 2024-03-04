@@ -45,13 +45,13 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   private readonly pathFilter: PathFilter
   private readonly fileFilter: FileFilter
   private rebuildCounter = 0
-  constructor({ root, log, name, pattern2FileType, ignorePatterns, fileFilter }: HostTreeOptions, rebuildInterval: number) {
+  constructor({ root, log, name, pattern2ContentType, ignorePatterns, fileFilter }: HostTreeOptions, rebuildInterval: number) {
     super()
     this.rebuildInterval = rebuildInterval
     this.root = root
     this.log = log
     this.name = name
-    this.filePathClassifier = makeFilePathClassifier(pattern2FileType)
+    this.filePathClassifier = makeFilePathClassifier(pattern2ContentType)
     this.pathFilter = makePathFilter(ignorePatterns)
     this.fileFilter = fileFilter
   }

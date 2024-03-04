@@ -13,7 +13,7 @@ export interface HostTreeOptions {
   */
   root: string
   name: string
-  pattern2FileType: Record<string, string>
+  pattern2ContentType: Record<string, string>
   ignorePatterns: string[]
   fileFilter: FileFilter
   log?: Logger
@@ -37,12 +37,12 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
   private readonly filePathClassifier: FileClassifier
   private readonly pathFilter: PathFilter
   private readonly fileFilter: FileFilter
-  constructor({ root, log, name, pattern2FileType, ignorePatterns, fileFilter }: HostTreeOptions) {
+  constructor({ root, log, name, pattern2ContentType, ignorePatterns, fileFilter }: HostTreeOptions) {
     super()
     this.root = root
     this.log = log
     this.name = name
-    this.filePathClassifier = makeFilePathClassifier(pattern2FileType)
+    this.filePathClassifier = makeFilePathClassifier(pattern2ContentType)
     this.pathFilter = makeFSOFilter(ignorePatterns)
     this.fileFilter = fileFilter
   }

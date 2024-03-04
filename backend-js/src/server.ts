@@ -157,10 +157,13 @@ export async function startServer(
   let hostTree: IHostTree = new EmptyHostTree(config.name)
   if (config.root) {
     const common = {
-      pattern2FileType: config.fileType,
+      pattern2ContentType: config.fileType,
       log: fileTreeLog,
       ignorePatterns: config.ignore,
       fileFilter(file: LocalFile): boolean {
+        if (config.includes && !config.includes.includes(file.type)) {
+          return false
+        }
         for (const hook of hooks.includeLocalFile) {
           if (!hook(file)) return false
         }
