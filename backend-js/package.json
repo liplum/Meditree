@@ -11,6 +11,7 @@
     "dist/**/*.d.ts"
   ],
   "scripts": {
+    "build": "tsc",
     "start": "tsc && node dist/index.js"
   },
   "author": "Liplum",
