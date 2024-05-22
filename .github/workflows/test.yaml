@@ -18,12 +18,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: 'pnpm'
-          
+
       - name: compile node.js backend
         run: |
           cd backend-js
-          pnpm i --frozen-lockfile
           pnpm build
           cd ..
