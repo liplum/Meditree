@@ -1,4 +1,4 @@
-import { DirectoryInfo, DirectoryTag, extractFromDirectory, getSubfile, isDirectory, isFile } from "@meditree/model"
+import { DirectoryInfo, DirectoryTag, extractFromDirectory, getSubfile, isDirectory, isFile } from "@liplum/meditree-model"
 
 export interface FileTreePayload {
   name: string
