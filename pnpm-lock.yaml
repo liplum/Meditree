@@ -326,9 +326,9 @@ importers:
 
   web-vue:
     dependencies:
-      '@meditree/model':
-        specifier: workspace:^
-        version: link:../model-js
+      '@liplum/meditree-model':
+        specifier: ^1.2.0
+        version: 1.2.0
       filesize:
         specifier: ^10.0.7
         version: 10.1.0
