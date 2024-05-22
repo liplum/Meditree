@@ -24,5 +24,6 @@ jobs:
       - name: compile node.js backend
         run: |
           cd backend-js
+          pnpm i
           pnpm build
           cd ..
