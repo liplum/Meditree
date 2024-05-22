@@ -22,7 +22,7 @@
   "devDependencies": {
     "@mdi/font": "^7.2.96",
     "@types/js-cookie": "^3.0.3",
-    "@vitejs/plugin-vue": "^4.1.0",
+    "@vitejs/plugin-vue": "^5.0.4",
     "vite": "^5.0.10"
   }
 }
