@@ -131,7 +131,7 @@ function Markdown({ src, alt, parentDir }: { src: string, alt: string, parentDir
     return <div style={{ height: "90%", overflow: "auto" }}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        transformImageUri={uri => {
+        urlTransform={uri => {
           if (uri.startsWith("http://") || uri.startsWith("https://")) {
             return uri
           } else {
