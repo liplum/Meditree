@@ -2,7 +2,7 @@ import fs from "fs"
 import { v4 as uuidv4 } from "uuid"
 import { type File } from "./file.js"
 import JSON5 from "json5"
-
+import * as  R from "./r.js"
 export interface AppConfig {
   /** 
    * The network interface on which the application will listen for incoming connections.
@@ -63,6 +63,7 @@ export interface AppConfig {
 
 export function setupConfig(config: AppConfig | Partial<AppConfig> = {}): AppConfig {
   const newConfig = config as AppConfig
+  newConfig["$schema"] = R.configJsonSchemaUrl;
   if (!newConfig.name) {
     newConfig.name = uuidv4()
   }
@@ -98,7 +99,7 @@ export function loadConfigFromFile(configFi: File): AppConfig {
   }
   const config = setupConfig(json)
   if (configFi.writable) {
-    fs.writeFileSync(configFi.path, JSON5.stringify(config, null, 2))
+    fs.writeFileSync(configFi.path, JSON.stringify(config, null, 2))
   }
   return config
 }

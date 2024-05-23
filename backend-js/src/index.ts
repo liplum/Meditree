@@ -31,7 +31,7 @@ async function main(argv: string[]): Promise<void> {
       // load from cmd args
       ? args.config
       // load from home dir
-      : existsOrNull(resolveAppStoragePath("config.json5"))
+      : existsOrNull(resolveAppStoragePath("config.jsonc"))
       ?? resolveAppStoragePath("config.json")
   )
   configFi.ensureParent()
