@@ -9,7 +9,6 @@ import WatchPlugin from "./plugin/watch.js"
 import AuthPlugin from "./plugin/auth.js"
 import RandomPlugin from "./plugin/random.js"
 import LimiterPlugin from "./plugin/limiter.js"
-import UploadPlugin from "./plugin/upload.js"
 // mongoDB
 import MongoDBPlugin from "./plugin/mongodb/core.js"
 import MongoDBUserPlugin from "./plugin/mongodb/user-storage.js"
@@ -30,7 +29,6 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
   registry.minify = MinifyPlugin
   registry.watch = WatchPlugin
   registry.limiter = LimiterPlugin
-  registry.upload = UploadPlugin
   registry.random = RandomPlugin
 
   // mongoDB
