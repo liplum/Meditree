@@ -34,6 +34,30 @@ export class FileTreeManager extends EventEmitter implements FileTreeLike {
     }
   }
 
+  resolveFileFromFull(path: string): LocalFile | null {
+    const pathParts = path.split("/")
+    while (pathParts.length && pathParts[pathParts.length - 1].length === 0) {
+      pathParts.pop()
+    }
+    while (pathParts.length && pathParts[0].length === 0) {
+      pathParts.shift()
+    }
+    const resolved = this.resolveFile(pathParts)
+    return resolved
+  }
+
+  // resolveDirFromFull(path: string): LocalFile | null {
+  //   const pathParts = path.split("/")
+  //   while (pathParts.length && pathParts[pathParts.length - 1].length === 0) {
+  //     pathParts.pop()
+  //   }
+  //   while (pathParts.length && pathParts[0].length === 0) {
+  //     pathParts.shift()
+  //   }
+  //   const resolved = this.resolveFile(pathParts)
+  //   return resolved
+  // }
+
   async createReadStream(file: LocalFile, options?: ReadStreamOptions): Promise<Readable | null> {
     // if the file has a path, it's a local file
     const path = file.localPath

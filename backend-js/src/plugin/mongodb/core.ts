@@ -21,7 +21,7 @@ export interface MongoDbService {
 }
 
 export const MongoDBType = {
-  MongoDB: token<MongoDbService>("net.liplum.MongoDB.MongoDB"),
+  MongoDB: token<MongoDbService>("meditree.MongoDB.MongoDB"),
 }
 
 const MongoDbPlugin: PluginMeta<MeditreePlugin, MongoDbPluginConfig> = {

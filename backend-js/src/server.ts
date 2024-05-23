@@ -23,9 +23,9 @@ import { fileTypeFromFile } from "file-type"
 
 
 export const MeditreeType = {
-  HostTree: token<(options: HostTreeOptions) => IHostTree>("net.liplum.Meditree.HostTree"),
-  Auth: token<RequestHandler>("net.liplum.Meditree.Auth"),
-  Events: token<MeditreeEvents>("net.liplum.Meditree.Events"),
+  HostTree: token<(options: HostTreeOptions) => IHostTree>("meditree.Meditree.HostTree"),
+  Auth: token<RequestHandler>("meditree.Meditree.Auth"),
+  Events: token<MeditreeEvents>("meditree.Meditree.Events"),
 }
 
 export const startServer = async (
@@ -317,31 +317,15 @@ export const startServer = async (
     res.end()
   })
 
-
-  const resolveFile = (path: string) => {
+  api.head("/file/(*)", authMiddleware, async (req, res) => {
+    let path: string = req.params[0]
     try {
       path = decodeURIComponent(path)
     } catch (e) {
-      return "Invalid URI"
+      res.status(400).send("Invalid URI").end()
+      return 
     }
-    const pathParts = path.split("/")
-    while (pathParts.length && pathParts[pathParts.length - 1].length === 0) {
-      pathParts.pop()
-    }
-    while (pathParts.length && pathParts[0].length === 0) {
-      pathParts.shift()
-    }
-    const resolved = manager.resolveFile(pathParts)
-    return resolved
-  }
-
-  api.head("/file/(*)", authMiddleware, async (req, res) => {
-    let path: string = req.params[0]
-    const resolved = resolveFile(path)
-    if (resolved === "Invalid URI") {
-      res.status(400).send(resolved).end()
-      return
-    }
+    const resolved = manager.resolveFileFromFull(path)
     if (!resolved?.type) {
       res.sendStatus(404).end()
       return
@@ -358,11 +342,13 @@ export const startServer = async (
 
   app.get("/file/(*)", authMiddleware, async (req, res) => {
     let path: string = req.params[0]
-    const resolved = resolveFile(path)
-    if (resolved === "Invalid URI") {
-      res.status(400).send(resolved).end()
-      return
+    try {
+      path = decodeURIComponent(path)
+    } catch (e) {
+      res.status(400).send("Invalid URI").end()
+      return 
     }
+    const resolved = manager.resolveFileFromFull(path)
     if (!resolved?.type) {
       res.sendStatus(404).end()
       return

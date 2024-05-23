@@ -1,7 +1,7 @@
 import { token } from "@liplum/ioc"
 
 export const UserType = {
-  UserStorage: token<UserStorageService>("net.liplum.User.Storage"),
+  UserStorage: token<UserStorageService>("meditree.User.Storage"),
 }
 
 /**
