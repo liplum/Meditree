@@ -1,10 +1,16 @@
 import os from "os"
-import path from "path"
+import p from "path"
+import fs from "fs"
 
 const home = os.homedir()
-export const appDir = path.join(home, ".meditree")
+export const appDir = p.join(home, ".meditree")
 
-export function resolveAppStoragePath(_path: string): string {
-  if (path.isAbsolute(_path)) return _path
-  else return path.join(appDir, _path)
+export const resolveAppStoragePath = (path: string): string => {
+  if (p.isAbsolute(path)) return path
+  else return p.join(appDir, path)
+}
+
+export const existsOrNull = (path: string): string | null => {
+  if (fs.existsSync(path)) return path
+  else return null
 }

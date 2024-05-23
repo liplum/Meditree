@@ -5,7 +5,7 @@ import path from "path"
 import { File as FileDelegate } from "./file.js"
 import { createLogger } from "@liplum/log"
 import fs from "fs"
-import { resolveAppStoragePath } from "./env.js"
+import { existsOrNull, resolveAppStoragePath } from "./env.js"
 import esMain from "es-main"
 import { cli } from '@liplum/cli'
 
@@ -31,7 +31,8 @@ async function main(argv: string[]): Promise<void> {
       // load from cmd args
       ? args.config
       // load from home dir
-      : resolveAppStoragePath("config.json")
+      : existsOrNull(resolveAppStoragePath("config.json5"))
+      ?? resolveAppStoragePath("config.json")
   )
   configFi.ensureParent()
   if (!fs.existsSync(configFi.path)) {

@@ -1,6 +1,7 @@
 import fs from "fs"
 import { v4 as uuidv4 } from "uuid"
 import { type File } from "./file.js"
+import JSON5 from "json5"
 
 export interface AppConfig {
   /** 
@@ -91,13 +92,13 @@ export function loadConfigFromFile(configFi: File): AppConfig {
   const data = fs.readFileSync(configFi.path, "utf8")
   let json: any
   try {
-    json = JSON.parse(data)
+    json = JSON5.parse(data)
   } catch {
     json = {}
   }
   const config = setupConfig(json)
   if (configFi.writable) {
-    fs.writeFileSync(configFi.path, JSON.stringify(config, null, 2))
+    fs.writeFileSync(configFi.path, JSON5.stringify(config, null, 2))
   }
   return config
 }
