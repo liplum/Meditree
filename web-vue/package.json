@@ -11,19 +11,19 @@
   "dependencies": {
     "@liplum/meditree-model": "^1.2.0",
     "@vue/reactivity": "^3.4.27",
-    "filesize": "^10.0.7",
-    "js-cookie": "^3.0.1",
-    "video.js": "^8.3.0",
+    "filesize": "^10.1.2",
+    "js-cookie": "^3.0.5",
+    "video.js": "^8.12.0",
     "vue": "^3.4.27",
-    "vue-i18n": "^9.2.2",
-    "vue-router": "^4.1.6",
+    "vue-i18n": "^9.13.1",
+    "vue-router": "^4.3.2",
     "vuejs-tree": "^3.0.2",
-    "vuetify": "^3.1.13"
+    "vuetify": "^3.6.7"
   },
   "devDependencies": {
-    "@mdi/font": "^7.2.96",
-    "@types/js-cookie": "^3.0.3",
+    "@mdi/font": "^7.4.47",
+    "@types/js-cookie": "^3.0.6",
     "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.0.10"
+    "vite": "^5.2.11"
   }
 }
