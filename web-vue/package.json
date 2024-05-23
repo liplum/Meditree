@@ -10,10 +10,11 @@
   },
   "dependencies": {
     "@liplum/meditree-model": "^1.2.0",
+    "@vue/reactivity": "^3.4.27",
     "filesize": "^10.0.7",
     "js-cookie": "^3.0.1",
     "video.js": "^8.3.0",
-    "vue": "^3.2.47",
+    "vue": "^3.4.27",
     "vue-i18n": "^9.2.2",
     "vue-router": "^4.1.6",
     "vuejs-tree": "^3.0.2",
