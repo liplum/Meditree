@@ -6,7 +6,7 @@ import { UserType } from "./user-storage.js"
 import { type PluginMeta } from "../plugin.js"
 
 export const StatisticsType = {
-  StatisticsStorage: token<StatisticsStorageService>("Statistics.Storage")
+  StatisticsStorage: token<StatisticsStorageService>("net.liplum.Statistics.Storage")
 }
 
 export interface StatisticsStorageService {

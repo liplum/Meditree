@@ -13,7 +13,7 @@ interface AdminPluginConfig {
 }
 
 export const AdminPluginType = {
-  Auth: token<RequestHandler>("AdminPlugin.Auth"),
+  Auth: token<RequestHandler>("net.liplum.Admin.Auth"),
 }
 const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
   create(config) {

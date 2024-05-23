@@ -23,9 +23,9 @@ import { fileTypeFromFile } from "file-type"
 import multer from "multer"
 
 export const MeditreeType = {
-  HostTree: token<(options: HostTreeOptions) => IHostTree>("Meditree.HostTree"),
-  Auth: token<RequestHandler>("Meditree.Auth"),
-  Events: token<MeditreeEvents>("Meditree.Events"),
+  HostTree: token<(options: HostTreeOptions) => IHostTree>("net.liplum.Meditree.HostTree"),
+  Auth: token<RequestHandler>("net.liplum.Meditree.Auth"),
+  Events: token<MeditreeEvents>("net.liplum.Meditree.Events"),
 }
 
 export const startServer = async (

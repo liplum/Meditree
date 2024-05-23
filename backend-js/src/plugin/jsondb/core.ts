@@ -30,7 +30,7 @@ export interface JsonDbService {
 }
 
 export const Type = {
-  JsonDB: token<JsonDbService>("JsonDB"),
+  JsonDB: token<JsonDbService>("net.liplum.JsonDB.JsonDB"),
 }
 
 const JsonDbPlugin: PluginMeta<MeditreePlugin, JsonDbPluginConfig> = {
