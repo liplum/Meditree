@@ -2,26 +2,34 @@ import { loadConfigFromFile } from "./config.js"
 import { startServer } from "./server.js"
 import { install as installSourceMap } from "source-map-support"
 import path from "path"
-import { pathToFileURL } from "url"
-import commandLineArgs from "command-line-args"
 import { File as FileDelegate } from "./file.js"
 import { createLogger } from "@liplum/log"
 import fs from "fs"
 import { resolveAppStoragePath } from "./env.js"
+import esMain from "es-main"
+import { cli } from '@liplum/cli'
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+async function main(argv: string[]): Promise<void> {
   installSourceMap()
-  const options = commandLineArgs([
-    { name: "config", alias: "i", type: String, defaultOption: true },
-  ])
+  const args = cli({
+    name: 'Medtiree',
+    description: 'Share your media anywhere in a tree with various backends and frontends.',
+    examples: ['node dist/index.js -i <config-file>',],
+    require: [],
+    options: [{
+      name: 'config',
+      alias: "i",
+      description: 'The config file path.'
+    },],
+  }, { argv })!
   const log = createLogger("Bootstrap")
   // To try finding the config file in following locations:
   // 1. the specific path passed by command line arguments.
   // 2. the default path in user home: "~/.meditree/config.json"
   const configFi = new FileDelegate(
-    options.config
+    args.config
       // load from cmd args
-      ? options.config
+      ? args.config
       // load from home dir
       : resolveAppStoragePath("config.json")
   )
@@ -38,5 +46,10 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   configFi.checkWritable()
   const config = loadConfigFromFile(configFi)
   log.info(`Config is loading from "${path.resolve(configFi.path)}".`)
-  startServer(config)
+  await startServer(config)
+}
+
+
+if (esMain(import.meta)) {
+  main(process.argv)
 }

@@ -107,9 +107,7 @@ async function main(argv) {
       await gen(args)
       break
   }
-
 }
-
 
 async function getM3u8(args) {
   const content = await fetchTextFile(args.url)

@@ -26,12 +26,6 @@ importers:
       chokidar:
         specifier: ^3.5.3
         version: 3.6.0
-      command-line-args:
-        specifier: ^5.2.1
-        version: 5.2.1
-      command-line-usage:
-        specifier: ^7.0.1
-        version: 7.0.1
       cookie-parser:
         specifier: ^1.4.6
         version: 1.4.6
@@ -75,9 +69,6 @@ importers:
       '@types/bytes':
         specifier: ^3.1.4
         version: 3.1.4
-      '@types/command-line-args':
-        specifier: ^5.2.3
-        version: 5.2.3
       '@types/cookie-parser':
         specifier: ^1.4.6
         version: 1.4.6
@@ -2062,9 +2053,6 @@ packages:
 
   '@types/bytes@3.1.4':
     resolution: {integrity: sha512-A0uYgOj3zNc4hNjHc5lYUfJQ/HVyBXiUMKdXd7ysclaE6k9oJdavQzODHuwjpUu2/boCP8afjQYi8z/GtvNCWA==}
-
-  '@types/command-line-args@5.2.3':
-    resolution: {integrity: sha512-uv0aG6R0Y8WHZLTamZwtfsDLVRnOa+n+n5rEvFWL5Na5gZ8V2Teab/duDPFzIIIhs9qizDpcavCusCLJZu62Kw==}
 
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
@@ -8025,8 +8013,6 @@ snapshots:
       '@types/node': 20.11.22
 
   '@types/bytes@3.1.4': {}
-
-  '@types/command-line-args@5.2.3': {}
 
   '@types/connect@3.4.38':
     dependencies:
