@@ -80,6 +80,9 @@ importers:
       ws:
         specifier: ^8.17.0
         version: 8.17.0
+      yaml:
+        specifier: ^2.4.2
+        version: 2.4.2
     devDependencies:
       '@types/bytes':
         specifier: ^3.1.4
@@ -6111,6 +6114,11 @@ packages:
 
   yaml@2.4.0:
     resolution: {integrity: sha512-j9iR8g+/t0lArF4V6NE/QCfT+CO7iLqrXAHZbJdo+LfjqP1vR8Fg5bSiaq6Q2lOD1AUEVrEVIgABvBFYojJVYQ==}
+    engines: {node: '>= 14'}
+    hasBin: true
+
+  yaml@2.4.2:
+    resolution: {integrity: sha512-B3VqDZ+JAg1nZpaEmWtTXUlBneoGx6CPM9b0TENK6aoSu5t73dItudwdgmi6tHlIZZId4dZ9skcAQ2UbcyAeVA==}
     engines: {node: '>= 14'}
     hasBin: true
 
@@ -13338,6 +13346,8 @@ snapshots:
   yaml@1.10.2: {}
 
   yaml@2.4.0: {}
+
+  yaml@2.4.2: {}
 
   yargs-parser@21.1.1: {}
 

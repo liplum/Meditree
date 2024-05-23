@@ -1,1 +1,2 @@
 export const configJsonSchemaUrl = "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/config-schema.json"
+export const configYamlSchemaComment = `# yaml-language-server: $schema=${configJsonSchemaUrl}`

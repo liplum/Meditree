@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/config-schema.json",
   "title": "Meditree configuration",
   "description": "The JSON schema for config.json that Meditree used.",
   "type": "object",
@@ -49,19 +50,26 @@
     "plugin": {
       "type": "object",
       "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "_disabled": {
+        "oneOf": [
+          {
             "type": "boolean"
           },
-          "_depends": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          {
+            "type": "object",
+            "properties": {
+              "_disabled": {
+                "type": "boolean"
+              },
+              "_depends": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": {}
           }
-        },
-        "additionalProperties": {}
+        ]
       }
     }
   }

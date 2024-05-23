@@ -1,4 +1,4 @@
-import fs from "fs"
+import fs from "fs/promises"
 import path from "path"
 
 export type FileType = string
@@ -310,44 +310,35 @@ export function attachVirtualPath(root: FileTreeLike): void {
 }
 
 export class File {
-  private _readable?: boolean
-  private _writable?: boolean
   readonly path: string
-
+  _lastReadableError?: Error;
+  _lastWritableError?: Error;
   constructor(path: string) {
     this.path = path
   }
 
-  get readable(): boolean {
-    return this._readable ?? false
-  }
-
-  get writable(): boolean {
-    return this._writable ?? false
-  }
-
-  checkReadable(): Error | undefined {
+  async checkReadable(): Promise<boolean> {
     try {
-      fs.accessSync(this.path, fs.constants.R_OK)
-      this._readable = true
+      await fs.access(this.path, fs.constants.R_OK)
+      return true
     } catch (error) {
-      this._readable = false
-      return error
+      this._lastReadableError = error as Error
+      return false
     }
   }
 
-  checkWritable(): Error | undefined {
+  async checkWritable(): Promise<boolean> {
     try {
-      fs.accessSync(this.path, fs.constants.W_OK)
-      this._writable = true
+      await fs.access(this.path, fs.constants.W_OK)
+      return true
     } catch (error) {
-      this._writable = false
-      return error
+      this._lastWritableError = error as Error
+      return false
     }
   }
 
-  ensureParent(): void {
+  async ensureParent(): Promise<void> {
     const dir = path.dirname(this.path)
-    fs.mkdirSync(dir, { recursive: true })
+    await fs.mkdir(dir, { recursive: true })
   }
 }
