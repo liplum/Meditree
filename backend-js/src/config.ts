@@ -7,6 +7,11 @@ import * as  R from "./r.js"
 import mime from "mime"
 import os from "os"
 export interface AppConfig {
+  /**
+   * It indicates whether the config file is readonly, aka, the file cannot be modified by Meditree.
+   * false by default.
+   */
+  readonly?: boolean
   /** 
    * The network interface on which the application will listen for incoming connections.
    * 0.0.0.0(all interfaces) by default.
@@ -150,7 +155,7 @@ export const loadConfigFromFile = async (configFi: File): Promise<AppConfig> => 
     }
   }
 
-  if (await configFi.checkWritable()) {
+  if (!config.readonly && await configFi.checkWritable()) {
     if (fileType === ConfigFileType.yaml) {
       if (!content.startsWith(R.configYamlSchemaComment)) {
         await writeConfig(configFi, content, fileType)
