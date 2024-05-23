@@ -365,8 +365,6 @@ export async function startServer(
     await pipeFile(req, res, resolved)
   })
 
-
-
   // Phrase 19: start HostTree and rebuild it manually.
   hostTree.start()
   await hostTree.rebuildFileTree()

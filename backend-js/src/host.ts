@@ -156,7 +156,7 @@ export async function createFileTreeFrom({
               size: stat.size,
               name: fileName,
               localPath: filePath,
-              etag: etag(filePath, { weak: true, })
+              etag: etag(stat, { weak: false, })
             })
             if (fileFilter(localFile)) {
               tree.addFile(localFile)
