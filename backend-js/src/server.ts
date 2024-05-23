@@ -19,6 +19,7 @@ import { resolveAppStoragePath } from "./env.js"
 import fs from "fs"
 import { type MeditreeMeta } from "./meta.js"
 import mime from "mime"
+import multer from "multer"
 
 export const TYPE = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("Meditree.HostTree"),
@@ -103,6 +104,12 @@ export async function startServer(
 
   const events = new EventEmitter() as MeditreeEvents
 
+  const storage = multer.diskStorage({
+
+  })
+
+  const upload = multer({ storage })
+
   container.bind(TYPE.Events).toValue(events)
 
   // Phrase 10: plugins register or override services.
@@ -159,8 +166,10 @@ export async function startServer(
   if (config.root) {
     const common: Partial<HostTreeOptions> = {
       classifier: async (path) => {
-        const type = classifyContentTypeByPattern(path, config.fileType)
-        if (type) return type
+        if (config.fileType) {
+          const type = classifyContentTypeByPattern(path, config.fileType)
+          if (type) return type
+        }
         return mime.getType(path)
       },
       log: fileTreeLog,
@@ -301,8 +310,9 @@ export async function startServer(
     res.end()
   })
 
-  app.get("/api/file(/*)", authMiddleware, async (req, res) => {
-    let path: string = removePrefix(req.baseUrl + req.path, "/api/file/")
+
+  app.get("/api/file(*)", authMiddleware, async (req, res) => {
+    let path: string = req.params[0]
     try {
       path = decodeURIComponent(path)
     } catch (e) {
@@ -325,6 +335,8 @@ export async function startServer(
     res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)
     await pipeFile(req, res, resolved)
   })
+
+
 
   // Phrase 19: start HostTree and rebuild it manually.
   hostTree.start()
