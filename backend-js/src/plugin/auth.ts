@@ -25,7 +25,7 @@ interface AuthPluginConfig {
 }
 
 const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
-  depends: ["user-storage"],
+  depends: ["upload"],
   create(config) {
     let storage: UserStorageService
     const log = createLogger("Auth")

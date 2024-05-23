@@ -9,6 +9,7 @@ import WatchPlugin from "./plugin/watch.js"
 import AuthPlugin from "./plugin/auth.js"
 import RandomPlugin from "./plugin/random.js"
 import LimiterPlugin from "./plugin/limiter.js"
+import UploadPlugin from "./plugin/upload.js"
 // mongoDB
 import MongoDBPlugin from "./plugin/mongodb/core.js"
 import MongoDBUserPlugin from "./plugin/mongodb/user-storage.js"
@@ -18,12 +19,20 @@ import JsonDBPlugin from "./plugin/jsondb/core.js"
 import JsonDBUserPlugin from "./plugin/jsondb/user-storage.js"
 import JsonDBStatisticsPlugin from "./plugin/jsondb/statistics-storage.js"
 
+// Admin
+import AdminPlugin from "./plugin/admin/admin.js"
+import AdminAuthTokenPlugin from "./plugin/admin/auth-token.js"
+
+
 export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>): void {
   registry.homepage = HomepagePlugin
   registry.hls = HLSPlugin
   registry.minify = MinifyPlugin
   registry.watch = WatchPlugin
   registry.limiter = LimiterPlugin
+  registry.upload = UploadPlugin
+  registry.random = RandomPlugin
+
   // mongoDB
   registry.mongodb = MongoDBPlugin
   registry["mongodb-user"] = MongoDBUserPlugin
@@ -35,5 +44,8 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
   // has dependencies
   registry.auth = AuthPlugin
   registry.statistics = StatisticsPlugin
-  registry.random = RandomPlugin
+
+  // Admin
+  registry.admin = AdminPlugin
+  registry["admin-auth-token"] = AdminAuthTokenPlugin
 }

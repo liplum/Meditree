@@ -20,7 +20,7 @@ import fs from "fs"
 import { type MeditreeMeta } from "./meta.js"
 import mime from "mime"
 import { fileTypeFromFile } from "file-type"
-import multer from "multer"
+
 
 export const MeditreeType = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("net.liplum.Meditree.HostTree"),
@@ -104,12 +104,6 @@ export const startServer = async (
     .toValue((req, res, next) => { next() })
 
   const events = new EventEmitter() as MeditreeEvents
-
-  const storage = multer.diskStorage({
-
-  })
-
-  const upload = multer({ storage })
 
   container.bind(MeditreeType.Events).toValue(events)
 
@@ -295,7 +289,7 @@ export const startServer = async (
 
   // Phrase 17: plugins patch the express app registering and FileTree manager setup.
   for (const plugin of plugins) {
-    await plugin.setupMeditree?.({ app, api, upload, manager, container, service })
+    await plugin.setupMeditree?.({ app, api, manager, container, service })
   }
 
   // Phrase 18: express app setup.
@@ -436,7 +430,6 @@ export interface MeditreeSetupContext {
   app: express.Express
   api: express.Router
   manager: FileTreeManager
-  upload: multer.Multer
   container: Container
   service: MeditreeService
 }
@@ -453,7 +446,7 @@ export interface MeditreePlugin {
   setupHooks?: (hooks: MeditreeHooks) => void
 
   setupMeditree?: ({
-    app, api, upload, manager, container, service
+    app, api, manager, container, service
   }: MeditreeSetupContext) => Promise<void>
 
   onLocalFileTreeRebuilt?: (tree: LocalFileTree) => void
