@@ -19,6 +19,7 @@ import { resolveAppStoragePath } from "./env.js"
 import fs from "fs"
 import { type MeditreeMeta } from "./meta.js"
 import mime from "mime"
+import { fileTypeFromFile } from "file-type"
 import multer from "multer"
 
 export const TYPE = {
@@ -162,13 +163,20 @@ export async function startServer(
       return hostTreeCtor(options)
     }
   }
+  if (config.enhancedMimeType) {
+    log.info("Enhanced mime type mode is enabled. Building file tree might be terribly slow.")
+  }
   let hostTree: IHostTree = new EmptyHostTree(config.name)
   if (config.root) {
     const common: Partial<HostTreeOptions> = {
       classifier: async (path) => {
-        if (config.fileType) {
-          const type = classifyContentTypeByPattern(path, config.fileType)
+        if (config.mimeTypes) {
+          const type = classifyContentTypeByPattern(path, config.mimeTypes)
           if (type) return type
+        }
+        if (config.enhancedMimeType) {
+          const type = await fileTypeFromFile(path)
+          if (type) return type.mime
         }
         return mime.getType(path)
       },
@@ -319,6 +327,9 @@ export async function startServer(
     const pathParts = path.split("/")
     while (pathParts.length && pathParts[pathParts.length - 1].length === 0) {
       pathParts.pop()
+    }
+    while (pathParts.length && pathParts[0].length === 0) {
+      pathParts.shift()
     }
     const resolved = manager.resolveFile(pathParts)
     return resolved
