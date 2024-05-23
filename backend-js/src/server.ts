@@ -310,20 +310,47 @@ export async function startServer(
     res.end()
   })
 
-
-  app.get("/api/file(*)", authMiddleware, async (req, res) => {
-    let path: string = req.params[0]
+  const resolveFile = (path: string) => {
     try {
       path = decodeURIComponent(path)
     } catch (e) {
-      res.status(400).send("URI Invalid").end()
-      return
+      return "Invalid URI"
     }
     const pathParts = path.split("/")
     while (pathParts.length && pathParts[pathParts.length - 1].length === 0) {
       pathParts.pop()
     }
     const resolved = manager.resolveFile(pathParts)
+    return resolved
+  }
+
+  app.head("/api/file(*)", authMiddleware, async (req, res) => {
+    let path: string = req.params[0]
+    const resolved = resolveFile(path)
+    if (resolved === "Invalid URI") {
+      res.status(400).send(resolved).end()
+      return
+    }
+    if (!resolved?.type) {
+      res.sendStatus(404).end()
+      return
+    }
+    res.contentType(resolved.type)
+    res.header("Content-Length", "${resolved.size}")
+    const expireTime = new Date(Date.now() + config.cacheMaxAge)
+    res.setHeader("Expires", expireTime.toUTCString())
+    res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)
+    res.end()
+  })
+
+
+  app.get("/api/file(*)", authMiddleware, async (req, res) => {
+    let path: string = req.params[0]
+    const resolved = resolveFile(path)
+    if (resolved === "Invalid URI") {
+      res.status(400).send(resolved).end()
+      return
+    }
     if (!resolved?.type) {
       res.sendStatus(404).end()
       return
