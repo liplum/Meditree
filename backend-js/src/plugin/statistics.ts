@@ -10,11 +10,11 @@ export const TYPE = {
 }
 
 export interface StatisticsStorageService {
-  increment(filePath: string): Promise<void>
-  getViewCount(filePath: string): Promise<number | undefined>
+  increment: (filePath: string) => Promise<void>
+  getViewCount: (filePath: string) => Promise<number | undefined>
 
-  setLastView(filePath: string, time: Date): Promise<void>
-  getLastView(filePath: string): Promise<Date | undefined>
+  setLastView: (filePath: string, time: Date) => Promise<void>
+  getLastView: (filePath: string) => Promise<Date | undefined>
 }
 interface StatisticsPluginConfig {
   /**
@@ -25,10 +25,10 @@ interface StatisticsPluginConfig {
 
 const StatisticsPlugin: PluginMeta<MeditreePlugin, StatisticsPluginConfig> = {
   depends: ["statistics-storage"],
-  create(config) {
+  create: (config) => {
     let statistics: StatisticsStorageService
     return {
-      async setupMeditree({ app, manager, container }) {
+      setupMeditree: async ({ app, manager, container }) => {
         statistics = container.get(TYPE.StatisticsStorage)
         const events = container.get(MeditreeType.Events)
         const users = container.tryGet(UserType.UserStorage)

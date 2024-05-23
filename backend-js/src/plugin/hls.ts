@@ -10,10 +10,10 @@ interface HLSPluginConfig {
 }
 
 const HLSPlugin: PluginMeta<MeditreePlugin, HLSPluginConfig> = {
-  create(config) {
+  create: (config) => {
     const hideTsFile = config.hideTsFile ?? false
     return {
-      onLocalFileTreeRebuilt(tree) {
+      onLocalFileTreeRebuilt: (tree) => {
         for (const m3u8Fi of tree.visitFile({
           fileFilter: (f) => f.type === "application/x-mpegURL",
           dirFilter: (d) => d.tag?.main === undefined,

@@ -34,11 +34,11 @@ const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
     const jwtSecret = config.jwtSecret ?? uuidv4()
     log.info(`JWT secret: "${jwtSecret}", expiration: "${jwtExpiration}".`)
     return {
-      setupMeta(meta) {
+      setupMeta: (meta) => {
         meta.auth = {
         }
       },
-      setupService(container) {
+      setupService: (container) => {
         storage = container.get(TYPE.UserStorage)
         container.bind(MeditreeType.Auth).toValue(async (req: Request & WithUser, res, next) => {
           // Get the JWT from the cookie, body or authorization header in a fallback chain.
@@ -70,7 +70,7 @@ const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
         }
         )
       },
-      async setupMeditree({ app, manager, container }) {
+      setupMeditree: async ({ app, manager, container }) => {
         app.post("/api/login", async (req, res) => {
           const { account, password } = req.body
           if (typeof account !== "string" || typeof password !== "string") {

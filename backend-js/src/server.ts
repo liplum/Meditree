@@ -28,9 +28,9 @@ export const TYPE = {
   Events: token<MeditreeEvents>("Meditree.Events"),
 }
 
-export async function startServer(
+export const startServer = async (
   config: AppConfig
-): Promise<void> {
+): Promise<void> => {
   // Phrase 1: setup starting timer.
   const timer = new Timer()
   timer.start("Start Server")
@@ -70,7 +70,7 @@ export async function startServer(
   }
 
   // Phrase 7: listen to all "exit-like" events, and handle them properly.
-  function onExitPlugin(): void {
+  const onExitPlugin = (): void => {
     // hostTree may not be declared before app exits.
     if (typeof hostTree !== "undefined") {
       hostTree.stop()
@@ -122,11 +122,17 @@ export async function startServer(
 
   // Phrase 11: create express app with essential middlewares.
   const app = express()
+  const api = express.Router()
+  const admin = express.Router()
   const server = http.createServer(app)
   app.use(cors())
   app.use(express.json())
   app.use(cookieParser())
-  app.use(function (req, res, next) {
+
+  api.use("/admin", admin)
+  app.use("/api", api)
+
+  app.use((req, res, next) => {
     try {
       decodeURIComponent(req.path)
     } catch (error) {
@@ -152,7 +158,7 @@ export async function startServer(
 
   // Phrase 13: resolve the HostTree service.
   const hostTreeCtor = container.get(TYPE.HostTree)
-  function createHostTree(options: HostTreeOptions): IHostTree {
+  const createHostTree = (options: HostTreeOptions): IHostTree => {
     if (!fs.existsSync(options.root)) {
       log.warn(`"${options.root}" doesn't exist, so it's ignored.`)
       return new EmptyHostTree(options.name)
@@ -251,7 +257,7 @@ export async function startServer(
   /**
    * Ranged is for videos and audios. On Safari mobile, range headers is used.
   */
-  async function pipeFile(req: Request, res: Response, file: LocalFile): Promise<void> {
+  const pipeFile = async (req: Request, res: Response, file: LocalFile): Promise<void> => {
     let { start, end } = resolveRange(req.headers.range)
     start ??= 0
     end ??= file.size - 1
@@ -296,7 +302,7 @@ export async function startServer(
   // Phrase 18: express app setup.
   const authMiddleware = container.get(TYPE.Auth)
 
-  app.get("/api/meta", (req, res) => {
+  api.get("/meta", (req, res) => {
     res.status(200)
     const meta: MeditreeMeta = {
       name: config.name,
@@ -307,16 +313,24 @@ export async function startServer(
   })
 
   // For authentication verification
-  app.get("/api/verify", authMiddleware, (req, res) => {
+  api.get("/verify", authMiddleware, (req, res) => {
     res.sendStatus(200).end()
   })
 
-  app.get("/api/list", authMiddleware, (req, res) => {
+  api.get("/list", authMiddleware, (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
     res.send(treeJsonCache)
     res.end()
   })
+
+  admin.route("/file")
+    .put((req, res) => {
+
+    })
+    .delete((req, res) => {
+
+    })
 
   const resolveFile = (path: string) => {
     try {
@@ -335,7 +349,7 @@ export async function startServer(
     return resolved
   }
 
-  app.head("/api/file/(*)", authMiddleware, async (req, res) => {
+  api.head("/file/(*)", authMiddleware, async (req, res) => {
     let path: string = req.params[0]
     const resolved = resolveFile(path)
     if (resolved === "Invalid URI") {
@@ -356,7 +370,7 @@ export async function startServer(
   })
 
 
-  app.get("/api/file/(*)", authMiddleware, async (req, res) => {
+  app.get("/file/(*)", authMiddleware, async (req, res) => {
     let path: string = req.params[0]
     const resolved = resolveFile(path)
     if (resolved === "Invalid URI") {
@@ -395,17 +409,17 @@ export async function startServer(
   }
 }
 
-function removePrefix(origin: string, prefix: string): string {
+const removePrefix = (origin: string, prefix: string): string => {
   if (origin.startsWith(prefix)) return origin.substring(prefix.length,)
   else return origin
 }
 
-function removeSuffix(origin: string, suffix: string): string {
+const removeSuffix = (origin: string, suffix: string): string => {
   if (origin.endsWith(suffix)) return origin.substring(0, origin.length - suffix.length)
   else return origin
 }
 
-function resolveRange(range?: string): { start?: number, end?: number } {
+const resolveRange = (range?: string): { start?: number, end?: number } => {
   if (!range) return {}
   let start: number | undefined
   let end: number | undefined
@@ -426,29 +440,31 @@ function resolveRange(range?: string): { start?: number, end?: number } {
   return { start, end }
 }
 
+export interface MeditreeSetupContext {
+  app: express.Express
+  manager: FileTreeManager
+  container: Container
+  service: MeditreeService
+}
+
 export interface MeditreePlugin {
-  init?(): Promise<void>
+  init?: () => Promise<void>
 
-  setupMeta?(meta: MeditreeMeta): void
+  setupMeta?: (meta: MeditreeMeta) => void
 
-  setupService?(container: Container): void
+  setupService?: (container: Container) => void
 
-  setupServer?(app: Express.Application, server: Server): Promise<void>
+  setupServer?: (app: Express.Application, server: Server) => Promise<void>
 
-  setupHooks?(hooks: MeditreeHooks): void
+  setupHooks?: (hooks: MeditreeHooks) => void
 
-  setupMeditree?({
+  setupMeditree?: ({
     app, manager, container, service
-  }: {
-    app: express.Express
-    manager: FileTreeManager
-    container: Container
-    service: MeditreeService
-  }): Promise<void>
+  }: MeditreeSetupContext) => Promise<void>
 
-  onLocalFileTreeRebuilt?(tree: LocalFileTree): void
+  onLocalFileTreeRebuilt?: (tree: LocalFileTree) => void
 
-  onExit?(): void
+  onExit?: () => void
 }
 
 export interface MeditreeService {

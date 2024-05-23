@@ -20,14 +20,14 @@ interface Entry {
 const JsonDBStatisticsPlugin: PluginMeta<MeditreePlugin, JsonDBStatisticsPluginConfig> = {
   implements: ["statistics-storage"],
   depends: ["jsondb"],
-  create(config) {
+  create: (config) => {
     const collection = config.collection ?? "statistics"
     return {
-      setupService(container) {
+      setupService: (container) => {
         const jsondb = container.get(JsonDBType.JsonDB)
         const statistics = jsondb.loadDB(collection)
         container.bind(StatisticsType.StatisticsStorage).toValue({
-          async increment(filePath: string) {
+          increment: async (filePath: string) => {
             const path = `/${filePath}`
             if (await statistics.exists(path)) {
               const entry: Entry = await statistics.getData(path)
@@ -38,7 +38,7 @@ const JsonDBStatisticsPlugin: PluginMeta<MeditreePlugin, JsonDBStatisticsPluginC
               await statistics.push(path, { view: 1 })
             }
           },
-          async getViewCount(filePath: string) {
+          getViewCount: async (filePath: string) => {
             const path = `/${filePath}`
             if (await statistics.exists(`/${path}`)) {
               const entry: Entry = await statistics.getData(path)
@@ -47,7 +47,7 @@ const JsonDBStatisticsPlugin: PluginMeta<MeditreePlugin, JsonDBStatisticsPluginC
               return
             }
           },
-          async getLastView(filePath) {
+          getLastView: async (filePath) => {
             const path = `/${filePath}`
             if (await statistics.exists(`/${path}`)) {
               const entry: Entry = await statistics.getData(path)
@@ -56,7 +56,7 @@ const JsonDBStatisticsPlugin: PluginMeta<MeditreePlugin, JsonDBStatisticsPluginC
               return
             }
           },
-          async setLastView(filePath, time) {
+          setLastView: async (filePath, time) => {
             const path = `/${filePath}`
             if (await statistics.exists(path)) {
               const entry: Entry = await statistics.getData(path)

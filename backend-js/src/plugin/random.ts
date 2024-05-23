@@ -23,12 +23,12 @@ interface RandomPluginConfig {
  * Minify plugin affects only file tree json for client side.
  */
 const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
-  create(config) {
+  create: (config) => {
     const types = config.types ?? {
       video: "redirect",
       image: "pipe"
     }
-    function getMode(fileType: string): ServeMode {
+    const getMode = (fileType: string): ServeMode => {
       if (typeof types === "string") {
         return types
       }
@@ -42,7 +42,7 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
     const rand = new Random()
     let indexedTree: IndexedTree
     return {
-      setupMeta(meta) {
+      setupMeta: (meta) => {
         meta.capabilities.push({
           name: "random",
           version: "v1",
@@ -50,7 +50,7 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
           infoUrl: "/api/random-info",
         })
       },
-      async setupMeditree({ app, manager, container, service }) {
+      setupMeditree: async ({ app, manager, container, service }) => {
         const authMiddleware = container.get(TYPE.Auth)
         manager.on("file-tree-update", ({ tree }) => {
           indexedTree = IndexedTree.from(tree)

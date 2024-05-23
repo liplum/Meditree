@@ -20,10 +20,10 @@ interface WatchPluginConfig {
  * Watch plugin will watch the root directory changing and frequently rebuild the local file tree.
  */
 const WatchPlugin: PluginMeta<MeditreePlugin, WatchPluginConfig> = {
-  create(config) {
+  create: (config) => {
     const rebuildInterval = parseTime(config.rebuildInterval, "10s")
     return {
-      setupService(container) {
+      setupService: (container) => {
         container.bind(TYPE.HostTree)
           .toValue((options) =>
             new WatchTree(options, rebuildInterval)

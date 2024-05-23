@@ -22,25 +22,25 @@ interface Entry {
 const MongoDBStatisticsPlugin: PluginMeta<MeditreePlugin, MongoDBStatisticsPluginConfig> = {
   implements: ["statistics-storage"],
   depends: ["mongodb"],
-  create(config) {
+  create: (config) => {
     const collection = config.collection ?? "statistics"
     return {
-      setupService(container) {
+      setupService: (container) => {
         const mongodb = container.get(MongoDBType.MongoDB)
         const statistics = mongodb.db.collection<Entry>(collection)
         container.bind(StatisticsType.StatisticsStorage).toValue({
-          async increment(filePath: string) {
+          increment: async (filePath: string) => {
             await statistics.updateOne({ filePath }, { $inc: { view: 1 } }, { upsert: true })
           },
-          async getViewCount(filePath: string) {
+          getViewCount: async (filePath: string) => {
             const entry = await statistics.findOne({ filePath })
             return entry ? entry.view : undefined
           },
-          async getLastView(filePath) {
+          getLastView: async (filePath) => {
             const entry = await statistics.findOne({ filePath })
             return entry ? entry.lastView : undefined
           },
-          async setLastView(filePath, time) {
+          setLastView: async (filePath, time) => {
             await statistics.updateOne({ filePath }, { $set: { lastView: time } }, { upsert: true })
           },
         })

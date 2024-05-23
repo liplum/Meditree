@@ -32,15 +32,15 @@ const MongoDbPlugin: PluginMeta<MeditreePlugin, MongoDbPluginConfig> = {
     const log = createLogger("MongoDB")
     let client: MongoClient
     return {
-      async init() {
+      init: async () => {
         client = new MongoClient(dbUrl, config.options)
         log.info(`MongoDB Client connected to ${dbUrl}`)
       },
-      onExit() {
+      onExit: () => {
         client?.close(true)
         log.info("MongoDB Client closed.")
       },
-      setupService(container) {
+      setupService: (container) => {
         if (client === undefined) throw new Error("MongoDB Client is not initialized.")
         const db = client.db(database)
         container.bind(TYPE.MongoDB).toValue({

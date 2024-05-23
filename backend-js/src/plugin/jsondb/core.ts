@@ -26,7 +26,7 @@ interface JsonDbPluginConfig {
 }
 
 export interface JsonDbService {
-  loadDB(name: string): JsonDB
+  loadDB: (name: string) => JsonDB
 }
 
 export const TYPE = {
@@ -40,15 +40,15 @@ const JsonDbPlugin: PluginMeta<MeditreePlugin, JsonDbPluginConfig> = {
     const dir = resolveAppStoragePath(config.dir ?? "jsondb")
     const name2DB = new Map<string, JsonDB>()
     return {
-      async init() {
+      init: async () => {
         log.info(`JsonDB will load from "${path.resolve(dir)}".`)
       },
-      onExit() {
+      onExit: () => {
         log.info("JsonDB closed.")
       },
-      setupService(container) {
+      setupService: (container) => {
         container.bind(TYPE.JsonDB).toValue({
-          loadDB(name) {
+          loadDB: (name) => {
             let db = name2DB.get(name)
             if (db === undefined) {
               db = new JsonDB(new Config(

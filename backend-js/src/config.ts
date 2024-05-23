@@ -32,6 +32,12 @@ export interface AppConfig {
    */
   root?: string | string[] | Record<string, string>
   /**
+   * The root directory where to save the uploaded files.
+   * 
+   * By default, if the {@link root} 
+   */
+  storageRoot?: string
+  /**
    * Recognizing the mime type most precisely by reading the file's magic number.
    * It will terribly impact the performance of building file tree.
    * false by default.

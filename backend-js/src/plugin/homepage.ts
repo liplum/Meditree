@@ -19,7 +19,7 @@ interface HomepagePluginConfig {
 }
 
 const HomepagePlugin: PluginMeta<MeditreePlugin, HomepagePluginConfig> = {
-  create(config) {
+  create: (config) => {
     const log = createLogger("Homepage")
     const root = config.root
     const requireAuth = config.requireAuth ?? false
@@ -34,7 +34,7 @@ const HomepagePlugin: PluginMeta<MeditreePlugin, HomepagePluginConfig> = {
     // lazy-build the html
     let html: string | undefined
     return {
-      async setupMeditree({ app, manager, container }) {
+      setupMeditree: async ({ app, manager, container }) => {
         if (!root) {
           manager.on("file-tree-update", () => {
             // clear the built html

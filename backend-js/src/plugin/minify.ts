@@ -17,11 +17,11 @@ interface MinifyPluginConfig {
  * Minify plugin affects only file tree json for client side.
  */
 const MinifyPlugin: PluginMeta<MeditreePlugin, MinifyPluginConfig> = {
-  create(config) {
+  create: (config) => {
     const removeHidden = config.removeHidden ?? true
     const removeSize = config.removeSize ?? true
     return {
-      setupHooks(hooks) {
+      setupHooks: (hooks) => {
         hooks.onClientFileTreeUpdated.push((tree) => {
           if (removeHidden || removeSize) {
             function visit(cur: FileTreeJson): void {

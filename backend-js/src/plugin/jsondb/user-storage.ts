@@ -16,17 +16,17 @@ interface JsonDBUserPluginConfig {
 const JsonDbUserPlugin: PluginMeta<MeditreePlugin, JsonDBUserPluginConfig> = {
   implements: ["user-storage"],
   depends: ["jsondb", "user"],
-  create(config) {
+  create: (config) => {
     const collection = config.collection ?? "users"
-    function getUserPath(user: User | string): string {
+    const getUserPath = (user: User | string): string => {
       return typeof user === "string" ? `/${user}` : `/${user.account}`
     }
     return {
-      setupService(container) {
+      setupService: (container) => {
         const jsonDB = container.get(JsonDBType.JsonDB)
         const db = jsonDB.loadDB(collection)
         container.bind(UserType.UserStorage).toValue({
-          async addUser(user) {
+          addUser: async (user) => {
             const userPath = getUserPath(user)
             if (await db.exists(userPath)) {
               // already existing
@@ -35,7 +35,7 @@ const JsonDbUserPlugin: PluginMeta<MeditreePlugin, JsonDBUserPluginConfig> = {
             await db.push(userPath, user)
             return true
           },
-          async getUser(account) {
+          getUser: async (account) => {
             const userPath = getUserPath(account)
             if (!await db.exists(userPath)) {
               // not existing
@@ -47,7 +47,7 @@ const JsonDbUserPlugin: PluginMeta<MeditreePlugin, JsonDBUserPluginConfig> = {
               return null
             }
           },
-          async updateUser(user) {
+          updateUser: async (user) => {
             const userPath = getUserPath(user)
             if (await db.exists(userPath)) {
               await db.push(userPath, user)
@@ -55,7 +55,7 @@ const JsonDbUserPlugin: PluginMeta<MeditreePlugin, JsonDBUserPluginConfig> = {
             }
             return false
           },
-          async deleteUser(account) {
+          deleteUser: async (account) => {
             const userPath = getUserPath(account)
             if (await db.exists(userPath)) {
               await db.delete(userPath)
@@ -63,7 +63,7 @@ const JsonDbUserPlugin: PluginMeta<MeditreePlugin, JsonDBUserPluginConfig> = {
             }
             return false
           },
-          async hasUser(account) {
+          hasUser: async (account) => {
             const userPath = getUserPath(account)
             return await db.exists(userPath)
           }
