@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
+import { MeditreeType, type MeditreePlugin } from "../server.js"
 import { v4 as uuidv4 } from "uuid"
 import jwt, { type JwtPayload } from "jsonwebtoken"
 import { createLogger } from "@liplum/log"
 import { type Request } from "express"
 import { type PluginMeta } from "../plugin.js"
-import { TYPE, type User, type UserStorageService } from "./user-storage.js"
+import { UserType, type User, type UserStorageService } from "./user-storage.js"
 
 interface AuthPluginConfig {
   /**
@@ -39,7 +39,7 @@ const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
         }
       },
       setupService: (container) => {
-        storage = container.get(TYPE.UserStorage)
+        storage = container.get(UserType.UserStorage)
         container.bind(MeditreeType.Auth).toValue(async (req: Request & WithUser, res, next) => {
           // Get the JWT from the cookie, body or authorization header in a fallback chain.
           const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)

@@ -11,6 +11,9 @@ importers:
       '@liplum/cli':
         specifier: ^1.0.0
         version: 1.0.0
+      '@liplum/ioc':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@liplum/log':
         specifier: ^0.0.1
         version: 0.0.1
@@ -1051,6 +1054,9 @@ packages:
 
   '@liplum/cli@1.0.0':
     resolution: {integrity: sha512-rkvCvFl73te2Rhy14Zeu+GLkdy13Fk6L58cKn4Lyd2fqKSgJkgC+qTuJ9KtIjGD5tMKC9CThKSSZhyrZFcjceg==}
+
+  '@liplum/ioc@0.1.0':
+    resolution: {integrity: sha512-0WSIRMC2ndNtejtAEVcNpQrHYt3suqp0Mr4i1kYp56YIcjmbZs4QQEdE0qfRRWMTaiW1OR02Ee/QOz77xonV0g==}
 
   '@liplum/log@0.0.1':
     resolution: {integrity: sha512-cyx8Rt2xRp4fspsjpWO3o1XRi2HYQ922TGa6r5ZQJnC1O5Ih28r+rUzRd6ISX20bWkO0K73l+fw6N9T3h16eYA==}
@@ -6786,6 +6792,8 @@ snapshots:
       didyoumean: 1.2.2
       remove-markdown: 0.5.0
       tslib: 2.6.2
+
+  '@liplum/ioc@0.1.0': {}
 
   '@liplum/log@0.0.1':
     dependencies:

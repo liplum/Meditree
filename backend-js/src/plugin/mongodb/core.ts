@@ -1,6 +1,6 @@
 import { type Db, MongoClient, type MongoClientOptions } from "mongodb"
 import { type MeditreePlugin } from "../../server.js"
-import { token } from "../../ioc.js"
+import { token } from "@liplum/ioc"
 import { createLogger } from "@liplum/log"
 import { type PluginMeta } from "../../plugin.js"
 
@@ -20,7 +20,7 @@ export interface MongoDbService {
   db: Db
 }
 
-export const TYPE = {
+export const MongoDBType = {
   MongoDB: token<MongoDbService>("MongoDB"),
 }
 
@@ -43,7 +43,7 @@ const MongoDbPlugin: PluginMeta<MeditreePlugin, MongoDbPluginConfig> = {
       setupService: (container) => {
         if (client === undefined) throw new Error("MongoDB Client is not initialized.")
         const db = client.db(database)
-        container.bind(TYPE.MongoDB).toValue({
+        container.bind(MongoDBType.MongoDB).toValue({
           db
         })
       },

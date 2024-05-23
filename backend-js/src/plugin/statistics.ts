@@ -1,11 +1,11 @@
-import { token } from "../ioc.js"
-import { TYPE as MeditreeType, type MeditreePlugin } from "../server.js"
+import { token } from "@liplum/ioc"
+import { MeditreeType, type MeditreePlugin } from "../server.js"
 import { type WithUser } from "./auth.js"
 import { type Request } from "express"
-import { TYPE as UserType } from "./user-storage.js"
+import { UserType } from "./user-storage.js"
 import { type PluginMeta } from "../plugin.js"
 
-export const TYPE = {
+export const StatisticsType = {
   StatisticsStorage: token<StatisticsStorageService>("Statistics.Storage")
 }
 
@@ -29,7 +29,7 @@ const StatisticsPlugin: PluginMeta<MeditreePlugin, StatisticsPluginConfig> = {
     let statistics: StatisticsStorageService
     return {
       setupMeditree: async ({ app, manager, container }) => {
-        statistics = container.get(TYPE.StatisticsStorage)
+        statistics = container.get(StatisticsType.StatisticsStorage)
         const events = container.get(MeditreeType.Events)
         const users = container.tryGet(UserType.UserStorage)
         events.on("file-requested", async (req: Request & Partial<WithUser>, res, file) => {

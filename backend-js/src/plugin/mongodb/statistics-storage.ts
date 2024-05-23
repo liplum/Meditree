@@ -1,7 +1,7 @@
 import { type PluginMeta } from "../../plugin.js"
 import { type MeditreePlugin } from "../../server.js"
-import { TYPE as StatisticsType } from "../statistics.js"
-import { TYPE as MongoDBType } from "./core.js"
+import { StatisticsType as StatisticsType } from "../statistics.js"
+import { MongoDBType } from "./core.js"
 
 interface MongoDBStatisticsPluginConfig {
   /**

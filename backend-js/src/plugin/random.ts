@@ -2,7 +2,7 @@
 import { type Request } from "express"
 import { type FileTreeLike, iterateAllFilesInTree, type LocalFile } from "../file.js"
 import { type PluginMeta } from "../plugin.js"
-import { TYPE, type MeditreePlugin } from "../server.js"
+import { MeditreeType, type MeditreePlugin } from "../server.js"
 import { Random } from "random-js"
 
 type ServeMode = "redirect" | "pipe"
@@ -51,7 +51,7 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
         })
       },
       setupMeditree: async ({ app, manager, container, service }) => {
-        const authMiddleware = container.get(TYPE.Auth)
+        const authMiddleware = container.get(MeditreeType.Auth)
         manager.on("file-tree-update", ({ tree }) => {
           indexedTree = IndexedTree.from(tree)
         })

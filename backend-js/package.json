@@ -16,6 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "@liplum/cli": "^1.0.0",
+    "@liplum/ioc": "^0.1.0",
     "@liplum/log": "^0.0.1",
     "@meditree/model": "workspace:^",
     "bytes": "^3.1.2",

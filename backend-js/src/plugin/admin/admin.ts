@@ -1,6 +1,8 @@
-import { type PluginMeta } from "../plugin.js"
-import { type MeditreePlugin } from "../server.js"
+import { token } from "@liplum/ioc"
+import { type PluginMeta } from "../../plugin.js"
+import { type MeditreePlugin } from "../../server.js"
 import { v4 as uuidv4 } from "uuid"
+import { RequestHandler } from "express"
 
 interface AdminPluginConfig {
   /**
@@ -10,6 +12,9 @@ interface AdminPluginConfig {
   auth?: string
 }
 
+export const AdminPluginType = {
+  Auth: token<RequestHandler>("AdminPlugin.Auth"),
+}
 const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
   create(config) {
     const auth = config.auth ?? uuidv4()

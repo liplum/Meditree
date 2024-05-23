@@ -1,8 +1,8 @@
 import { type WithId } from "mongodb"
 import { type MeditreePlugin } from "../../server.js"
-import { TYPE as MongoDBType } from "./core.js"
+import { MongoDBType } from "./core.js"
 import { type PluginMeta } from "../../plugin.js"
-import { TYPE as UserType, type User } from "../user-storage.js"
+import { UserType, type User } from "../user-storage.js"
 export const HLSMediaType = "application/x-mpegURL"
 interface MongoDDUserPluginConfig {
   /**

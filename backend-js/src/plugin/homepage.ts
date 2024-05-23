@@ -1,6 +1,6 @@
 import { type FileTreeJson, type FileJson } from "../file.js"
 import { createLogger } from "@liplum/log"
-import { TYPE, type MeditreePlugin } from "../server.js"
+import { MeditreeType, type MeditreePlugin } from "../server.js"
 import express, { type RequestHandler } from "express"
 import fs from "fs"
 import { type PluginMeta } from "../plugin.js"
@@ -41,7 +41,7 @@ const HomepagePlugin: PluginMeta<MeditreePlugin, HomepagePluginConfig> = {
             html = undefined
           })
         }
-        const authMiddleware = container.get(TYPE.Auth)
+        const authMiddleware = container.get(MeditreeType.Auth)
         if (root) {
           app.use(express.static(root))
         } else {

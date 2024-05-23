@@ -1,5 +1,5 @@
 import { type MeditreePlugin } from "../../server.js"
-import { token } from "../../ioc.js"
+import { token } from "@liplum/ioc"
 import { createLogger } from "@liplum/log"
 import { JsonDB, Config } from "node-json-db"
 import path from "path"
@@ -29,7 +29,7 @@ export interface JsonDbService {
   loadDB: (name: string) => JsonDB
 }
 
-export const TYPE = {
+export const Type = {
   JsonDB: token<JsonDbService>("JsonDB"),
 }
 
@@ -47,7 +47,7 @@ const JsonDbPlugin: PluginMeta<MeditreePlugin, JsonDbPluginConfig> = {
         log.info("JsonDB closed.")
       },
       setupService: (container) => {
-        container.bind(TYPE.JsonDB).toValue({
+        container.bind(Type.JsonDB).toValue({
           loadDB: (name) => {
             let db = name2DB.get(name)
             if (db === undefined) {

@@ -10,7 +10,7 @@ import { Timer } from "./timer.js"
 import { type PluginRegistry, resolvePluginList } from "./plugin.js"
 import { type Readable } from "stream"
 import http, { type Server } from "http"
-import { Container, token } from "./ioc.js"
+import { Container, token } from "@liplum/ioc"
 import cookieParser from "cookie-parser"
 import { registerBuiltinPlugins } from "./builtin-plugin.js"
 import { EventEmitter } from "events"
@@ -22,7 +22,7 @@ import mime from "mime"
 import { fileTypeFromFile } from "file-type"
 import multer from "multer"
 
-export const TYPE = {
+export const MeditreeType = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("Meditree.HostTree"),
   Auth: token<RequestHandler>("Meditree.Auth"),
   Events: token<MeditreeEvents>("Meditree.Events"),
@@ -97,10 +97,10 @@ export const startServer = async (
   }
 
   // Phrase 9: register default service.
-  container.bind(TYPE.HostTree)
+  container.bind(MeditreeType.HostTree)
     .toValue((options) => new HostTree(options))
 
-  container.bind(TYPE.Auth)
+  container.bind(MeditreeType.Auth)
     .toValue((req, res, next) => { next() })
 
   const events = new EventEmitter() as MeditreeEvents
@@ -111,7 +111,7 @@ export const startServer = async (
 
   const upload = multer({ storage })
 
-  container.bind(TYPE.Events).toValue(events)
+  container.bind(MeditreeType.Events).toValue(events)
 
   // Phrase 10: plugins register or override services.
   for (const plugin of plugins) {
@@ -157,7 +157,7 @@ export const startServer = async (
   }
 
   // Phrase 13: resolve the HostTree service.
-  const hostTreeCtor = container.get(TYPE.HostTree)
+  const hostTreeCtor = container.get(MeditreeType.HostTree)
   const createHostTree = (options: HostTreeOptions): IHostTree => {
     if (!fs.existsSync(options.root)) {
       log.warn(`"${options.root}" doesn't exist, so it's ignored.`)
@@ -300,7 +300,7 @@ export const startServer = async (
   }
 
   // Phrase 18: express app setup.
-  const authMiddleware = container.get(TYPE.Auth)
+  const authMiddleware = container.get(MeditreeType.Auth)
 
   api.get("/meta", (req, res) => {
     res.status(200)

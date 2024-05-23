@@ -1,6 +1,6 @@
-import { token } from "../ioc.js"
+import { token } from "@liplum/ioc"
 
-export const TYPE = {
+export const UserType = {
   UserStorage: token<UserStorageService>("UserStorage"),
 }
 

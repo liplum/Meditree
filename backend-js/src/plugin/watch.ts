@@ -3,7 +3,7 @@ import { type LocalFileTree, type FileTreeLike, type FileTreeJson, type LocalFil
 import { type IHostTree, type HostTreeOptions, makeFSOFilter as makePathFilter, type PathFilter, type FileClassifier, createFileTreeFrom, type FileFilter } from "../host.js"
 import { type MeditreePlugin } from "../server.js"
 import type fs from "fs"
-import { TYPE } from "../server.js"
+import { MeditreeType } from "../server.js"
 import EventEmitter from "events"
 import { parseTime } from "../utils.js"
 import { type Logger } from "@liplum/log"
@@ -24,7 +24,7 @@ const WatchPlugin: PluginMeta<MeditreePlugin, WatchPluginConfig> = {
     const rebuildInterval = parseTime(config.rebuildInterval, "10s")
     return {
       setupService: (container) => {
-        container.bind(TYPE.HostTree)
+        container.bind(MeditreeType.HostTree)
           .toValue((options) =>
             new WatchTree(options, rebuildInterval)
           )
