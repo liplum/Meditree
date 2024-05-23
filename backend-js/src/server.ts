@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { CompoundHostTree, EmptyHostTree, HostTree, type HostTreeOptions, type IHostTree } from "./host.js"
+import { CompoundHostTree, EmptyHostTree, HostTree, classifyContentTypeByPattern, type HostTreeOptions, type IHostTree } from "./host.js"
 import { type AppConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
 import { cloneFileTreeJson, type FileTreeJson, type LocalFileTree, type LocalFile } from "./file.js"
@@ -18,6 +18,7 @@ import path from "path"
 import { resolveAppStoragePath } from "./env.js"
 import fs from "fs"
 import { type MeditreeMeta } from "./meta.js"
+import mime from "mime"
 
 export const TYPE = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("Meditree.HostTree"),
@@ -156,8 +157,12 @@ export async function startServer(
   }
   let hostTree: IHostTree = new EmptyHostTree(config.name)
   if (config.root) {
-    const common = {
-      pattern2ContentType: config.fileType,
+    const common: Partial<HostTreeOptions> = {
+      classifier: async (path) => {
+        const type = classifyContentTypeByPattern(path, config.fileType)
+        if (type) return type
+        return mime.getType(path)
+      },
       log: fileTreeLog,
       ignorePatterns: config.ignore,
       fileFilter(file: LocalFile): boolean {
@@ -175,7 +180,7 @@ export async function startServer(
         root: config.root,
         name: config.name,
         ...common,
-      })
+      } as HostTreeOptions)
     } else if (Array.isArray(config.root)) {
       const rootHostTree = new CompoundHostTree(config.name)
       hostTree = rootHostTree
@@ -183,7 +188,7 @@ export async function startServer(
         const name = path.basename(root)
         rootHostTree.addSubtree(createHostTree({
           root, name, ...common
-        }))
+        } as HostTreeOptions))
       }
     } else {
       const rootHostTree = new CompoundHostTree(config.name)
@@ -192,7 +197,7 @@ export async function startServer(
         if (!name) throw new Error(`The root[${root}] maps no name.`)
         rootHostTree.addSubtree(createHostTree({
           root, name, ...common
-        }))
+        } as HostTreeOptions))
       }
     }
   }

@@ -13,7 +13,7 @@ export interface HostTreeOptions {
   */
   root: string
   name: string
-  pattern2ContentType: Record<string, string>
+  classifier: (path: string) => Promise<FileType | null>
   ignorePatterns: string[]
   fileFilter: FileFilter
   log?: Logger
@@ -34,16 +34,16 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
   readonly name: string
   private readonly log?: Logger
   private fileTree: LocalFileTree
-  private readonly filePathClassifier: FileClassifier
-  private readonly pathFilter: PathFilter
+  private readonly classifier: FileClassifier
+  private readonly filter: PathFilter
   private readonly fileFilter: FileFilter
-  constructor({ root, log, name, pattern2ContentType, ignorePatterns, fileFilter }: HostTreeOptions) {
+  constructor({ root, log, name, classifier, ignorePatterns, fileFilter }: HostTreeOptions) {
     super()
     this.root = root
     this.log = log
     this.name = name
-    this.filePathClassifier = makeFilePathClassifier(pattern2ContentType)
-    this.pathFilter = makeFSOFilter(ignorePatterns)
+    this.classifier = classifier
+    this.filter = makeFSOFilter(ignorePatterns)
     this.fileFilter = fileFilter
   }
 
@@ -65,8 +65,8 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
     const tree = await createFileTreeFrom({
       name: this.name,
       root: this.root,
-      classifier: this.filePathClassifier,
-      includes: this.pathFilter,
+      classifier: this.classifier,
+      includes: this.filter,
       fileFilter: this.fileFilter,
       ignoreEmptyDir: true,
     })
@@ -95,20 +95,19 @@ export function makeFSOFilter(ignorePatterns: string[]): PathFilter {
     return true
   }
 }
-export type FileClassifier = (path: string) => FileType | null
+export type FileClassifier = (path: string) => Promise<FileType | null>
 
-export function makeFilePathClassifier(fileTypePattern: Record<string, string>): FileClassifier {
-  return (path) => {
-    const patterns = fileTypePattern
-    for (const [pattern, type] of Object.entries(patterns)) {
-      if (minimatch(path, pattern, minimatchOptions)) {
-        return type
-      }
+export const classifyContentTypeByPattern = (path: string, fileTypePattern: Record<string, string>) => {
+  const patterns = fileTypePattern
+  for (const [pattern, type] of Object.entries(patterns)) {
+    if (minimatch(path, pattern, minimatchOptions)) {
+      return type
     }
-    // if not matching any one
-    return null
   }
+  // if not matching any one
+  return null
 }
+
 export const statAsync = promisify(fs.stat)
 export const readdirAsync = promisify(fs.readdir)
 
@@ -148,7 +147,7 @@ export async function createFileTreeFrom({
       try {
         const stat = await statAsync(filePath)
         if (stat.isFile()) {
-          const fileType = classifier(filePath)
+          const fileType = await classifier(filePath)
           if (fileType != null) {
             const localFile = new LocalFile(
               tree, fileType, stat.size, fileName, filePath,

@@ -58,22 +58,6 @@ export function setupConfig(config: AppConfig | Partial<AppConfig> = {}): AppCon
   if (!newConfig.name) {
     newConfig.name = uuidv4()
   }
-  if (!newConfig.fileType) {
-    newConfig.fileType = {
-      "**/*.mp4": "video/mp4",
-      "**/*.svg": "image/svg+xml",
-      "**/*.+(mov|qt)": "video/quicktime",
-      "**/*.png": "image/png",
-      "**/*.+(jpeg|jpg)": "image/jpeg",
-      "**/*.mp3": "audio/mpeg",
-      "**/*.md": "text/markdown",
-      "**/*.txt": "text/plain",
-      "**/*.gif": "image/gif",
-      "**/*.webp": "image/webp",
-      "**/*.m3u8": "application/x-mpegURL",
-      "**/*.ts": "video/mpeg",
-    }
-  }
   if (!newConfig.port) {
     newConfig.port = 8080
   }

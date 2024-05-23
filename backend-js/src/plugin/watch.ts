@@ -1,6 +1,6 @@
 import chokidar from "chokidar"
 import { type LocalFileTree, type FileTreeLike, type FileTreeJson, type LocalFile } from "../file.js"
-import { type IHostTree, type HostTreeOptions, makeFilePathClassifier, makeFSOFilter as makePathFilter, type PathFilter, type FileClassifier, createFileTreeFrom, type FileFilter } from "../host.js"
+import { type IHostTree, type HostTreeOptions, makeFSOFilter as makePathFilter, type PathFilter, type FileClassifier, createFileTreeFrom, type FileFilter } from "../host.js"
 import { type MeditreePlugin } from "../server.js"
 import type fs from "fs"
 import { TYPE } from "../server.js"
@@ -41,18 +41,18 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   private fileTree: LocalFileTree
   private fileWatcher: fs.FSWatcher | null = null
   private readonly rebuildInterval: number
-  private readonly filePathClassifier: FileClassifier
-  private readonly pathFilter: PathFilter
+  private readonly classifier: FileClassifier
+  private readonly filter: PathFilter
   private readonly fileFilter: FileFilter
   private rebuildCounter = 0
-  constructor({ root, log, name, pattern2ContentType, ignorePatterns, fileFilter }: HostTreeOptions, rebuildInterval: number) {
+  constructor({ root, log, name, classifier, ignorePatterns, fileFilter }: HostTreeOptions, rebuildInterval: number) {
     super()
     this.rebuildInterval = rebuildInterval
     this.root = root
     this.log = log
     this.name = name
-    this.filePathClassifier = makeFilePathClassifier(pattern2ContentType)
-    this.pathFilter = makePathFilter(ignorePatterns)
+    this.classifier = classifier
+    this.filter = makePathFilter(ignorePatterns)
     this.fileFilter = fileFilter
   }
 
@@ -87,7 +87,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
       this.log?.verbose(`[${event}] "${filePath}"`)
       // const relative = path.relative(this.root, filePath)
       if (event === "add" || event === "unlink") {
-        if (this.filePathClassifier(filePath) == null) return
+        if (this.classifier(filePath) == null) return
         this.shouldRebuild = true
         this.rebuildCounter = 0
       }
@@ -101,8 +101,8 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
     const tree = await createFileTreeFrom({
       name: this.name,
       root: this.root,
-      classifier: this.filePathClassifier,
-      includes: this.pathFilter,
+      classifier: this.classifier,
+      includes: this.filter,
       fileFilter: this.fileFilter,
       ignoreEmptyDir: true,
     })

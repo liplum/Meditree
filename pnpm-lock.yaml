@@ -41,6 +41,9 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
+      mime:
+        specifier: ^4.0.3
+        version: 4.0.3
       minimatch:
         specifier: ^9.0.4
         version: 9.0.4
@@ -4452,6 +4455,11 @@ packages:
   mime@1.6.0:
     resolution: {integrity: sha512-x0Vn8spI+wuJ1O6S7gnbaQg8Pxh4NNHb7KSINmEWKiPE4RKOplvijn+NkmYmmRgP68mc70j2EbeTFRsrswaQeg==}
     engines: {node: '>=4'}
+    hasBin: true
+
+  mime@4.0.3:
+    resolution: {integrity: sha512-KgUb15Oorc0NEKPbvfa0wRU+PItIEZmiv+pyAO2i0oTIVTJhlzMclU7w4RXWQrSOVH5ax/p/CkIO7KI4OyFJTQ==}
+    engines: {node: '>=16'}
     hasBin: true
 
   mimic-fn@4.0.0:
@@ -11407,6 +11415,8 @@ snapshots:
       mime-db: 1.52.0
 
   mime@1.6.0: {}
+
+  mime@4.0.3: {}
 
   mimic-fn@4.0.0: {}
 

@@ -13,7 +13,7 @@ async function main(argv: string[]): Promise<void> {
   installSourceMap()
   const args = cli({
     name: 'Medtiree',
-    description: 'Share your media anywhere in a tree with various backends and frontends.',
+    description: 'Share your media anywhere in a tree.',
     examples: ['node dist/index.js -i <config-file>',],
     require: [],
     options: [{
