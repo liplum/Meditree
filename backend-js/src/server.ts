@@ -252,10 +252,10 @@ export async function startServer(
 
     res.statusCode = req.headers.range ? 206 : 200
 
-    res.setHeader("content-length", retrievedLength)
+    res.setHeader("Content-Length", retrievedLength)
     if (req.headers.range) {
-      res.setHeader("content-range", `bytes ${start}-${end}/${file.size}`)
-      res.setHeader("accept-ranges", "bytes")
+      res.setHeader("Content-Range", `bytes ${start}-${end}/${file.size}`)
+      res.setHeader("Accept-Ranges", "bytes")
     }
     let stream: Readable | null | undefined
     const options = { start, end, }
@@ -324,7 +324,7 @@ export async function startServer(
     return resolved
   }
 
-  app.head("/api/file(*)", authMiddleware, async (req, res) => {
+  app.head("/api/file/(*)", authMiddleware, async (req, res) => {
     let path: string = req.params[0]
     const resolved = resolveFile(path)
     if (resolved === "Invalid URI") {
@@ -336,15 +336,16 @@ export async function startServer(
       return
     }
     res.contentType(resolved.type)
-    res.header("Content-Length", "${resolved.size}")
+    res.setHeader("ETag", resolved.etag)
     const expireTime = new Date(Date.now() + config.cacheMaxAge)
     res.setHeader("Expires", expireTime.toUTCString())
     res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)
+    res.setHeader("Content-Length", resolved.size)
     res.end()
   })
 
 
-  app.get("/api/file(*)", authMiddleware, async (req, res) => {
+  app.get("/api/file/(*)", authMiddleware, async (req, res) => {
     let path: string = req.params[0]
     const resolved = resolveFile(path)
     if (resolved === "Invalid URI") {
@@ -357,6 +358,7 @@ export async function startServer(
     }
     events.emit("file-requested", req, res, resolved)
     res.contentType(resolved.type)
+    res.setHeader("ETag", resolved.etag)
     const expireTime = new Date(Date.now() + config.cacheMaxAge)
     res.setHeader("Expires", expireTime.toUTCString())
     res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)

@@ -22,15 +22,21 @@ export class LocalFile {
   readonly type: FileType
   readonly size: number
   readonly localPath: string
+  readonly etag: string
   virtualPath: string
   tag?: Record<string, any>
   hidden?: boolean
-  constructor(parent: LocalFileTree, type: FileType, size: number, name: string, localPath: string) {
+  constructor({
+    parent, type, size, name, localPath, etag
+  }: {
+    parent: LocalFileTree, type: FileType, size: number, name: string, localPath: string, etag: string
+  }) {
     this.name = name
     this.parent = parent
     this.type = type
     this.size = size
     this.localPath = localPath
+    this.etag = etag
   }
 
   toJSON(): FileJson {

@@ -35,6 +35,9 @@ importers:
       es-main:
         specifier: ^1.3.0
         version: 1.3.0
+      etag:
+        specifier: ^1.8.1
+        version: 1.8.1
       express:
         specifier: ^4.19.2
         version: 4.19.2
@@ -81,6 +84,9 @@ importers:
       '@types/cors':
         specifier: ^2.8.17
         version: 2.8.17
+      '@types/etag':
+        specifier: ^1.8.3
+        version: 1.8.3
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
@@ -2412,6 +2418,9 @@ packages:
 
   '@types/estree@1.0.5':
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
+
+  '@types/etag@1.8.3':
+    resolution: {integrity: sha512-QYHv9Yeh1ZYSMPQOoxY4XC4F1r+xRUiAriB303F4G6uBsT3KKX60DjiogvVv+2VISVDuJhcIzMdbjT+Bm938QQ==}
 
   '@types/express-serve-static-core@4.19.1':
     resolution: {integrity: sha512-ej0phymbFLoCB26dbbq5PGScsf2JAJ4IJHjG10LalgUV36XKTmA4GdA+PVllKvRk0sEKt64X8975qFnkSi0hqA==}
@@ -8736,6 +8745,10 @@ snapshots:
       '@types/estree': 1.0.5
 
   '@types/estree@1.0.5': {}
+
+  '@types/etag@1.8.3':
+    dependencies:
+      '@types/node': 20.12.12
 
   '@types/express-serve-static-core@4.19.1':
     dependencies:

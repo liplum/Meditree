@@ -6,6 +6,7 @@ import { LocalFileTree } from "./file.js"
 import EventEmitter from "events"
 import { promisify } from "util"
 import { type Logger } from "@liplum/log"
+import etag from "etag"
 
 export interface HostTreeOptions {
   /**
@@ -149,9 +150,14 @@ export async function createFileTreeFrom({
         if (stat.isFile()) {
           const fileType = await classifier(filePath)
           if (fileType != null) {
-            const localFile = new LocalFile(
-              tree, fileType, stat.size, fileName, filePath,
-            )
+            const localFile = new LocalFile({
+              parent: tree,
+              type: fileType,
+              size: stat.size,
+              name: fileName,
+              localPath: filePath,
+              etag: etag(filePath, { weak: true, })
+            })
             if (fileFilter(localFile)) {
               tree.addFile(localFile)
             }
