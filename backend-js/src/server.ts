@@ -123,13 +123,11 @@ export const startServer = async (
   // Phrase 11: create express app with essential middlewares.
   const app = express()
   const api = express.Router()
-  const admin = express.Router()
   const server = http.createServer(app)
   app.use(cors())
   app.use(express.json())
   app.use(cookieParser())
 
-  api.use("/admin", admin)
   app.use("/api", api)
 
   app.use((req, res, next) => {
@@ -294,9 +292,10 @@ export const startServer = async (
   const service: MeditreeService = {
     pipeFile,
   }
+
   // Phrase 17: plugins patch the express app registering and FileTree manager setup.
   for (const plugin of plugins) {
-    await plugin.setupMeditree?.({ app, manager, container, service })
+    await plugin.setupMeditree?.({ app, api, upload, manager, container, service })
   }
 
   // Phrase 18: express app setup.
@@ -324,13 +323,6 @@ export const startServer = async (
     res.end()
   })
 
-  admin.route("/file")
-    .put((req, res) => {
-
-    })
-    .delete((req, res) => {
-
-    })
 
   const resolveFile = (path: string) => {
     try {
@@ -442,7 +434,9 @@ const resolveRange = (range?: string): { start?: number, end?: number } => {
 
 export interface MeditreeSetupContext {
   app: express.Express
+  api: express.Router
   manager: FileTreeManager
+  upload: multer.Multer
   container: Container
   service: MeditreeService
 }
@@ -459,7 +453,7 @@ export interface MeditreePlugin {
   setupHooks?: (hooks: MeditreeHooks) => void
 
   setupMeditree?: ({
-    app, manager, container, service
+    app, api, upload, manager, container, service
   }: MeditreeSetupContext) => Promise<void>
 
   onLocalFileTreeRebuilt?: (tree: LocalFileTree) => void
