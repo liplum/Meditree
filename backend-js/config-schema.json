@@ -50,6 +50,15 @@
         "type": "string"
       }
     },
+    "logLevel": {
+      "enum": [
+        "ERROR",
+        "WARN",
+        "INFO",
+        "DEBUG",
+        "VERBOSE"
+      ]
+    },
     "plugin": {
       "type": "object",
       "additionalProperties": {
