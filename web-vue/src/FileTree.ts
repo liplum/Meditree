@@ -93,7 +93,7 @@ function parseDirectory(name: string, directory: DirectoryInfo, parent?: Directo
         fi.name = name
         fi.type = mainFi["*type"]
         fi.hidden = file["*hide"] || false
-        fi.path = dir.path ? name : `${dir.path}/${name}`
+        fi.path = dir.path ? `${dir.path}/${name}` : name
         fi.url = `/api/file/${dir.path}/${name}/${mainName}`
         fi.size = mainFi.size
         dir.addChild(fi)

@@ -69,7 +69,7 @@ export function createDelegate({ name, root, }: FileTreePayload): FileTreeDelega
           isLeaf: true,
           title: name,
           key: curKey,
-          path: parentNode.path ? name : `${parentNode.path}/${name}`,
+          path: parentNode.path ? `${parentNode.path}/${name}` : name,
           url: `/api/file/${parentNode.path}/${name}`,
           type: file["*type"],
           size: file.size,

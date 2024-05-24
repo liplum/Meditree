@@ -59,7 +59,7 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
               res.status(500).send("Uploaded file not found")
               return
             }
-            let dir = `${req.query.dir}`
+            let dir = typeof req.query.dir === "string" ? req.query.dir : ""
             try {
               dir = decodeURIComponent(dir)
             } catch (e) {
@@ -69,7 +69,7 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
             const pathParts = splitPath(dir)
             let mostRecentTree: LocalFileTree | undefined
             let end: number
-            for (end = pathParts.length - 1; end >= 0; end--) {
+            for (end = Math.max(0, pathParts.length - 1); end >= 0; end--) {
               const tree = resolveFileTree(manager, pathParts.slice(0, end))
               if (tree instanceof LocalFileTree) {
                 mostRecentTree = tree
@@ -83,7 +83,8 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
             }
             const pathPartsRemaining = pathParts.slice(end, pathParts.length).map((path) => filenamify(path, { replacement: "-" }))
             const dirPath = p.join(mostRecentTree.path, ...pathPartsRemaining)
-            const filename = filenamify(`${req.query.name}` ?? file.originalname, { replacement: "-" })
+            const name = typeof req.query.name === "string" ? req.query.name : undefined
+            const filename = filenamify(name ?? file.originalname, { replacement: "-" })
 
             try {
               await fs.mkdir(dirPath, { recursive: true })

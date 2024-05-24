@@ -340,7 +340,7 @@ export const startServer = async (
   })
 
 
-  app.get("/file/(*)", authMiddleware, async (req, res) => {
+  api.get("/file/(*)", authMiddleware, async (req, res) => {
     let path: string = req.params[0]
     try {
       path = decodeURIComponent(path)
