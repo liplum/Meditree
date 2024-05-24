@@ -342,6 +342,7 @@ export const startServer = async (
 
   api.get("/file/(*)", authMiddleware, async (req, res) => {
     let path: string = req.params[0]
+    const attachment = req.query.attachment !== undefined
     try {
       path = decodeURIComponent(path)
     } catch (e) {
@@ -359,6 +360,9 @@ export const startServer = async (
     const expireTime = new Date(Date.now() + config.cacheMaxAge)
     res.setHeader("Expires", expireTime.toUTCString())
     res.setHeader("Cache-Control", `max-age=${config.cacheMaxAge}`)
+    if (attachment) {
+      res.attachment(resolved.name)
+    }
     await pipeFile(req, res, resolved)
   })
 
