@@ -16,9 +16,7 @@ import { z } from "zod"
 interface AdminPluginConfig {
   /**
   * The root directory where to save the uploaded files temporarily.
-  * By default,
-  * if {@link AppConfig.root} is a string, that will be used,
-  * either {@link os.tmpdir} will be used.
+  * By default, {@link os.tmpdir} will be used.
   */
   tempDir?: string
   /** 
@@ -110,6 +108,8 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
             }
             log.verbose(`An uploaded file saved at ${newFilePath}`)
             res.sendStatus(200).end()
+            // eagerly rebuild file tree after file uploaded
+            service.rebuildFileTree()
           })
           .delete(validateRequest({
             query: z.object({
@@ -137,6 +137,8 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
             }
             log.verbose(`Deleted file: ${path} at ${file.localPath}`)
             res.sendStatus(200).end()
+            // eagerly rebuild file tree after file deleted
+            service.rebuildFileTree()
           })
         api.use("/admin", admin)
       },

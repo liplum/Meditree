@@ -285,6 +285,7 @@ export const startServer = async (
   }
   const service: MeditreeService = {
     pipeFile,
+    rebuildFileTree: hostTree.rebuildFileTree,
   }
 
   // Phrase 17: plugins patch the express app registering and FileTree manager setup.
@@ -446,6 +447,7 @@ export interface MeditreePlugin {
 
 export interface MeditreeService {
   pipeFile(req: Request, res: Response, file: LocalFile): Promise<void>
+  rebuildFileTree(): Promise<void>
 }
 export type HookOf<T> = T[]
 
