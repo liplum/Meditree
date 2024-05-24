@@ -75,8 +75,8 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.emit("rebuild", tree)
   }
 
-  resolveFile(pathParts: string[]): LocalFile | null {
-    return this.fileTree?.resolveFile(pathParts)
+  resolveFileEntry(pathParts: string[]): LocalFile | LocalFileTree | undefined {
+    return this.fileTree?.resolveFileEntry(pathParts)
   }
 }
 
@@ -186,8 +186,8 @@ export class EmptyHostTree implements FileTreeLike, IHostTree {
     this.name = name
   }
 
-  resolveFile(pathParts: string[]): LocalFile | null {
-    return null
+  resolveFileEntry(pathParts: string[]): undefined {
+    return undefined
   }
 
   toJSON(): FileTreeJson {
@@ -236,8 +236,8 @@ export class CompoundHostTree extends EventEmitter implements FileTreeLike, IHos
     this.builtFileTree = new LocalFileTree(this.name, "?")
   }
 
-  resolveFile(pathParts: string[]): LocalFile | null {
-    return this.builtFileTree.resolveFile(pathParts)
+  resolveFileEntry(pathParts: string[]): LocalFile | FileTreeLike | undefined {
+    return this.builtFileTree.resolveFileEntry(pathParts)
   }
 
   toJSON(): FileTreeJson {

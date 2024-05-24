@@ -28,6 +28,7 @@
     "etag": "^1.8.1",
     "express": "^4.19.2",
     "file-type": "^19.0.0",
+    "filenamify": "^6.0.0",
     "json5": "^2.2.3",
     "jsonwebtoken": "^9.0.2",
     "mime": "^4.0.3",

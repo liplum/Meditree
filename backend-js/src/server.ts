@@ -2,7 +2,7 @@
 import { CompoundHostTree, EmptyHostTree, HostTree, classifyContentTypeByPattern, type HostTreeOptions, type IHostTree } from "./host.js"
 import { type AppConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
-import { cloneFileTreeJson, type FileTreeJson, type LocalFileTree, type LocalFile } from "./file.js"
+import { cloneFileTreeJson, type FileTreeJson, type LocalFileTree, type LocalFile, splitPath, resolveFile } from "./file.js"
 import cors from "cors"
 import { FileTreeManager, type ReadStreamOptions } from "./manager.js"
 import { LogLevels, createLogger, globalOptions, initGlobalLogDir } from "@liplum/log"
@@ -93,7 +93,7 @@ export const startServer = async (
 
   // Phrase 8: initialize plugins.
   for (const plugin of plugins) {
-    await plugin.init?.()
+    await plugin.init?.(config)
   }
 
   // Phrase 9: register default service.
@@ -323,9 +323,9 @@ export const startServer = async (
       path = decodeURIComponent(path)
     } catch (e) {
       res.status(400).send("Invalid URI").end()
-      return 
+      return
     }
-    const resolved = manager.resolveFileFromFull(path)
+    const resolved = resolveFile(manager, path)
     if (!resolved?.type) {
       res.sendStatus(404).end()
       return
@@ -346,9 +346,9 @@ export const startServer = async (
       path = decodeURIComponent(path)
     } catch (e) {
       res.status(400).send("Invalid URI").end()
-      return 
+      return
     }
-    const resolved = manager.resolveFileFromFull(path)
+    const resolved = resolveFile(manager, path)
     if (!resolved?.type) {
       res.sendStatus(404).end()
       return
@@ -421,7 +421,7 @@ export interface MeditreeSetupContext {
 }
 
 export interface MeditreePlugin {
-  init?: () => Promise<void>
+  init?: (appConfig: AppConfig) => Promise<void>
 
   setupMeta?: (meta: MeditreeMeta) => void
 

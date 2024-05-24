@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { createLogger, type Logger } from "@liplum/log"
-import { type FileTreeLike, type FileTreeJson, type LocalFile, attachVirtualPath } from "./file.js"
+import { type FileTreeLike, type FileTreeJson, LocalFile, attachVirtualPath, LocalFileTree } from "./file.js"
 import EventEmitter from "events"
 import { type Readable } from "stream"
 import fs from "fs"
@@ -26,37 +26,9 @@ export class FileTreeManager extends EventEmitter implements FileTreeLike {
     return this.localTree ? this.localTree.tree.name : ""
   }
 
-  resolveFile(pathParts: string[]): LocalFile | null {
-    if (this.localTree) {
-      return this.localTree.tree.resolveFile(pathParts)
-    } else {
-      return null
-    }
+  resolveFileEntry(pathParts: string[]): LocalFile | FileTreeLike | undefined {
+    return this.localTree?.tree.resolveFileEntry(pathParts)
   }
-
-  resolveFileFromFull(path: string): LocalFile | null {
-    const pathParts = path.split("/")
-    while (pathParts.length && pathParts[pathParts.length - 1].length === 0) {
-      pathParts.pop()
-    }
-    while (pathParts.length && pathParts[0].length === 0) {
-      pathParts.shift()
-    }
-    const resolved = this.resolveFile(pathParts)
-    return resolved
-  }
-
-  // resolveDirFromFull(path: string): LocalFile | null {
-  //   const pathParts = path.split("/")
-  //   while (pathParts.length && pathParts[pathParts.length - 1].length === 0) {
-  //     pathParts.pop()
-  //   }
-  //   while (pathParts.length && pathParts[0].length === 0) {
-  //     pathParts.shift()
-  //   }
-  //   const resolved = this.resolveFile(pathParts)
-  //   return resolved
-  // }
 
   async createReadStream(file: LocalFile, options?: ReadStreamOptions): Promise<Readable | null> {
     // if the file has a path, it's a local file

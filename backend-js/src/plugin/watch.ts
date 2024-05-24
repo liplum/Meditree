@@ -119,7 +119,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
     this.rebuildLoopTask = null
   }
 
-  resolveFile(pathParts: string[]): LocalFile | null {
-    return this.fileTree?.resolveFile(pathParts)
+  resolveFileEntry(pathParts: string[]): LocalFile | FileTreeLike | undefined {
+    return this.fileTree?.resolveFileEntry(pathParts)
   }
 }

@@ -57,7 +57,7 @@ export class LocalFile {
 export type PathFilter = (path: string) => boolean
 export interface FileTreeLike {
   readonly name: string
-  resolveFile(pathParts: string[]): LocalFile | null
+  resolveFileEntry(pathParts: string[]): LocalFile | FileTreeLike | undefined
   toJSON(): FileTreeJson
   children(): (LocalFile | FileTreeLike)[]
 }
@@ -80,10 +80,7 @@ export class LocalFileTree implements FileTreeLike {
   readonly parent?: LocalFileTree
   hidden?: boolean
   private readonly name2File = new Map<string, LocalFile | LocalFileTree>()
-  /**
-   * If `path` is undefined, it indicates this file tree is virtual.
-   */
-  readonly path?: string
+  readonly path: string
   readonly name: string
   tag?: Record<string, any>
   constructor(name: string, path: string, parent?: LocalFileTree) {
@@ -96,25 +93,15 @@ export class LocalFileTree implements FileTreeLike {
     return Array.from(this.name2File.values())
   }
 
-  /**
- * Resolves a file given its path parts.
- * @param pathParts The parts of the file's path.
- * @returns The resolved file or `null` if it could not be found.
- */
-  resolveFile(pathParts: string[]): LocalFile | null {
+  resolveFileEntry(pathParts: string[]): LocalFile | LocalFileTree | undefined {
     let cur: LocalFile | LocalFileTree | undefined = this
     let index: number
     for (index = 0; index < pathParts.length && cur instanceof LocalFileTree; index++) {
       const currentPart = pathParts[index]
       cur = cur.name2File.get(currentPart)
     }
-
-    // ensure it's a file, and the pathParts is exhausted.
-    if (cur instanceof LocalFile && index === pathParts.length) {
-      return cur
-    } else {
-      return null
-    }
+    // ensure that the pathParts is exhausted.
+    return index === pathParts.length ? cur : undefined
   }
 
   private _subtreeFileCountCache?: number
@@ -341,4 +328,41 @@ export class File {
     const dir = path.dirname(this.path)
     await fs.mkdir(dir, { recursive: true })
   }
+}
+
+export const splitPath = (fullPath: String): string[] => {
+  const pathParts = fullPath.split("/")
+  while (pathParts.length && pathParts[pathParts.length - 1].length === 0) {
+    pathParts.pop()
+  }
+  while (pathParts.length && pathParts[0].length === 0) {
+    pathParts.shift()
+  }
+  return pathParts
+}
+
+/**
+* Resolve a file by the {@link pathParts} given.
+* @param pathParts The parts of the file path.
+* @returns The resolved file, or `null` if not found.
+*/
+export const resolveFile = (tree: FileTreeLike, path: string | string[]): LocalFile | undefined => {
+  if (typeof path === "string") {
+    path = splitPath(path)
+  }
+  const entry = tree.resolveFileEntry(path)
+  return entry instanceof LocalFile ? entry : undefined
+}
+
+/**
+* Resolve a file tree by the {@link pathParts} given.
+* @param pathParts The parts of the file tree path.
+* @returns The resolved file tree, or `null` if not found.
+*/
+export const resolveFileTree = (tree: FileTreeLike, path: string | string[]): LocalFileTree | undefined => {
+  if (typeof path === "string") {
+    path = splitPath(path)
+  }
+  const entry = tree.resolveFileEntry(path)
+  return entry instanceof LocalFileTree ? entry : undefined
 }
