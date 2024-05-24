@@ -73,7 +73,7 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
           res.contentType(randomFi.type)
           switch (getMode(randomFi.type)) {
             case "redirect":
-              res.redirect(`/api/file/${encodeURIComponent(randomFi.virtualPath)}`)
+              res.redirect(`/api/file/${encodeURIComponent(randomFi.virtualPath!)}`)
               break
             case "pipe":
               await service.pipeFile(req, res, randomFi)

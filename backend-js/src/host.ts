@@ -34,7 +34,7 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
   private readonly root: string
   readonly name: string
   private readonly log?: Logger
-  private fileTree: LocalFileTree
+  private fileTree: LocalFileTree | undefined
   private readonly classifier: FileClassifier
   private readonly filter: PathFilter
   private readonly fileFilter: FileFilter
@@ -49,11 +49,11 @@ export class HostTree extends EventEmitter implements FileTreeLike, IHostTree {
   }
 
   children(): (FileTreeLike | LocalFile)[] {
-    return this.fileTree.children()
+    return this.fileTree?.children() ?? []
   }
 
   toJSON(): FileTreeJson {
-    return this.fileTree.toJSON()
+    return this.fileTree?.toJSON() ?? {}
   }
 
   start(): void {

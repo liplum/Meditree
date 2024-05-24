@@ -33,7 +33,7 @@ const StatisticsPlugin: PluginMeta<MeditreePlugin, StatisticsPluginConfig> = {
         const events = container.get(MeditreeType.Events)
         const users = container.tryGet(UserType.UserStorage)
         events.on("file-requested", async (req: Request & Partial<WithUser>, res, file) => {
-          const virtualPath = file.virtualPath
+          const virtualPath = file.virtualPath!
           await statistics.increment(virtualPath)
           await statistics.setLastView(virtualPath, new Date())
           if (req.user && users) {

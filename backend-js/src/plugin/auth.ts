@@ -40,7 +40,7 @@ const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
       },
       setupService: (container) => {
         storage = container.get(UserType.UserStorage)
-        container.bind(MeditreeType.Auth).toValue(async (req: Request & WithUser, res, next) => {
+        container.bind(MeditreeType.Auth).toValue(async (req, res, next) => {
           // Get the JWT from the cookie, body or authorization header in a fallback chain.
           const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
           if (!token) {

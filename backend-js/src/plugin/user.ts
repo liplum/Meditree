@@ -1,5 +1,13 @@
 import { type PluginMeta } from "../plugin"
 import { type MeditreePlugin } from "../server"
+import { User } from "./user-storage"
+declare global {
+  namespace Express {
+    interface Request {
+      user: User
+    }
+  }
+}
 
 interface UserPluginConfig {
 

@@ -1,7 +1,7 @@
 import { token } from "@liplum/ioc"
 import { type PluginMeta } from "../../plugin.js"
 import { type MeditreePlugin } from "../../server.js"
-import express, { RequestHandler } from "express"
+import express, { Request, RequestHandler } from "express"
 import multer from "multer"
 import { createLogger } from "@liplum/log"
 import { AppConfig } from "../../config.js"
@@ -10,6 +10,8 @@ import { FileTreeLike, LocalFileTree, resolveFileTree, splitPath } from "../../f
 import filenamify from 'filenamify'
 import p from "path"
 import fs from "fs/promises"
+import { processRequest, validateRequest } from 'zod-express-middleware'
+import { z } from "zod"
 
 interface AdminPluginConfig {
   /**
@@ -52,14 +54,20 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
             fieldSize: config.maxFileSize,
           }
         })
+
         admin.route("/file")
-          .put(upload.single("file"), async (req, res) => {
+          .put(validateRequest({
+            query: z.object({
+              dir: z.string().default(""),
+              name: z.string().optional(),
+            })
+          }), upload.single("file"), async (req, res) => {
             const file = req.file
             if (!file) {
               res.status(500).send("Uploaded file not found")
               return
             }
-            let dir = typeof req.query.dir === "string" ? req.query.dir : ""
+            let dir = req.query.dir!
             try {
               dir = decodeURIComponent(dir)
             } catch (e) {
@@ -83,8 +91,7 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
             }
             const pathPartsRemaining = pathParts.slice(end, pathParts.length).map((path) => filenamify(path, { replacement: "-" }))
             const dirPath = p.join(mostRecentTree.path, ...pathPartsRemaining)
-            const name = typeof req.query.name === "string" ? req.query.name : undefined
-            const filename = filenamify(name ?? file.originalname, { replacement: "-" })
+            const filename = filenamify(req.query.name ?? file.originalname, { replacement: "-" })
 
             try {
               await fs.mkdir(dirPath, { recursive: true })
@@ -105,6 +112,7 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
             res.sendStatus(200).end()
           })
           .delete((req, res) => {
+            const path = typeof req.query.path === "string" ? req.query.path : ""
             res.sendStatus(200).end()
           })
         api.use("/admin", admin)

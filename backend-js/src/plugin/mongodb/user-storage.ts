@@ -1,4 +1,4 @@
-import { type WithId } from "mongodb"
+import { ObjectId, type WithId } from "mongodb"
 import { type MeditreePlugin } from "../../server.js"
 import { MongoDBType } from "./core.js"
 import { type PluginMeta } from "../../plugin.js"
@@ -11,6 +11,11 @@ interface MongoDDUserPluginConfig {
   collection?: string
 }
 
+declare module "../user-storage.js" {
+  interface User {
+    _id?: ObjectId
+  }
+}
 /**
  * Default plugin dependencies: `mongodb`.
  */
@@ -35,7 +40,7 @@ const MongoDBUserPlugin: PluginMeta<MeditreePlugin, MongoDDUserPluginConfig> = {
           getUser: async (account) => {
             return await users.findOne({ account }) as User | null
           },
-          updateUser: async (user: WithId<User>) => {
+          updateUser: async (user) => {
             const res = await users.updateOne({ _id: user._id }, { $set: user })
             return res.matchedCount > 0
           },

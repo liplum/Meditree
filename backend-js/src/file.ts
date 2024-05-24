@@ -23,7 +23,7 @@ export class LocalFile {
   readonly size: number
   readonly localPath: string
   readonly etag: string
-  virtualPath: string
+  virtualPath: string | undefined
   tag?: Record<string, any>
   hidden?: boolean
   constructor({

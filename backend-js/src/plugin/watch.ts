@@ -38,7 +38,7 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   readonly name: string
   private readonly root: string
   private readonly log?: Logger
-  private fileTree: LocalFileTree
+  private fileTree: LocalFileTree | undefined
   private fileWatcher: fs.FSWatcher | null = null
   private readonly rebuildInterval: number
   private readonly classifier: FileClassifier
@@ -57,11 +57,11 @@ export class WatchTree extends EventEmitter implements FileTreeLike, IHostTree {
   }
 
   children(): (LocalFile | FileTreeLike)[] {
-    return this.fileTree.children()
+    return this.fileTree?.children() ?? []
   }
 
   toJSON(): FileTreeJson {
-    return this.fileTree.toJSON()
+    return this.fileTree?.toJSON() ?? {}
   }
 
   get isWatching(): boolean {
