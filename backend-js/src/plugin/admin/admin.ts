@@ -6,7 +6,7 @@ import multer from "multer"
 import { createLogger } from "@liplum/log"
 import { AppConfig } from "../../config.js"
 import os from "os"
-import { FileTreeLike, LocalFileTree, resolveFileTree, splitPath } from "../../file.js"
+import { FileTreeLike, LocalFileTree, resolveFile, resolveFileTree, splitPath } from "../../file.js"
 import filenamify from 'filenamify'
 import p from "path"
 import fs from "fs/promises"
@@ -58,7 +58,7 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
         admin.route("/file")
           .put(validateRequest({
             query: z.object({
-              dir: z.string().default(""),
+              dir: z.string().optional(),
               name: z.string().optional(),
             })
           }), upload.single("file"), async (req, res) => {
@@ -67,7 +67,7 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
               res.status(500).send("Uploaded file not found")
               return
             }
-            let dir = req.query.dir!
+            let dir = req.query.dir ?? ""
             try {
               dir = decodeURIComponent(dir)
             } catch (e) {
@@ -96,23 +96,46 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
             try {
               await fs.mkdir(dirPath, { recursive: true })
             } catch (error) {
-              log.error(`Cannot create directory: ${dirPath}`, error)
-              res.status(500).send("Cannot create directory")
+              log.error(`Failed to create directory: ${dirPath}`, error)
+              res.status(500).send("Failed to create directory")
               return
             }
             const newFilePath = p.join(dirPath, filename)
             try {
               await fs.rename(file.path, newFilePath)
             } catch (error) {
-              log.error(`Cannot move file: ${file.path} => ${newFilePath}`, error)
-              res.status(500).send("Cannot put such file")
+              log.error(`Failed to move file: ${file.path} => ${newFilePath}`, error)
+              res.status(500).send("Failed to put such file")
               return
             }
             log.verbose(`An uploaded file saved at ${newFilePath}`)
             res.sendStatus(200).end()
           })
-          .delete((req, res) => {
-            const path = typeof req.query.path === "string" ? req.query.path : ""
+          .delete(validateRequest({
+            query: z.object({
+              path: z.string(),
+            })
+          }), async (req, res) => {
+            let path = req.query.path
+            try {
+              path = decodeURIComponent(path)
+            } catch (e) {
+              res.status(400).send("Invalid path")
+              return
+            }
+            const file = resolveFile(manager, path)
+            if (!file) {
+              res.status(404).send("No such file")
+              return
+            }
+            try {
+              await fs.unlink(file.localPath)
+            } catch (error) {
+              log.error(`Failed to delete file: ${file.localPath}`, error)
+              res.status(500).send("Failed to delete file")
+              return
+            }
+            log.verbose(`Deleted file: ${path} at ${file.localPath}`)
             res.sendStatus(200).end()
           })
         api.use("/admin", admin)
