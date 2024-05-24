@@ -55,7 +55,7 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
         manager.on("file-tree-update", ({ tree }) => {
           indexedTree = IndexedTree.from(tree)
         })
-        function resolveTypes(req: Request): string[] {
+        const resolveTypes = (req: Request): string[] => {
           const targetType = req.query.type
           let types: string[] = []
           if (typeof targetType === "string") {

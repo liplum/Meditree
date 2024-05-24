@@ -6,6 +6,8 @@ import { createLogger } from "@liplum/log"
 import { type Request } from "express"
 import { type PluginMeta } from "../plugin.js"
 import { UserType, type User, type UserStorageService } from "./user-storage.js"
+import { validateRequest } from "zod-express-middleware"
+import { z } from "zod"
 
 interface AuthPluginConfig {
   /**
@@ -71,12 +73,13 @@ const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
         )
       },
       setupMeditree: async ({ app, manager, container }) => {
-        app.post("/api/login", async (req, res) => {
+        app.post("/api/login", validateRequest({
+          body: z.object({
+            account: z.string(),
+            password: z.string(),
+          })
+        }), async (req, res) => {
           const { account, password } = req.body
-          if (typeof account !== "string" || typeof password !== "string") {
-            res.status(400).send("Invalid Credentials")
-            return
-          }
           // only finding active staffs
           const user = await storage.getUser(account)
           if (!user || user.password !== password) {
@@ -98,12 +101,13 @@ const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
 
         if (register) {
           log.info("User registration hosts on \"/api/register\".")
-          app.post("/api/register", async (req, res) => {
+          app.post("/api/register", validateRequest({
+            body: z.object({
+              account: z.string(),
+              password: z.string(),
+            })
+          }), async (req, res) => {
             const { account, password } = req.body
-            if (!(typeof account === "string" && typeof password === "string")) {
-              res.status(400).send("Credentials Invalid")
-              return
-            }
             const user = await storage.getUser(account)
             if (user !== null) {
               res.status(400).send("Account Exists")
