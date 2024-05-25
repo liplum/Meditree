@@ -50,6 +50,9 @@ importers:
       express-list-endpoints:
         specifier: ^7.1.0
         version: 7.1.0
+      express-rate-limit:
+        specifier: ^7.2.0
+        version: 7.2.0(express@4.19.2)
       file-type:
         specifier: ^19.0.0
         version: 19.0.0
@@ -3646,6 +3649,12 @@ packages:
   express-list-endpoints@7.1.0:
     resolution: {integrity: sha512-7FyKxABfkRC0t6B6btxlAcFr0WrpPAL12MFAGhAxoIi/OyphxVQzVmyuWbcNxEApBmNzzgt2khjlqj/3wyHMMA==}
     engines: {node: '>=18'}
+
+  express-rate-limit@7.2.0:
+    resolution: {integrity: sha512-T7nul1t4TNyfZMJ7pKRKkdeVJWa2CqB8NA1P8BwYaoDI5QSBZARv5oMS43J7b7I5P+4asjVXjb7ONuwDKucahg==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      express: 4 || 5 || ^5.0.0-beta.1
 
   express@4.19.2:
     resolution: {integrity: sha512-5T6nhjsT+EOMzuck8JjBHARTHfMht0POzlA60WV2pMD3gyXw2LZnZ+ueGdNxG+0calOJcWKbpFcuzLZ91YWq9Q==}
@@ -10481,6 +10490,10 @@ snapshots:
     optional: true
 
   express-list-endpoints@7.1.0: {}
+
+  express-rate-limit@7.2.0(express@4.19.2):
+    dependencies:
+      express: 4.19.2
 
   express@4.19.2:
     dependencies:

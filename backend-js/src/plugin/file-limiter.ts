@@ -3,7 +3,7 @@ import { type MeditreePlugin } from "../server.js"
 import { parseBytes } from "../utils.js"
 import { Transform, type TransformCallback } from "stream"
 
-interface LimiterPluginConfig {
+interface FileLimiterPluginConfig {
   /**
    * The maximum(including) file size allowed.
    * No limitation by default.
@@ -19,7 +19,7 @@ interface LimiterPluginConfig {
   throttle?: number | string
 }
 
-const LimiterPlugin: PluginMeta<MeditreePlugin, LimiterPluginConfig> = {
+const FileLimiterPlugin: PluginMeta<MeditreePlugin, FileLimiterPluginConfig> = {
   create: (config) => {
     const maxFileSize = parseBytes(config.maxFileSize, -1)
     const throttleRate = parseBytes(config.throttle, -1)
@@ -39,7 +39,7 @@ const LimiterPlugin: PluginMeta<MeditreePlugin, LimiterPluginConfig> = {
     }
   }
 }
-export default LimiterPlugin
+export default FileLimiterPlugin
 
 /**
  * A custom Transform stream that throttles the data passing through it to limit the bandwidth.

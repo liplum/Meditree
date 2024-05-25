@@ -483,3 +483,5 @@ export interface MeditreeEvents extends EventEmitter {
   off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile) => void | Promise<void>): this
   emit(event: "file-requested", req: Request, res: Response, file: LocalFile): boolean
 }
+
+export interface 

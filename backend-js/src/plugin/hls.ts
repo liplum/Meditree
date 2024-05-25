@@ -31,4 +31,3 @@ const HLSPlugin: PluginMeta<MeditreePlugin, HLSPluginConfig> = {
     }
   }
 }
-export default HLSPlugin
