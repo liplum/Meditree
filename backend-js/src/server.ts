@@ -21,6 +21,7 @@ import { type MeditreeMeta } from "./meta.js"
 import mime from "mime"
 import { fileTypeFromFile } from "file-type"
 import expressListEndpoints from "express-list-endpoints"
+import { MiddlewareRgistry } from "./middleware.js"
 
 export const MeditreeType = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("meditree.Meditree.HostTree"),
@@ -109,7 +110,7 @@ export const startServer = async (
 
   // Phrase 10: plugins register or override services.
   for (const plugin of plugins) {
-    plugin.setupService?.(container)
+    await plugin.setupService?.(container)
   }
   // Then froze the container
   container.froze()
@@ -145,7 +146,7 @@ export const startServer = async (
   }
   // Phrase 12: plugins patch the server setup.
   for (const plugin of plugins) {
-    plugin.setupHooks?.(hooks)
+    await plugin.setupHooks?.(hooks)
   }
 
   // Phrase 13: resolve the HostTree service.
@@ -286,6 +287,10 @@ export const startServer = async (
   const service: MeditreeService = {
     pipeFile,
     rebuildFileTree: hostTree.rebuildFileTree,
+  }
+  const middlewares = new MiddlewareRgistry()
+  for (const plugin of plugins) {
+    await plugin.setupMiddleware?.({ registry: middlewares, manager, container, service })
   }
 
   // Phrase 17: plugins patch the express app registering and FileTree manager setup.
@@ -431,20 +436,31 @@ export interface MeditreeSetupContext {
   service: MeditreeService
 }
 
+export interface MeditreeSetupMiddlewareContext {
+  registry: MiddlewareRgistry
+  manager: FileTreeManager
+  container: Container
+  service: MeditreeService
+}
+
 export interface MeditreePlugin {
-  init?: (appConfig: AppConfig) => Promise<void>
+  init?: (appConfig: AppConfig) => Promise<void> | void
 
-  setupMeta?: (meta: MeditreeMeta) => void
+  setupMeta?: (meta: MeditreeMeta) => Promise<void> | void
 
-  setupService?: (container: Container) => void
+  setupService?: (container: Container) => Promise<void> | void
 
-  setupServer?: (app: Express.Application, server: Server) => Promise<void>
+  setupServer?: (app: Express.Application, server: Server) => Promise<void> | void
 
-  setupHooks?: (hooks: MeditreeHooks) => void
+  setupHooks?: (hooks: MeditreeHooks) => Promise<void> | void
+
+  setupMiddleware?: ({
+    registry, manager, container, service
+  }: MeditreeSetupMiddlewareContext) => Promise<void> | void
 
   setupMeditree?: ({
     app, api, manager, container, service
-  }: MeditreeSetupContext) => Promise<void>
+  }: MeditreeSetupContext) => Promise<void> | void
 
   onLocalFileTreeRebuilt?: (tree: LocalFileTree) => void
 
@@ -483,5 +499,3 @@ export interface MeditreeEvents extends EventEmitter {
   off(event: "file-requested", listener: (req: Request, res: Response, file: LocalFile) => void | Promise<void>): this
   emit(event: "file-requested", req: Request, res: Response, file: LocalFile): boolean
 }
-
-export interface 
