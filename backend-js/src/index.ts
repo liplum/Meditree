@@ -7,6 +7,7 @@ import { createLogger } from "@liplum/log"
 import { existsOrNull, resolveAppStoragePath } from "./env.js"
 import esMain from "es-main"
 import { cli } from '@liplum/cli'
+import inquirer from 'inquirer'
 
 export interface ServeArgs {
   /**
@@ -52,8 +53,8 @@ export interface InitConfigArgs {
 
 export async function initConfig(args: InitConfigArgs) {
   const path = args.path ?? resolveAppStoragePath("config.json")
-  
   await createConfigFile(path)
+  console.log(`Config file created at ${path}`)
 }
 
 if (esMain(import.meta)) {
