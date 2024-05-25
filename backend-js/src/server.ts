@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { CompoundHostTree, EmptyHostTree, HostTree, classifyContentTypeByPattern, type HostTreeOptions, type IHostTree } from "./host.js"
-import { type MeditreeConfig } from "./config.js"
-import express, { type RequestHandler, type Request, type Response } from "express"
-import { cloneFileTreeJson, type FileTreeJson, type LocalFileTree, type LocalFile, splitPath, resolveFile } from "./file.js"
+import { setupConfig, type MeditreeConfig } from "./config.js"
+import express, { type Request, type Response } from "express"
+import { cloneFileTreeJson, type FileTreeJson, type LocalFileTree, type LocalFile, resolveFile } from "./file.js"
 import cors from "cors"
 import { FileTreeManager, type ReadStreamOptions } from "./manager.js"
-import { LogLevels, createLogger, globalOptions, initGlobalLogDir } from "@liplum/log"
+import { createLogger } from "@liplum/log"
 import { Timer } from "./timer.js"
 import { type PluginRegistry, resolvePluginList } from "./plugin.js"
 import { type Readable } from "stream"
@@ -15,33 +15,26 @@ import cookieParser from "cookie-parser"
 import { registerBuiltinPlugins } from "./builtin-plugin.js"
 import { EventEmitter } from "events"
 import path from "path"
-import { resolveAppStoragePath } from "./env.js"
 import fs from "fs"
 import { type MeditreeMeta } from "./meta.js"
 import mime from "mime"
 import { fileTypeFromFile } from "file-type"
 import expressListEndpoints from "express-list-endpoints"
 import { MiddlewareContainer, MiddlewareProvider, MiddlewareRgistry } from "./middleware.js"
+import { MeditreeWorkspace } from "./workspace.js"
 
 export const MeditreeType = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("meditree.Meditree.HostTree"),
 }
 
 export const startServer = async (
-  config: MeditreeConfig
+  workspace: MeditreeWorkspace
 ): Promise<void> => {
   // Phrase 1: setup starting timer.
   const timer = new Timer()
   timer.start("Start Server")
+  const config = await workspace.loadConfig() ?? setupConfig()
 
-  // Phrase 2: try to initialize global logging settings.
-  initGlobalLogDir(resolveAppStoragePath("log"))
-  if (config.logLevel) {
-    const lv = LogLevels[config.logLevel.toUpperCase()]
-    if (lv) {
-      globalOptions.consoleOutputRequired = lv
-    }
-  }
   // Phrase 3: create logger.
   const log = createLogger("Main")
   const pluginLog = createLogger("Plugin")

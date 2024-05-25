@@ -1,13 +1,10 @@
-import { createConfigFile, loadConfigFromFile, setupConfig } from "./config.js"
+import { createConfigFile } from "./config.js"
 import { startServer } from "./server.js"
 import { install as installSourceMap } from "source-map-support"
-import path from "path"
-import { File as FileDelegate } from "./file.js"
-import { createLogger } from "@liplum/log"
-import { appDir, existsOrNull, resolveAppStoragePath } from "./env.js"
+import { LogLevel, LogLevels } from "@liplum/log"
+import { appDir, resolveAppStoragePath } from "./env.js"
 import esMain from "es-main"
 import { cli } from '@liplum/cli'
-import inquirer from 'inquirer'
 import { MeditreeWorkspace } from "./workspace.js"
 
 export interface ServeArgs {
@@ -15,17 +12,20 @@ export interface ServeArgs {
    * The path of workspace directory
    */
   workspace?: string
+  loglevel?: keyof LogLevel
 }
 
 export async function serve(args: ServeArgs): Promise<void> {
   installSourceMap()
-  const log = createLogger("Bootstrap")
   // To try finding the config file in following locations:
   // 1. the specific path passed by command line arguments.
   // 2. the default path in user home: "~/.meditree/config.json"
-  const workspace = new MeditreeWorkspace(args.workspace ?? appDir)
-  log.info(`Config was loaded from "${path.resolve(configFi.path)}".`)
-  await startServer(config)
+  const workspace = new MeditreeWorkspace({
+    path: args.workspace ?? appDir,
+    logLevel: args.loglevel ? LogLevels[args.loglevel?.toUpperCase()] : LogLevels.INFO,
+  })
+  await workspace.initLogger()
+  await startServer(workspace)
 }
 
 export interface InitWorkspaceArgs {
@@ -52,6 +52,10 @@ if (esMain(import.meta)) {
       ],
       require: [],
       options: [{
+        name: 'loglevel',
+        alias: "l",
+        description: `The log level: ${Object.keys(LogLevels)}.`
+      }, {
         name: 'workspace',
         alias: "w",
         description: 'The workspace directory.'
