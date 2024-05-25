@@ -40,9 +40,9 @@ const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
         meta.auth = {
         }
       },
-      setupService: (container) => {
+      setupMiddleware: ({ registry, container }) => {
         storage = container.get(UserType.UserStorage)
-        container.bind(MeditreeType.Auth).toValue(async (req, res, next) => {
+        registry.named("auth-user", 100, async (req, res, next) => {
           // Get the JWT from the cookie, body or authorization header in a fallback chain.
           const token = req.cookies.jwt ?? req.body.jwt ?? getJwtFromAuthHeader(req)
           if (!token) {
@@ -69,8 +69,7 @@ const AuthPlugin: PluginMeta<MeditreePlugin, AuthPluginConfig> = {
             res.status(401).send("Auth Error").end()
             return
           }
-        }
-        )
+        })
       },
       setupMeditree: async ({ app, manager, container }) => {
         app.post("/api/login", validateRequest({

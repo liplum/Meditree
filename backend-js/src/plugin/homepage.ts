@@ -1,7 +1,7 @@
 import { type FileTreeJson, type FileJson } from "../file.js"
 import { createLogger } from "@liplum/log"
-import { MeditreeType, type MeditreePlugin } from "../server.js"
-import express, { type RequestHandler } from "express"
+import { type MeditreePlugin } from "../server.js"
+import express from "express"
 import fs from "fs"
 import { type PluginMeta } from "../plugin.js"
 
@@ -34,30 +34,27 @@ const HomepagePlugin: PluginMeta<MeditreePlugin, HomepagePluginConfig> = {
     // lazy-build the html
     let html: string | undefined
     return {
-      setupMeditree: async ({ app, manager, container }) => {
+      setupMeditree: async ({ app, manager, container, middlewares }) => {
         if (!root) {
           manager.on("file-tree-update", () => {
             // clear the built html
             html = undefined
           })
         }
-        const authMiddleware = container.get(MeditreeType.Auth)
         if (root) {
           app.use(express.static(root))
         } else {
-          const handlers: RequestHandler[] = [(req, res) => {
+          app.get("/index.html", ...middlewares.byName("auth-user"), (req, res) => {
             res.status(200)
             res.contentType("text/html")
             if (html === undefined) {
               html = buildIndexHtml(manager.toJSON())
             }
             res.send(html)
-          }]
-          if (requireAuth) {
-            handlers.unshift(authMiddleware)
-          }
-          app.get("/index.html", ...handlers)
-          app.get("/", ...handlers)
+          })
+          app.get("/", (req, res) => {
+            res.redirect("/index.html")
+          })
         }
       }
     }

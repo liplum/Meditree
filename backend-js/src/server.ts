@@ -25,8 +25,6 @@ import { MiddlewareRgistry } from "./middleware.js"
 
 export const MeditreeType = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("meditree.Meditree.HostTree"),
-  Auth: token<RequestHandler>("meditree.Meditree.Auth"),
-  Events: token<MeditreeEvents>("meditree.Meditree.Events"),
 }
 
 export const startServer = async (
@@ -101,12 +99,7 @@ export const startServer = async (
   container.bind(MeditreeType.HostTree)
     .toValue((options) => new HostTree(options))
 
-  container.bind(MeditreeType.Auth)
-    .toValue((req, res, next) => { next() })
-
   const events = new EventEmitter() as MeditreeEvents
-
-  container.bind(MeditreeType.Events).toValue(events)
 
   // Phrase 10: plugins register or override services.
   for (const plugin of plugins) {
@@ -295,11 +288,8 @@ export const startServer = async (
 
   // Phrase 17: plugins patch the express app registering and FileTree manager setup.
   for (const plugin of plugins) {
-    await plugin.setupMeditree?.({ app, api, manager, container, service })
+    await plugin.setupMeditree?.({ app, api, middlewares, manager, container, service, events })
   }
-
-  // Phrase 18: express app setup.
-  const authMiddleware = container.get(MeditreeType.Auth)
 
   api.get("/meta", (req, res) => {
     res.status(200)
@@ -312,18 +302,18 @@ export const startServer = async (
   })
 
   // For authentication verification
-  api.get("/verify", authMiddleware, (req, res) => {
+  api.get("/verify", ...middlewares.byName("auth-user"), (req, res) => {
     res.sendStatus(200).end()
   })
 
-  api.get("/list", authMiddleware, (req, res) => {
+  api.get("/list", ...middlewares.byName("auth-user"), (req, res) => {
     res.status(200)
     res.contentType("application/json;charset=utf-8")
     res.send(treeJsonCache)
     res.end()
   })
 
-  api.head("/file/(*)", authMiddleware, async (req, res) => {
+  api.head("/file/(*)", ...middlewares.byName("auth-user"), async (req, res) => {
     let path: string = req.params[0]
     try {
       path = decodeURIComponent(path)
@@ -346,7 +336,7 @@ export const startServer = async (
   })
 
 
-  api.get("/file/(*)", authMiddleware, async (req, res) => {
+  api.get("/file/(*)", ...middlewares.byName("auth-user"), async (req, res) => {
     let path: string = req.params[0]
     const attachment = req.query.attachment !== undefined
     try {
@@ -431,6 +421,8 @@ const resolveRange = (range?: string): { start?: number, end?: number } => {
 export interface MeditreeSetupContext {
   app: express.Express
   api: express.Router
+  middlewares: MiddlewareRgistry
+  events: MeditreeEvents
   manager: FileTreeManager
   container: Container
   service: MeditreeService
@@ -459,7 +451,7 @@ export interface MeditreePlugin {
   }: MeditreeSetupMiddlewareContext) => Promise<void> | void
 
   setupMeditree?: ({
-    app, api, manager, container, service
+    app, api, middlewares, manager, container, service, events
   }: MeditreeSetupContext) => Promise<void> | void
 
   onLocalFileTreeRebuilt?: (tree: LocalFileTree) => void

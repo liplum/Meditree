@@ -28,9 +28,8 @@ const StatisticsPlugin: PluginMeta<MeditreePlugin, StatisticsPluginConfig> = {
   create: (config) => {
     let statistics: StatisticsStorageService
     return {
-      setupMeditree: async ({ app, manager, container }) => {
+      setupMeditree: async ({ app, manager, container, events }) => {
         statistics = container.get(StatisticsType.StatisticsStorage)
-        const events = container.get(MeditreeType.Events)
         const users = container.tryGet(UserType.UserStorage)
         events.on("file-requested", async (req: Request & Partial<WithUser>, res, file) => {
           const virtualPath = file.virtualPath!

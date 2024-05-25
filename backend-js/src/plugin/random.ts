@@ -2,7 +2,7 @@
 import { type Request } from "express"
 import { type FileTreeLike, iterateAllFilesInTree, type LocalFile } from "../file.js"
 import { type PluginMeta } from "../plugin.js"
-import { MeditreeType, type MeditreePlugin } from "../server.js"
+import { type MeditreePlugin } from "../server.js"
 import { Random } from "random-js"
 
 type ServeMode = "redirect" | "pipe"
@@ -50,8 +50,7 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
           infoUrl: "/api/random-info",
         })
       },
-      setupMeditree: async ({ app, manager, container, service }) => {
-        const authMiddleware = container.get(MeditreeType.Auth)
+      setupMeditree: async ({ app, manager, middlewares, service }) => {
         manager.on("file-tree-update", ({ tree }) => {
           indexedTree = IndexedTree.from(tree)
         })
@@ -65,7 +64,7 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
           }
           return types
         }
-        app.get("/api/random-file", authMiddleware, async (req, res) => {
+        app.get("/api/random-file", ...middlewares.byName("auth-user"), async (req, res) => {
           const randomFi = indexedTree.random(rand, resolveTypes(req))
           if (!randomFi) {
             return res.sendStatus(404).end()
@@ -83,7 +82,7 @@ const RandomPlugin: PluginMeta<MeditreePlugin, RandomPluginConfig> = {
           }
         })
 
-        app.get("/api/random-info", (req, res) => {
+        app.get("/api/random-info", ...middlewares.byName("auth-user"), (req, res) => {
           const randomFi = indexedTree.random(rand, resolveTypes(req))
           if (!randomFi) {
             return res.sendStatus(404).end()
