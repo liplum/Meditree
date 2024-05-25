@@ -2,7 +2,7 @@ import { token } from "@liplum/ioc"
 import { MeditreeType, type MeditreePlugin } from "../server.js"
 import { type WithUser } from "./auth.js"
 import { type Request } from "express"
-import { UserType } from "./user/user-storage.js"
+import { UserType } from "./user/storage.js"
 import { type PluginMeta } from "../plugin.js"
 
 export const StatisticsType = {

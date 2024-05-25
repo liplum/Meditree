@@ -12,12 +12,12 @@ import FileLimiterPlugin from "./plugin/file-limiter.js"
 import RateLimiterPlugin from "./plugin/rate-limiter.js"
 // mongoDB
 import MongoDBPlugin from "./plugin/mongodb/core.js"
-import MongoDBUserPlugin from "./plugin/mongodb/user-storage.js"
-import MongoDBStatisticsPlugin from "./plugin/mongodb/statistics-storage.js"
+import MongoDBUserPlugin from "./plugin/mongodb/user.js"
+import MongoDBStatisticsPlugin from "./plugin/mongodb/statistics.js"
 // JsonDB
 import JsonDBPlugin from "./plugin/jsondb/core.js"
-import JsonDBUserPlugin from "./plugin/jsondb/user-storage.js"
-import JsonDBStatisticsPlugin from "./plugin/jsondb/statistics-storage.js"
+import JsonDBUserPlugin from "./plugin/jsondb/user.js"
+import JsonDBStatisticsPlugin from "./plugin/jsondb/statistics.js"
 
 // Admin
 import AdminPlugin from "./plugin/admin/admin.js"

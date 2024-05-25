@@ -5,7 +5,7 @@ import jwt, { type JwtPayload } from "jsonwebtoken"
 import { createLogger } from "@liplum/log"
 import { type Request } from "express"
 import { type PluginMeta } from "../plugin.js"
-import { UserType, type User, type UserStorageService } from "./user/user-storage.js"
+import { UserType, type User, type UserStorageService } from "./user/storage.js"
 import { validateRequest } from "zod-express-middleware"
 import { z } from "zod"
 

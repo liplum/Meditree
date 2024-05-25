@@ -1,16 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Meditree auth plugin configuration",
+  "title": "Meditree rate limiter plugin configuration",
   "type": "object",
   "properties": {
     "global": {
-      "$ref": "#/$ref/config"
+      "$ref": "#/$defs/config"
     },
     "routes": {
       "additionalProperties": {
-        "type": {
-          "$ref": "#/$ref/config"
-        }
+        "$ref": "#/$defs/config"
       }
     }
   },
@@ -29,7 +27,7 @@
       "type": "object",
       "properties": {
         "windowMs": {
-          "$ref": "#/$ref/time"
+          "$ref": "#/$def/time"
         },
         "requestLimit": {
           "type": "integer"

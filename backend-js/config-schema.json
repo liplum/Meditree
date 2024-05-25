@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/config-schema.json",
   "title": "Meditree configuration",
   "description": "The JSON schema for config.json that Meditree used.",
   "type": "object",
@@ -63,34 +62,204 @@
       "type": "object",
       "properties": {
         "admin": {
-          "$ref": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/src/plugin/admin/admin.schema.json"
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/admin/admin.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
         },
         "admin-auth-token": {
-          "$ref": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/src/plugin/admin/auth-token.schema.json"
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/admin/auth-token.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "jsondb": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/jsondb/core.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "jsondb-user": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/jsondb/user.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "jsondb-statistics": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/jsondb/statistics.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "mongodb": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/mongodb/core.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "mongodb-user": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/mongodb/user.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "mongodb-statistics": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/mongodb/statistics.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "auth": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/auth.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "file-limiter": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/file-limiter.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "hls": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/hls.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "homepage": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/homepage.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "minify": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/minify.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "random": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/random.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "rate-limiter": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/rate-limiter.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "statistics": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/statistics.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
+        },
+        "watch": {
+          "anyOf": [
+            {
+              "$ref": "./src/plugin/watch.schema.json"
+            },
+            {
+              "$ref": "#/$defs/pluginConfig"
+            }
+          ]
         }
       },
       "additionalProperties": {
-        "oneOf": [
-          {
-            "type": "boolean"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "_disabled": {
-                "type": "boolean"
-              },
-              "_depends": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            },
-            "additionalProperties": {}
-          }
-        ]
+        "$ref": "#/$defs/pluginConfig"
       }
+    }
+  },
+  "$defs": {
+    "pluginConfig": {
+      "title": "Plugin configuration",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "_disabled": {
+              "type": "boolean"
+            },
+            "_depends": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": {}
+        }
+      ]
     }
   }
 }
