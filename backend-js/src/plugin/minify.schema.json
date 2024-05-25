@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/plugin/minify.schema.json",
+  "title": "Meditree minify plugin configuration",
+  "type": "object",
+  "properties": {
+    "removeHidden": {
+      "type": "boolean"
+    },
+    "removeSize": {
+      "type": "boolean"
+    }
+  }
+}

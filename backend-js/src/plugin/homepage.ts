@@ -11,18 +11,12 @@ interface HomepagePluginConfig {
    * By default, a simple built-in homepage will be served.
    */
   root?: string
-  /**
-   * Whether the built-in homepage requires authentication.
-   * False by default.
-   */
-  requireAuth?: boolean
 }
 
 const HomepagePlugin: PluginMeta<MeditreePlugin, HomepagePluginConfig> = {
   create: (config) => {
     const log = createLogger("Homepage")
     const root = config.root
-    const requireAuth = config.requireAuth ?? false
     if (root) {
       if (fs.existsSync(root)) {
         log.info(`The ${root} is being served.`)

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/plugin/random.schema.json",
+  "title": "Meditree random plugin configuration",
+  "type": "object",
+  "properties": {
+    "types": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/serveMode"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/serveMode"
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "serveMode": {
+      "enum": [
+        "redirect",
+        "pipe"
+      ]
+    }
+  }
+}

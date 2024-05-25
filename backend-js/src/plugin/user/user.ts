@@ -1,5 +1,5 @@
-import { type PluginMeta } from "../plugin"
-import { type MeditreePlugin } from "../server"
+import { type PluginMeta } from "../../plugin"
+import { type MeditreePlugin } from "../../server"
 import { User } from "./user-storage"
 declare global {
   namespace Express {
@@ -10,7 +10,7 @@ declare global {
 }
 
 interface UserPluginConfig {
-
+  
 }
 
 const UserPlugin: PluginMeta<MeditreePlugin, UserPluginConfig> = {

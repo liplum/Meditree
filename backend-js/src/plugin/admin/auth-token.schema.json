@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/plugin/admin/auth-token.schema.json",
+  "title": "Meditree admin-auth-token plugin for admin plugin configuration",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string"
+    },
+    "cookiePath": {
+      "type": "integer"
+    }
+  }
+}

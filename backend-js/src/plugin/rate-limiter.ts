@@ -2,6 +2,7 @@ import { createLogger } from "@liplum/log"
 import { type PluginMeta } from "../plugin.js"
 import { type MeditreePlugin } from "../server.js"
 import { rateLimit, Options } from 'express-rate-limit'
+import { parseBytes } from "../utils.js"
 
 interface RateLimiterPluginConfig {
   global?: RateLimiterConfig
@@ -12,7 +13,7 @@ interface RateLimiterConfig {
   /**
   * see {@link Options.windowMs}
   */
-  windowMs: number
+  windowMs?: string | number
 
   /**
    * see {@link Options.limit}
@@ -45,7 +46,7 @@ export default RateLimiterPlugin
 
 const createRateLimit = (config: RateLimiterConfig) => {
   return rateLimit({
-    windowMs: config.windowMs,
+    windowMs: parseBytes(config.windowMs, "1m"),
     limit: config.rquestLimit,
     standardHeaders: 'draft-7',
   })

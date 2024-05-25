@@ -1,6 +1,6 @@
 import { type PluginMeta } from "../../plugin.js"
 import { type MeditreePlugin } from "../../server.js"
-import { UserType as UserType, type User } from "../user-storage.js"
+import { UserType as UserType, type User } from "../user/user-storage.js"
 import { Type as JsonDBType } from "./core.js"
 export const HLSMediaType = "application/x-mpegURL"
 interface JsonDBUserPluginConfig {

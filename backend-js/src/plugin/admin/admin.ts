@@ -1,16 +1,14 @@
-import { token } from "@liplum/ioc"
 import { type PluginMeta } from "../../plugin.js"
 import { type MeditreePlugin } from "../../server.js"
-import express, { Request, RequestHandler } from "express"
+import express, {  } from "express"
 import multer from "multer"
 import { createLogger } from "@liplum/log"
-import { AppConfig } from "../../config.js"
 import os from "os"
-import { FileTreeLike, LocalFileTree, resolveFile, resolveFileTree, splitPath } from "../../file.js"
+import { LocalFileTree, resolveFile, resolveFileTree, splitPath } from "../../file.js"
 import filenamify from 'filenamify'
 import p from "path"
 import fs from "fs/promises"
-import { processRequest, validateRequest } from 'zod-express-middleware'
+import { validateRequest } from 'zod-express-middleware'
 import { z } from "zod"
 
 interface AdminPluginConfig {

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/plugin/file-limiter.schema.json",
+  "title": "Meditree auth plugin configuration",
+  "type": "object",
+  "properties": {
+    "maxFileSize": {
+      "$ref":"#/$ref/bytes"
+    },
+    "throttle": {
+      "$ref":"#/$ref/bytes"
+    }
+  },
+  "$defs": {
+    "bytes": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    }
+  }
+}

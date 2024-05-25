@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/plugin/rate-limiter.schema.json",
+  "title": "Meditree auth plugin configuration",
+  "type": "object",
+  "properties": {
+    "global": {
+      "$ref": "#/$ref/config"
+    },
+    "routes": {
+      "additionalProperties": {
+        "type": {
+          "$ref": "#/$ref/config"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "time": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "windowMs": {
+          "$ref": "#/$ref/time"
+        },
+        "requestLimit": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

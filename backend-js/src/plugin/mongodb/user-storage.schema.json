@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/plugin/mongodb/user-storage.schema.json",
+  "title": "Meditree mongodb-user plugin configuration",
+  "type": "object",
+  "properties": {
+    "collection": {
+      "type": "string"
+    }
+  }
+}

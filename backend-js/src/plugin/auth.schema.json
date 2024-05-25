@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/plugin/auth.schema.json",
+  "title": "Meditree auth plugin configuration",
+  "type": "object",
+  "properties": {
+    "jwtExpiration": {
+      "$ref": "#/$defs/time"
+    },
+    "jwtSecret": {
+      "type": "string"
+    },
+    "register": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "time": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    }
+  }
+}

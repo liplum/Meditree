@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/plugin/homepage.schema.json",
+  "title": "Meditree homepage plugin configuration",
+  "type": "object",
+  "properties": {
+    "root": {
+      "type": "string"
+    }
+  }
+}

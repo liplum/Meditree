@@ -61,6 +61,14 @@
     },
     "plugin": {
       "type": "object",
+      "properties": {
+        "admin": {
+          "$ref": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/plugin/admin/admin.schema.json"
+        },
+        "admin-auth-token": {
+          "$ref": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/plugin/admin/auth-token.schema.json"
+        }
+      },
       "additionalProperties": {
         "oneOf": [
           {
