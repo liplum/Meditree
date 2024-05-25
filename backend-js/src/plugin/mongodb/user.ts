@@ -11,7 +11,7 @@ interface MongoDDUserPluginConfig {
   collection?: string
 }
 
-declare module "../user/user-storage.js" {
+declare module "../user/storage.js" {
   interface User {
     _id?: ObjectId
   }

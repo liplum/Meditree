@@ -109,7 +109,7 @@ const writeConfig = async (configFi: File, config: Record<string, any> | string,
   if (typeof config === "string") {
     if (fileType === ConfigFileType.yaml) {
       if (!config.startsWith(R.configYamlSchemaComment)) {
-        config += `${R.configYamlSchemaComment}${os.EOL}`
+        config = `${R.configYamlSchemaComment}${os.EOL}\n` + config
         await fs.writeFile(configFi.path, config)
       }
     } else {
