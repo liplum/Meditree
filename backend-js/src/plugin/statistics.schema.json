@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Meditree jsondb-statistics plugin configuration",
+  "title": "Meditree statistics plugin configuration",
   "type": "object",
   "properties": {
-    "collection": {
+    "statisticsPath": {
       "type": "string"
     }
   }

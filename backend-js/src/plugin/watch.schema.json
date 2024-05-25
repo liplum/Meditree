@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/plugin/watch.schema.json",
   "title": "Meditree watch plugin configuration",
   "type": "object",
   "properties": {
