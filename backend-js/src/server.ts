@@ -21,7 +21,7 @@ import { type MeditreeMeta } from "./meta.js"
 import mime from "mime"
 import { fileTypeFromFile } from "file-type"
 import expressListEndpoints from "express-list-endpoints"
-import { MiddlewareRgistry } from "./middleware.js"
+import { MiddlewareContainer, MiddlewareProvider, MiddlewareRgistry } from "./middleware.js"
 
 export const MeditreeType = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("meditree.Meditree.HostTree"),
@@ -281,7 +281,7 @@ export const startServer = async (
     pipeFile,
     rebuildFileTree: hostTree.rebuildFileTree,
   }
-  const middlewares = new MiddlewareRgistry()
+  const middlewares = new MiddlewareContainer()
   for (const plugin of plugins) {
     await plugin.setupMiddleware?.({ registry: middlewares, manager, container, service })
   }
@@ -421,7 +421,7 @@ const resolveRange = (range?: string): { start?: number, end?: number } => {
 export interface MeditreeSetupContext {
   app: express.Express
   api: express.Router
-  middlewares: MiddlewareRgistry
+  middlewares: MiddlewareProvider
   events: MeditreeEvents
   manager: FileTreeManager
   container: Container

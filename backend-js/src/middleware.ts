@@ -5,15 +5,35 @@ interface MiddlewareEntry {
   priority: number
 }
 
-export class MiddlewareRgistry {
+export interface MiddlewareProvider {
+  ofRoute: (route: string) => RequestHandler[]
+  byName: (route: string) => RequestHandler[]
+}
+export interface MiddlewareRgistry {
+  add: (route: string, priority: number, ...handlers: RequestHandler[]) => void
+  global: (priority: number, ...handlers: RequestHandler[]) => void
+  named: (route: string, priority: number, ...handlers: RequestHandler[]) => void
+}
+
+export class MiddlewareContainer implements MiddlewareProvider {
   #route2Middlewares = new Map<string, MiddlewareEntry[]>()
   #name2Middlewares = new Map<string, MiddlewareEntry[]>()
-
-  constructor() {
-  }
+  #allRouteMiddlewares: MiddlewareEntry[] = []
 
   ofRoute(route: string): RequestHandler[] {
-    return this.#route2Middlewares.get(route)?.map((entry) => entry.handler) ?? []
+    const result: MiddlewareEntry[] = []
+    const routeSpecific = this.#route2Middlewares.get(route)
+    if (routeSpecific) {
+      result.push(...routeSpecific)
+    }
+    if (this.#allRouteMiddlewares.length) {
+      const all = this.#allRouteMiddlewares
+      result.push(...all)
+      result.sort((a, b) => {
+        return a.priority - b.priority
+      })
+    }
+    return result.map((entry) => entry.handler)
   }
 
   byName(route: string): RequestHandler[] {
@@ -21,11 +41,20 @@ export class MiddlewareRgistry {
   }
 
   add(route: string, priority: number, ...handlers: RequestHandler[]) {
-    addInto(this.#route2Middlewares, route, priority,... handlers)
+    addInto(this.#route2Middlewares, route, priority, ...handlers)
   }
-  
+
+  global(priority: number, ...handlers: RequestHandler[]) {
+    for (const handler of handlers) {
+      this.#allRouteMiddlewares.push({
+        handler,
+        priority,
+      })
+    }
+  }
+
   named(route: string, priority: number, ...handlers: RequestHandler[]) {
-    addInto(this.#name2Middlewares, route, priority,... handlers)
+    addInto(this.#name2Middlewares, route, priority, ...handlers)
   }
 }
 
