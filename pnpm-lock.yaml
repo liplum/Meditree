@@ -9,8 +9,8 @@ importers:
   backend-js:
     dependencies:
       '@liplum/cli':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.1
+        version: 1.0.1
       '@liplum/ioc':
         specifier: ^0.1.0
         version: 0.1.0
@@ -1070,8 +1070,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@liplum/cli@1.0.0':
-    resolution: {integrity: sha512-rkvCvFl73te2Rhy14Zeu+GLkdy13Fk6L58cKn4Lyd2fqKSgJkgC+qTuJ9KtIjGD5tMKC9CThKSSZhyrZFcjceg==}
+  '@liplum/cli@1.0.1':
+    resolution: {integrity: sha512-glyjmC0lKUK6Zj/V1nVVIWvfC0Mplphz6QW4/Gd5mlu7545ZPBzOCNBSSi4Zlu7GdgqJGAEmO+Fedvz1m+rveg==}
 
   '@liplum/ioc@0.1.0':
     resolution: {integrity: sha512-0WSIRMC2ndNtejtAEVcNpQrHYt3suqp0Mr4i1kYp56YIcjmbZs4QQEdE0qfRRWMTaiW1OR02Ee/QOz77xonV0g==}
@@ -2436,6 +2436,12 @@ packages:
 
   '@types/bytes@3.1.4':
     resolution: {integrity: sha512-A0uYgOj3zNc4hNjHc5lYUfJQ/HVyBXiUMKdXd7ysclaE6k9oJdavQzODHuwjpUu2/boCP8afjQYi8z/GtvNCWA==}
+
+  '@types/command-line-args@5.2.3':
+    resolution: {integrity: sha512-uv0aG6R0Y8WHZLTamZwtfsDLVRnOa+n+n5rEvFWL5Na5gZ8V2Teab/duDPFzIIIhs9qizDpcavCusCLJZu62Kw==}
+
+  '@types/command-line-usage@5.0.4':
+    resolution: {integrity: sha512-BwR5KP3Es/CSht0xqBcUXS3qCAUVXwpRKsV2+arxeb65atasuXG9LykC9Ab10Cw3s2raH92ZqOeILaQbsB2ACg==}
 
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
@@ -6833,8 +6839,10 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
 
-  '@liplum/cli@1.0.0':
+  '@liplum/cli@1.0.1':
     dependencies:
+      '@types/command-line-args': 5.2.3
+      '@types/command-line-usage': 5.0.4
       chalk: 5.3.0
       command-line-args: 5.2.1
       command-line-usage: 7.0.1
@@ -8826,6 +8834,10 @@ snapshots:
       '@types/node': 20.12.12
 
   '@types/bytes@3.1.4': {}
+
+  '@types/command-line-args@5.2.3': {}
+
+  '@types/command-line-usage@5.0.4': {}
 
   '@types/connect@3.4.38':
     dependencies:

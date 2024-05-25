@@ -7,11 +7,6 @@ import * as  R from "./r.js"
 import mime from "mime"
 import os from "os"
 export interface AppConfig {
-  /**
-   * It indicates whether the config file is readonly, aka, the file cannot be modified by Meditree.
-   * false by default.
-   */
-  readonly?: boolean
   /** 
    * The network interface on which the application will listen for incoming connections.
    * 0.0.0.0(all interfaces) by default.
@@ -105,67 +100,56 @@ const readConfig = (content: string, type: ConfigFileType): any => {
   }
 }
 
-const writeConfig = async (configFi: File, config: Record<string, any> | string, fileType: ConfigFileType) => {
+const writeConfig = async (path: string, config: Record<string, any> | string, fileType: ConfigFileType) => {
   if (typeof config === "string") {
     if (fileType === ConfigFileType.yaml) {
       if (!config.startsWith(R.configYamlSchemaComment)) {
         config = `${R.configYamlSchemaComment}${os.EOL}\n` + config
-        await fs.writeFile(configFi.path, config)
+        await fs.writeFile(path, config)
       }
     } else {
-      await fs.writeFile(configFi.path, config)
+      await fs.writeFile(path, config)
     }
   } else if (fileType === ConfigFileType.json) {
     if (!config["$schema"]) {
       config["$schema"] = R.configJsonSchemaUrl
     }
-    await fs.writeFile(configFi.path, JSON.stringify(config, null, 2))
+    await fs.writeFile(path, JSON.stringify(config, null, 2))
   } else if (fileType === ConfigFileType.yaml) {
     let content = yaml.stringify(config)
     content = `${R.configYamlSchemaComment}\n` + content
-    await fs.writeFile(configFi.path, content)
+    await fs.writeFile(path, content)
   }
 }
 
-export const loadConfigFromFile = async (configFi: File): Promise<AppConfig> => {
-  const mimeType = mime.getType(configFi.path)
+export const createConfigFile = async (path: string): Promise<void> => {
+  const mimeType = mime.getType(path)
+  const initialConfig = setupConfig()
+  await writeConfig(path, initialConfig, mimeType === "text/yaml"
+    ? ConfigFileType.yaml
+    : mimeType === "application/json"
+      ? ConfigFileType.json
+      : ConfigFileType.json
+  )
+}
+
+export const loadConfigFromFile = async (path: string): Promise<AppConfig | undefined> => {
+  const mimeType = mime.getType(path)
   const fileType = mimeType === "text/yaml"
     ? ConfigFileType.yaml
     : mimeType === "application/json"
       ? ConfigFileType.json
-      : null
+      : ConfigFileType.json
   if (!fileType) {
     return setupConfig()
   }
 
-  if (!await configFi.checkReadable()) {
-    const config = setupConfig()
-    return config
-  }
-
-  var content = await fs.readFile(configFi.path, "utf8")
-  let config: any
   try {
+    const content = await fs.readFile(path, "utf8")
     const json = readConfig(content, fileType)
-    config = setupConfig(json)
+    return setupConfig(json)
   } catch {
-    config = setupConfig()
-    if (await configFi.checkWritable()) {
-      await writeConfig(configFi, config, fileType)
-    }
+    return
   }
-
-  if (!config.readonly && await configFi.checkWritable()) {
-    if (fileType === ConfigFileType.yaml) {
-      if (!content.startsWith(R.configYamlSchemaComment)) {
-        await writeConfig(configFi, content, fileType)
-      }
-    } else {
-      if (!config["$schema"]) {
-        config["$schema"] = R.configJsonSchemaUrl
-      }
-      await writeConfig(configFi, config, fileType)
-    }
-  }
-  return config
 }
+

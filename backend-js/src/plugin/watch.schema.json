@@ -4,7 +4,7 @@
   "type": "object",
   "properties": {
     "rebuildInterval": {
-      "$ref": "#/$ref/time"
+      "$ref": "#/$defs/time"
     }
   },
   "$defs": {

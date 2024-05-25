@@ -4,9 +4,6 @@
   "description": "The JSON schema for config.json that Meditree used.",
   "type": "object",
   "properties": {
-    "readonly": {
-      "type": "boolean"
-    },
     "name": {
       "type": "string"
     },
