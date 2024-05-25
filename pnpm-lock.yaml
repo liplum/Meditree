@@ -20,6 +20,9 @@ importers:
       '@meditree/model':
         specifier: workspace:^
         version: link:../model-js
+      '@types/express-list-endpoints':
+        specifier: ^6.0.3
+        version: 6.0.3
       bytes:
         specifier: ^3.1.2
         version: 3.1.2
@@ -44,6 +47,9 @@ importers:
       express:
         specifier: ^4.19.2
         version: 4.19.2
+      express-list-endpoints:
+        specifier: ^7.1.0
+        version: 7.1.0
       file-type:
         specifier: ^19.0.0
         version: 19.0.0
@@ -2449,6 +2455,9 @@ packages:
   '@types/etag@1.8.3':
     resolution: {integrity: sha512-QYHv9Yeh1ZYSMPQOoxY4XC4F1r+xRUiAriB303F4G6uBsT3KKX60DjiogvVv+2VISVDuJhcIzMdbjT+Bm938QQ==}
 
+  '@types/express-list-endpoints@6.0.3':
+    resolution: {integrity: sha512-0lZ5pOHtivd8Vx49E5gBQHMTmccMCQTLGjPBsBKHABdC9b55VY86dxvhfMkbJefzaH0YHhgExWOg5WoG2gDIeg==}
+
   '@types/express-serve-static-core@4.19.1':
     resolution: {integrity: sha512-ej0phymbFLoCB26dbbq5PGScsf2JAJ4IJHjG10LalgUV36XKTmA4GdA+PVllKvRk0sEKt64X8975qFnkSi0hqA==}
 
@@ -3633,6 +3642,10 @@ packages:
   expect@29.7.0:
     resolution: {integrity: sha512-2Zks0hf1VLFYI1kbh0I5jP3KHHyCHpkfyHBzsSXRFgl/Bg9mWYfMW8oD+PdMPlEwy5HNsR9JutYy6pMeOh61nw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
+
+  express-list-endpoints@7.1.0:
+    resolution: {integrity: sha512-7FyKxABfkRC0t6B6btxlAcFr0WrpPAL12MFAGhAxoIi/OyphxVQzVmyuWbcNxEApBmNzzgt2khjlqj/3wyHMMA==}
+    engines: {node: '>=18'}
 
   express@4.19.2:
     resolution: {integrity: sha512-5T6nhjsT+EOMzuck8JjBHARTHfMht0POzlA60WV2pMD3gyXw2LZnZ+ueGdNxG+0calOJcWKbpFcuzLZ91YWq9Q==}
@@ -8831,6 +8844,10 @@ snapshots:
     dependencies:
       '@types/node': 20.12.12
 
+  '@types/express-list-endpoints@6.0.3':
+    dependencies:
+      '@types/express': 4.17.21
+
   '@types/express-serve-static-core@4.19.1':
     dependencies:
       '@types/node': 20.12.12
@@ -10462,6 +10479,8 @@ snapshots:
       jest-message-util: 29.7.0
       jest-util: 29.7.0
     optional: true
+
+  express-list-endpoints@7.1.0: {}
 
   express@4.19.2:
     dependencies:

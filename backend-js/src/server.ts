@@ -20,7 +20,7 @@ import fs from "fs"
 import { type MeditreeMeta } from "./meta.js"
 import mime from "mime"
 import { fileTypeFromFile } from "file-type"
-
+import expressListEndpoints from "express-list-endpoints"
 
 export const MeditreeType = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("meditree.Meditree.HostTree"),
@@ -367,6 +367,12 @@ export const startServer = async (
     await pipeFile(req, res, resolved)
   })
 
+  const endpoints = expressListEndpoints(app)
+  for (const endpoint of endpoints) {
+    for (const method of endpoint.methods) {
+      log.info(`${method.padEnd(8)}\t${endpoint.path}`)
+    }
+  }
   // Phrase 19: start HostTree and rebuild it manually.
   hostTree.start()
   await hostTree.rebuildFileTree()
