@@ -63,7 +63,7 @@
       "type": "object",
       "properties": {
         "admin": {
-          "$ref": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/src/plugin/auth.schema.json"
+          "$ref": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/src/plugin/admin/admin.schema.json"
         },
         "admin-auth-token": {
           "$ref": "https://raw.githubusercontent.com/liplum/Meditree/master/backend-js/src/plugin/admin/auth-token.schema.json"
