@@ -1,12 +1,11 @@
 import fs from "fs/promises"
 import { v4 as uuidv4 } from "uuid"
-import { type File } from "./file.js"
 import JSON5 from "json5"
 import yaml from "yaml"
 import * as  R from "./r.js"
 import mime from "mime"
 import os from "os"
-export interface AppConfig {
+export interface MeditreeConfig {
   /** 
    * The network interface on which the application will listen for incoming connections.
    * 0.0.0.0(all interfaces) by default.
@@ -64,8 +63,8 @@ export interface AppConfig {
   logLevel?: string
 }
 
-export function setupConfig(config: AppConfig | Partial<AppConfig> = {}): AppConfig {
-  const newConfig = config as AppConfig
+export function setupConfig(config: MeditreeConfig | Partial<MeditreeConfig> = {}): MeditreeConfig {
+  const newConfig = config as MeditreeConfig
   if (!newConfig.name) {
     newConfig.name = uuidv4()
   }
@@ -133,7 +132,7 @@ export const createConfigFile = async (path: string): Promise<void> => {
   )
 }
 
-export const loadConfigFromFile = async (path: string): Promise<AppConfig | undefined> => {
+export const loadConfigFromFile = async (path: string): Promise<MeditreeConfig | undefined> => {
   const mimeType = mime.getType(path)
   const fileType = mimeType === "text/yaml"
     ? ConfigFileType.yaml

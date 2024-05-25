@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { CompoundHostTree, EmptyHostTree, HostTree, classifyContentTypeByPattern, type HostTreeOptions, type IHostTree } from "./host.js"
-import { type AppConfig } from "./config.js"
+import { type MeditreeConfig } from "./config.js"
 import express, { type RequestHandler, type Request, type Response } from "express"
 import { cloneFileTreeJson, type FileTreeJson, type LocalFileTree, type LocalFile, splitPath, resolveFile } from "./file.js"
 import cors from "cors"
@@ -28,7 +28,7 @@ export const MeditreeType = {
 }
 
 export const startServer = async (
-  config: AppConfig
+  config: MeditreeConfig
 ): Promise<void> => {
   // Phrase 1: setup starting timer.
   const timer = new Timer()
@@ -436,7 +436,7 @@ export interface MeditreeSetupMiddlewareContext {
 }
 
 export interface MeditreePlugin {
-  init?: (appConfig: AppConfig) => Promise<void> | void
+  init?: (appConfig: MeditreeConfig) => Promise<void> | void
 
   setupMeta?: (meta: MeditreeMeta) => Promise<void> | void
 

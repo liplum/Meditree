@@ -4,16 +4,17 @@ import { install as installSourceMap } from "source-map-support"
 import path from "path"
 import { File as FileDelegate } from "./file.js"
 import { createLogger } from "@liplum/log"
-import { existsOrNull, resolveAppStoragePath } from "./env.js"
+import { appDir, existsOrNull, resolveAppStoragePath } from "./env.js"
 import esMain from "es-main"
 import { cli } from '@liplum/cli'
 import inquirer from 'inquirer'
+import { MeditreeWorkspace } from "./workspace.js"
 
 export interface ServeArgs {
   /**
-   * The config file path
+   * The path of workspace directory
    */
-  config?: string
+  workspace?: string
 }
 
 export async function serve(args: ServeArgs): Promise<void> {
@@ -22,36 +23,17 @@ export async function serve(args: ServeArgs): Promise<void> {
   // To try finding the config file in following locations:
   // 1. the specific path passed by command line arguments.
   // 2. the default path in user home: "~/.meditree/config.json"
-  const configFi = new FileDelegate(
-    // load from cmd args
-    args.config
-    // load from home dir
-    ?? existsOrNull(resolveAppStoragePath("config.yaml"))
-    ?? existsOrNull(resolveAppStoragePath("config.yml"))
-    ?? resolveAppStoragePath("config.json")
-  )
-  if (args.config && !await configFi.checkReadable()) {
-    console.error(new Error(`Cannot read config from ${configFi.path}.`,
-      { cause: configFi._lastReadableError }))
-    process.exit(1)
-  }
-  let config = await loadConfigFromFile(configFi.path)
-  if (args.config && !config) {
-    log.warn(`Failed to load config from "${path.resolve(configFi.path)}", so default config is used.`)
-    process.exit(1)
-  } else {
-    config = setupConfig()
-  }
+  const workspace = new MeditreeWorkspace(args.workspace ?? appDir)
   log.info(`Config was loaded from "${path.resolve(configFi.path)}".`)
   await startServer(config)
 }
 
-export interface InitConfigArgs {
+export interface InitWorkspaceArgs {
   path?: string
 }
 
 
-export async function initConfig(args: InitConfigArgs) {
+export async function initConfig(args: InitWorkspaceArgs) {
   const path = args.path ?? resolveAppStoragePath("config.json")
   await createConfigFile(path)
   console.log(`Config file created at ${path}`)
@@ -66,27 +48,27 @@ if (esMain(import.meta)) {
       description: "Serve the Medtiree.",
       examples: [
         'meditree serve',
-        'meditree serve -i <config-file>',
+        'meditree serve -w <workspace-path>',
       ],
       require: [],
       options: [{
-        name: 'config',
-        alias: "i",
-        description: 'The config file path.'
+        name: 'workspace',
+        alias: "w",
+        description: 'The workspace directory.'
       },],
     }, {
-      name: "initConfig",
-      description: "Serve the Medtiree.",
+      name: "init",
+      description: "Initialize a Meditree workspace.",
       examples: [
-        'meditree initConfig',
-        'meditree initConfig <path>',
+        'meditree init',
+        'meditree init <workspace-path>',
       ],
       require: [],
       options: [{
         name: 'path',
         alias: "p",
         defaultOption: true,
-        description: 'The path where to generate config file.'
+        description: 'The path where to generate Meditree workspace.'
       },],
     }],
   })!
@@ -95,7 +77,7 @@ if (esMain(import.meta)) {
       serve(args as ServeArgs)
       break
     case "initConfig":
-      initConfig(args as InitConfigArgs)
+      initConfig(args as InitWorkspaceArgs)
       break
   }
 }
