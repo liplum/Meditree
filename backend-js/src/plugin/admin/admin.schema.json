@@ -7,7 +7,19 @@
       "type": "string"
     },
     "maxFileSize": {
-      "type": "integer"
+      "$ref": "#/$defs/bytes"
+    }
+  },
+  "$defs": {
+    "bytes": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ]
     }
   }
 }

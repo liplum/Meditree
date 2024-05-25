@@ -1,6 +1,6 @@
 import { type PluginMeta } from "../../plugin.js"
 import { type MeditreePlugin } from "../../server.js"
-import express, {  } from "express"
+import express from "express"
 import multer from "multer"
 import { createLogger } from "@liplum/log"
 import os from "os"
@@ -10,6 +10,7 @@ import p from "path"
 import fs from "fs/promises"
 import { validateRequest } from 'zod-express-middleware'
 import { z } from "zod"
+import { parseBytes } from "../../utils.js"
 
 interface AdminPluginConfig {
   /**
@@ -21,7 +22,7 @@ interface AdminPluginConfig {
    * Maximum size of each form field value in bytes. 
    * 1048576 by default
    */
-  maxFileSize?: number
+  maxFileSize?: string | number
 }
 
 const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
@@ -43,7 +44,7 @@ const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
         })
         const upload = multer({
           storage, limits: {
-            fieldSize: config.maxFileSize,
+            fileSize: parseBytes(config.maxFileSize, 1048576),
           }
         })
 
