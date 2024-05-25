@@ -1,7 +1,6 @@
 import { type PluginMeta } from "../../plugin.js"
 import { type MeditreePlugin } from "../../server.js"
 import { v4 as uuidv4 } from "uuid"
-import { AdminPluginType } from "./admin.js"
 import { createLogger } from "@liplum/log"
 
 interface AdminAuthTokenPluginConfig {
@@ -28,8 +27,8 @@ const AdminAuthTokenPlugin: PluginMeta<MeditreePlugin, AdminAuthTokenPluginConfi
     })()
     const cookiePath = config.cookiePath ?? "meditree.Admin.AuthToken"
     return {
-      setupService: (container) => {
-        container.bind(AdminPluginType.Auth).toValue((req, res, next) => {
+      setupMiddleware: ({ registry }) => {
+        registry.named("auth-admin", 100, (req, res, next) => {
           const theirToken = req.cookies[cookiePath]
           if (theirToken === token) {
             next()

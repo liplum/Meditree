@@ -26,20 +26,16 @@ interface AdminPluginConfig {
   maxFileSize?: number
 }
 
-export const AdminPluginType = {
-  Auth: token<RequestHandler>("meditree.Admin.Auth"),
-}
-
 const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
   create(config) {
     const log = createLogger("Admin")
     let tempDir = config.tempDir
     return {
-      setupMeditree: async ({ api, manager, container, service }) => {
-        const authMiddleware = container.tryGet(AdminPluginType.Auth)
+      setupMeditree: async ({ api, manager, middlewares, service }) => {
+        const authMiddlewares = middlewares.byName("auth-admin")
         const admin = express.Router()
-        if (authMiddleware) {
-          admin.use(authMiddleware)
+        if (authMiddlewares.length) {
+          admin.use(...authMiddlewares)
         } else {
           log.warn(`Critical Security Risk: the Meditree server lacks an admin authentication method. This means anyone can access, modify, or delete your files! This message is only intended for testing purposes on a private network. Do not deploy a server without proper authentication in production. To setup an authentication method, for example, configure Meditree and add a plugin, "admin-auth-token"`)
         }
