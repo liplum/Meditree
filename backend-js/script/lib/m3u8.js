@@ -1,5 +1,4 @@
 
-import https from "https"
 import fs from "fs"
 import { extname, dirname, basename, join } from "path"
 import Ffmpeg from "fluent-ffmpeg"
@@ -57,13 +56,8 @@ export async function convertVideo2M3u8({ videoPath, time, overwrite, destDir })
 }
 
 export async function fetchTextFile(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, (response) => {
-      let data = ""
-      response.on("data", (chunk) => { data += chunk })
-      response.on("end", () => { resolve(data) })
-    }).on("error", (error) => { reject(error) })
-  })
+  const res = await fetch(url)
+  return await res.text()
 }
 
 export function convertRelativeUrlsToAbsolute({ playlistUrl, content }) {
