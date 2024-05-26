@@ -115,9 +115,6 @@ async function getM3u8(args) {
     ? convertRelativeUrlsToAbsolute({ playlistUrl: args.url, content })
     : content
   let outputPath = args.output
-  if (fs.statSync(outputPath).isDirectory()) {
-    outputPath = join(outputPath, defaultFile)
-  }
   if (extname(outputPath) !== ".m3u8") {
     outputPath = `${outputPath}.m3u8`
   }
