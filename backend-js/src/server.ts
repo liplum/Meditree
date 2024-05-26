@@ -22,7 +22,6 @@ import mime from "mime"
 import { fileTypeFromFile } from "file-type"
 import expressListEndpoints from "express-list-endpoints"
 import { MiddlewareContainer, MiddlewareProvider, MiddlewareRgistry } from "./middleware.js"
-import { pipeline } from "stream/promises"
 
 export const MeditreeType = {
   HostTree: token<(options: HostTreeOptions) => IHostTree>("meditree.Meditree.HostTree"),
@@ -276,9 +275,8 @@ export const startServer = async (
     stream.on("error", (_) => {
       res.sendStatus(500).end()
     })
-    await pipeline(stream, res)
+    stream.pipe(res)
   }
-  
   const service: MeditreeService = {
     pipeFile,
     rebuildFileTree: hostTree.rebuildFileTree,
