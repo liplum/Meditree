@@ -36,11 +36,13 @@ export async function serve(args: ServeArgs): Promise<void> {
     process.exit(1)
   }
   let config = await loadConfigFromFile(configFi.path)
-  if (args.config && !config) {
-    log.warn(`Failed to load config from "${path.resolve(configFi.path)}", so default config is used.`)
-    process.exit(1)
-  } else {
-    config = setupConfig()
+  if (!config) {
+    if (args.config) {
+      log.warn(`Failed to load config from "${path.resolve(configFi.path)}", so default config is used.`)
+      process.exit(1)
+    } else {
+      config = setupConfig()
+    }
   }
   log.info(`Config was loaded from "${path.resolve(configFi.path)}".`)
   await startServer(config)
