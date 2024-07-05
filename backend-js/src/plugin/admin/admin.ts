@@ -23,6 +23,9 @@ interface AdminPluginConfig {
    * 1048576 by default
    */
   maxFileSize?: string | number
+
+  
+  trashBin?: boolean
 }
 
 const AdminPlugin: PluginMeta<MeditreePlugin, AdminPluginConfig> = {
