@@ -10,14 +10,11 @@ import AuthPlugin from "./plugin/auth.js"
 import RandomPlugin from "./plugin/random.js"
 import FileLimiterPlugin from "./plugin/file-limiter.js"
 import RateLimiterPlugin from "./plugin/rate-limiter.js"
+
 // mongoDB
 import MongoDBPlugin from "./plugin/mongodb/core.js"
 import MongoDBUserPlugin from "./plugin/mongodb/user.js"
 import MongoDBStatisticsPlugin from "./plugin/mongodb/statistics.js"
-// JsonDB
-import JsonDBPlugin from "./plugin/jsondb/core.js"
-import JsonDBUserPlugin from "./plugin/jsondb/user.js"
-import JsonDBStatisticsPlugin from "./plugin/jsondb/statistics.js"
 
 // Admin
 import AdminPlugin from "./plugin/admin/admin.js"
@@ -37,10 +34,6 @@ export function registerBuiltinPlugins(registry: PluginRegistry<MeditreePlugin>)
   registry.mongodb = MongoDBPlugin
   registry["mongodb-user"] = MongoDBUserPlugin
   registry["mongodb-statistics"] = MongoDBStatisticsPlugin
-  // JsonDB
-  registry.jsondb = JsonDBPlugin
-  registry["jsondb-user"] = JsonDBUserPlugin
-  registry["jsondb-statistics"] = JsonDBStatisticsPlugin
   // has dependencies
   registry.auth = AuthPlugin
   registry.statistics = StatisticsPlugin
